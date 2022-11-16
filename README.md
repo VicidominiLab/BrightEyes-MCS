@@ -19,7 +19,7 @@ single-photon time-tagging microscopy therefore fluorescence spectroscopy, fluor
 (FLIM), and fluorescence lifetime correlation spectroscopy (FLFS) experiments.
 
 
-[![video session](docs/video/brighteyes-frame.png)](docs/video/brighteyes-mcs.webm)  
+[![video session](docs/video/brighteyes-frame.png)](docs/video/brighteyes-mcs.webm.mov)  
 **Click on the video**
 
 ---
