@@ -18,6 +18,8 @@ Moreover, it can be integrated with the
 single-photon time-tagging microscopy therefore fluorescence spectroscopy, fluorescence lifetime imaging microscopy
 (FLIM), and fluorescence lifetime correlation spectroscopy (FLFS) experiments.
 
+[docs_video_brighteyes-mcs.webm](https://user-images.githubusercontent.com/61466143/202123174-e9019c5c-bc9c-403d-b710-0516af8346b9.webm)
+
 
 [![video session](docs/video/brighteyes-frame.png)](docs/video/brighteyes-mcs.webm.mov)  
 **Click on the video**
