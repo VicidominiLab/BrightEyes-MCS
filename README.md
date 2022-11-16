@@ -13,8 +13,11 @@ It provides a user-friendly interface to do microscopy with a 25 channels SPAD,
 the possibility to save the data in HDF5, moving the scanning area during the scouting, control the lasers, 
 manage Z-stack imaging, time-lapsed imaging.      
 
-Moreover, it can be integrated with the
-[BrightEyes Time-Tagging Module](https://github.com/VicidominiLab/BrightEyes-TTM). This module allow to perform 
+It provides a jupyter terminal running exposing the control system object. This allow the user a quick prototyping and debugging.
+BrightEyes-MCS provides within the GUI also a plugin and script interface. The plugins interface allows the user to expand the control system and the script interface allows users to develop easily the own code for quick analysis right after the acquisition.
+
+The software can be integrated with the
+[BrightEyes Time-Tagging Module](https://github.com/VicidominiLab/BrightEyes-TTM), the open-source time-tagging hardware with a resolution ~40ps(!). This module allow to perform 
 single-photon time-tagging microscopy therefore fluorescence spectroscopy, fluorescence lifetime imaging microscopy
 (FLIM), and fluorescence lifetime correlation spectroscopy (FLFS) experiments.
 
