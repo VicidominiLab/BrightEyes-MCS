@@ -56,6 +56,44 @@ Please refer to the individual source files for details on specific
 licensing exceptions.
 See [LICENSE.md](LICENSE.md) file for details.
 
+
+# Credits
+
+**Author:** Mattia Donato
+
+The authors are thanked for their valuable contributions. Below is a breakdown of the parts they have contributed to and the list of contributors.
+- **BrightEyes-MCS-LowLevel**: Marco Castello, Giorgio Tortarolo, Simonluca Piazza, Mattia Donato, Eli Slenders
+- **MemorySharedNumpyArray**: Sami Valtteri Koho 
+- **FCS Live Preview**: Eli Slenders
+- **Scripts examples (shift vectors, grid calibration, ffs analysis)**: Alessandro Zunino, Eli Slenders
+- **Scientific QT Spinbox**: Luca Bega
+
+**Scientific team**: 
+[Molecular Microscopy and Spectroscopy](https://vicidominilab.github.io/), Istituto Italiano di Tecnologia:
+  - **Giuseppe Vicidomini** _(Principal Investigator)_
+  - Luca Bega
+  - Andrea Bucci
+  - Francesco Fersini
+  - Giacomo Garre'
+  - Marcus Held
+  - Sanket Patil
+  - Eleonora Perego
+  - Marco Scotto
+  - Eli Slenders
+  - Sabrina Zappone
+  - Alessandro Zunino
+
+
+
+# Reference
+- A robust and versatile platform for image scanning microscopy enabling super-resolution FLIM. _Castello, M., Tortarolo, G., Buttafava, M. et al._ Nature Methods 16, 175–178 (2019). doi: https://doi.org/10.1038/s41592-018-0291-9
+
+
+- A Compact and Effective Photon-Resolved Image Scanning Microscope. _Giorgio Tortarolo, Alessandro Zunino, Simonluca Piazza, Mattia Donato, Sabrina Zappone, Agnieszka Pierzyńska-Mach, Marco Castello, Giuseppe Vicidomini_ 
+bioRxiv 2023.07.28.549477; doi: https://doi.org/10.1101/2023.07.28.549477
+
+
+
 ---
 
 # Requirements
@@ -103,46 +141,6 @@ Once installed you will have the link with icon of BrightEyes-MCS and on your De
 The firmwares needed for running the NI FPGA are not included in the BrightEyes-MCS tree.
 It is present during the installation phase a graphical tool to download and extract them.
 In case of issues it is possible download directly from the repository of [BrightEyes-MCSLL](https://github.com/VicidominiLab/BrightEyes-MCSLL).
-
-
----
-
-# Credits
-
-**Author:** Mattia Donato
-
-**Scientific team**: 
-[Molecular Microscopy and Spectroscopy](https://vicidominilab.github.io/), Istituto Italiano di Tecnologia:
-  - Giuseppe Vicidomini _(Principal Investigator)_
-  - Luca Bega
-  - Andrea Bucci
-  - Francesco Fersini
-  - Giacomo Garre'
-  - Marcus Held
-  - Sanket Patil
-  - Eleonora Perego
-  - Marco Scotto
-  - Eli Slenders
-  - Sabrina Zappone
-  - Alessandro Zunino
-
-
-Thanks for significant contribution for 
-- **BrightEyes-MCS-LowLevel**: Marco Castello, Giorgio Tortarolo, Simonluca Piazza, Mattia Donato, Eli Slenders
-- **MemorySharedNumpyArray**: Sami Valtteri Koho 
-- **FCS Live Preview**: Eli Slenders
-- **Scripts examples (shift vectors, grid calibration, ffs analysis)**: Alessandro Zunino, Eli Slenders
-- **Scientific QT Spinbox**: Luca Bega
-
-
-# Reference
-- A robust and versatile platform for image scanning microscopy enabling super-resolution FLIM. _Castello, M., Tortarolo, G., Buttafava, M. et al._ Nature Methods 16, 175–178 (2019). doi: https://doi.org/10.1038/s41592-018-0291-9
-
-
-- A Compact and Effective Photon-Resolved Image Scanning Microscope. _Giorgio Tortarolo, Alessandro Zunino, Simonluca Piazza, Mattia Donato, Sabrina Zappone, Agnieszka Pierzyńska-Mach, Marco Castello, Giuseppe Vicidomini_ 
-bioRxiv 2023.07.28.549477; doi: https://doi.org/10.1101/2023.07.28.549477
-
-
 
 ---
 
