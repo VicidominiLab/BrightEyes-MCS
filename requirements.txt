@@ -1,0 +1,19 @@
+pyqtgraph~=0.12.3
+numpy~=1.24
+PySide2~=5.15.2
+setuptools~=44.0.0
+nifpga~=20.0.0
+Cython~=0.29.24
+h5py
+scipy
+pyqtdarktheme
+imageio
+qtconsole
+napari
+importlib-metadata
+nifpga-fast-fifo-recv>=0.100.1
+ultradict
+#pprofile
+atomics
+matplotlib
+#brighteyes-flim #facultative activate in case of FLIM analysis/preview
