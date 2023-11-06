@@ -26,7 +26,10 @@ class MainWindow(QMainWindow):
         container_layout.addWidget(self.browser)
 
         # Create a label
-        label = QLabel("Please read the License and please click the license acceptance")
+        label = QLabel("BrightEyes-MCS is under General Public License version 3 (GPLv3).\n"
+                       "The firmwares instead are part of BrightEyes-MCSLL which is NOT under GPLv3.\n"
+                       "The firmwares are free of usage under certain usage described by the license above.\n\n"
+                       "Please read carefully the License above and then click below your choice.\n")
         label.setAlignment(Qt.AlignCenter)
 
         container_layout.addWidget(label)
