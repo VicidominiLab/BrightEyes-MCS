@@ -500,7 +500,7 @@ class Ui_MainWindowDesign(object):
         self.spinBox_nframe = QSpinBox(self.dockWidgetContents_2)
         self.spinBox_nframe.setObjectName(u"spinBox_nframe")
         self.spinBox_nframe.setMinimum(1)
-        self.spinBox_nframe.setMaximum(200000)
+        self.spinBox_nframe.setMaximum(16777216)
         self.spinBox_nframe.setValue(1)
 
         self.gridLayout_5.addWidget(self.spinBox_nframe, 2, 1, 1, 1)
@@ -513,7 +513,7 @@ class Ui_MainWindowDesign(object):
         self.spinBox_ny = QSpinBox(self.dockWidgetContents_2)
         self.spinBox_ny.setObjectName(u"spinBox_ny")
         self.spinBox_ny.setMinimum(1)
-        self.spinBox_ny.setMaximum(2048)
+        self.spinBox_ny.setMaximum(16777216)
         self.spinBox_ny.setValue(512)
 
         self.gridLayout_5.addWidget(self.spinBox_ny, 1, 1, 1, 1)
@@ -536,7 +536,7 @@ class Ui_MainWindowDesign(object):
         self.spinBox_nx = QSpinBox(self.dockWidgetContents_2)
         self.spinBox_nx.setObjectName(u"spinBox_nx")
         self.spinBox_nx.setMinimum(1)
-        self.spinBox_nx.setMaximum(2048)
+        self.spinBox_nx.setMaximum(16777216)
         self.spinBox_nx.setValue(512)
 
         self.gridLayout_5.addWidget(self.spinBox_nx, 0, 1, 1, 1)
