@@ -7,6 +7,6 @@ echo "git reset --hard origin/master"
 git reset --hard origin/master
 
 echo Compiling the Cython code
-python setup.py build_ext --inplace --force
+compile_cython
 
 xcopy /Y brighteyes_mcs\cfg.bck\* brighteyes_mcs\cfg\

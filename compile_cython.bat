@@ -1,0 +1,5 @@
+@REM VERSION COMPILE WITH VISUAL STUDIO
+compile_cython_vs
+
+@REM VERSION WITH VISUAL STUDIO
+@REM compile_cython_msys2

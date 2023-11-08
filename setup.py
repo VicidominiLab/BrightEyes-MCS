@@ -1,11 +1,20 @@
 from setuptools import find_packages, setup
-from distutils.extension import Extension
-from distutils.core import setup
+from setuptools.extension import Extension
 from Cython.Build import cythonize
 from Cython.Distutils import build_ext
 import numpy as np
 
-# COMMAND TO COMPILE: python setup.py build_ext --inplace
+
+# COMMAND TO COMPILE:
+# with Visual Studio Installed
+# python setup.py build_ext --inplace
+
+# with Msys2 with pacman -S mingw-w64-ucrt-x86_64-gcc
+# add to path the msys2 path
+#
+# $env:Path += ';C:\msys64\usr\bin'
+# $env:Path += ';C:\msys64\ucrt64\bin'
+# python setup.py build_ext --inplace --compiler=mingw32 -DMS_WIN64
 
 setup(
     ext_modules=cythonize(
