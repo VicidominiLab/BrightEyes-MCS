@@ -68,7 +68,7 @@ pip install -r requirements.txt
 echo:
 echo Build Cython code
 echo:
-compile_cython
+call compile_cython.bat
 echo:
 echo Creating Links
 echo:
