@@ -1,6 +1,6 @@
 import numpy as np
 import multiprocessing as mp
-from UltraDict import UltraDict
+#from UltraDict import UltraDict
 
 from PySide2.QtCore import QObject
 
