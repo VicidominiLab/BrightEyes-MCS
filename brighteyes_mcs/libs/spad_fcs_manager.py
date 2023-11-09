@@ -29,10 +29,13 @@ class SpadFcsManager(QObject):
 
         self.mp_manager = mp.Manager()
 
-        self.ultra_dict_inst = UltraDict({}, shared_lock=True, full_dump_size=10000)
-        self.shared_dict = UltraDict(
-            {}, shared_lock=True, full_dump_size=10000
-        )  # self.mp_manager.dict()
+        # self.ultra_dict_inst = UltraDict({}, shared_lock=True, full_dump_size=10000)
+        # self.shared_dict = UltraDict(
+        #     {}, shared_lock=True, full_dump_size=10000
+        # )  # self.mp_manager.dict()
+
+        self.ultra_dict_inst = self.mp_manager.dict()
+        self.shared_dict = self.mp_manager.dict()
 
         self.default_configuration = {
             "shutters": None,

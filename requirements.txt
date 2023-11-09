@@ -12,7 +12,7 @@ qtconsole
 napari
 importlib-metadata
 nifpga-fast-fifo-recv>=0.100.1
-ultradict
+#ultradict
 #pprofile
 atomics
 matplotlib
