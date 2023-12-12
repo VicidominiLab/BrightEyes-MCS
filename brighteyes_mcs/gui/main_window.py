@@ -2895,6 +2895,11 @@ class MainWindow(QMainWindow):
         for xxx in range(self.CHANNELS_x):
             for yyy in range(self.CHANNELS_y):
                 if saturation_data[yyy, xxx] > 0:
+                    v=self.spadfcsmanager_inst.getFingerprintCumulative()*1.
+                    ratio = saturation_data[yyy, xxx] / v[yyy,xxx]
+                    print(ratio)
+                    size = 1 + min(ratio * 8 * 100,8 )
+
                     self.fingerprint_saturation_mask.addPoints(
                         x=[
                             xxx + 0.5,
@@ -2904,7 +2909,7 @@ class MainWindow(QMainWindow):
                         ],
                         pen="b",
                         brush="b",
-                        size=10,
+                        size=size,
                         symbol="s",
                     )
 
