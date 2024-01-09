@@ -240,6 +240,7 @@ class MainWindow(QMainWindow):
         self.configurationFPGA_dict = {}
         self.configurationGUI_dict = {}
 
+
         self.spadfcsmanager_inst = SpadFcsManager()
         print_dec("SpadFcsManager()")
         self.qthread = QThread()
@@ -1008,6 +1009,15 @@ class MainWindow(QMainWindow):
         dialog.setFileMode(QFileDialog.Directory)
         if dialog.exec_():
             self.ui.lineEdit_destinationfolder.setText(dialog.selectedFiles()[0])
+    @Slot()
+    def numberChannelsChanged(self):
+        ch = int(self.ui.comboBox_channels.currentText())
+        print_dec("numberChannelsChanged to", self.ui.comboBox_channels.currentText())
+        self.CHANNELS = ch
+        self.CHANNELS_x = int(np.sqrt(ch))
+        self.CHANNELS_y = self.CHANNELS_x
+        self.fingerprint_mask = np.ones((self.CHANNELS_x, self.CHANNELS_y), dtype=np.uint8)
+
 
     @Slot()
     def cmd_filename(self):
@@ -2033,7 +2043,6 @@ class MainWindow(QMainWindow):
     def update_fingerprint_mask(self):
         print_dec("update_fingerprint_mask")
         self.fingerprint_markers_mask.clear()
-
         for xxx in range(self.CHANNELS_x):
             for yyy in range(self.CHANNELS_y):
                 if self.fingerprint_mask[yyy, xxx] != 1:
@@ -2892,12 +2901,15 @@ class MainWindow(QMainWindow):
             )
 
         self.fingerprint_saturation_mask.clear()
+
+        coeff = 25./self.CHANNELS
+
         for xxx in range(self.CHANNELS_x):
             for yyy in range(self.CHANNELS_y):
                 if saturation_data[yyy, xxx] > 0:
                     v=self.spadfcsmanager_inst.getFingerprintCumulative()*1.
                     ratio = saturation_data[yyy, xxx] / v[yyy,xxx]
-                    print(ratio)
+                    # print(ratio)
                     size = 1 + min(ratio * 8 * 100,8 )
 
                     self.fingerprint_saturation_mask.addPoints(
@@ -2909,7 +2921,7 @@ class MainWindow(QMainWindow):
                         ],
                         pen="b",
                         brush="b",
-                        size=size,
+                        size=size*coeff,
                         symbol="s",
                     )
 
@@ -3522,6 +3534,10 @@ Have fun!
         self.activate_preview = activate_preview
 
         self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
+
+        self.spadfcsmanager_inst.set_channels(int(self.ui.comboBox_channels.currentText()))
+
+
         self.spadfcsmanager_inst.set_activate_DFD(self.DFD_Activate)
 
         self.ui.progressBar_fifo_digital.setMaximum(5)

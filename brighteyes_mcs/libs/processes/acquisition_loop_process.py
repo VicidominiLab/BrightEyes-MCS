@@ -13,6 +13,7 @@ from ..h5manager import H5Manager
 try:
     from ..cython.fastconverter import (
         convertRawDataToCountsDirect,
+        convertRawDataToCountsDirect49,
         convertDataFromAnalogFIFO,
     )
     from ..cython.autocorrelator import Autocorrelator
@@ -30,11 +31,12 @@ except Exception as e:
     os._exit(1)
 
 from ..print_dec import print_dec, set_debug
-
+from numpy import sqrt
 
 class AcquisitionLoopProcess(mp.Process):
     def __init__(
         self,
+        channels,
         shared_objects,
         activate_preview,
         data_queue,
@@ -45,6 +47,20 @@ class AcquisitionLoopProcess(mp.Process):
     ):
         set_debug(debug)
         print_dec("AcquisitionLoopProcess INIT")
+
+        self.DATA_WORDS_ANALOG = 2
+        if channels == 25:
+            print_dec("Found 25 channels -> DATA_WORDS_DIGITAL = 2")
+            self.channels = 25
+            self.DATA_WORDS_DIGITAL = 2
+        elif channels == 49:
+            print_dec("Found 49 channels -> DATA_WORDS_DIGITAL = 8")
+            self.channels = 49
+            self.DATA_WORDS_DIGITAL = 8
+        else:
+            print_dec("Found NOT STANDARD NUMBER OF CHANNELS FALLBACK TO DATA_WORDS_DIGITAL = 2")
+            self.channels = 25
+            self.DATA_WORDS_DIGITAL = 2
 
         self.shm_activated_fifos_list = shared_objects["activated_fifos_list"]
         self.shm_autocorrelation = shared_objects["shared_autocorrelation"]
@@ -101,11 +117,18 @@ class AcquisitionLoopProcess(mp.Process):
         self.FCS_reset_event = mp.Event()
 
         self.buffer_size_in_words = shared_dict["preview_buffer_size_in_words"]  # 15000
-        self.buffer_size = self.timebinsPerPixel * self.buffer_size_in_words * 2
-
-        self.buffer = np.zeros((self.buffer_size, 25 + 2), dtype=np.uint64)
-        self.saturation = np.zeros(25 + 2, dtype=np.uint64)
-        self.buffer_sum_25_ch = np.zeros(self.buffer_size, dtype=np.uint64)
+        self.buffer_size = self.timebinsPerPixel * self.buffer_size_in_words * self.DATA_WORDS_DIGITAL
+        
+        
+        if self.channels == 25:            
+            self.buffer = np.zeros((self.buffer_size, 25 + 2), dtype=np.uint64)
+            self.saturation = np.zeros(25 + 2, dtype=np.uint64)
+            self.buffer_sum_SPAD_ch = np.zeros(self.buffer_size, dtype=np.uint64)
+            
+        if self.channels == 49:
+            self.buffer = np.zeros((self.buffer_size, 49 + 2), dtype=np.uint64)
+            self.saturation = np.zeros(49 + 2, dtype=np.uint64)
+            self.buffer_sum_SPAD_ch = np.zeros(self.buffer_size, dtype=np.uint64)
 
         self.buffer_analog = np.zeros((self.buffer_size, 2), dtype=np.int32)
 
@@ -136,8 +159,8 @@ class AcquisitionLoopProcess(mp.Process):
         )
 
         self.stop_event.clear()
-        self.current_pointer = 0  # self.timebinsPerPixel * 2
-        self.current_pointer_analog = 0  # self.timebinsPerPixel * 2
+        self.current_pointer = 0  # self.timebinsPerPixel * self.DATA_WORDS_DIGITAL
+        self.current_pointer_analog = 0  # self.timebinsPerPixel * self.DATA_WORDS_ANALOG
 
         self.current_pixel = 0
         self.current_frame = 0
@@ -283,6 +306,17 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.update_dictionary_slowly(0.1)
 
+        #This seams redundant but it is for optimize the performances
+        channels = self.channels
+        channels_y = int(sqrt(self.channels))
+        channels_x = channels_y
+        print("Channels ", channels, channels_x, channels_y)
+
+        if channels == 25:
+            converter = convertRawDataToCountsDirect
+        if channels == 49:
+            converter = convertRawDataToCountsDirect49
+        print_dec("SHAPE before while", self.shape )
         while not self.stop_event.is_set():
             selected_channel = self.shared_dict["channel"]
 
@@ -305,52 +339,52 @@ class AcquisitionLoopProcess(mp.Process):
                     ):  # if the previous queue data was between two frames
                         print_dec(
                             len(internal_buffer),
-                            max_gap_frame - (self.current_pointer * 2),
+                            max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL),
                             max_gap_frame,
-                            (self.current_pointer * 2),
+                            (self.current_pointer * self.DATA_WORDS_DIGITAL),
                         )
-                        if max_gap_frame - (self.current_pointer * 2) == 0:
+                        if max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL) == 0:
                             self.gap = 0
                             internal_buffer = None
                         else:
                             data_from_queue = internal_buffer[
-                                : max_gap_frame - (self.current_pointer * 2)
+                                : max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL)
                             ]
-                            self.gap = data_from_queue.shape[0] // 2
+                            self.gap = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
                             internal_buffer = internal_buffer[
-                                max_gap_frame - (self.current_pointer * 2) :
+                                max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL) :
                             ]
 
                     if (
                         internal_buffer is None
                     ):  # standard case (no previous split data)
                         data_from_queue = self.data_queue["FIFO"].get()
-                        self.gap = data_from_queue.shape[0] // 2
+                        self.gap = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
                         #
                         # print_dec(
                         #     None,
                         #     len(data_from_queue),
-                        #     (self.current_pointer + self.gap) * 2 - max_gap_frame,
+                        #     (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL - max_gap_frame,
                         # )
-                        if (self.current_pointer + self.gap) * 2 >= max_gap_frame:
+                        if (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL >= max_gap_frame:
                             print_dec(
                                 " c ",
-                                (self.current_pointer + self.gap) * 2,
+                                (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL,
                                 self.gap,
                                 max_gap_frame,
                             )
                             print_dec(
                                 data_from_queue.shape,
-                                max_gap_frame - (self.current_pointer * 2),
+                                max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL),
                             )
 
                             internal_buffer = data_from_queue[
-                                max_gap_frame - (self.current_pointer * 2) :
+                                max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL) :
                             ]
                             data_from_queue = data_from_queue[
-                                : max_gap_frame - (self.current_pointer * 2)
+                                : max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL)
                             ]
-                            self.gap = data_from_queue.shape[0] // 2
+                            self.gap = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
 
                             frameComplete["FIFO"] = True
 
@@ -362,8 +396,8 @@ class AcquisitionLoopProcess(mp.Process):
                             internal_buffer = None
 
 
-                    if self.expected_raw_data < (self.current_pointer + self.gap) * 2:
-                        self.gap = max_gap_frame // 2 - self.current_pointer
+                    if self.expected_raw_data < (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL:
+                        self.gap = max_gap_frame // self.DATA_WORDS_DIGITAL - self.current_pointer
                         print_dec("MISTERY!!!")
                         print_dec("New GAP", self.gap)
 
@@ -407,13 +441,20 @@ class AcquisitionLoopProcess(mp.Process):
 
                     self.saturation[:] = 0
 
+                    print("data_from_queue", data_from_queue.shape)
+                    print("self.gap * self.DATA_WORDS_DIGITAL", self.gap * self.DATA_WORDS_DIGITAL)
+                    print("self.buffer", self.buffer.shape)
+                    print("self.buffer_sum_SPAD_ch", self.buffer_sum_SPAD_ch.shape)
+                    print("self.saturation", self.saturation.shape)
+                    print("self.fingerprint_mask", self.fingerprint_mask.shape)
+
                     if (
-                        convertRawDataToCountsDirect(
+                        converter(
                             data_from_queue,
                             0,
-                            self.gap * 2,
+                            self.gap * self.DATA_WORDS_DIGITAL,
                             self.buffer,
-                            self.buffer_sum_25_ch,
+                            self.buffer_sum_SPAD_ch,
                             self.saturation,
                             self.fingerprint_mask,
                         )
@@ -423,7 +464,9 @@ class AcquisitionLoopProcess(mp.Process):
                             "==============DISASTER IN THE PREVIEW====================="
                         )
 
+
                     buffer_up_to_gap = self.buffer[: self.gap]
+
 
                     if isinstance(selected_channel, int):
                         if self.activate_show_preview == True:
@@ -479,7 +522,7 @@ class AcquisitionLoopProcess(mp.Process):
                             np.add.at(
                                 self.image_xy,
                                 (list_y, list_x),
-                                self.buffer_sum_25_ch[: self.gap],
+                                self.buffer_sum_SPAD_ch[: self.gap],
                             )
                             self.image_xy_lock.release()
 
@@ -491,7 +534,7 @@ class AcquisitionLoopProcess(mp.Process):
                             np.add.at(
                                 self.image_zy,
                                 (list_y[cond_x_central], list_z[cond_x_central]),
-                                self.buffer_sum_25_ch[: self.gap][cond_x_central],
+                                self.buffer_sum_SPAD_ch[: self.gap][cond_x_central],
                             )
                             self.image_zy_lock.release()
 
@@ -503,17 +546,17 @@ class AcquisitionLoopProcess(mp.Process):
                             np.add.at(
                                 self.image_xz,
                                 (list_z[cond_y_central], list_x[cond_y_central]),
-                                self.buffer_sum_25_ch[: self.gap][cond_y_central],
+                                self.buffer_sum_SPAD_ch[: self.gap][cond_y_central],
                             )
                             self.image_xz_lock.release()
 
                         if self.active_autocorrelation:
-                            correlator.add(self.buffer_sum_25_ch[: self.gap])
+                            correlator.add(self.buffer_sum_SPAD_ch[: self.gap])
                             self.autocorrelation[
                                 1, :
                             ] = correlator.get_correlation_normalized()
                         if self.activate_trace:
-                            temporalBinner.add(self.buffer_sum_25_ch[: self.gap])
+                            temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap])
                             self.trace_pos.value = (
                                 temporalBinner.get_current_position_bins()
                             )
@@ -548,12 +591,12 @@ class AcquisitionLoopProcess(mp.Process):
                             self.image_xy_rgb_lock.release()
 
                         if self.active_autocorrelation:
-                            correlator.add(self.buffer_sum_25_ch[: self.gap])
+                            correlator.add(self.buffer_sum_SPAD_ch[: self.gap])
                             self.autocorrelation[
                                 1, :
                             ] = correlator.get_correlation_normalized()
                         if self.activate_trace:
-                            temporalBinner.add(self.buffer_sum_25_ch[: self.gap])
+                            temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap])
                             self.trace_pos.value = (
                                 temporalBinner.get_current_position_bins()
                             )
@@ -562,16 +605,16 @@ class AcquisitionLoopProcess(mp.Process):
                     if not self.activate_preview:
                         # This is for debug purpose
                         # np.add.at(self.buffer_for_save, (list_y, list_x, list_b),
-                        #           buffer_up_to_gap[:,:25])
+                        #           buffer_up_to_gap[:,:channels])
                         # np.add.at(self.buffer_for_save_channels_extra, (list_y, list_x, list_b),
-                        #           buffer_up_to_gap[:,25:])
+                        #           buffer_up_to_gap[:,channels:])
 
                         self.buffer_for_save[
                             list_y, list_x, list_b, :
-                        ] = buffer_up_to_gap[:, :25]
+                        ] = buffer_up_to_gap[:, :channels]
                         self.buffer_for_save_channels_extra[
                             list_y, list_x, list_b, :
-                        ] = buffer_up_to_gap[:, 25:]
+                        ] = buffer_up_to_gap[:, channels:]
 
                         print_dec(
                             self.current_pointer,
@@ -588,14 +631,14 @@ class AcquisitionLoopProcess(mp.Process):
                             list_b.max(),
                         )
 
-                    sum_tmp = buffer_up_to_gap[:, :25].sum(axis=0).reshape(5, 5)
+                    sum_tmp = buffer_up_to_gap[:, :channels].sum(axis=0).reshape(channels_x, channels_y)
 
                     self.total_photon = np.sum(sum_tmp)
 
                     self.fingerprint[0, :, :] += sum_tmp
                     try:
-                        self.fingerprint[1, :, :] = buffer_up_to_gap[-1, :25].reshape(
-                            5, 5
+                        self.fingerprint[1, :, :] = buffer_up_to_gap[-1, :channels].reshape(
+                            channels_x, channels_y
                         )
                     except:
                         print_dec("buffer_up_to_gap", buffer_up_to_gap)
@@ -603,10 +646,10 @@ class AcquisitionLoopProcess(mp.Process):
 
                     if self.gap > 10000:
                         self.fingerprint[2, :, :] = (
-                            self.buffer[:10000, :25].sum(axis=0).reshape(5, 5)
+                            self.buffer[:10000, :channels].sum(axis=0).reshape(channels_x, channels_y)
                         )
 
-                    self.fingerprint[4, :, :] += self.saturation[:25].reshape(5, 5)
+                    self.fingerprint[4, :, :] += self.saturation[:channels].reshape(channels_x, channels_y)
                     self.current_pointer += self.gap
                     self.shm_loc_previewed["FIFO"].value = self.current_pointer
                     # print_dec(self.current_pointer*2, self.gap*2, (self.current_pointer + self.gap)*2)
@@ -648,9 +691,9 @@ class AcquisitionLoopProcess(mp.Process):
                             self.buffer_for_save[:] = 0
                             self.buffer_for_save_channels_extra[:] = 0
                             print_dec("done add_to_dataset")
-                            print_dec(self.current_pointer * 2)
+                            print_dec(self.current_pointer * self.DATA_WORDS_DIGITAL)
 
-                    if self.current_pointer * 2 >= self.expected_raw_data:
+                    if self.current_pointer * self.DATA_WORDS_DIGITAL >= self.expected_raw_data:
                         self.stop_event.set()
 
             if "FIFOAnalog" in self.shm_activated_fifos_list:
@@ -680,13 +723,13 @@ class AcquisitionLoopProcess(mp.Process):
                         # in the case the current queue data overflow in the next frame the data are split
 
                         # max_gap_frame = self.expected_raw_data_per_frame * (self.current_frame+1)
-                        # if (self.current_pointer + self.gap) * 2  >= max_gap_frame:
-                        #     print_dec(" c ", (self.current_pointer + self.gap) * 2,
+                        # if (self.current_pointer + self.gap) * self.DATA_WORDS_ANALOG  >= max_gap_frame:
+                        #     print_dec(" c ", (self.current_pointer + self.gap) * self.DATA_WORDS_ANALOG,
                         #           max_gap_frame)
                         #     print(data_from_queue.shape, max_gap_frame-(self.current_pointer*2))
                         #
-                        #     internal_buffer = data_from_queue[max_gap_frame - (self.current_pointer * 2):]
-                        #     data_from_queue = data_from_queue[:max_gap_frame - (self.current_pointer * 2)]
+                        #     internal_buffer = data_from_queue[max_gap_frame - (self.current_pointer * self.DATA_WORDS_ANALOG):]
+                        #     data_from_queue = data_from_queue[:max_gap_frame - (self.current_pointer * self.DATA_WORDS_ANALOG)]
 
                         if (
                             self.current_pointer_analog + self.gap_analog
@@ -889,10 +932,10 @@ class AcquisitionLoopProcess(mp.Process):
                             self.buffer_analog_for_save[:] = 0
                             print_dec("done add_to_dataset")
                             print_dec(
-                                self.current_pointer_analog * 2, self.expected_raw_data
+                                self.current_pointer_analog * self.DATA_WORDS_ANALOG, self.expected_raw_data
                             )
 
-                    if self.current_pointer_analog * 2 >= self.expected_raw_data:
+                    if self.current_pointer_analog * self.DATA_WORDS_ANALOG >= self.expected_raw_data:
                         self.stop_event.set()
 
             if self.trace_reset_event.is_set():

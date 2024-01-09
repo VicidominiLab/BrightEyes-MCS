@@ -12,10 +12,10 @@ from ..libs.mp_shared_array import MemorySharedNumpyArray
 
 
 class SpadFcsManager(QObject):
-    def __init__(self, filename="bitfiles/MyBitfileUSB.lvbitx", address="RIO0"):
+    def __init__(self, filename="bitfiles/MyBitfileUSB.lvbitx", address="RIO0", channels=25):
         super().__init__()
         # def __init__(self, filename="C:/Users/madonato/PycharmProjects/pyspad-fcs/bitfiles/laser_wait4.lvbitx", address="RIO0"):
-        self.channels = 25
+        self.channels = channels
         self.dim_detector = int(np.sqrt(self.channels))
         # self.activate_rgb = False
 
@@ -26,6 +26,8 @@ class SpadFcsManager(QObject):
         # self.nifpga_session = None
         self.fpga_handle = None
         self.shared_arrays_ready = False
+
+        self.channels = 25
 
         self.mp_manager = mp.Manager()
 
@@ -128,6 +130,11 @@ class SpadFcsManager(QObject):
 
     def __del__(self):
         print_dec("Destructor called.")
+
+    def set_channels(self, ch):
+        print_dec("Channels", ch)
+        self.channels = ch
+        self.dim_detector = int(np.sqrt(self.channels))
 
     def activateShowPreview(self, enable):
         print_dec("activate_show_preview", enable)
@@ -381,6 +388,7 @@ class SpadFcsManager(QObject):
         # if self.previewEnabled:
         print_dec("self.previewProcess()")
         self.previewProcess = AcquisitionLoopProcess(
+            self.channels,
             shared_objects,
             activate_preview,
             self.data_queue,
@@ -448,9 +456,20 @@ class SpadFcsManager(QObject):
         self.dim_z = self.registers_configuration["#frames"]
         self.dim_rep = self.registers_configuration["#repetition"] - 1
 
-        self.expected_raw_data_per_frame = (
-            2 * self.timebins_per_pixel * self.dim_x * self.dim_y
-        )
+        if self.channels == 25:
+            self.expected_raw_data_per_frame = (
+                2 * self.timebins_per_pixel * self.dim_x * self.dim_y
+            )
+            print_dec("self.expected_raw_data_per_frame calculated for 25 channels ",self.expected_raw_data_per_frame)
+        elif self.channels == 49:
+            self.expected_raw_data_per_frame = (
+                    8 * self.timebins_per_pixel * self.dim_x * self.dim_y
+            )
+            print_dec("self.expected_raw_data_per_frame calculated for 49 channels", self.expected_raw_data_per_frame)
+
+        else:
+            print_dec("self.expected_raw_data_per_frame DISASTER")
+
         self.expected_raw_data = (
             self.expected_raw_data_per_frame * self.dim_z * self.dim_rep
         )
@@ -463,7 +482,13 @@ class SpadFcsManager(QObject):
         except:
             self.timebins_per_pixel = self.default_configuration["#timebinsPerPixel"]
 
-        self.fifo_chuck_size = 2 * self.timebins_per_pixel
+        if self.channels==25:
+            self.fifo_chuck_size = 2 * self.timebins_per_pixel
+            print_dec("update_chuck self.channels == 25")
+        elif self.channels == 49:
+            self.fifo_chuck_size = 8 * self.timebins_per_pixel
+            print_dec("update_chuck self.channels == 49")
+
         # self.fifo_chuck_size = 2 * max(self.timebins_per_pixel, 100)
 
         self.fpga_handle.set_fifo_chuck_size(self.fifo_chuck_size)

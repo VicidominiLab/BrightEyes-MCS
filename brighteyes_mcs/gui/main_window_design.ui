@@ -1979,7 +1979,7 @@
           <x>0</x>
           <y>0</y>
           <width>384</width>
-          <height>288</height>
+          <height>317</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_64">
@@ -1995,55 +1995,6 @@
             <layout class="QGridLayout" name="gridLayout_36">
              <item row="1" column="0">
               <layout class="QGridLayout" name="gridLayout_24">
-               <item row="3" column="1">
-                <widget class="QLabel" name="label_loadedcfg">
-                 <property name="text">
-                  <string>.</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="1">
-                <widget class="QLineEdit" name="lineEdit_ni_addr">
-                 <property name="text">
-                  <string>RIO0</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="2">
-                <widget class="QPushButton" name="pushButton_saveCfg">
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="9" column="0">
-                <widget class="QLabel" name="label_91">
-                 <property name="text">
-                  <string>FPGA 2nd Bitfile</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="1">
-                <widget class="QLineEdit" name="lineEdit_configurationfile">
-                 <property name="text">
-                  <string>default.cfg</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_88">
-                 <property name="text">
-                  <string>Loaded .cfg</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="0">
-                <widget class="QLabel" name="label_66">
-                 <property name="text">
-                  <string>FPGA Addr.</string>
-                 </property>
-                </widget>
-               </item>
                <item row="9" column="1">
                 <widget class="QLineEdit" name="lineEdit_fpga2bitfile">
                  <property name="text">
@@ -2051,72 +2002,17 @@
                  </property>
                 </widget>
                </item>
-               <item row="5" column="1">
-                <widget class="QLineEdit" name="lineEdit_fpgabitfile">
-                 <property name="text">
-                  <string>bitfiles/MyBitfileUSB.lvbitx</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="10" column="0">
-                <widget class="QLabel" name="label_92">
-                 <property name="text">
-                  <string>FPGA 2nd Addr.</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QLabel" name="label_75">
-                 <property name="text">
-                  <string>Load .cfg file</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="8" column="1">
-                <spacer name="verticalSpacer_7">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item row="5" column="0">
-                <widget class="QLabel" name="label_65">
-                 <property name="text">
-                  <string>FPGA Bitfile</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="0">
-                <widget class="QLabel" name="label_67">
-                 <property name="text">
-                  <string>Default .cfg File</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="10" column="1">
-                <widget class="QLineEdit" name="lineEdit_ni2addr">
+               <item row="8" column="0">
+                <widget class="QLabel" name="label_98">
                  <property name="text">
                   <string/>
                  </property>
                 </widget>
                </item>
-               <item row="2" column="1">
-                <widget class="QLabel" name="label_81">
+               <item row="6" column="1">
+                <widget class="QLineEdit" name="lineEdit_ni_addr">
                  <property name="text">
-                  <string>Save .cfg file</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
-                <widget class="QPushButton" name="pushButton_loadCfg">
-                 <property name="text">
-                  <string>...</string>
+                  <string>RIO0</string>
                  </property>
                 </widget>
                </item>
@@ -2133,6 +2029,69 @@
                  </property>
                 </widget>
                </item>
+               <item row="6" column="0">
+                <widget class="QLabel" name="label_66">
+                 <property name="text">
+                  <string>FPGA Addr.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_88">
+                 <property name="text">
+                  <string>Loaded .cfg</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="label_67">
+                 <property name="text">
+                  <string>Default .cfg File</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLabel" name="label_75">
+                 <property name="text">
+                  <string>Load .cfg file</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="1">
+                <widget class="QLineEdit" name="lineEdit_fpgabitfile">
+                 <property name="text">
+                  <string>bitfiles/MyBitfileUSB.lvbitx</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="10" column="1">
+                <widget class="QLineEdit" name="lineEdit_ni2addr">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="2">
+                <widget class="QPushButton" name="pushButton_saveCfg">
+                 <property name="text">
+                  <string>...</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QPushButton" name="pushButton_loadCfg">
+                 <property name="text">
+                  <string>...</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="10" column="0">
+                <widget class="QLabel" name="label_92">
+                 <property name="text">
+                  <string>FPGA 2nd Addr.</string>
+                 </property>
+                </widget>
+               </item>
                <item row="9" column="2">
                 <widget class="QPushButton" name="pushButton_FPGA2_file_selection">
                  <property name="sizePolicy">
@@ -2144,6 +2103,68 @@
                  <property name="text">
                   <string>...</string>
                  </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QLineEdit" name="lineEdit_configurationfile">
+                 <property name="text">
+                  <string>default.cfg</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="9" column="0">
+                <widget class="QLabel" name="label_91">
+                 <property name="text">
+                  <string>FPGA 2nd Bitfile</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLabel" name="label_81">
+                 <property name="text">
+                  <string>Save .cfg file</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QLabel" name="label_loadedcfg">
+                 <property name="text">
+                  <string>.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0">
+                <widget class="QLabel" name="label_65">
+                 <property name="text">
+                  <string>FPGA Bitfile</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="8" column="1">
+                <spacer name="verticalSpacer_7">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="7" column="2">
+                <widget class="QComboBox" name="comboBox_channels">
+                 <item>
+                  <property name="text">
+                   <string>25</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>49</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
               </layout>
@@ -4311,8 +4332,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>117</x>
-     <y>1076</y>
+     <x>115</x>
+     <y>1082</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -4327,8 +4348,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>117</x>
-     <y>1076</y>
+     <x>115</x>
+     <y>1108</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4343,8 +4364,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>117</x>
-     <y>1076</y>
+     <x>115</x>
+     <y>1134</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4359,8 +4380,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1084</y>
+     <x>119</x>
+     <y>1181</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4375,8 +4396,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1084</y>
+     <x>119</x>
+     <y>1207</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4391,8 +4412,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1084</y>
+     <x>119</x>
+     <y>1233</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -4567,8 +4588,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1076</y>
+     <x>119</x>
+     <y>1082</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -4583,8 +4604,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1076</y>
+     <x>119</x>
+     <y>1108</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -4599,8 +4620,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1076</y>
+     <x>119</x>
+     <y>1134</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -4759,8 +4780,8 @@
    <slot>startBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>79</y>
+     <x>526</x>
+     <y>50</y>
     </hint>
     <hint type="destinationlabel">
      <x>747</x>
@@ -4775,8 +4796,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>70</y>
+     <x>467</x>
+     <y>41</y>
     </hint>
     <hint type="destinationlabel">
      <x>555</x>
@@ -4791,8 +4812,8 @@
    <slot>stopBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>79</y>
+     <x>526</x>
+     <y>52</y>
     </hint>
     <hint type="destinationlabel">
      <x>870</x>
@@ -4871,8 +4892,8 @@
    <slot>cmd_moveToSelectedColumnFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>70</y>
+     <x>527</x>
+     <y>41</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -4951,8 +4972,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>70</y>
+     <x>494</x>
+     <y>41</y>
     </hint>
     <hint type="destinationlabel">
      <x>628</x>
@@ -5063,8 +5084,8 @@
    <slot>FCSReset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>79</y>
+     <x>482</x>
+     <y>54</y>
     </hint>
     <hint type="destinationlabel">
      <x>840</x>
@@ -5111,8 +5132,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1072</y>
+     <x>262</x>
+     <y>1261</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -5127,8 +5148,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1072</y>
+     <x>262</x>
+     <y>1204</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -5159,8 +5180,8 @@
    <slot>radio_ttm_local()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1072</y>
+     <x>217</x>
+     <y>1091</y>
     </hint>
     <hint type="destinationlabel">
      <x>1195</x>
@@ -5175,8 +5196,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1072</y>
+     <x>339</x>
+     <y>1091</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -5336,7 +5357,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>370</x>
-     <y>1236</y>
+     <y>1270</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -5584,6 +5605,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>comboBox_channels</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>numberChannelsChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>332</x>
+     <y>1210</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>422</x>
+     <y>1217</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>temporalSettingsChanged()</slot>
@@ -5662,5 +5699,6 @@
   <slot>loadPreset()</slot>
   <slot>savePreset()</slot>
   <slot>about()</slot>
+  <slot>numberChannelsChanged()</slot>
  </slots>
 </ui>
