@@ -3603,6 +3603,19 @@ Have fun!
         calib_yy = self.ui.spinBox_calib_y.value()
         calib_zz = self.ui.spinBox_calib_z.value()
 
+        if self.CHANNELS == 49:
+            self.setRegistersDict(
+                {
+                    "49_enable": True
+                }
+            )
+        else:
+            self.setRegistersDict(
+                {
+                    "49_enable": False
+                }
+            )
+
         offset_xx_um = self.ui.spinBox_off_x_um.value()
         offset_yy_um = self.ui.spinBox_off_y_um.value()
         offset_zz_um = self.ui.spinBox_off_z_um.value()
