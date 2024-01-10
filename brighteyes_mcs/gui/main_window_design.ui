@@ -1850,34 +1850,10 @@
     <layout class="QGridLayout" name="gridLayout_27">
      <item row="4" column="1">
       <layout class="QGridLayout" name="gridLayout_28">
-       <item row="0" column="2">
-        <widget class="QCheckBox" name="checkBox_showPreview">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_35">
          <property name="text">
-          <string>Show Image Preview</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2" rowspan="2">
-        <widget class="QPushButton" name="pushButton_circular">
-         <property name="text">
-          <string>Define Circular Motion
-(as current view)</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QCheckBox" name="checkBox_snake">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use for the scanning a &amp;quot;snake-walk&amp;quot; instead of a normal &amp;quot;raster-scan&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Snake walk</string>
+          <string>SPAD Channels</string>
          </property>
         </widget>
        </item>
@@ -1894,6 +1870,16 @@
          </property>
         </widget>
        </item>
+       <item row="1" column="1">
+        <widget class="QCheckBox" name="checkBox_snake">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use for the scanning a &amp;quot;snake-walk&amp;quot; instead of a normal &amp;quot;raster-scan&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Snake walk</string>
+         </property>
+        </widget>
+       </item>
        <item row="2" column="1">
         <widget class="QCheckBox" name="checkBox_circular">
          <property name="toolTip">
@@ -1903,6 +1889,54 @@
           <string>Circular Motion</string>
          </property>
         </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QComboBox" name="comboBox_channels">
+         <item>
+          <property name="text">
+           <string>25</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>49</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="1" column="2" rowspan="2" colspan="2">
+        <widget class="QPushButton" name="pushButton_circular">
+         <property name="text">
+          <string>Define Circular Motion
+(as current view)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" colspan="2">
+        <widget class="QCheckBox" name="checkBox_showPreview">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Show Image Preview</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <spacer name="horizontalSpacer_13">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>
@@ -1977,9 +2011,9 @@
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>0</y>
+          <y>-35</y>
           <width>384</width>
-          <height>317</height>
+          <height>291</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_64">
@@ -2152,20 +2186,6 @@
                   </size>
                  </property>
                 </spacer>
-               </item>
-               <item row="7" column="2">
-                <widget class="QComboBox" name="comboBox_channels">
-                 <item>
-                  <property name="text">
-                   <string>25</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>49</string>
-                  </property>
-                 </item>
-                </widget>
                </item>
               </layout>
              </item>

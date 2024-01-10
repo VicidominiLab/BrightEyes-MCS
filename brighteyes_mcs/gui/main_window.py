@@ -801,6 +801,13 @@ class MainWindow(QMainWindow):
             False,
         )
 
+        configuration_helper["spad_number_of_channels"] = (
+            "SPAD channels",
+            str,
+            self.ui.comboBox_channels,
+            False,
+        )
+
         configuration_helper["comment"] = (
             "Comment",
             str,
@@ -3555,8 +3562,8 @@ Have fun!
 
         self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
 
+        self.numberChannelsChanged()
         self.spadfcsmanager_inst.set_channels(int(self.ui.comboBox_channels.currentText()))
-
 
         self.spadfcsmanager_inst.set_activate_DFD(self.DFD_Activate)
 
