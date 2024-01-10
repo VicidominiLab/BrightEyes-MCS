@@ -821,6 +821,19 @@ class MainWindow(QMainWindow):
             False,
         )
 
+        configuration_helper["bitFile2"] = (
+            "Bit File 2",
+            str,
+            self.ui.lineEdit_fpga2bitfile,
+            False,
+        )
+        configuration_helper["niAddr2"] = (
+            "Ni Addr 2",
+            str,
+            self.ui.lineEdit_ni2addr,
+            False,
+        )
+
         configuration_helper["spadCmdLength"] = (
             "Spad Comman Length",
             str,
@@ -1649,9 +1662,16 @@ class MainWindow(QMainWindow):
     def connectFPGA(self):
         print_dec("ConnectFPGA")
 
-        self.spadfcsmanager_inst.set_bit_file(self.ui.lineEdit_fpgabitfile.text())
         self.bitfile_check(self.ui.lineEdit_fpgabitfile.text())
+
+        self.spadfcsmanager_inst.set_bit_file(self.ui.lineEdit_fpgabitfile.text())
         self.spadfcsmanager_inst.set_ni_addr(self.ui.lineEdit_ni_addr.text())
+
+        self.spadfcsmanager_inst.set_bit_file_second_fpga(self.ui.lineEdit_fpga2bitfile.text())
+        self.spadfcsmanager_inst.set_ni_addr_second_fpga(self.ui.lineEdit_ni2addr.text())
+
+
+
         self.spadfcsmanager_inst.set_timeout_fifos(
             self.ui.spinBox_fifo_timeout.value() * 1000
         )

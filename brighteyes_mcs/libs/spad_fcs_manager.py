@@ -20,7 +20,7 @@ class SpadFcsManager(QObject):
         # self.activate_rgb = False
 
         self.niAddr = address
-        self.fn = filename
+        self.bitfile = filename
         self.timeout_fifos = 0.5e6
         # self.fifo = None
         # self.nifpga_session = None
@@ -186,11 +186,20 @@ class SpadFcsManager(QObject):
 
     def set_bit_file(self, bitfile=""):
         print_dec("set_bit_file", bitfile)
-        self.fn = bitfile
+        self.bitfile = bitfile
 
     def set_ni_addr(self, niAddr=""):
         print_dec("set_ni_addr", niAddr)
         self.niAddr = niAddr
+
+    def set_bit_file_second_fpga(self, bitfile=""):
+        print_dec("set_bit_file 2nd FPGA", bitfile)
+        self.bitfile2 = bitfile
+
+    def set_ni_addr_second_fpga(self, niAddr=""):
+        print_dec("set_ni_addr 2nd FPGA", niAddr)
+        self.niAddr2 = niAddr
+
 
     def set_requested_depth(self, requested_depth):
         print_dec("requested_depth", requested_depth)
@@ -209,18 +218,20 @@ class SpadFcsManager(QObject):
 
     def connect(self, initial_registers={}, list_fifos=[]):
         print_dec("FPGA connect()")
-        # self.nifpga_session = nifpga.Session(self.fn, self.niAddr)
+        # self.nifpga_session = nifpga.Session(self.bitfile, self.niAddr)
         try:
             self.fpga_handle = FpgaHandle(
-                self.fn,
-                self.niAddr,
-                self.mp_manager,
+                bitfile=self.bitfile,
+                ni_address=self.niAddr,
+                mp_manager=self.mp_manager,
                 requested_depth=self.requested_depth,
                 list_fifos=["FIFO"],
                 ultra_dict_inst=self.ultra_dict_inst,
                 debug=self.debug,
                 use_rust_fifo=self.use_rust_fifo,
-                timeout_fifos=self.timeout_fifos
+                timeout_fifos=self.timeout_fifos,
+                bitfile2=self.bitfile2,
+                ni_address2=self.niAddr2,
             )
             self.is_connected = True
         except Exception as e:

@@ -1,4 +1,6 @@
 import multiprocessing as mp
+import time
+
 import psutil
 import nifpga
 import os
@@ -18,6 +20,8 @@ class FpgaHandle(object):
         ultra_dict_inst={},
         debug=True,
         use_rust_fifo=True,
+        bitfile2="",
+        ni_address2="",
     ):
         set_debug(debug)
         self.mp_manager = mp_manager
@@ -30,10 +34,15 @@ class FpgaHandle(object):
         p.nice(psutil.HIGH_PRIORITY_CLASS)
         print_dec("self.mp_manager - PID:", self.mp_manager._process.pid, p.nice())
 
+        self.nifpga_obj = None
+        self.nifpga_obj2 = None
+
         self.configuration = {
             "timeout_fifos": timeout_fifos,
             "bitfile": bitfile,
             "ni_address": ni_address,
+            "bitfile2": bitfile2,
+            "ni_address2": ni_address2,
             "requested_depth": requested_depth,
             "list_fifos_to_read_continously": self.mp_manager.list(list(list_fifos)),
             "stop_event": self.mp_manager.Event(),
@@ -82,6 +91,19 @@ class FpgaHandle(object):
         )
         print_dec("self.fpga_handle_process.start() done")
 
+        if ((self.configuration["bitfile2"] != "") and
+            (self.configuration["ni_address2"] != "")):
+
+            self.nifpga_obj2 = nifpga.Session(
+                bitfile=self.configuration["bitfile2"],
+                resource=self.configuration["ni_address2"],
+                no_run=False,      # Must run directly !!
+                reset_if_last_session_on_exit=False,
+            )
+            if self.nifpga_obj2.fpga_vi_state != nifpga.FpgaViState.Running:
+                raise("FPGA2 NOT STARTED")
+            print_dec("FPGA2 started")
+
         # Session(bitfile, resource, no_run=False, reset_if_last_session_on_exit=False, **kwargs)
         self.nifpga_obj = nifpga.Session(
             bitfile=self.configuration["bitfile"],
@@ -89,6 +111,8 @@ class FpgaHandle(object):
             no_run=True,
             reset_if_last_session_on_exit=False,
         )
+        print_dec("FPGA1 configured")
+
 
     def fpga_handle_process_isAlive(self):
         try:
@@ -110,6 +134,13 @@ class FpgaHandle(object):
         self.nifpga_obj.close()
 
         print_dec("nifpga_obj killed")
+
+        if self.nifpga_obj2 is not None:
+            self.nifpga_obj2.abort()
+            self.nifpga_obj2.reset()
+            self.nifpga_obj2.close()
+
+        print_dec("nifpga_obj2 killed")
 
     # SLOW VERSION
     # def register_read(self, register, timeout=1000):

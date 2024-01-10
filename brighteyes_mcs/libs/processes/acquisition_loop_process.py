@@ -441,13 +441,6 @@ class AcquisitionLoopProcess(mp.Process):
 
                     self.saturation[:] = 0
 
-                    print("data_from_queue", data_from_queue.shape)
-                    print("self.gap * self.DATA_WORDS_DIGITAL", self.gap * self.DATA_WORDS_DIGITAL)
-                    print("self.buffer", self.buffer.shape)
-                    print("self.buffer_sum_SPAD_ch", self.buffer_sum_SPAD_ch.shape)
-                    print("self.saturation", self.saturation.shape)
-                    print("self.fingerprint_mask", self.fingerprint_mask.shape)
-
                     if (
                         converter(
                             data_from_queue,
