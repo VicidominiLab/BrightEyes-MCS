@@ -391,7 +391,7 @@ class SpadFcsManager(QObject):
                 "preview_buffer_size_in_words": self.preview_buffer_size_in_words,
                 "last_packet_size": 0,
                 "DFD_Activate": self.DFD_Activate,
-                "DFD_nBins": 120,
+                "DFD_nBins": 81,
                 "snake_walk": self.snake_walk,
             }
         )

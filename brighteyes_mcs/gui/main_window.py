@@ -3507,7 +3507,7 @@ Have fun!
     @Slot()
     def DFD_clicked(self):
         if self.ui.checkBox_DFD.isChecked():
-            self.ui.spinBox_time_bin_per_px.setValue(120)
+            self.ui.spinBox_time_bin_per_px.setValue(81)
             self.ui.spinBox_timeresolution.setValue(2.0)
 
     @Slot()
@@ -3765,9 +3765,9 @@ Have fun!
         )
 
         if self.DFD_Activate:
-            trace_bins = 120
+            trace_bins = 81
 
-            trace_length = 120
+            trace_length = 81
 
             trace_sample_per_bins = int(trace_length // trace_bins)
 

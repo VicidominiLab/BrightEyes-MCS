@@ -317,7 +317,7 @@ class DfdWidget(QWidget, dfd_widget_design.Ui_Form):
         self.multi_ax_hist[0, 0].clear()
         self.multi_ax_hist[0, 0].plot(self.flim_ref.data_hist)
 
-        ddd = 120 * (-np.angle(phasor_ref)) / (2 * np.pi)
+        ddd = 81 * (-np.angle(phasor_ref)) / (2 * np.pi)
         ggg = np.asarray(
             [
                 brighteyes_flim.linear_shift(
@@ -374,7 +374,7 @@ class DfdWidget(QWidget, dfd_widget_design.Ui_Form):
 
         self.multi_ax_hist[1, 0].plot(self.flim_meas.data_hist)
 
-        ddd = 120 * np.angle(1.0 / phasor_table / phasor_global) / (2 * np.pi)
+        ddd = 81 * np.angle(1.0 / phasor_table / phasor_global) / (2 * np.pi)
         ggg = np.asarray(
             [
                 brighteyes_flim.linear_shift(
