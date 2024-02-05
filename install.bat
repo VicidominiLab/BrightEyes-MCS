@@ -7,16 +7,16 @@ set "SelectedPython="
 echo Welcome to BrightEyes-MCS installation.
 echo:
 echo This script will install BrightEyes-MCS in a Virtual Environment in the current folder.
-echo In order to proceed you need to have installed in your system Python 3.10.
+echo In order to proceed, you need to have installed in your system Python 3.10.
 echo:
 echo Found Python installation:
 
 :: Use the "where" command to list available Python installations
 set "Index=0"
-for /f %%i in ('where python.exe') do (
+for /f "tokens=* delims=" %%i in ('where python.exe') do (
     set /a Index+=1
     set "PythonExes[!Index!]=%%i"
-    echo [!Index!] %%i
+    echo [!Index!] "%%i"
 )
 
 :: Prompt the user for input
@@ -43,7 +43,7 @@ if not defined SelectedPython (
 echo:
 echo Selected Python installation: %SelectedPython%
 echo:
-echo If it is correct push Enter otherwise Ctrl+C to exit.
+echo If it is correct, press Enter; otherwise, press Ctrl+C to exit.
 echo:
 pause
 :: Save the selected Python installation path to the global variable
@@ -55,7 +55,7 @@ echo Selected Python installation: %SelectedPython%
 echo:
 echo Generating the new venv environment in the folder venv\
 echo:
-%SelectedPython% -m venv venv
+"%SelectedPython%" -m venv venv
 echo:
 echo:
 echo Activate the venv
@@ -80,6 +80,3 @@ echo BrightEyes-MCS installation DONE!
 echo:
 pause
 endlocal
-
-
-
