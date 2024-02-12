@@ -72,9 +72,9 @@ class SpadFcsManager(QObject):
             "stop": False,
             "Run": False,
             "L1": 1,
-            "L2": 2,
-            "L3": 3,
-            "L4": 4,
+            "L2": 0,
+            "L3": 0,
+            "L4": 0,
             # 'LaserOffAfterMeasurement' : False,
         }
         self.requested_depth = 100000
