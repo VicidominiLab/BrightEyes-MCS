@@ -2489,8 +2489,11 @@ class MainWindow(QMainWindow):
     @Slot()
     def cmd_circular(self):
         self.define_circular()
-        self.ui.spinBox_time_bin_per_px.setValue(32)
-        self.ui.spinBox_timeresolution.setValue(1000)
+        # self.ui.spinBox_time_bin_per_px.setValue(32)
+        self.ui.spinBox_nx.setValue(32)
+        self.ui.spinBox_ny.setValue(1000)
+        #self.ui.spinBox_time_bin_per_px.setValue(32)
+        self.ui.spinBox_timeresolution.setValue(10)
         self.ui.checkBox_circular.setChecked(True)
         self.load_circular()
 
@@ -3619,6 +3622,7 @@ Have fun!
                 "WaitOnlyFirstTime": waitOnlyFirstTime,
                 "CircularMotionActivate": circular_motion,
                 "DummyData": dummy_data,
+                # "AD5764_MaxBit": 1,
             }
         )
 
