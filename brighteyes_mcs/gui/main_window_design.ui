@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1623</width>
-    <height>1835</height>
+    <height>1838</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1850,14 +1850,20 @@
     <layout class="QGridLayout" name="gridLayout_27">
      <item row="4" column="1">
       <layout class="QGridLayout" name="gridLayout_28">
-       <item row="3" column="1">
-        <widget class="QLabel" name="label_35">
+       <item row="0" column="1" colspan="2">
+        <widget class="QCheckBox" name="checkBox_showPreview">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
-          <string>SPAD Channels</string>
+          <string>Show Image Preview</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
+       <item row="1" column="1" colspan="2">
         <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1870,23 +1876,20 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_35">
+         <property name="text">
+          <string>SPAD Channels</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1" colspan="2">
         <widget class="QCheckBox" name="checkBox_snake">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use for the scanning a &amp;quot;snake-walk&amp;quot; instead of a normal &amp;quot;raster-scan&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>Snake walk</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QCheckBox" name="checkBox_circular">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Circular Motion</string>
          </property>
         </widget>
        </item>
@@ -1904,41 +1907,59 @@
          </item>
         </widget>
        </item>
-       <item row="1" column="2" rowspan="2" colspan="2">
-        <widget class="QPushButton" name="pushButton_circular">
-         <property name="text">
-          <string>Define Circular Motion
-(as current view)</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2" colspan="2">
-        <widget class="QCheckBox" name="checkBox_showPreview">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Show Image Preview</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="3">
-        <spacer name="horizontalSpacer_13">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
       </layout>
+     </item>
+     <item row="4" column="2">
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="title">
+        <string>Circular Motion</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_20">
+        <item row="2" column="1">
+         <widget class="QSpinBox" name="spinBox_circular_points">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>32</number>
+          </property>
+          <property name="value">
+           <number>32</number>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <spacer name="horizontalSpacer_14">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_43">
+          <property name="text">
+           <string>Number of points</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="3">
+         <widget class="QCheckBox" name="checkBox_circular">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Activate</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </item>
     </layout>
    </widget>
@@ -2011,7 +2032,7 @@
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>-35</y>
+          <y>-74</y>
           <width>384</width>
           <height>291</height>
          </rect>
@@ -3252,7 +3273,7 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>327</height>
+          <height>328</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_67">
@@ -3912,7 +3933,7 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>287</height>
+          <height>288</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -4352,8 +4373,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>1082</y>
+     <x>117</x>
+     <y>1022</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -4368,8 +4389,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>1108</y>
+     <x>119</x>
+     <y>1022</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4384,8 +4405,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>1134</y>
+     <x>119</x>
+     <y>1022</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4400,8 +4421,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1181</y>
+     <x>123</x>
+     <y>1030</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4416,8 +4437,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1207</y>
+     <x>123</x>
+     <y>1030</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4432,8 +4453,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1233</y>
+     <x>123</x>
+     <y>1030</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -4608,8 +4629,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1082</y>
+     <x>121</x>
+     <y>1022</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -4624,8 +4645,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1108</y>
+     <x>123</x>
+     <y>1022</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -4640,8 +4661,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1134</y>
+     <x>123</x>
+     <y>1022</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -4961,7 +4982,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>410</x>
-     <y>1286</y>
+     <y>1304</y>
     </hint>
     <hint type="destinationlabel">
      <x>790</x>
@@ -4977,7 +4998,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>370</x>
-     <y>1164</y>
+     <y>1115</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -5121,27 +5142,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>410</x>
-     <y>1312</y>
+     <y>1330</y>
     </hint>
     <hint type="destinationlabel">
      <x>348</x>
      <y>1647</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton_circular</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>cmd_circular()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>410</x>
-     <y>948</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>375</x>
-     <y>874</y>
     </hint>
    </hints>
   </connection>
@@ -5152,8 +5157,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>1261</y>
+     <x>129</x>
+     <y>1018</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -5168,8 +5173,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>1204</y>
+     <x>129</x>
+     <y>1018</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -5200,8 +5205,8 @@
    <slot>radio_ttm_local()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>217</x>
-     <y>1091</y>
+     <x>129</x>
+     <y>1018</y>
     </hint>
     <hint type="destinationlabel">
      <x>1195</x>
@@ -5216,8 +5221,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>339</x>
-     <y>1091</y>
+     <x>129</x>
+     <y>1018</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -5348,7 +5353,7 @@
      <y>1535</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1661</x>
+     <x>1622</x>
      <y>1776</y>
     </hint>
    </hints>
@@ -5377,7 +5382,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>370</x>
-     <y>1270</y>
+     <y>1190</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -5632,12 +5637,44 @@
    <slot>numberChannelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>332</x>
-     <y>1210</y>
+     <x>146</x>
+     <y>975</y>
     </hint>
     <hint type="destinationlabel">
      <x>422</x>
      <y>1217</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_circular</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>circularMotionActivateChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>304</x>
+     <y>930</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>424</x>
+     <y>1076</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_circular_points</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>circularMotionActivateChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>262</x>
+     <y>948</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>948</y>
     </hint>
    </hints>
   </connection>
@@ -5720,5 +5757,6 @@
   <slot>savePreset()</slot>
   <slot>about()</slot>
   <slot>numberChannelsChanged()</slot>
+  <slot>circularMotionActivateChanged()</slot>
  </slots>
 </ui>

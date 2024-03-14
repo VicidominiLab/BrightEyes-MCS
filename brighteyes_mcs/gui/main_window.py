@@ -2339,9 +2339,10 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def test8(self):
-        self.define_circular()
+        pass
+        # self.define_circular()
 
-    def define_circular(self):
+    def define_circular(self, circular_points):
         xx = self.ui.spinBox_range_x.value()
         yy = self.ui.spinBox_range_y.value()
         zz = self.ui.spinBox_range_z.value()
@@ -2366,13 +2367,13 @@ class MainWindow(QMainWindow):
         offExtra_y_V = self.ui.spinBox_offExtra_y_V.value()
         offExtra_z_V = self.ui.spinBox_offExtra_z_V.value()
 
-        N_CIRCULAR = 32
+        t = np.linspace(0, 2 * np.pi, circular_points + 1)[:-1]
 
-        t = np.linspace(0, 2 * np.pi, N_CIRCULAR + 1)[:-1]
+
 
         self.X_array_um = (np.cos(t) * xx / 2) + offset_xx_um
         self.Y_array_um = (np.sin(t) * yy / 2) + offset_yy_um
-        self.Z_array_um = (np.zeros(N_CIRCULAR) * zz) + offset_zz_um
+        self.Z_array_um = (np.zeros(circular_points) * zz) + offset_zz_um
 
         self.X_array = self.X_array_um / calib_xx + offExtra_x_V
         self.Y_array = self.Y_array_um / calib_yy + offExtra_y_V
@@ -2382,7 +2383,7 @@ class MainWindow(QMainWindow):
 
         self.markers_list_circular = []
 
-        for i in range(N_CIRCULAR):
+        for i in range(circular_points):
             conf = {}
             # conf["offset_x_um"] = (self.X_array[i] - (offExtra_x_V + offset_xx))/calib_xx
             # conf["offset_y_um"] = (self.Y_array[i] - (offExtra_y_V + offset_yy))/calib_yy
@@ -2438,8 +2439,21 @@ class MainWindow(QMainWindow):
     @Slot()
     def test9(self):
         self.load_circular()
+    @Slot()
+    def circularMotionActivateChanged(self):
+        if self.ui.checkBox_circular.isChecked():
+            circular_points = self.ui.spinBox_circular_points.value()
+            self.define_circular(circular_points)
+            # self.ui.spinBox_time_bin_per_px.setValue(32)
+            self.ui.spinBox_nx.setValue(circular_points)
+            self.ui.spinBox_ny.setValue(100)
+            # self.ui.spinBox_time_bin_per_px.setValue(32)
+            self.load_circular()
+        else:
+            self.markers_list_circular = []
+            self.marker_plot_circular_scan.clear()
 
-    def load_circular(self):
+    def load_circular(self, ARRAY_SIZE=32):
         # CIRCULAR MODE
         # ScanXVoltages <==== self.X_array
         # ScanYVoltages <==== self.Y_array
@@ -2460,11 +2474,24 @@ class MainWindow(QMainWindow):
         # self.temporalSettingsChanged()
         # self.plotSettingsChanged()
 
+        X_arr = self.X_array
+        Y_arr = self.Y_array
+        Z_arr = self.Z_array
+
+        if X_arr.shape[0]<32:
+            X_arr = np.pad(X_arr,(0,32-X_arr.shape[0]),mode="edge")
+
+        if Y_arr.shape[0]<32:
+            Y_arr = np.pad(Y_arr,(0,32-Y_arr.shape[0]),mode="edge")
+
+        if Z_arr.shape[0]<32:
+            Z_arr = np.pad(Z_arr,(0,32-Z_arr.shape[0]),mode="edge")
+
         self.setRegistersDict(
             {
-                "ScanXVoltages": self.X_array,
-                "ScanYVoltages": self.Y_array,
-                "ScanZVoltages": self.Z_array,
+                "ScanXVoltages": X_arr,
+                "ScanYVoltages": Y_arr,
+                "ScanZVoltages": Z_arr,
             }
         )
 
@@ -2486,16 +2513,6 @@ class MainWindow(QMainWindow):
         #
         # self.startAcquisition(activate_preview=True)
 
-    @Slot()
-    def cmd_circular(self):
-        self.define_circular()
-        # self.ui.spinBox_time_bin_per_px.setValue(32)
-        self.ui.spinBox_nx.setValue(32)
-        self.ui.spinBox_ny.setValue(1000)
-        #self.ui.spinBox_time_bin_per_px.setValue(32)
-        self.ui.spinBox_timeresolution.setValue(10)
-        self.ui.checkBox_circular.setChecked(True)
-        self.load_circular()
 
     @Slot()
     def copyPositionsMarkers(self):

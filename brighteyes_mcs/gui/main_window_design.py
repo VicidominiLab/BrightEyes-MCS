@@ -19,7 +19,7 @@ class Ui_MainWindowDesign(object):
     def setupUi(self, MainWindowDesign):
         if not MainWindowDesign.objectName():
             MainWindowDesign.setObjectName(u"MainWindowDesign")
-        MainWindowDesign.resize(1623, 1835)
+        MainWindowDesign.resize(1623, 1838)
         self.centralwidget = QWidget(MainWindowDesign)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_2 = QGridLayout(self.centralwidget)
@@ -1057,26 +1057,27 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_27.setObjectName(u"gridLayout_27")
         self.gridLayout_28 = QGridLayout()
         self.gridLayout_28.setObjectName(u"gridLayout_28")
-        self.label_35 = QLabel(self.dockWidgetContents_4)
-        self.label_35.setObjectName(u"label_35")
+        self.checkBox_showPreview = QCheckBox(self.dockWidgetContents_4)
+        self.checkBox_showPreview.setObjectName(u"checkBox_showPreview")
+        self.checkBox_showPreview.setChecked(True)
 
-        self.gridLayout_28.addWidget(self.label_35, 3, 1, 1, 1)
+        self.gridLayout_28.addWidget(self.checkBox_showPreview, 0, 1, 1, 2)
 
         self.checkBox_DFD_LaserDebug = QCheckBox(self.dockWidgetContents_4)
         self.checkBox_DFD_LaserDebug.setObjectName(u"checkBox_DFD_LaserDebug")
         self.checkBox_DFD_LaserDebug.setChecked(True)
 
-        self.gridLayout_28.addWidget(self.checkBox_DFD_LaserDebug, 0, 1, 1, 1)
+        self.gridLayout_28.addWidget(self.checkBox_DFD_LaserDebug, 1, 1, 1, 2)
+
+        self.label_35 = QLabel(self.dockWidgetContents_4)
+        self.label_35.setObjectName(u"label_35")
+
+        self.gridLayout_28.addWidget(self.label_35, 3, 1, 1, 1)
 
         self.checkBox_snake = QCheckBox(self.dockWidgetContents_4)
         self.checkBox_snake.setObjectName(u"checkBox_snake")
 
-        self.gridLayout_28.addWidget(self.checkBox_snake, 1, 1, 1, 1)
-
-        self.checkBox_circular = QCheckBox(self.dockWidgetContents_4)
-        self.checkBox_circular.setObjectName(u"checkBox_circular")
-
-        self.gridLayout_28.addWidget(self.checkBox_circular, 2, 1, 1, 1)
+        self.gridLayout_28.addWidget(self.checkBox_snake, 2, 1, 1, 2)
 
         self.comboBox_channels = QComboBox(self.dockWidgetContents_4)
         self.comboBox_channels.addItem("")
@@ -1085,23 +1086,37 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_28.addWidget(self.comboBox_channels, 3, 2, 1, 1)
 
-        self.pushButton_circular = QPushButton(self.dockWidgetContents_4)
-        self.pushButton_circular.setObjectName(u"pushButton_circular")
-
-        self.gridLayout_28.addWidget(self.pushButton_circular, 1, 2, 2, 2)
-
-        self.checkBox_showPreview = QCheckBox(self.dockWidgetContents_4)
-        self.checkBox_showPreview.setObjectName(u"checkBox_showPreview")
-        self.checkBox_showPreview.setChecked(True)
-
-        self.gridLayout_28.addWidget(self.checkBox_showPreview, 0, 2, 1, 2)
-
-        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.gridLayout_28.addItem(self.horizontalSpacer_13, 3, 3, 1, 1)
-
 
         self.gridLayout_27.addLayout(self.gridLayout_28, 4, 1, 1, 1)
+
+        self.groupBox_2 = QGroupBox(self.dockWidgetContents_4)
+        self.groupBox_2.setObjectName(u"groupBox_2")
+        self.gridLayout_20 = QGridLayout(self.groupBox_2)
+        self.gridLayout_20.setObjectName(u"gridLayout_20")
+        self.spinBox_circular_points = QSpinBox(self.groupBox_2)
+        self.spinBox_circular_points.setObjectName(u"spinBox_circular_points")
+        self.spinBox_circular_points.setMinimum(1)
+        self.spinBox_circular_points.setMaximum(32)
+        self.spinBox_circular_points.setValue(32)
+
+        self.gridLayout_20.addWidget(self.spinBox_circular_points, 2, 1, 1, 1)
+
+        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.gridLayout_20.addItem(self.horizontalSpacer_14, 2, 2, 1, 1)
+
+        self.label_43 = QLabel(self.groupBox_2)
+        self.label_43.setObjectName(u"label_43")
+
+        self.gridLayout_20.addWidget(self.label_43, 2, 0, 1, 1)
+
+        self.checkBox_circular = QCheckBox(self.groupBox_2)
+        self.checkBox_circular.setObjectName(u"checkBox_circular")
+
+        self.gridLayout_20.addWidget(self.checkBox_circular, 0, 0, 1, 3)
+
+
+        self.gridLayout_27.addWidget(self.groupBox_2, 4, 2, 1, 1)
 
         self.dockWidget_activatefifo.setWidget(self.dockWidgetContents_4)
         MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_activatefifo)
@@ -1151,7 +1166,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, -35, 384, 291))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, -74, 384, 291))
         self.gridLayout_64 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_64.setObjectName(u"gridLayout_64")
         self.tabWidget_2 = QTabWidget(self.scrollAreaWidgetContents_2)
@@ -1965,7 +1980,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 342, 327))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 342, 328))
         self.gridLayout_67 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_67.setObjectName(u"gridLayout_67")
         self.label_dummy = QLabel(self.scrollAreaWidgetContents_6)
@@ -2330,7 +2345,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 342, 287))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 342, 288))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -2611,7 +2626,6 @@ class Ui_MainWindowDesign(object):
         self.spinBox_ny.valueChanged.connect(MainWindowDesign.spatialSettingsChanged)
         self.pushButton_FCS_reset.clicked.connect(MainWindowDesign.FCSReset)
         self.toolButton_filename.clicked.connect(MainWindowDesign.cmd_filename)
-        self.pushButton_circular.clicked.connect(MainWindowDesign.cmd_circular)
         self.toolButton_ttm_executable_path.clicked.connect(MainWindowDesign.cmd_path_ttm)
         self.toolButton_ttm_filename.clicked.connect(MainWindowDesign.cmd_filename_ttm)
         self.checkBox_ttmActivate.stateChanged.connect(MainWindowDesign.ttm_activate_change_state)
@@ -2643,6 +2657,8 @@ class Ui_MainWindowDesign(object):
         self.radioButton_digital.clicked.connect(MainWindowDesign.checkAlerts)
         self.radioButton_analog.clicked.connect(MainWindowDesign.checkAlerts)
         self.comboBox_channels.currentIndexChanged.connect(MainWindowDesign.numberChannelsChanged)
+        self.checkBox_circular.clicked.connect(MainWindowDesign.circularMotionActivateChanged)
+        self.spinBox_circular_points.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(0)
@@ -2900,28 +2916,28 @@ class Ui_MainWindowDesign(object):
         self.comboBox_preset.setItemText(9, QCoreApplication.translate("MainWindowDesign", u"9", None))
 
         self.dockWidget_activatefifo.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Adv.", None))
-        self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD Channels", None))
-#if QT_CONFIG(tooltip)
-        self.checkBox_DFD_LaserDebug.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_DFD_LaserDebug.setText(QCoreApplication.translate("MainWindowDesign", u"Laser in CH26 (for DFD)", None))
-#if QT_CONFIG(tooltip)
-        self.checkBox_snake.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Use for the scanning a &quot;snake-walk&quot; instead of a normal &quot;raster-scan&quot;</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_snake.setText(QCoreApplication.translate("MainWindowDesign", u"Snake walk", None))
-#if QT_CONFIG(tooltip)
-        self.checkBox_circular.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_circular.setText(QCoreApplication.translate("MainWindowDesign", u"Circular Motion", None))
-        self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
-        self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
-
-        self.pushButton_circular.setText(QCoreApplication.translate("MainWindowDesign", u"Define Circular Motion\n"
-"(as current view)", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_showPreview.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The live-preview can be disabled.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_showPreview.setText(QCoreApplication.translate("MainWindowDesign", u"Show Image Preview", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_DFD_LaserDebug.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_DFD_LaserDebug.setText(QCoreApplication.translate("MainWindowDesign", u"Laser in CH26 (for DFD)", None))
+        self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD Channels", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_snake.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Use for the scanning a &quot;snake-walk&quot; instead of a normal &quot;raster-scan&quot;</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_snake.setText(QCoreApplication.translate("MainWindowDesign", u"Snake walk", None))
+        self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
+        self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
+
+        self.groupBox_2.setTitle(QCoreApplication.translate("MainWindowDesign", u"Circular Motion", None))
+        self.label_43.setText(QCoreApplication.translate("MainWindowDesign", u"Number of points", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_circular.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_circular.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
         self.dockWidget_laser.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Laser configuration", None))
         self.checkBox_laser2.setText(QCoreApplication.translate("MainWindowDesign", u"Laser 2", None))
         self.checkBox_laser0.setText(QCoreApplication.translate("MainWindowDesign", u"Laser 0", None))
