@@ -3841,6 +3841,15 @@ Have fun!
             self.sendCmdRun()
 
         self.update_fingerprint_mask()
+    @Slot()
+    def test_analog_digital(self):
+        print_dec("test_analog_digital()")
+        self.ui.radioButton_analog.setAutoExclusive(False)
+        self.ui.radioButton_digital.setAutoExclusive(False)
+        print_dec("now the ratioButton can be on at the same time")
+
+
+
 
     @Slot()
     def trace_parameters_changed(self):

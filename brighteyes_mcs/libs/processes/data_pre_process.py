@@ -69,16 +69,18 @@ class DataPreProcess(mp.Process):
                 # databuffer = self.shm_data.get_numpy_handle()
                 if not self.queue_in.empty():
                     dict_from_queue = self.queue_in.get()
-                    fifo_name = list(dict_from_queue.keys())[0]
-                    data, len_values = dict_from_queue[fifo_name]
-                    if not (fifo_name in pre_buffer_list):
-                        # print(fifo_name)
-                        pre_buffer_list[fifo_name] = []
-                        pre_buffer_len[fifo_name] = 0
-                        time_start[fifo_name] = time.time()
-                        fifo_lists.append(fifo_name)
-                    pre_buffer_list[fifo_name] += data
-                    pre_buffer_len[fifo_name] += len_values
+                    # print_dec(dict_from_queue.keys())
+                    #fifo_name = list(dict_from_queue.keys())[0]
+                    for fifo_name in dict_from_queue.keys():
+                        data, len_values = dict_from_queue[fifo_name]
+                        if not (fifo_name in pre_buffer_list):
+                            # print(fifo_name)
+                            pre_buffer_list[fifo_name] = []
+                            pre_buffer_len[fifo_name] = 0
+                            time_start[fifo_name] = time.time()
+                            fifo_lists.append(fifo_name)
+                        pre_buffer_list[fifo_name] += data
+                        pre_buffer_len[fifo_name] += len_values
 
                 for fifo_name in fifo_lists:
                     time_stop[fifo_name] = time.time()

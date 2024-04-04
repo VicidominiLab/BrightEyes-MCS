@@ -984,7 +984,7 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>172</height>
+          <height>169</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_68">
@@ -3273,17 +3273,14 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>328</height>
+          <height>349</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_67">
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_dummy">
+         <item row="1" column="0">
+          <widget class="QCheckBox" name="checkBox_correlationMatrix">
            <property name="text">
-            <string>0t</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <string>Activate Corr. Matrix</string>
            </property>
           </widget>
          </item>
@@ -3307,17 +3304,13 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QProgressBar" name="progressBar_2">
-           <property name="value">
-            <number>24</number>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QCheckBox" name="checkBox_correlationMatrix">
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_dummy">
            <property name="text">
-            <string>Activate Corr. Matrix</string>
+            <string>0t</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -3330,17 +3323,17 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="0">
-            <widget class="QPushButton" name="pushButton_9">
-             <property name="text">
-              <string>Test7</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="0">
             <widget class="QPushButton" name="pushButton">
              <property name="text">
               <string>Test1</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QPushButton" name="pushButton_6">
+             <property name="text">
+              <string>Test4</string>
              </property>
             </widget>
            </item>
@@ -3358,6 +3351,13 @@
              </property>
             </widget>
            </item>
+           <item row="1" column="2">
+            <widget class="QPushButton" name="pushButton_3">
+             <property name="text">
+              <string>Test3</string>
+             </property>
+            </widget>
+           </item>
            <item row="3" column="1">
             <widget class="QPushButton" name="pushButton_10">
              <property name="text">
@@ -3365,17 +3365,10 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QPushButton" name="pushButton_6">
+           <item row="3" column="0">
+            <widget class="QPushButton" name="pushButton_9">
              <property name="text">
-              <string>Test4</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QPushButton" name="pushButton_3">
-             <property name="text">
-              <string>Test3</string>
+              <string>Test7</string>
              </property>
             </widget>
            </item>
@@ -3393,7 +3386,21 @@
              </property>
             </widget>
            </item>
+           <item row="4" column="0">
+            <widget class="QPushButton" name="pushButton_19">
+             <property name="text">
+              <string>Set Analog+Digital</string>
+             </property>
+            </widget>
+           </item>
           </layout>
+         </item>
+         <item row="2" column="0">
+          <widget class="QProgressBar" name="progressBar_2">
+           <property name="value">
+            <number>24</number>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -3933,7 +3940,7 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>288</height>
+          <height>283</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -4004,7 +4011,7 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>131</height>
+          <height>129</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_65">
@@ -4325,8 +4332,8 @@
    <slot>test1()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1381</x>
-     <y>755</y>
+     <x>1383</x>
+     <y>746</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -4341,8 +4348,8 @@
    <slot>test2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1487</x>
-     <y>755</y>
+     <x>1493</x>
+     <y>746</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -4358,7 +4365,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1602</x>
-     <y>755</y>
+     <y>746</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -4373,8 +4380,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>117</x>
-     <y>1022</y>
+     <x>115</x>
+     <y>1027</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -4389,8 +4396,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1022</y>
+     <x>115</x>
+     <y>1053</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4405,8 +4412,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1022</y>
+     <x>115</x>
+     <y>1079</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4421,8 +4428,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1030</y>
+     <x>119</x>
+     <y>1126</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4437,8 +4444,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1030</y>
+     <x>119</x>
+     <y>1152</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4453,8 +4460,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1030</y>
+     <x>119</x>
+     <y>1178</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -4517,8 +4524,8 @@
    <slot>test4()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1381</x>
-     <y>784</y>
+     <x>1383</x>
+     <y>775</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -4533,8 +4540,8 @@
    <slot>test5()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1487</x>
-     <y>784</y>
+     <x>1493</x>
+     <y>775</y>
     </hint>
     <hint type="destinationlabel">
      <x>689</x>
@@ -4550,7 +4557,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1602</x>
-     <y>784</y>
+     <y>775</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -4565,8 +4572,8 @@
    <slot>test7()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1381</x>
-     <y>813</y>
+     <x>1383</x>
+     <y>804</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -4581,8 +4588,8 @@
    <slot>test8()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1487</x>
-     <y>813</y>
+     <x>1493</x>
+     <y>804</y>
     </hint>
     <hint type="destinationlabel">
      <x>690</x>
@@ -4598,7 +4605,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1602</x>
-     <y>813</y>
+     <y>804</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -4629,8 +4636,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1022</y>
+     <x>119</x>
+     <y>1027</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -4645,8 +4652,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1022</y>
+     <x>119</x>
+     <y>1053</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -4661,8 +4668,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1022</y>
+     <x>119</x>
+     <y>1079</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -4821,8 +4828,8 @@
    <slot>startBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>526</x>
-     <y>50</y>
+     <x>1232</x>
+     <y>1031</y>
     </hint>
     <hint type="destinationlabel">
      <x>747</x>
@@ -4837,8 +4844,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>467</x>
-     <y>41</y>
+     <x>567</x>
+     <y>268</y>
     </hint>
     <hint type="destinationlabel">
      <x>555</x>
@@ -4853,8 +4860,8 @@
    <slot>stopBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>526</x>
-     <y>52</y>
+     <x>1232</x>
+     <y>1147</y>
     </hint>
     <hint type="destinationlabel">
      <x>870</x>
@@ -4870,7 +4877,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1438</x>
-     <y>614</y>
+     <y>606</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -4886,7 +4893,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1612</x>
-     <y>614</y>
+     <y>606</y>
     </hint>
     <hint type="destinationlabel">
      <x>871</x>
@@ -4902,7 +4909,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1438</x>
-     <y>642</y>
+     <y>633</y>
     </hint>
     <hint type="destinationlabel">
      <x>874</x>
@@ -4918,7 +4925,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1612</x>
-     <y>642</y>
+     <y>633</y>
     </hint>
     <hint type="destinationlabel">
      <x>862</x>
@@ -4933,8 +4940,8 @@
    <slot>cmd_moveToSelectedColumnFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>527</x>
-     <y>41</y>
+     <x>1232</x>
+     <y>268</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -4982,7 +4989,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>410</x>
-     <y>1304</y>
+     <y>1303</y>
     </hint>
     <hint type="destinationlabel">
      <x>790</x>
@@ -4998,7 +5005,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>370</x>
-     <y>1115</y>
+     <y>1114</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -5013,8 +5020,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>494</x>
-     <y>41</y>
+     <x>719</x>
+     <y>268</y>
     </hint>
     <hint type="destinationlabel">
      <x>628</x>
@@ -5125,8 +5132,8 @@
    <slot>FCSReset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>482</x>
-     <y>54</y>
+     <x>1109</x>
+     <y>1264</y>
     </hint>
     <hint type="destinationlabel">
      <x>840</x>
@@ -5142,7 +5149,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>410</x>
-     <y>1330</y>
+     <y>1329</y>
     </hint>
     <hint type="destinationlabel">
      <x>348</x>
@@ -5157,8 +5164,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1018</y>
+     <x>262</x>
+     <y>1186</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -5173,8 +5180,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1018</y>
+     <x>262</x>
+     <y>1134</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -5221,8 +5228,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1018</y>
+     <x>339</x>
+     <y>1031</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -5382,7 +5389,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>370</x>
-     <y>1190</y>
+     <y>1189</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -5590,7 +5597,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1383</x>
-     <y>726</y>
+     <y>717</y>
     </hint>
     <hint type="destinationlabel">
      <x>1255</x>
@@ -5678,6 +5685,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushButton_19</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>test_analog_digital()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1337</x>
+     <y>821</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1255</x>
+     <y>869</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>temporalSettingsChanged()</slot>
@@ -5758,5 +5781,6 @@
   <slot>about()</slot>
   <slot>numberChannelsChanged()</slot>
   <slot>circularMotionActivateChanged()</slot>
+  <slot>test_analog_digital()</slot>
  </slots>
 </ui>

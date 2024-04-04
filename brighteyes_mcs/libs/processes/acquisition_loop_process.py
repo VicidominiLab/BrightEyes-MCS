@@ -70,6 +70,9 @@ class AcquisitionLoopProcess(mp.Process):
         self.current_y = 0
         self.current_f = 0
         self.current_pixel = 0
+        self.current_frame = 0
+        self.current_frame_analog = 0
+
         self.shm_image_xy_rgb = shared_objects["shared_image_xy_rgb"]
         self.shm_image_xy = shared_objects["shared_image_xy"]
         self.shm_image_xz = shared_objects["shared_image_xz"]
@@ -162,8 +165,8 @@ class AcquisitionLoopProcess(mp.Process):
         self.current_pointer = 0  # self.timebinsPerPixel * self.DATA_WORDS_DIGITAL
         self.current_pointer_analog = 0  # self.timebinsPerPixel * self.DATA_WORDS_ANALOG
 
-        self.current_pixel = 0
         self.current_frame = 0
+        self.current_frame_analog = 0
 
         print_dec(self.stop_event.is_set())
         self.image_xy_rgb = self.shm_image_xy_rgb.get_numpy_handle()
@@ -324,9 +327,7 @@ class AcquisitionLoopProcess(mp.Process):
                 self.shm_number_of_threads_h5.value = -1
 
             self.shared_dict_proxy["FIFO_status"] = self.data_queue["FIFO"].qsize()
-            self.shared_dict_proxy["FIFOAnalog_status"] = self.data_queue[
-                "FIFOAnalog"
-            ].qsize()
+            self.shared_dict_proxy["FIFOAnalog_status"] = self.data_queue["FIFOAnalog"].qsize()
 
             if "FIFO" in self.shm_activated_fifos_list:
                 max_gap_frame = self.expected_raw_data_per_frame * (
@@ -609,20 +610,20 @@ class AcquisitionLoopProcess(mp.Process):
                             list_y, list_x, list_b, :
                         ] = buffer_up_to_gap[:, channels:]
 
-                        print_dec(
-                            self.current_pointer,
-                            self.current_pointer + self.gap,
-                            self.buffer.shape,
-                            buffer_up_to_gap.shape,
-                        )
+                        # print_dec(
+                        #     self.current_pointer,
+                        #     self.current_pointer + self.gap,
+                        #     self.buffer.shape,
+                        #     buffer_up_to_gap.shape,
+                        # )
                         # print(self.buffer.shape , buffer_up_to_gap.shape, list_y.shape)
-                        print_dec(
-                            self.current_frame,
-                            self.gap,
-                            list_y.max(),
-                            list_x.max(),
-                            list_b.max(),
-                        )
+                        # print_dec(
+                        #     self.current_frame,
+                        #     self.gap,
+                        #     list_y.max(),
+                        #     list_x.max(),
+                        #     list_b.max(),
+                        # )
 
                     sum_tmp = buffer_up_to_gap[:, :channels].sum(axis=0).reshape(channels_x, channels_y)
 
@@ -648,6 +649,7 @@ class AcquisitionLoopProcess(mp.Process):
                     # print_dec(self.current_pointer*2, self.gap*2, (self.current_pointer + self.gap)*2)
 
                     if frameComplete["FIFO"]:
+                        print_dec("frameComplete[FIFO]")
                         frameComplete["FIFO"] = False
                         self.fingerprint[3, :, :] = self.fingerprint[0, :, :]
                         self.fingerprint[0, :, :] = 0
@@ -657,7 +659,7 @@ class AcquisitionLoopProcess(mp.Process):
 
                         current_z = (self.current_frame - 1) % self.shape[2]
                         current_rep = (self.current_frame - 1) // self.shape[2]
-                        print_dec("FRAME ", current_z, current_rep, " DONE")
+                        print_dec("FRAME [FIFO] ", current_z, current_rep, " DONE")
 
                         self.shared_dict_proxy.update(
                             {
@@ -683,7 +685,7 @@ class AcquisitionLoopProcess(mp.Process):
                             )
                             self.buffer_for_save[:] = 0
                             self.buffer_for_save_channels_extra[:] = 0
-                            print_dec("done add_to_dataset")
+                            print_dec("done digital add_to_dataset")
                             print_dec(self.current_pointer * self.DATA_WORDS_DIGITAL)
 
                     if self.current_pointer * self.DATA_WORDS_DIGITAL >= self.expected_raw_data:
@@ -692,7 +694,8 @@ class AcquisitionLoopProcess(mp.Process):
             if "FIFOAnalog" in self.shm_activated_fifos_list:
                 if not self.data_queue["FIFOAnalog"].empty():
                     max_gap_frame = (self.expected_raw_data_per_frame) * (
-                        self.current_frame + 1
+                        self.current_frame_analog + 1
+
                     )
 
                     if (
@@ -726,7 +729,7 @@ class AcquisitionLoopProcess(mp.Process):
 
                         if (
                             self.current_pointer_analog + self.gap_analog
-                        ) *2 >= max_gap_frame:
+                        ) * 2 >= max_gap_frame:
                             print_dec(
                                 " c ",
                                 (self.current_pointer_analog + self.gap_analog),
@@ -743,7 +746,7 @@ class AcquisitionLoopProcess(mp.Process):
 
                             frameComplete["FIFOAnalog"] = True
 
-                            self.current_frame += 1
+                            self.current_frame_analog += 1
 
                     if internal_buffer_analog is not None:
                         if internal_buffer_analog.size == 0:
@@ -896,8 +899,9 @@ class AcquisitionLoopProcess(mp.Process):
                     ].value = self.current_pointer_analog
 
                     self.shared_dict_proxy.update({"total_photon": self.total_photon})
-
+                    # print_dec("frameComplete", frameComplete)
                     if frameComplete["FIFOAnalog"]:
+                        print_dec("frameComplete[FIFOAnalog]")
                         frameComplete["FIFOAnalog"] = False
                         self.fingerprint[3, :, :] = self.fingerprint[0, :, :]
                         self.fingerprint[0, :, :] = 0
@@ -907,12 +911,14 @@ class AcquisitionLoopProcess(mp.Process):
 
                         current_z = (self.current_frame - 1) % self.shape[2]
                         current_rep = (self.current_frame - 1) // self.shape[2]
-                        print_dec("FRAME ", current_z, current_rep, " DONE")
+                        print_dec("FRAME [FIFOAnalog] ", current_z, current_rep, " DONE")
+
                         self.shared_dict_proxy.update(
                             {
                                 "current_z": current_z,
                                 "current_rep": current_rep,
                                 "total_photon": self.total_photon,
+                                "last_packet_size": self.gap_analog
                             }
                         )
                         if not self.activate_preview:
@@ -923,7 +929,7 @@ class AcquisitionLoopProcess(mp.Process):
                                 current_z,
                             )
                             self.buffer_analog_for_save[:] = 0
-                            print_dec("done add_to_dataset")
+                            print_dec("done analog add_to_dataset")
                             print_dec(
                                 self.current_pointer_analog * self.DATA_WORDS_ANALOG, self.expected_raw_data
                             )

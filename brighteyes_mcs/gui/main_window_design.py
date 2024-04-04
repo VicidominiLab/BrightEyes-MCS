@@ -571,7 +571,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_6.setWidgetResizable(True)
         self.scrollAreaWidgetContents_4 = QWidget()
         self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 342, 172))
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 342, 169))
         self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName(u"gridLayout_68")
         self.gridLayout_3434 = QGridLayout()
@@ -1980,14 +1980,13 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 342, 328))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 342, 349))
         self.gridLayout_67 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_67.setObjectName(u"gridLayout_67")
-        self.label_dummy = QLabel(self.scrollAreaWidgetContents_6)
-        self.label_dummy.setObjectName(u"label_dummy")
-        self.label_dummy.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.checkBox_correlationMatrix = QCheckBox(self.scrollAreaWidgetContents_6)
+        self.checkBox_correlationMatrix.setObjectName(u"checkBox_correlationMatrix")
 
-        self.gridLayout_67.addWidget(self.label_dummy, 5, 0, 1, 1)
+        self.gridLayout_67.addWidget(self.checkBox_correlationMatrix, 1, 0, 1, 1)
 
         self.verticalSpacer_16 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -1999,16 +1998,11 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_67.addWidget(self.progressBar_3, 3, 0, 1, 1)
 
-        self.progressBar_2 = QProgressBar(self.scrollAreaWidgetContents_6)
-        self.progressBar_2.setObjectName(u"progressBar_2")
-        self.progressBar_2.setValue(24)
+        self.label_dummy = QLabel(self.scrollAreaWidgetContents_6)
+        self.label_dummy.setObjectName(u"label_dummy")
+        self.label_dummy.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_67.addWidget(self.progressBar_2, 2, 0, 1, 1)
-
-        self.checkBox_correlationMatrix = QCheckBox(self.scrollAreaWidgetContents_6)
-        self.checkBox_correlationMatrix.setObjectName(u"checkBox_correlationMatrix")
-
-        self.gridLayout_67.addWidget(self.checkBox_correlationMatrix, 1, 0, 1, 1)
+        self.gridLayout_67.addWidget(self.label_dummy, 5, 0, 1, 1)
 
         self.gridLayout_23 = QGridLayout()
         self.gridLayout_23.setObjectName(u"gridLayout_23")
@@ -2017,15 +2011,15 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_23.addWidget(self.pushButton_8, 2, 2, 1, 1)
 
-        self.pushButton_9 = QPushButton(self.scrollAreaWidgetContents_6)
-        self.pushButton_9.setObjectName(u"pushButton_9")
-
-        self.gridLayout_23.addWidget(self.pushButton_9, 3, 0, 1, 1)
-
         self.pushButton = QPushButton(self.scrollAreaWidgetContents_6)
         self.pushButton.setObjectName(u"pushButton")
 
         self.gridLayout_23.addWidget(self.pushButton, 1, 0, 1, 1)
+
+        self.pushButton_6 = QPushButton(self.scrollAreaWidgetContents_6)
+        self.pushButton_6.setObjectName(u"pushButton_6")
+
+        self.gridLayout_23.addWidget(self.pushButton_6, 2, 0, 1, 1)
 
         self.pushButton_2 = QPushButton(self.scrollAreaWidgetContents_6)
         self.pushButton_2.setObjectName(u"pushButton_2")
@@ -2037,20 +2031,20 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_23.addWidget(self.pushButton_11, 3, 2, 1, 1)
 
+        self.pushButton_3 = QPushButton(self.scrollAreaWidgetContents_6)
+        self.pushButton_3.setObjectName(u"pushButton_3")
+
+        self.gridLayout_23.addWidget(self.pushButton_3, 1, 2, 1, 1)
+
         self.pushButton_10 = QPushButton(self.scrollAreaWidgetContents_6)
         self.pushButton_10.setObjectName(u"pushButton_10")
 
         self.gridLayout_23.addWidget(self.pushButton_10, 3, 1, 1, 1)
 
-        self.pushButton_6 = QPushButton(self.scrollAreaWidgetContents_6)
-        self.pushButton_6.setObjectName(u"pushButton_6")
+        self.pushButton_9 = QPushButton(self.scrollAreaWidgetContents_6)
+        self.pushButton_9.setObjectName(u"pushButton_9")
 
-        self.gridLayout_23.addWidget(self.pushButton_6, 2, 0, 1, 1)
-
-        self.pushButton_3 = QPushButton(self.scrollAreaWidgetContents_6)
-        self.pushButton_3.setObjectName(u"pushButton_3")
-
-        self.gridLayout_23.addWidget(self.pushButton_3, 1, 2, 1, 1)
+        self.gridLayout_23.addWidget(self.pushButton_9, 3, 0, 1, 1)
 
         self.pushButton_7 = QPushButton(self.scrollAreaWidgetContents_6)
         self.pushButton_7.setObjectName(u"pushButton_7")
@@ -2062,8 +2056,19 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_23.addWidget(self.pushButton_about, 0, 0, 1, 1)
 
+        self.pushButton_19 = QPushButton(self.scrollAreaWidgetContents_6)
+        self.pushButton_19.setObjectName(u"pushButton_19")
+
+        self.gridLayout_23.addWidget(self.pushButton_19, 4, 0, 1, 1)
+
 
         self.gridLayout_67.addLayout(self.gridLayout_23, 0, 0, 1, 1)
+
+        self.progressBar_2 = QProgressBar(self.scrollAreaWidgetContents_6)
+        self.progressBar_2.setObjectName(u"progressBar_2")
+        self.progressBar_2.setValue(24)
+
+        self.gridLayout_67.addWidget(self.progressBar_2, 2, 0, 1, 1)
 
         self.scrollArea_5.setWidget(self.scrollAreaWidgetContents_6)
 
@@ -2345,7 +2350,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 342, 288))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 342, 283))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -2390,7 +2395,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 342, 131))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 342, 129))
         self.gridLayout_65 = QGridLayout(self.scrollAreaWidgetContents_3)
         self.gridLayout_65.setObjectName(u"gridLayout_65")
         self.gridLayout_AO = QGridLayout()
@@ -2659,6 +2664,7 @@ class Ui_MainWindowDesign(object):
         self.comboBox_channels.currentIndexChanged.connect(MainWindowDesign.numberChannelsChanged)
         self.checkBox_circular.clicked.connect(MainWindowDesign.circularMotionActivateChanged)
         self.spinBox_circular_points.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
+        self.pushButton_19.clicked.connect(MainWindowDesign.test_analog_digital)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(0)
@@ -3049,18 +3055,19 @@ class Ui_MainWindowDesign(object):
         self.checkBox_DummyData.setText("")
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_5), QCoreApplication.translate("MainWindowDesign", u"FIFOs", None))
         self.dockWidget_debug.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Menu && Debug", None))
-        self.label_dummy.setText(QCoreApplication.translate("MainWindowDesign", u"0t", None))
         self.checkBox_correlationMatrix.setText(QCoreApplication.translate("MainWindowDesign", u"Activate Corr. Matrix", None))
+        self.label_dummy.setText(QCoreApplication.translate("MainWindowDesign", u"0t", None))
         self.pushButton_8.setText(QCoreApplication.translate("MainWindowDesign", u"Test6", None))
-        self.pushButton_9.setText(QCoreApplication.translate("MainWindowDesign", u"Test7", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindowDesign", u"Test1", None))
+        self.pushButton_6.setText(QCoreApplication.translate("MainWindowDesign", u"Test4", None))
         self.pushButton_2.setText(QCoreApplication.translate("MainWindowDesign", u"Test2", None))
         self.pushButton_11.setText(QCoreApplication.translate("MainWindowDesign", u"Test9", None))
-        self.pushButton_10.setText(QCoreApplication.translate("MainWindowDesign", u"Test8", None))
-        self.pushButton_6.setText(QCoreApplication.translate("MainWindowDesign", u"Test4", None))
         self.pushButton_3.setText(QCoreApplication.translate("MainWindowDesign", u"Test3", None))
+        self.pushButton_10.setText(QCoreApplication.translate("MainWindowDesign", u"Test8", None))
+        self.pushButton_9.setText(QCoreApplication.translate("MainWindowDesign", u"Test7", None))
         self.pushButton_7.setText(QCoreApplication.translate("MainWindowDesign", u"Test5", None))
         self.pushButton_about.setText(QCoreApplication.translate("MainWindowDesign", u"LICENSE", None))
+        self.pushButton_19.setText(QCoreApplication.translate("MainWindowDesign", u"Set Analog+Digital", None))
         self.dockWidget_panorama.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Panorama", None))
         self.pushButton_grabPanorama.setText(QCoreApplication.translate("MainWindowDesign", u"Use current image as panorama", None))
         self.dockWidget_filename.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"File", None))
