@@ -89,7 +89,7 @@ class DataPreProcess(mp.Process):
                     if (
                         pre_buffer_len[fifo_name] > len_buffer
                         or delta_time[fifo_name] > timeout
-                    ) and pre_buffer_len[fifo_name] > 0:
+                    ) and (pre_buffer_len[fifo_name] > 0):
                         time_start[fifo_name] = time.time()
                         data_as_array = np.fromiter(
                             pre_buffer_list[fifo_name],
@@ -102,9 +102,7 @@ class DataPreProcess(mp.Process):
                             self.dict_of_shared_loc[fifo_name].value
                             + pre_buffer_len[fifo_name]
                         )
-                        self.last_preprocessed_len[fifo_name].value = pre_buffer_len[
-                            fifo_name
-                        ]
+                        self.last_preprocessed_len[fifo_name].value = pre_buffer_len[fifo_name]
                         # print("-> ", self.dict_of_shared_loc[fifo_name].value)
                         pre_buffer_list[fifo_name] = []
                         pre_buffer_len[fifo_name] = 0

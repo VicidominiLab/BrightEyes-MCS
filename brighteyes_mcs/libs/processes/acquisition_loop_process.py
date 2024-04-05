@@ -706,11 +706,11 @@ class AcquisitionLoopProcess(mp.Process):
                         # internal_buffer_analog = None
                         #
                         data_from_queue = internal_buffer_analog[
-                            : max_gap_frame - self.current_pointer
+                            : max_gap_frame - self.current_pointer_analog
                         ]
                         self.gap_analog = data_from_queue.shape[0] // 2
                         internal_buffer_analog = internal_buffer_analog[
-                            max_gap_frame - self.current_pointer :
+                            max_gap_frame - self.current_pointer_analog :
                         ]
 
                     else:  # standard case (no previous split data)
@@ -737,11 +737,11 @@ class AcquisitionLoopProcess(mp.Process):
                             )
 
                             internal_buffer_analog = data_from_queue[
-                                max_gap_frame - self.current_pointer :
+                                max_gap_frame - self.current_pointer_analog :
                             ]
                             self.gap_analog = data_from_queue.shape[0]
                             data_from_queue = data_from_queue[
-                                : max_gap_frame - self.current_pointer
+                                : max_gap_frame - self.current_pointer_analog
                             ]
 
                             frameComplete["FIFOAnalog"] = True

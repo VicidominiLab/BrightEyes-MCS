@@ -1737,8 +1737,6 @@ class MainWindow(QMainWindow):
             if self.ui.radioButton_analog.isChecked():
                 fifo.append("FIFOAnalog")
 
-            # todo: remove this
-            # fifo=[]
             self.spadfcsmanager_inst.set_len_fifo_prebuffer(
                 self.ui.spinBox_fifo_prebuffer.value()
             )
@@ -3919,8 +3917,6 @@ Have fun!
         if self.ui.radioButton_analog.isChecked():
             fifo.append("FIFOAnalog")
 
-        # todo: remove this
-        # fifo = []
         self.spadfcsmanager_inst.setActivatedFifo(fifo)
 
         if self.DFD_Activate:
