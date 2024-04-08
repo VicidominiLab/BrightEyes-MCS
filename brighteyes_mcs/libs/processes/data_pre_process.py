@@ -80,7 +80,7 @@ class DataPreProcess(mp.Process):
                             pre_buffer_len[fifo_name] = 0
                             counter_total_len[fifo_name] = 0
                             time_start[fifo_name] = time.time()
-                            fifo_lists.append(fifo_name)
+                            # fifo_lists.append(fifo_name)
                         pre_buffer_list[fifo_name] += data
                         pre_buffer_len[fifo_name] += len_values
                         counter_total_len[fifo_name] += len_values
