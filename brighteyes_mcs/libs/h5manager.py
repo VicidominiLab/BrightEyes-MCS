@@ -60,6 +60,7 @@ class H5Manager:
 
     def add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z):
         # self._add_to_dataset(dataset_name, buffer_for_save, current_rep, current_z)
+        print_dec(dataset_name, buffer_for_save.shape, current_rep, current_z)
         self.threads.append(
             threading.Thread(
                 target=lambda: self._add_to_dataset(

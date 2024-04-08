@@ -692,12 +692,11 @@ class AcquisitionLoopProcess(mp.Process):
                         self.stop_event.set()
 
             if "FIFOAnalog" in self.shm_activated_fifos_list:
-                if not self.data_queue["FIFOAnalog"].empty():
-                    max_gap_frame = (self.expected_raw_data_per_frame) * (
+                max_gap_frame = self.expected_raw_data_per_frame * (
                         self.current_frame_analog + 1
 
-                    )
-
+                )
+                if not self.data_queue["FIFOAnalog"].empty():
                     if (
                         internal_buffer_analog is not None
                     ):  # if the previous queue data was between two frames
@@ -909,8 +908,8 @@ class AcquisitionLoopProcess(mp.Process):
                         self.fingerprint[2, :, :] = 0
                         self.fingerprint[4, :, :] = 0
 
-                        current_z = (self.current_frame - 1) % self.shape[2]
-                        current_rep = (self.current_frame - 1) // self.shape[2]
+                        current_z = (self.current_frame_analog - 1) % self.shape[2]
+                        current_rep = (self.current_frame_analog - 1) // self.shape[2]
                         print_dec("FRAME [FIFOAnalog] ", current_z, current_rep, " DONE")
 
                         self.shared_dict_proxy.update(
