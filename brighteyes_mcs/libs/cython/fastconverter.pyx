@@ -174,8 +174,8 @@ cpdef int convertRawDataToCountsDirect49(data, start, stop, buffer_out, buffer_s
                     #word7
                     out_view[i, 26] = ( values_view_7        & 0x3FFF)  # 14 bits
                     out_view[i, 38] = ((values_view_7 >> 14) & 0x3FFF)  # 14 bits
-                    out_view[i, 50] = ((values_view_7 >> 28) & 0xFFFF)  # 16 bits
-                    out_view[i, 51] = ((values_view_7 >> 44) & 0xFFFF)  # 16 bits
+                    out_view[i, 49] = ((values_view_7 >> 28) & 0xFFFF)  # 16 bits
+                    out_view[i, 50] = ((values_view_7 >> 44) & 0xFFFF)  # 16 bits
                     #dummy          = ((values_view_7 >> 60) & 0x000F)  # 4 bits
 
                     #word0
@@ -235,8 +235,8 @@ cpdef int convertRawDataToCountsDirect49(data, start, stop, buffer_out, buffer_s
                     # word7
                     if out_view[i, 26] == 0x3FFF  : out_saturation_view[26]  += 1  # 14 bits
                     if out_view[i, 38] == 0x3FFF  : out_saturation_view[38]  += 1  # 14 bits
+                    if out_view[i, 49] == 0xFFFF  : out_saturation_view[49]  += 1  # 16 bits
                     if out_view[i, 50] == 0xFFFF  : out_saturation_view[50]  += 1  # 16 bits
-                    if out_view[i, 51] == 0xFFFF  : out_saturation_view[51]  += 1  # 16 bits
                     # if dummy == 0x000F                                             # 4 bits
 
                     for k in prange(0,49):
