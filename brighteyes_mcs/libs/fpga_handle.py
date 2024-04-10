@@ -76,6 +76,9 @@ class FpgaHandle(object):
         self.fpga_handle_process = FpgaHandleProcess(
             self.configuration, use_rust_fifo=self.use_rust_fifo
         )
+
+        self.fpga_handle_process.daemon = True
+
         print_dec(self.configuration["is_readytorun"].is_set())
         self.fpga_handle_process.start()
         print_dec("Waiting for the ready to run")

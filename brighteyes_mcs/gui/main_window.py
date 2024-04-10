@@ -1732,10 +1732,11 @@ class MainWindow(QMainWindow):
             )
 
             fifo = []
-            if self.ui.radioButton_digital.isChecked():
-                fifo.append("FIFO")
             if self.ui.radioButton_analog.isChecked():
                 fifo.append("FIFOAnalog")
+            if self.ui.radioButton_digital.isChecked():
+                fifo.append("FIFO")
+
 
             self.spadfcsmanager_inst.set_len_fifo_prebuffer(
                 self.ui.spinBox_fifo_prebuffer.value()
@@ -2668,7 +2669,6 @@ class MainWindow(QMainWindow):
 
         if self.ui.radioButton_analog.isChecked():
             fifo_name = "FIFOAnalog"
-
         if self.ui.radioButton_digital.isChecked():
             fifo_name = "FIFO"
 
