@@ -23,7 +23,7 @@ class MemorySharedNumpyArray(object):
         np.dtype (str): the Numpy dtype string
     """
 
-    def __init__(self, dtype, shape, sampling, lock=True):
+    def __init__(self, dtype, shape, sampling=0, lock=True):
         """
         Args:
             dtype (str): a Numpy data type string ('uint32' etc.). You can also use the

@@ -463,51 +463,52 @@ class AcquisitionLoopProcess(mp.Process):
 
 
                     if isinstance(selected_channel, int):
-                        if self.activate_show_preview == True:
-                            self.image_xy_lock.acquire()
-                            self.image_xy[list_y, list_x] = 0
-                            np.add.at(
-                                self.image_xy,
-                                (list_y, list_x),
-                                buffer_up_to_gap[:, selected_channel],
-                            )
-                            self.image_xy_lock.release()
+                        if (selected_channel < (channels+2)):
+                            if (self.activate_show_preview == True):
+                                self.image_xy_lock.acquire()
+                                self.image_xy[list_y, list_x] = 0
+                                np.add.at(
+                                    self.image_xy,
+                                    (list_y, list_x),
+                                    buffer_up_to_gap[:, selected_channel],
+                                )
+                                self.image_xy_lock.release()
 
-                            cond_x_central = list_x == (self.shape[0] // 2)
-                            self.image_zy_lock.acquire()
-                            self.image_zy[
-                                list_y[cond_x_central], list_z[cond_x_central]
-                            ] = 0
-                            np.add.at(
-                                self.image_zy,
-                                (list_y[cond_x_central], list_z[cond_x_central]),
-                                buffer_up_to_gap[cond_x_central, selected_channel],
-                            )
-                            self.image_zy_lock.release()
+                                cond_x_central = list_x == (self.shape[0] // 2)
+                                self.image_zy_lock.acquire()
+                                self.image_zy[
+                                    list_y[cond_x_central], list_z[cond_x_central]
+                                ] = 0
+                                np.add.at(
+                                    self.image_zy,
+                                    (list_y[cond_x_central], list_z[cond_x_central]),
+                                    buffer_up_to_gap[cond_x_central, selected_channel],
+                                )
+                                self.image_zy_lock.release()
 
-                            cond_y_central = list_y == (self.shape[1] // 2)
-                            self.image_xz_lock.acquire()
-                            self.image_xz[
-                                list_z[cond_y_central], list_x[cond_y_central]
-                            ] = 0
-                            np.add.at(
-                                self.image_xz,
-                                (list_z[cond_y_central], list_x[cond_y_central]),
-                                buffer_up_to_gap[cond_y_central, selected_channel],
-                            )
-                            self.image_xz_lock.release()
+                                cond_y_central = list_y == (self.shape[1] // 2)
+                                self.image_xz_lock.acquire()
+                                self.image_xz[
+                                    list_z[cond_y_central], list_x[cond_y_central]
+                                ] = 0
+                                np.add.at(
+                                    self.image_xz,
+                                    (list_z[cond_y_central], list_x[cond_y_central]),
+                                    buffer_up_to_gap[cond_y_central, selected_channel],
+                                )
+                                self.image_xz_lock.release()
 
-                        if self.active_autocorrelation:
-                            correlator.add(buffer_up_to_gap[:, selected_channel])
-                            self.autocorrelation[
-                                1, :
-                            ] = correlator.get_correlation_normalized()
-                        if self.activate_trace:
-                            temporalBinner.add(buffer_up_to_gap[:, selected_channel])
-                            self.trace_pos.value = (
-                                temporalBinner.get_current_position_bins()
-                            )
-                            self.trace[1, :] = temporalBinner.get_bins()
+                            if self.active_autocorrelation:
+                                correlator.add(buffer_up_to_gap[:, selected_channel])
+                                self.autocorrelation[
+                                    1, :
+                                ] = correlator.get_correlation_normalized()
+                            if self.activate_trace:
+                                temporalBinner.add(buffer_up_to_gap[:, selected_channel])
+                                self.trace_pos.value = (
+                                    temporalBinner.get_current_position_bins()
+                                )
+                                self.trace[1, :] = temporalBinner.get_bins()
 
                     elif selected_channel.startswith("Sum"):
                         if self.activate_show_preview == True:

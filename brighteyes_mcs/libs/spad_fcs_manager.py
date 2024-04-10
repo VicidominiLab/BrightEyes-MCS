@@ -270,27 +270,27 @@ class SpadFcsManager(QObject):
         self.fpga_handle.set_list_fifos_to_read_continously(self.activated_fifos_list)
 
         self.shared_autocorrelation = MemorySharedNumpyArray(
-            dtype=float, shape=[2, self.autocorrelation_maxx], sampling=0, lock=True
+            dtype=float, shape=[2, self.autocorrelation_maxx], lock=True
         )
 
         self.shared_trace = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[2, self.trace_bins], sampling=0, lock=True
+            dtype=np.int64, shape=[2, self.trace_bins], lock=True
         )
 
         self.shared_image_xy_rgb = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_y, self.dim_x, 3], sampling=0, lock=True
+            dtype=np.int64, shape=[self.dim_y, self.dim_x, 3], lock=True
         )
 
         self.shared_image_xy = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_y, self.dim_x], sampling=0, lock=True
+            dtype=np.int64, shape=[self.dim_y, self.dim_x], lock=True
         )
 
         self.shared_image_xz = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_z, self.dim_x], sampling=0, lock=True
+            dtype=np.int64, shape=[self.dim_z, self.dim_x], lock=True
         )
 
         self.shared_image_zy = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_y, self.dim_z], sampling=0, lock=True
+            dtype=np.int64, shape=[self.dim_y, self.dim_z], lock=True
         )
 
         self.shared_fingerprint = MemorySharedNumpyArray(
