@@ -692,7 +692,7 @@ class AcquisitionLoopProcess(mp.Process):
                         self.stop_event.set()
 
             if "FIFOAnalog" in self.shm_activated_fifos_list:
-                max_gap_frame = self.expected_raw_data_per_frame * (
+                max_gap_frame_analog = self.expected_raw_data_per_frame * (
                         self.current_frame_analog + 1
 
                 )
@@ -700,47 +700,47 @@ class AcquisitionLoopProcess(mp.Process):
                     if (
                         internal_buffer_analog is not None
                     ):  # if the previous queue data was between two frames
-                        # data_from_queue = internal_buffer_analog
-                        # self.gap_analog = data_from_queue.shape[0]
+                        # data_from_queue_analog = internal_buffer_analog
+                        # self.gap_analog = data_from_queue_analog.shape[0]
                         # internal_buffer_analog = None
                         #
-                        data_from_queue = internal_buffer_analog[
-                            : max_gap_frame - self.current_pointer_analog
+                        data_from_queue_analog = internal_buffer_analog[
+                            : max_gap_frame_analog - self.current_pointer_analog
                         ]
-                        self.gap_analog = data_from_queue.shape[0] // 2
+                        self.gap_analog = data_from_queue_analog.shape[0] // 2
                         internal_buffer_analog = internal_buffer_analog[
-                            max_gap_frame - self.current_pointer_analog :
+                            max_gap_frame_analog - self.current_pointer_analog :
                         ]
 
                     else:  # standard case (no previous split data)
-                        data_from_queue = self.data_queue["FIFOAnalog"].get()
-                        self.gap_analog = data_from_queue.shape[0]
+                        data_from_queue_analog = self.data_queue["FIFOAnalog"].get()
+                        self.gap_analog = data_from_queue_analog.shape[0]
                         # in the case the current queue data overflow in the next frame the data are split
 
-                        # max_gap_frame = self.expected_raw_data_per_frame * (self.current_frame+1)
-                        # if (self.current_pointer + self.gap) * self.DATA_WORDS_ANALOG  >= max_gap_frame:
+                        # max_gap_frame_analog = self.expected_raw_data_per_frame * (self.current_frame+1)
+                        # if (self.current_pointer + self.gap) * self.DATA_WORDS_ANALOG  >= max_gap_frame_analog:
                         #     print_dec(" c ", (self.current_pointer + self.gap) * self.DATA_WORDS_ANALOG,
-                        #           max_gap_frame)
-                        #     print(data_from_queue.shape, max_gap_frame-(self.current_pointer*2))
+                        #           max_gap_frame_analog)
+                        #     print(data_from_queue_analog.shape, max_gap_frame_analog-(self.current_pointer*2))
                         #
-                        #     internal_buffer = data_from_queue[max_gap_frame - (self.current_pointer * self.DATA_WORDS_ANALOG):]
-                        #     data_from_queue = data_from_queue[:max_gap_frame - (self.current_pointer * self.DATA_WORDS_ANALOG)]
+                        #     internal_buffer = data_from_queue_analog[max_gap_frame_analog - (self.current_pointer * self.DATA_WORDS_ANALOG):]
+                        #     data_from_queue_analog = data_from_queue_analog[:max_gap_frame_analog - (self.current_pointer * self.DATA_WORDS_ANALOG)]
 
                         if (
                             self.current_pointer_analog + self.gap_analog
-                        ) * 2 >= max_gap_frame:
+                        ) * 2 >= max_gap_frame_analog:
                             print_dec(
                                 " c ",
                                 (self.current_pointer_analog + self.gap_analog),
-                                max_gap_frame,
+                                max_gap_frame_analog,
                             )
 
-                            internal_buffer_analog = data_from_queue[
-                                max_gap_frame - self.current_pointer_analog :
+                            internal_buffer_analog = data_from_queue_analog[
+                                max_gap_frame_analog - self.current_pointer_analog :
                             ]
-                            self.gap_analog = data_from_queue.shape[0]
-                            data_from_queue = data_from_queue[
-                                : max_gap_frame - self.current_pointer_analog
+                            self.gap_analog = data_from_queue_analog.shape[0]
+                            data_from_queue_analog = data_from_queue_analog[
+                                : max_gap_frame_analog - self.current_pointer_analog
                             ]
 
                             frameComplete["FIFOAnalog"] = True
@@ -825,7 +825,7 @@ class AcquisitionLoopProcess(mp.Process):
                         )
                     if (
                         convertDataFromAnalogFIFO(
-                            data_from_queue,
+                            data_from_queue_analog,
                             0,
                             self.gap_analog,
                             self.buffer_analog,

@@ -350,6 +350,9 @@ class SpadFcsManager(QObject):
             debug=self.debug,
             use_rust_fifo=self.use_rust_fifo,
         )
+
+        self.dataProcess.daemon = True
+
         shared_objects = {
             "activated_fifos_list": self.activated_fifos_list,
             "loc_acquired": self.loc_acquired,
@@ -408,6 +411,7 @@ class SpadFcsManager(QObject):
             self.shared_dict,
             debug=self.debug,
         )
+        self.previewProcess.daemon = True
 
         self.shared_arrays_ready = True
         print_dec("self.dataProcess.start()")

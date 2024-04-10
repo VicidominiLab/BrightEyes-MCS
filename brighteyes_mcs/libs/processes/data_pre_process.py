@@ -86,7 +86,7 @@ class DataPreProcess(mp.Process):
                         counter_total_len[fifo_name] += len_values
 
                 # print_dec("fifo_lists", fifo_lists)
-                print_dec("pre_buffer_list", pre_buffer_list.keys())
+                # print_dec("pre_buffer_list", pre_buffer_list.keys())
                 for fifo_name in pre_buffer_list.keys():
                     time_stop[fifo_name] = time.time()
                     delta_time[fifo_name] = time_stop[fifo_name] - time_start[fifo_name]
