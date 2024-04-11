@@ -497,49 +497,47 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_5 = QGridLayout()
         self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.spinBox_nframe = QSpinBox(self.dockWidgetContents_2)
-        self.spinBox_nframe.setObjectName(u"spinBox_nframe")
-        self.spinBox_nframe.setMinimum(1)
-        self.spinBox_nframe.setMaximum(200000)
-        self.spinBox_nframe.setValue(1)
-
-        self.gridLayout_5.addWidget(self.spinBox_nframe, 2, 1, 1, 1)
-
-        self.label_nframe = QLabel(self.dockWidgetContents_2)
-        self.label_nframe.setObjectName(u"label_nframe")
-
-        self.gridLayout_5.addWidget(self.label_nframe, 2, 0, 1, 1)
-
-        self.spinBox_ny = QSpinBox(self.dockWidgetContents_2)
-        self.spinBox_ny.setObjectName(u"spinBox_ny")
-        self.spinBox_ny.setMinimum(1)
-        self.spinBox_ny.setMaximum(2048)
-        self.spinBox_ny.setValue(512)
-
-        self.gridLayout_5.addWidget(self.spinBox_ny, 1, 1, 1, 1)
-
+        self.gridLayout_5.setSizeConstraint(QLayout.SetMinimumSize)
         self.label_nx = QLabel(self.dockWidgetContents_2)
         self.label_nx.setObjectName(u"label_nx")
 
         self.gridLayout_5.addWidget(self.label_nx, 0, 0, 1, 1)
-
-        self.label_nrepetition = QLabel(self.dockWidgetContents_2)
-        self.label_nrepetition.setObjectName(u"label_nrepetition")
-
-        self.gridLayout_5.addWidget(self.label_nrepetition, 3, 0, 1, 1)
 
         self.label_ny = QLabel(self.dockWidgetContents_2)
         self.label_ny.setObjectName(u"label_ny")
 
         self.gridLayout_5.addWidget(self.label_ny, 1, 0, 1, 1)
 
+        self.label_nrepetition = QLabel(self.dockWidgetContents_2)
+        self.label_nrepetition.setObjectName(u"label_nrepetition")
+
+        self.gridLayout_5.addWidget(self.label_nrepetition, 3, 0, 1, 1)
+
+        self.spinBox_nframe = QSpinBox(self.dockWidgetContents_2)
+        self.spinBox_nframe.setObjectName(u"spinBox_nframe")
+        self.spinBox_nframe.setMinimum(1)
+        self.spinBox_nframe.setMaximum(999999999)
+        self.spinBox_nframe.setValue(1)
+
+        self.gridLayout_5.addWidget(self.spinBox_nframe, 2, 1, 1, 1)
+
         self.spinBox_nx = QSpinBox(self.dockWidgetContents_2)
         self.spinBox_nx.setObjectName(u"spinBox_nx")
         self.spinBox_nx.setMinimum(1)
-        self.spinBox_nx.setMaximum(2048)
+        self.spinBox_nx.setMaximum(999999999)
         self.spinBox_nx.setValue(512)
 
         self.gridLayout_5.addWidget(self.spinBox_nx, 0, 1, 1, 1)
+
+        self.pushButton_18 = QPushButton(self.dockWidgetContents_2)
+        self.pushButton_18.setObjectName(u"pushButton_18")
+
+        self.gridLayout_5.addWidget(self.pushButton_18, 4, 1, 1, 1)
+
+        self.label_nframe = QLabel(self.dockWidgetContents_2)
+        self.label_nframe.setObjectName(u"label_nframe")
+
+        self.gridLayout_5.addWidget(self.label_nframe, 2, 0, 1, 1)
 
         self.spinBox_nrepetition = QSpinBox(self.dockWidgetContents_2)
         self.spinBox_nrepetition.setObjectName(u"spinBox_nrepetition")
@@ -549,10 +547,43 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_5.addWidget(self.spinBox_nrepetition, 3, 1, 1, 1)
 
-        self.pushButton_18 = QPushButton(self.dockWidgetContents_2)
-        self.pushButton_18.setObjectName(u"pushButton_18")
+        self.spinBox_ny = QSpinBox(self.dockWidgetContents_2)
+        self.spinBox_ny.setObjectName(u"spinBox_ny")
+        self.spinBox_ny.setMinimum(1)
+        self.spinBox_ny.setMaximum(999999999)
+        self.spinBox_ny.setValue(512)
 
-        self.gridLayout_5.addWidget(self.pushButton_18, 4, 1, 1, 1)
+        self.gridLayout_5.addWidget(self.spinBox_ny, 1, 1, 1, 1)
+
+        self.label_pixelsize_x = QLabel(self.dockWidgetContents_2)
+        self.label_pixelsize_x.setObjectName(u"label_pixelsize_x")
+
+        self.gridLayout_5.addWidget(self.label_pixelsize_x, 0, 3, 1, 1)
+
+        self.label_101 = QLabel(self.dockWidgetContents_2)
+        self.label_101.setObjectName(u"label_101")
+
+        self.gridLayout_5.addWidget(self.label_101, 2, 2, 1, 1)
+
+        self.label_pixelsize_y = QLabel(self.dockWidgetContents_2)
+        self.label_pixelsize_y.setObjectName(u"label_pixelsize_y")
+
+        self.gridLayout_5.addWidget(self.label_pixelsize_y, 1, 3, 1, 1)
+
+        self.label_pixelsize_z = QLabel(self.dockWidgetContents_2)
+        self.label_pixelsize_z.setObjectName(u"label_pixelsize_z")
+
+        self.gridLayout_5.addWidget(self.label_pixelsize_z, 2, 3, 1, 1)
+
+        self.label_104 = QLabel(self.dockWidgetContents_2)
+        self.label_104.setObjectName(u"label_104")
+
+        self.gridLayout_5.addWidget(self.label_104, 1, 2, 1, 1)
+
+        self.label_105 = QLabel(self.dockWidgetContents_2)
+        self.label_105.setObjectName(u"label_105")
+
+        self.gridLayout_5.addWidget(self.label_105, 0, 2, 1, 1)
 
 
         self.gridLayout_6.addLayout(self.gridLayout_5, 0, 0, 1, 1)
@@ -571,7 +602,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_6.setWidgetResizable(True)
         self.scrollAreaWidgetContents_4 = QWidget()
         self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 342, 169))
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 342, 168))
         self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName(u"gridLayout_68")
         self.gridLayout_3434 = QGridLayout()
@@ -1004,8 +1035,9 @@ class Ui_MainWindowDesign(object):
         self.tableWidget_markers.setObjectName(u"tableWidget_markers")
         self.tableWidget_markers.setFont(font)
         self.tableWidget_markers.setColumnCount(4)
-        self.tableWidget_markers.horizontalHeader().setMinimumSectionSize(21)
-        self.tableWidget_markers.verticalHeader().setDefaultSectionSize(21)
+        self.tableWidget_markers.horizontalHeader().setMinimumSectionSize(10)
+        self.tableWidget_markers.verticalHeader().setMinimumSectionSize(10)
+        self.tableWidget_markers.verticalHeader().setDefaultSectionSize(10)
 
         self.gridLayout_17.addWidget(self.tableWidget_markers, 7, 0, 1, 5)
 
@@ -1166,7 +1198,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, -74, 384, 291))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 384, 291))
         self.gridLayout_64 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_64.setObjectName(u"gridLayout_64")
         self.tabWidget_2 = QTabWidget(self.scrollAreaWidgetContents_2)
@@ -1980,7 +2012,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 342, 349))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 342, 355))
         self.gridLayout_67 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_67.setObjectName(u"gridLayout_67")
         self.checkBox_correlationMatrix = QCheckBox(self.scrollAreaWidgetContents_6)
@@ -2350,7 +2382,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 342, 283))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 342, 282))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -2395,7 +2427,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 342, 129))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 342, 127))
         self.gridLayout_65 = QGridLayout(self.scrollAreaWidgetContents_3)
         self.gridLayout_65.setObjectName(u"gridLayout_65")
         self.gridLayout_AO = QGridLayout()
@@ -2668,7 +2700,7 @@ class Ui_MainWindowDesign(object):
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(0)
-        self.tabWidget_2.setCurrentIndex(0)
+        self.tabWidget_2.setCurrentIndex(1)
         self.comboBox_analogSelect_B.setCurrentIndex(0)
 
 
@@ -2802,26 +2834,32 @@ class Ui_MainWindowDesign(object):
         self.spinBox_waitAfterFrame.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Delay betweent two repetition in second.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.dockWidget_2.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Spatial settings", None))
+        self.label_nx.setText(QCoreApplication.translate("MainWindowDesign", u"N. of pixel X", None))
+        self.label_ny.setText(QCoreApplication.translate("MainWindowDesign", u"N. of pixel Y", None))
+        self.label_nrepetition.setText(QCoreApplication.translate("MainWindowDesign", u"N. of repetition", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_nframe.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Number of pixel along Z</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label_nframe.setText(QCoreApplication.translate("MainWindowDesign", u"N. of pixel Z", None))
-#if QT_CONFIG(tooltip)
-        self.spinBox_ny.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Number of pixel along Y</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.label_nx.setText(QCoreApplication.translate("MainWindowDesign", u"N. of pixel X", None))
-        self.label_nrepetition.setText(QCoreApplication.translate("MainWindowDesign", u"N. of repetition", None))
-        self.label_ny.setText(QCoreApplication.translate("MainWindowDesign", u"N. of pixel Y", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_nx.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Number of pixel along X</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.spinBox_nrepetition.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Number of repetition</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.pushButton_18.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Use this button each time you modified the number of pixel (X,Y,Z)</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_18.setText(QCoreApplication.translate("MainWindowDesign", u"Update View", None))
+        self.label_nframe.setText(QCoreApplication.translate("MainWindowDesign", u"N. of pixel Z", None))
+#if QT_CONFIG(tooltip)
+        self.spinBox_nrepetition.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Number of repetition</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.spinBox_ny.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Number of pixel along Y</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_pixelsize_x.setText(QCoreApplication.translate("MainWindowDesign", u"0.0 \u00b5m", None))
+        self.label_101.setText(QCoreApplication.translate("MainWindowDesign", u"Z pixel size", None))
+        self.label_pixelsize_y.setText(QCoreApplication.translate("MainWindowDesign", u"0.0 \u00b5m", None))
+        self.label_pixelsize_z.setText(QCoreApplication.translate("MainWindowDesign", u"0.0 \u00b5m", None))
+        self.label_104.setText(QCoreApplication.translate("MainWindowDesign", u"Y pixel size", None))
+        self.label_105.setText(QCoreApplication.translate("MainWindowDesign", u"X pixel size", None))
         self.dockWidget_fingerprint.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Micro image", None))
         self.label_microimage.setText(QCoreApplication.translate("MainWindowDesign", u"Type:", None))
         self.comboBox_fingerprint.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Cumulative", None))

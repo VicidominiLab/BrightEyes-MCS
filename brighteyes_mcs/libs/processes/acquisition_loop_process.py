@@ -120,8 +120,11 @@ class AcquisitionLoopProcess(mp.Process):
         self.FCS_reset_event = mp.Event()
 
         self.buffer_size_in_words = shared_dict["preview_buffer_size_in_words"]  # 15000
+        self.buffer_size_in_words_analog = self.buffer_size_in_words
+
         self.buffer_size = self.timebinsPerPixel * self.buffer_size_in_words * self.DATA_WORDS_DIGITAL
-        
+        self.buffer_size_analog = self.timebinsPerPixel * self.buffer_size_in_words_analog * self.DATA_WORDS_ANALOG
+
         
         if self.channels == 25:            
             self.buffer = np.zeros((self.buffer_size, 25 + 2), dtype=np.uint64)
@@ -133,7 +136,7 @@ class AcquisitionLoopProcess(mp.Process):
             self.saturation = np.zeros(49 + 2, dtype=np.uint64)
             self.buffer_sum_SPAD_ch = np.zeros(self.buffer_size, dtype=np.uint64)
 
-        self.buffer_analog = np.zeros((self.buffer_size, 2), dtype=np.int32)
+        self.buffer_analog = np.zeros((self.buffer_size_analog, 2), dtype=np.int32)
 
         self.last_packet_size = shared_dict["last_packet_size"]
 
@@ -242,6 +245,7 @@ class AcquisitionLoopProcess(mp.Process):
                 dtype="uint16",
             )
 
+
             self.buffer_for_save_channels_extra = np.zeros(
                 (
                     self.shape[1],
@@ -252,6 +256,7 @@ class AcquisitionLoopProcess(mp.Process):
                 dtype="uint8",
             )
 
+
             self.buffer_analog_for_save = np.zeros(
                 (
                     self.shape[1],
@@ -261,6 +266,10 @@ class AcquisitionLoopProcess(mp.Process):
                 ),
                 dtype="int32",
             )
+            print_dec("BUFFER SIZE")
+            print_dec("buffer_for_save size = %.3f GB" % (self.buffer_for_save.size * self.buffer_for_save.itemsize/1024/1024/1024))
+            print_dec("buffer_for_save_channels_extra size = %.3f GB" % (self.buffer_for_save_channels_extra.size * self.buffer_for_save_channels_extra.itemsize/1024/1024/1024))
+            print_dec("buffer_analog_for_save size = %.3f GB" % (self.buffer_analog_for_save.size * self.buffer_analog_for_save.itemsize/1024/1024/1024))
 
         self.total_photon = 0
 
@@ -817,12 +826,12 @@ class AcquisitionLoopProcess(mp.Process):
                         )
 
                     self.shared_dict_proxy["last_packet_size"] = self.gap_analog
-                    if self.gap_analog > self.buffer_size:
+                    if self.gap_analog > self.buffer_size_analog:
                         print_dec(
                             "Too many data larger than the buffer. GAP",
                             self.gap_analog,
-                            "buffer_size",
-                            self.buffer_size,
+                            "buffer_size_analog",
+                            self.buffer_size_analog,
                         )
                     if (
                         convertDataFromAnalogFIFO(

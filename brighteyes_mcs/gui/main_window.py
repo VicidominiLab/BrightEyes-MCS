@@ -1604,6 +1604,14 @@ class MainWindow(QMainWindow):
                 print_dec(
                     "axesRangeChanged self.lock_parameters_changed_call UNSET False"
                 )
+
+
+
+
+                self.ui.label_pixelsize_x.setText("%.3f nm" % (1000*self.ui.spinBox_range_x.value() / self.ui.spinBox_nx.value()))
+                self.ui.label_pixelsize_y.setText("%.3f nm" % (1000*self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value()))
+                self.ui.label_pixelsize_z.setText("%.3f nm" % (1000*self.ui.spinBox_range_z.value() / self.ui.spinBox_nframe.value()))
+
                 self.lock_range_changing = False
 
                 if self.started_preview:
@@ -3326,6 +3334,14 @@ Have fun!
         self.lock_range_changing = False
         self.positionSettingsChanged_apply(force=True)
         self.offset_um_update()
+
+        self.ui.label_pixelsize_x.setText(
+            "%.3f nm" % (1000 * self.ui.spinBox_range_x.value() / self.ui.spinBox_nx.value()))
+        self.ui.label_pixelsize_y.setText(
+            "%.3f nm" % (1000 * self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value()))
+        self.ui.label_pixelsize_z.setText(
+            "%.3f nm" % (1000 * self.ui.spinBox_range_z.value() / self.ui.spinBox_nframe.value()))
+
         self.lock_range_changing = lock
 
     @Slot()
@@ -3435,6 +3451,13 @@ Have fun!
 
             self.ui.pushButton_18.setStyleSheet("border: 1px solid red;")
 
+        self.ui.label_pixelsize_x.setText(
+            "%.3f nm" % (1000 * self.ui.spinBox_range_x.value() / self.ui.spinBox_nx.value()))
+        self.ui.label_pixelsize_y.setText(
+            "%.3f nm" % (1000 * self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value()))
+        self.ui.label_pixelsize_z.setText(
+            "%.3f nm" % (1000 * self.ui.spinBox_range_z.value() / self.ui.spinBox_nframe.value()))
+
     @Slot()
     def positionSettingsChanged(self, force=False):
         self.offset_um_update(force)
@@ -3519,6 +3542,7 @@ Have fun!
             print_dec(
                 "positionSettingsChanged_apply lock_parameters_changed_call is True"
             )
+
 
         self.checkAlerts()
 

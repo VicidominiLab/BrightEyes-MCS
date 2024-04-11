@@ -854,49 +854,20 @@
      </item>
      <item row="0" column="0">
       <layout class="QGridLayout" name="gridLayout_5">
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="spinBox_nframe">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of pixel along Z&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>200000</number>
-         </property>
-         <property name="value">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_nframe">
-         <property name="text">
-          <string>N. of pixel Z</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QSpinBox" name="spinBox_ny">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of pixel along Y&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>2048</number>
-         </property>
-         <property name="value">
-          <number>512</number>
-         </property>
-        </widget>
-       </item>
+       <property name="sizeConstraint">
+        <enum>QLayout::SetMinimumSize</enum>
+       </property>
        <item row="0" column="0">
         <widget class="QLabel" name="label_nx">
          <property name="text">
           <string>N. of pixel X</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_ny">
+         <property name="text">
+          <string>N. of pixel Y</string>
          </property>
         </widget>
        </item>
@@ -907,10 +878,19 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_ny">
-         <property name="text">
-          <string>N. of pixel Y</string>
+       <item row="2" column="1">
+        <widget class="QSpinBox" name="spinBox_nframe">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of pixel along Z&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>999999999</number>
+         </property>
+         <property name="value">
+          <number>1</number>
          </property>
         </widget>
        </item>
@@ -923,10 +903,27 @@
           <number>1</number>
          </property>
          <property name="maximum">
-          <number>2048</number>
+          <number>999999999</number>
          </property>
          <property name="value">
           <number>512</number>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QPushButton" name="pushButton_18">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this button each time you modified the number of pixel (X,Y,Z)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Update View</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_nframe">
+         <property name="text">
+          <string>N. of pixel Z</string>
          </property>
         </widget>
        </item>
@@ -946,13 +943,61 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="QPushButton" name="pushButton_18">
+       <item row="1" column="1">
+        <widget class="QSpinBox" name="spinBox_ny">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this button each time you modified the number of pixel (X,Y,Z)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of pixel along Y&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>999999999</number>
+         </property>
+         <property name="value">
+          <number>512</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLabel" name="label_pixelsize_x">
          <property name="text">
-          <string>Update View</string>
+          <string>0.0 µm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLabel" name="label_101">
+         <property name="text">
+          <string>Z pixel size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLabel" name="label_pixelsize_y">
+         <property name="text">
+          <string>0.0 µm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLabel" name="label_pixelsize_z">
+         <property name="text">
+          <string>0.0 µm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="label_104">
+         <property name="text">
+          <string>Y pixel size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_105">
+         <property name="text">
+          <string>X pixel size</string>
          </property>
         </widget>
        </item>
@@ -984,7 +1029,7 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>169</height>
+          <height>168</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_68">
@@ -1722,10 +1767,13 @@
         <number>4</number>
        </property>
        <attribute name="horizontalHeaderMinimumSectionSize">
-        <number>21</number>
+        <number>10</number>
+       </attribute>
+       <attribute name="verticalHeaderMinimumSectionSize">
+        <number>10</number>
        </attribute>
        <attribute name="verticalHeaderDefaultSectionSize">
-        <number>21</number>
+        <number>10</number>
        </attribute>
        <column>
         <property name="text">
@@ -2032,7 +2080,7 @@
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>-74</y>
+          <y>0</y>
           <width>384</width>
           <height>291</height>
          </rect>
@@ -2041,7 +2089,7 @@
          <item row="0" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="tab_2">
             <attribute name="title">
@@ -3273,7 +3321,7 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>349</height>
+          <height>355</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_67">
@@ -3940,7 +3988,7 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>283</height>
+          <height>282</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -4011,7 +4059,7 @@
           <x>0</x>
           <y>0</y>
           <width>342</width>
-          <height>129</height>
+          <height>127</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_65">
