@@ -126,7 +126,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.buffer_size_analog = self.timebinsPerPixel * self.buffer_size_in_words_analog * self.DATA_WORDS_ANALOG
 
         
-        if self.channels == 25:            
+        if self.channels == 25:
             self.buffer = np.zeros((self.buffer_size, 25 + 2), dtype=np.uint64)
             self.saturation = np.zeros(25 + 2, dtype=np.uint64)
             self.buffer_sum_SPAD_ch = np.zeros(self.buffer_size, dtype=np.uint64)
@@ -163,6 +163,7 @@ class AcquisitionLoopProcess(mp.Process):
             os.getpid(),
             "    <======================================================",
         )
+
 
         self.stop_event.clear()
         self.current_pointer = 0  # self.timebinsPerPixel * self.DATA_WORDS_DIGITAL
@@ -328,6 +329,25 @@ class AcquisitionLoopProcess(mp.Process):
             converter = convertRawDataToCountsDirect
         if channels == 49:
             converter = convertRawDataToCountsDirect49
+        # print_dec("=================================================================")
+        # print_dec("timebinsPerPixel", self.timebinsPerPixel)
+        # print_dec("time_resolution", self.time_resolution)
+        # print_dec("expected_raw_data", self.expected_raw_data)
+        # print_dec("expected_raw_data_per_frame", self.expected_raw_data_per_frame)
+        # print_dec("DFD_Activate", self.DFD_Activate)
+        # print_dec("DFD_nbins", self.DFD_nbins)
+        # print_dec("shared_dict", self.shared_dict)
+        # print_dec("shape", self.shape)
+        # print_dec("channels", self.channels)
+        # print_dec("channels_extra", self.channels_extra)
+        # print_dec("current_pointer", self.current_pointer)
+        # print_dec("current_pointer_analog", self.current_pointer_analog)
+        # print_dec("buffer_size_in_words", self.buffer_size_in_words)
+        # print_dec("buffer_size_in_words_analog", self.buffer_size_in_words_analog)
+        # print_dec("buffer_size", self.buffer_size)
+        # print_dec("buffer_size_analog", self.buffer_size_analog)
+        # print_dec("=================================================================")
+
         print_dec("SHAPE before while", self.shape )
         while not self.stop_event.is_set():
             selected_channel = self.shared_dict["channel"]
@@ -342,6 +362,14 @@ class AcquisitionLoopProcess(mp.Process):
                 max_gap_frame = self.expected_raw_data_per_frame * (
                     self.current_frame + 1
                 )
+
+
+                # if (internal_buffer is not None): print_dec(len(internal_buffer))
+                #
+                # print(max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL),
+                #     max_gap_frame,
+                #     (self.current_pointer * self.DATA_WORDS_DIGITAL),
+                # )
 
                 if not self.data_queue["FIFO"].empty():
                     if (
@@ -451,6 +479,7 @@ class AcquisitionLoopProcess(mp.Process):
 
                     self.saturation[:] = 0
 
+                    print_dec("self.gap", self.gap )
                     if (
                         converter(
                             data_from_queue,

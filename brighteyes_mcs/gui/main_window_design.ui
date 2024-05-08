@@ -2080,7 +2080,7 @@
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>0</y>
+          <y>-50</y>
           <width>384</width>
           <height>291</height>
          </rect>
@@ -2089,7 +2089,7 @@
          <item row="0" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
            <property name="currentIndex">
-            <number>1</number>
+            <number>5</number>
            </property>
            <widget class="QWidget" name="tab_2">
             <attribute name="title">
@@ -2816,7 +2816,7 @@
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="sciSpinBox" name="spinBox_off_x_V">
+                <widget class="QDoubleSpinBox" name="spinBox_off_x_V">
                  <property name="decimals">
                   <number>6</number>
                  </property>
@@ -2826,7 +2826,7 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="sciSpinBox" name="spinBox_off_y_V">
+                <widget class="QDoubleSpinBox" name="spinBox_off_y_V">
                  <property name="decimals">
                   <number>6</number>
                  </property>
@@ -2836,7 +2836,7 @@
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="sciSpinBox" name="spinBox_off_z_V">
+                <widget class="QDoubleSpinBox" name="spinBox_off_z_V">
                  <property name="decimals">
                   <number>6</number>
                  </property>
@@ -2912,7 +2912,7 @@
              <item row="1" column="0">
               <layout class="QGridLayout" name="gridLayout_16">
                <item row="0" column="1">
-                <widget class="sciSpinBox" name="spinBox_calib_x">
+                <widget class="QDoubleSpinBox" name="spinBox_calib_x">
                  <property name="decimals">
                   <number>6</number>
                  </property>
@@ -2950,7 +2950,7 @@
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="sciSpinBox" name="spinBox_calib_z">
+                <widget class="QDoubleSpinBox" name="spinBox_calib_z">
                  <property name="decimals">
                   <number>6</number>
                  </property>
@@ -2974,7 +2974,7 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="sciSpinBox" name="spinBox_calib_y">
+                <widget class="QDoubleSpinBox" name="spinBox_calib_y">
                  <property name="decimals">
                   <number>6</number>
                  </property>

@@ -1198,7 +1198,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 384, 291))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, -50, 384, 291))
         self.gridLayout_64 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_64.setObjectName(u"gridLayout_64")
         self.tabWidget_2 = QTabWidget(self.scrollAreaWidgetContents_2)
@@ -1676,21 +1676,21 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_21.addWidget(self.label_10, 0, 2, 1, 1)
 
-        self.spinBox_off_x_V = sciSpinBox(self.tab_8)
+        self.spinBox_off_x_V = QDoubleSpinBox(self.tab_8)
         self.spinBox_off_x_V.setObjectName(u"spinBox_off_x_V")
         self.spinBox_off_x_V.setDecimals(6)
         self.spinBox_off_x_V.setMinimum(-99.000000000000000)
 
         self.gridLayout_21.addWidget(self.spinBox_off_x_V, 0, 1, 1, 1)
 
-        self.spinBox_off_y_V = sciSpinBox(self.tab_8)
+        self.spinBox_off_y_V = QDoubleSpinBox(self.tab_8)
         self.spinBox_off_y_V.setObjectName(u"spinBox_off_y_V")
         self.spinBox_off_y_V.setDecimals(6)
         self.spinBox_off_y_V.setMinimum(-99.000000000000000)
 
         self.gridLayout_21.addWidget(self.spinBox_off_y_V, 1, 1, 1, 1)
 
-        self.spinBox_off_z_V = sciSpinBox(self.tab_8)
+        self.spinBox_off_z_V = QDoubleSpinBox(self.tab_8)
         self.spinBox_off_z_V.setObjectName(u"spinBox_off_z_V")
         self.spinBox_off_z_V.setDecimals(6)
         self.spinBox_off_z_V.setMinimum(-99.000000000000000)
@@ -1741,7 +1741,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_16 = QGridLayout()
         self.gridLayout_16.setObjectName(u"gridLayout_16")
-        self.spinBox_calib_x = sciSpinBox(self.tab_8)
+        self.spinBox_calib_x = QDoubleSpinBox(self.tab_8)
         self.spinBox_calib_x.setObjectName(u"spinBox_calib_x")
         self.spinBox_calib_x.setDecimals(6)
         self.spinBox_calib_x.setValue(8.900000000000000)
@@ -1768,7 +1768,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_16.addWidget(self.label_2, 0, 0, 1, 1)
 
-        self.spinBox_calib_z = sciSpinBox(self.tab_8)
+        self.spinBox_calib_z = QDoubleSpinBox(self.tab_8)
         self.spinBox_calib_z.setObjectName(u"spinBox_calib_z")
         self.spinBox_calib_z.setDecimals(6)
         self.spinBox_calib_z.setValue(10.000000000000000)
@@ -1785,7 +1785,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_16.addWidget(self.label_5, 1, 0, 1, 1)
 
-        self.spinBox_calib_y = sciSpinBox(self.tab_8)
+        self.spinBox_calib_y = QDoubleSpinBox(self.tab_8)
         self.spinBox_calib_y.setObjectName(u"spinBox_calib_y")
         self.spinBox_calib_y.setDecimals(6)
         self.spinBox_calib_y.setValue(8.900000000000000)
@@ -2700,7 +2700,7 @@ class Ui_MainWindowDesign(object):
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(0)
-        self.tabWidget_2.setCurrentIndex(1)
+        self.tabWidget_2.setCurrentIndex(5)
         self.comboBox_analogSelect_B.setCurrentIndex(0)
 
 
