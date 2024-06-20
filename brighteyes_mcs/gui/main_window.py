@@ -28,6 +28,8 @@ from PySide2.QtCore import (
     QFile,
     QCoreApplication,
     QTime,
+    QIODevice,
+    QBuffer
 )
 from PySide2.QtCore import QEvent, QRectF, QObject, QThread, QMutex, QMimeData, QUrl
 from PySide2.QtGui import QPixmap, QIcon, QGuiApplication
@@ -83,6 +85,186 @@ pg.setConfigOption("background", "k")
 pg.setConfigOption("foreground", "w")
 
 
+import uvicorn
+import threading
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse, Response
+import io
+from pyqtgraph import exporters
+
+class FastAPIServerThread(threading.Thread):
+    def __init__(self, main_window, host="127.0.0.1", port=8000):
+        super().__init__()
+        self.host = host
+        self.port = port
+        self.app = FastAPI()
+        self.main_window = main_window
+        self.server = None
+
+        class MySignal(QObject):
+            start = Signal()
+            stop = Signal()
+            preview = Signal()
+
+        self.signal = MySignal()
+        self.signal.start.connect(self.main_window.startButtonClicked)
+        self.signal.stop.connect(self.main_window.stopButtonClicked)
+        self.signal.preview.connect(self.main_window.previewButtonClicked)
+
+        @self.app.get("/")
+        async def read_root():
+            return {"message": "Hello, World!"}
+
+        @self.app.get("/gui/")
+        async def read_item():
+            mydict = self.main_window.getGUI_data()
+
+            return json.dumps(mydict, cls=NumpyEncoder)
+
+        @self.app.get("/gui/{item}")
+        async def read_item(item: str = None):
+            mydict = self.main_window.getGUI_data()
+
+            if item == 'all':
+                return json.dumps(mydict, cls=NumpyEncoder)
+            else:
+                return json.dumps(mydict[item], cls=NumpyEncoder)
+
+        @self.app.get("/cmd/{item}")
+        async def read_item(item: str = None):
+            if item == "preview":
+                print("preview")
+                self.signal.preview.emit()
+            if item == "acquisition":
+                print("acquisition")
+                self.signal.start.emit()
+            if item == "stop":
+                print("stop")
+                self.signal.stop.emit()
+
+            return "Done"
+
+        @self.app.put("/set")
+        def update_item(text: str):
+            print(text)
+            mydict = dict(json.loads(text))
+            print(mydict)
+            self.main_window.setGUI_data(mydict)
+            return "OK"
+
+        @self.app.post("/array/")
+        async def receive_array(file: UploadFile = File(...), shape: str = "", dtype: str = "float64"):
+            try:
+                # Read the file contents into bytes
+                data = await file.read()
+
+                # Log the received data length
+                print(f"Received data length: {len(data)} bytes")
+
+                # Convert the shape from string to tuple
+                shape_tuple = tuple(map(int, shape.split(',')))
+
+                # Log the received shape and dtype
+                print(f"Received shape: {shape_tuple}, dtype: {dtype}")
+
+                # Create the NumPy array from the binary data
+                np_array = np.frombuffer(data, dtype=dtype).reshape(shape_tuple)
+
+                return {"message": "Array received", "shape": np_array.shape}
+            except Exception as e:
+                # Log the exception message
+                print(f"Error: {e}")
+                raise HTTPException(status_code=400, detail=str(e))
+
+        @self.app.get("/preview.png")
+        async def send_array():
+            try:
+                # Create a sample NumPy array
+
+                exporter = exporters.ImageExporter(main_window.im_widget.imageItem)
+
+                # Save the image to a buffer
+                buffer = io.BytesIO()
+                image = exporter.export(toBytes=True)
+                buffer = QBuffer()
+                buffer.open(QIODevice.WriteOnly)
+                image.save(buffer, "PNG")
+
+                buffer.seek(0)
+                data = buffer.data().data()
+                return Response(data, media_type="image/png")
+
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/fingerprint.png")
+        async def send_array():
+            try:
+
+                exporter = exporters.ImageExporter(main_window.fingerprint_widget.imageItem)
+
+                # Save the image to a buffer
+                buffer = io.BytesIO()
+                image = exporter.export(toBytes=True)
+                buffer = QBuffer()
+                buffer.open(QIODevice.WriteOnly)
+                image.save(buffer, "PNG")
+
+                buffer.seek(0)
+                data = buffer.data().data()
+                return Response(data, media_type="image/png")
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/preview.np")
+        async def send_array():
+            try:
+                # Create a sample NumPy array
+                np_array = main_window.im_widget.getImageItem().image
+
+                # Convert the array to bytes
+                array_bytes = np_array.tobytes()
+                shape_str = ','.join(map(str, np_array.shape))
+                dtype_str = str(np_array.dtype)
+                headers = {
+                    "X-Shape": shape_str,
+                    "X-Dtype": dtype_str
+                }
+                buffer = io.BytesIO(array_bytes)
+                return StreamingResponse(buffer, media_type="application/octet-stream", headers=headers)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/fingerprint.np")
+        async def send_array():
+            try:
+                # Create a sample NumPy array
+                np_array = main_window.fingerprint_widget.getImageItem().image
+                # Convert the array to bytes
+                array_bytes = np_array.tobytes()
+                shape_str = ','.join(map(str, np_array.shape))
+                dtype_str = str(np_array.dtype)
+                headers = {
+                    "X-Shape": shape_str,
+                    "X-Dtype": dtype_str
+                }
+                buffer = io.BytesIO(array_bytes)
+                return StreamingResponse(buffer, media_type="application/octet-stream", headers=headers)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+
+
+    def run(self):
+        uvicorn_config = uvicorn.Config(app=self.app, host=self.host, port=self.port, log_level="info")
+        self.server = uvicorn.Server(config=uvicorn_config)
+        self.server.run()
+
+    def stop(self):
+        if self.server:
+            self.server.should_exit = True
+
+
 class PluginSignals(QObject):
     signal = Signal(str)
 
@@ -101,14 +283,14 @@ class MainWindow(QMainWindow):
         self.splash.setWindowFlags(Qt.SplashScreen | Qt.WindowStaysOnTopHint)
 
         LICENSE = (
-            """BrightEyes-MCS (Version: %s)                  
+                """BrightEyes-MCS (Version: %s)                  
         Author: Mattia Donato 
         License: General Public License version 3 (GPL v3)        
         Copyright © 2023 Istituto Italiano di Tecnologia
                         
         This program comes with ABSOLUTELY NO WARRANTY. 
         """
-            % __version__
+                % __version__
         )
 
         if "debug" in sys.argv:
@@ -239,7 +421,6 @@ class MainWindow(QMainWindow):
 
         self.configurationFPGA_dict = {}
         self.configurationGUI_dict = {}
-
 
         self.spadfcsmanager_inst = SpadFcsManager()
         print_dec("SpadFcsManager()")
@@ -439,21 +620,21 @@ class MainWindow(QMainWindow):
         self.snake_walk_Activate = False
 
         self.setupAnalogOutputGUI()
-        #Replace the terminal with ScriptLauncher
+        # Replace the terminal with ScriptLauncher
         self.plugin_manager.plugin_loader("script_launcher")
 
         print_dec("Added DfdWidget")
         self.dfd_page = DfdWidget(self)
         self.ui.tabWidget.addTab(self.dfd_page, "DFD Preview")
 
-        self.setStyleSheet(self.styleSheet()+
-        """
+        self.setStyleSheet(self.styleSheet() +
+                           """
         QToolTip { 
         background-color: black; 
         color: white; 
         border: black solid 1px
         }\n"""
-        )
+                           )
         if self.guiReadyFlag == True:
             QTimer.singleShot(10, self.guiReadyEvent)
             print_dec("call guiReadyEvent from __init__")
@@ -477,6 +658,16 @@ class MainWindow(QMainWindow):
     #     )
     #
     #     plot_widget.fitInView(zoom_rect)
+    def testServer_start(self):
+        server_thread = FastAPIServerThread(self, "0.0.0.0")
+        server_thread.start()
+
+    def testServer_stop(self):
+        print("stop")
+        server_thread.stop()
+        print("stopped")
+        server_thread.join()
+        print("joined")
 
     def configuration_helper_init(self):
         configuration_helper = {}
@@ -1029,6 +1220,7 @@ class MainWindow(QMainWindow):
         dialog.setFileMode(QFileDialog.Directory)
         if dialog.exec_():
             self.ui.lineEdit_destinationfolder.setText(dialog.selectedFiles()[0])
+
     @Slot()
     def numberChannelsChanged(self):
         ch = int(self.ui.comboBox_channels.currentText())
@@ -1037,7 +1229,6 @@ class MainWindow(QMainWindow):
         self.CHANNELS_x = int(np.sqrt(ch))
         self.CHANNELS_y = self.CHANNELS_x
         self.fingerprint_mask = np.ones((self.CHANNELS_x, self.CHANNELS_y), dtype=np.uint8)
-
 
     @Slot()
     def cmd_filename(self):
@@ -1289,7 +1480,7 @@ class MainWindow(QMainWindow):
     def getGUI_data(self):
         configuration = {}
         for n, (name, (caption, mtype, ref_obj, visible)) in enumerate(
-            self.configuration_helper.items()
+                self.configuration_helper.items()
         ):
             try:
                 if name == "plugins":
@@ -1605,12 +1796,12 @@ class MainWindow(QMainWindow):
                     "axesRangeChanged self.lock_parameters_changed_call UNSET False"
                 )
 
-
-
-
-                self.ui.label_pixelsize_x.setText("%.3f nm" % (1000*self.ui.spinBox_range_x.value() / self.ui.spinBox_nx.value()))
-                self.ui.label_pixelsize_y.setText("%.3f nm" % (1000*self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value()))
-                self.ui.label_pixelsize_z.setText("%.3f nm" % (1000*self.ui.spinBox_range_z.value() / self.ui.spinBox_nframe.value()))
+                self.ui.label_pixelsize_x.setText(
+                    "%.3f nm" % (1000 * self.ui.spinBox_range_x.value() / self.ui.spinBox_nx.value()))
+                self.ui.label_pixelsize_y.setText(
+                    "%.3f nm" % (1000 * self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value()))
+                self.ui.label_pixelsize_z.setText(
+                    "%.3f nm" % (1000 * self.ui.spinBox_range_z.value() / self.ui.spinBox_nframe.value()))
 
                 self.lock_range_changing = False
 
@@ -1663,6 +1854,7 @@ class MainWindow(QMainWindow):
         print_dec(
             "Now every process should be closed,Really! \n=============\n=== CIAO! ===\n============="
         )
+
     def bitfile_check(self, path):
         if not os.path.isfile(path):
             msgBox = QMessageBox()
@@ -1672,7 +1864,7 @@ class MainWindow(QMainWindow):
                            "you need to download them a part. Please find in the documentation the link.\n" % path
                            )
             msgBox.exec_()
-            raise(ValueError("Firmware file not found!"))
+            raise (ValueError("Firmware file not found!"))
 
     def connectFPGA(self):
         print_dec("ConnectFPGA")
@@ -1684,8 +1876,6 @@ class MainWindow(QMainWindow):
 
         self.spadfcsmanager_inst.set_bit_file_second_fpga(self.ui.lineEdit_fpga2bitfile.text())
         self.spadfcsmanager_inst.set_ni_addr_second_fpga(self.ui.lineEdit_ni2addr.text())
-
-
 
         self.spadfcsmanager_inst.set_timeout_fifos(
             self.ui.spinBox_fifo_timeout.value() * 1000
@@ -1734,8 +1924,8 @@ class MainWindow(QMainWindow):
             self.ui.label_actual_preview_buffer_size.setText(
                 "%d"
                 % (
-                    self.ui.spinBox_preview_buffer_size.value()
-                    * self.ui.spinBox_time_bin_per_px.value()
+                        self.ui.spinBox_preview_buffer_size.value()
+                        * self.ui.spinBox_time_bin_per_px.value()
                 )
             )
 
@@ -1744,7 +1934,6 @@ class MainWindow(QMainWindow):
                 fifo.append("FIFOAnalog")
             if self.ui.radioButton_digital.isChecked():
                 fifo.append("FIFO")
-
 
             self.spadfcsmanager_inst.set_len_fifo_prebuffer(
                 self.ui.spinBox_fifo_prebuffer.value()
@@ -2376,8 +2565,6 @@ class MainWindow(QMainWindow):
 
         t = np.linspace(0, 2 * np.pi, circular_points + 1)[:-1]
 
-
-
         self.X_array_um = (np.cos(t) * xx / 2) + offset_xx_um
         self.Y_array_um = (np.sin(t) * yy / 2) + offset_yy_um
         self.Z_array_um = (np.zeros(circular_points) * zz) + offset_zz_um
@@ -2446,6 +2633,7 @@ class MainWindow(QMainWindow):
     @Slot()
     def test9(self):
         self.load_circular()
+
     @Slot()
     def circularMotionActivateChanged(self):
         if self.ui.checkBox_circular.isChecked():
@@ -2485,14 +2673,14 @@ class MainWindow(QMainWindow):
         Y_arr = self.Y_array
         Z_arr = self.Z_array
 
-        if X_arr.shape[0]<32:
-            X_arr = np.pad(X_arr,(0,32-X_arr.shape[0]),mode="edge")
+        if X_arr.shape[0] < 32:
+            X_arr = np.pad(X_arr, (0, 32 - X_arr.shape[0]), mode="edge")
 
-        if Y_arr.shape[0]<32:
-            Y_arr = np.pad(Y_arr,(0,32-Y_arr.shape[0]),mode="edge")
+        if Y_arr.shape[0] < 32:
+            Y_arr = np.pad(Y_arr, (0, 32 - Y_arr.shape[0]), mode="edge")
 
-        if Z_arr.shape[0]<32:
-            Z_arr = np.pad(Z_arr,(0,32-Z_arr.shape[0]),mode="edge")
+        if Z_arr.shape[0] < 32:
+            Z_arr = np.pad(Z_arr, (0, 32 - Z_arr.shape[0]), mode="edge")
 
         self.setRegistersDict(
             {
@@ -2519,7 +2707,6 @@ class MainWindow(QMainWindow):
         # self.ui.progressBar_frame.setMaximum(0)
         #
         # self.startAcquisition(activate_preview=True)
-
 
     @Slot()
     def copyPositionsMarkers(self):
@@ -2646,7 +2833,7 @@ class MainWindow(QMainWindow):
             subprocess.Popen(
                 cmds,
                 creationflags=subprocess.DETACHED_PROCESS
-                | subprocess.CREATE_NEW_PROCESS_GROUP,
+                              | subprocess.CREATE_NEW_PROCESS_GROUP,
             )
         else:
             subprocess.Popen(cmds, start_new_session=True)
@@ -2659,7 +2846,7 @@ class MainWindow(QMainWindow):
         for k, v in enumerate(self.markers_list):
             # print(k, type(k), v, type(v))
             for n, i in enumerate(
-                ["offset_x_um", "offset_y_um", "offset_z_um"]
+                    ["offset_x_um", "offset_y_um", "offset_z_um"]
             ):  # assumed to be length 3
                 # print(n, type(n), i, type(i))
                 self.ui.tableWidget_markers.setItem(k, n, QTableWidgetItem(str(v[i])))
@@ -2711,7 +2898,7 @@ class MainWindow(QMainWindow):
         get_expected_fifo_elements = self.spadfcsmanager_inst.getExpectedFifoElements()
 
         current_time = (
-            get_current_preview_element * (time_res * time_bin * 1e-6) / self.CHANNELS
+                get_current_preview_element * (time_res * time_bin * 1e-6) / self.CHANNELS
         )
         current_frame = self.spadfcsmanager_inst.get_current_z()
         current_rep = self.spadfcsmanager_inst.get_current_rep()
@@ -2748,8 +2935,8 @@ class MainWindow(QMainWindow):
         trace, trace_pos = self.spadfcsmanager_inst.getTrace()
 
         if (
-            "Analog" in self.ui.comboBox_plot_channel.currentText()
-            and not self.DFD_Activate
+                "Analog" in self.ui.comboBox_plot_channel.currentText()
+                and not self.DFD_Activate
         ):
             self.trace_widget.setLabel("left", "Mean", "V")
             trace_bin = int(
@@ -2757,7 +2944,7 @@ class MainWindow(QMainWindow):
                 * 1e3
                 / (self.ui.spinBox_timeresolution.value())
             )
-            coeff = 1.0 / (2**27) / trace_bin
+            coeff = 1.0 / (2 ** 27) / trace_bin
         else:
             self.trace_widget.setLabel("left", "Freq.", "Hz")
             coeff = 1
@@ -2785,32 +2972,32 @@ class MainWindow(QMainWindow):
         # elif num == 2:  # fingerprint
         if self.fingerprint_visualization == 0:
             if (
-                self.get_fifo_elements % self.get_expected_fifo_elements_per_frame
+                    self.get_fifo_elements % self.get_expected_fifo_elements_per_frame
             ) != 0:
                 data_finger_print = (
-                    self.spadfcsmanager_inst.getFingerprintCumulative()
-                    / (
-                        (
-                            (
-                                self.get_fifo_elements
-                                % self.get_expected_fifo_elements_per_frame
-                            )
-                            / 2
+                        self.spadfcsmanager_inst.getFingerprintCumulative()
+                        / (
+                                (
+                                        (
+                                                self.get_fifo_elements
+                                                % self.get_expected_fifo_elements_per_frame
+                                        )
+                                        / 2
+                                )
+                                * time_res
+                                * time_bin
+                                * 1e-6
                         )
-                        * time_res
-                        * time_bin
-                        * 1e-6
-                    )
                 )
         elif self.fingerprint_visualization == 1:
             data_finger_print = (
-                self.spadfcsmanager_inst.getFingerprintCumulativeLast10000()
-                / (10000 * time_res * 1e-6)
+                    self.spadfcsmanager_inst.getFingerprintCumulativeLast10000()
+                    / (10000 * time_res * 1e-6)
             )
         elif self.fingerprint_visualization == 2:
             data_finger_print = (
-                self.spadfcsmanager_inst.getFingerprintCumulativeLastFrame()
-                / (self.get_expected_fifo_elements_per_frame / 2 * time_res * 1e-6)
+                    self.spadfcsmanager_inst.getFingerprintCumulativeLastFrame()
+                    / (self.get_expected_fifo_elements_per_frame / 2 * time_res * 1e-6)
             )
 
         saturation_data = self.spadfcsmanager_inst.getFingerprintSaturation()
@@ -2839,7 +3026,7 @@ class MainWindow(QMainWindow):
             self.my_tick_counter += self.timerPreviewImg.interval()
 
             if (self.my_tick_counter > 5000) or (
-                get_current_preview_element >= get_expected_fifo_elements
+                    get_current_preview_element >= get_expected_fifo_elements
             ):
                 print_dec(
                     "get_fifo_elements >= get_expected_fifo_elements and 1s passed"
@@ -2861,10 +3048,10 @@ class MainWindow(QMainWindow):
         self.ui.label_preview_delay.setText(
             "%0.3f"
             % (
-                fifo1
-                * self.spadfcsmanager_inst.shared_dict["last_packet_size"]
-                * self.ui.spinBox_timeresolution.value()
-                / 2e6
+                    fifo1
+                    * self.spadfcsmanager_inst.shared_dict["last_packet_size"]
+                    * self.ui.spinBox_timeresolution.value()
+                    / 2e6
             )
         )
 
@@ -2955,15 +3142,15 @@ class MainWindow(QMainWindow):
 
         self.fingerprint_saturation_mask.clear()
 
-        coeff = 25./self.CHANNELS
+        coeff = 25. / self.CHANNELS
 
         for xxx in range(self.CHANNELS_x):
             for yyy in range(self.CHANNELS_y):
                 if saturation_data[yyy, xxx] > 0:
-                    v=self.spadfcsmanager_inst.getFingerprintCumulative()*1.
-                    ratio = saturation_data[yyy, xxx] / v[yyy,xxx]
+                    v = self.spadfcsmanager_inst.getFingerprintCumulative() * 1.
+                    ratio = saturation_data[yyy, xxx] / v[yyy, xxx]
                     # print(ratio)
-                    size = 1 + min(ratio * 8 * 100,8 )
+                    size = 1 + min(ratio * 8 * 100, 8)
 
                     self.fingerprint_saturation_mask.addPoints(
                         x=[
@@ -2974,7 +3161,7 @@ class MainWindow(QMainWindow):
                         ],
                         pen="b",
                         brush="b",
-                        size=size*coeff,
+                        size=size * coeff,
                         symbol="s",
                     )
 
@@ -3255,9 +3442,9 @@ Have fun!
         numbers_repetition = self.ui.spinBox_nrepetition.value()
 
         calibration_v_step = (
-            np.asarray([xx, yy, zz])
-            / np.asarray([calib_xx, calib_yy, calib_zz])
-            / np.asarray([numbers_xx, numbers_yy, numbers_ff])
+                np.asarray([xx, yy, zz])
+                / np.asarray([calib_xx, calib_yy, calib_zz])
+                / np.asarray([numbers_xx, numbers_yy, numbers_ff])
         )
 
         offExtra_x_V = self.ui.spinBox_offExtra_x_V.value()
@@ -3436,13 +3623,13 @@ Have fun!
             self.ui.label_expected_dur_val.setText(
                 "%0.3f"
                 % (
-                    time_res
-                    * time_bin
-                    * numbers_xx
-                    * numbers_yy
-                    * numbers_ff
-                    * rep
-                    * 1e-6
+                        time_res
+                        * time_bin
+                        * numbers_xx
+                        * numbers_yy
+                        * numbers_ff
+                        * rep
+                        * 1e-6
                 )
             )
 
@@ -3494,9 +3681,9 @@ Have fun!
             numbers_repetition = self.ui.spinBox_nrepetition.value()
 
             calibration_v_step = (
-                np.asarray([xx, yy, zz])
-                / np.asarray([calib_xx, calib_yy, calib_zz])
-                / np.asarray([numbers_xx, numbers_yy, numbers_ff])
+                    np.asarray([xx, yy, zz])
+                    / np.asarray([calib_xx, calib_yy, calib_zz])
+                    / np.asarray([numbers_xx, numbers_yy, numbers_ff])
             )
 
             offExtra_x_V = self.ui.spinBox_offExtra_x_V.value()
@@ -3542,7 +3729,6 @@ Have fun!
             print_dec(
                 "positionSettingsChanged_apply lock_parameters_changed_call is True"
             )
-
 
         self.checkAlerts()
 
@@ -3704,9 +3890,9 @@ Have fun!
         numbers_repetition = self.ui.spinBox_nrepetition.value()
 
         calibration_v_step = (
-            np.asarray([xx, yy, zz])
-            / np.asarray([calib_xx, calib_yy, calib_zz])
-            / np.asarray([numbers_xx, numbers_yy, numbers_ff])
+                np.asarray([xx, yy, zz])
+                / np.asarray([calib_xx, calib_yy, calib_zz])
+                / np.asarray([numbers_xx, numbers_yy, numbers_ff])
         )
 
         offExtra_x_V = self.ui.spinBox_offExtra_x_V.value()
@@ -3830,9 +4016,9 @@ Have fun!
             )
 
             trace_length = (
-                self.ui.doubleSpinBox_maxlength.value()
-                * 1e6
-                / (self.ui.spinBox_timeresolution.value())
+                    self.ui.doubleSpinBox_maxlength.value()
+                    * 1e6
+                    / (self.ui.spinBox_timeresolution.value())
             )
 
             trace_sample_per_bins = int(trace_length // trace_bins)
@@ -3863,15 +4049,13 @@ Have fun!
             self.sendCmdRun()
 
         self.update_fingerprint_mask()
+
     @Slot()
     def test_analog_digital(self):
         print_dec("test_analog_digital()")
         self.ui.radioButton_analog.setAutoExclusive(False)
         self.ui.radioButton_digital.setAutoExclusive(False)
         print_dec("now the ratioButton can be on at the same time")
-
-
-
 
     @Slot()
     def trace_parameters_changed(self):
@@ -3881,9 +4065,9 @@ Have fun!
             / (self.ui.spinBox_timeresolution.value())
         )
         trace_length = (
-            self.ui.doubleSpinBox_maxlength.value()
-            * 1e6
-            / (self.ui.spinBox_timeresolution.value())
+                self.ui.doubleSpinBox_maxlength.value()
+                * 1e6
+                / (self.ui.spinBox_timeresolution.value())
         )
         trace_sample_per_bins = int(trace_length // trace_bins)
         self.ui.label_trace_total_bins.setText("%s" % trace_sample_per_bins)
@@ -4020,9 +4204,9 @@ Have fun!
         else:
             if QFile(folder + filename).exists():
                 filename = (
-                    filename.replace(".h5", "")
-                    + datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-                    + ".h5"
+                        filename.replace(".h5", "")
+                        + datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+                        + ".h5"
                 )
                 print_dec("FILE EXISTS")
         print_dec(filename)
@@ -4138,50 +4322,50 @@ Have fun!
 
         # x
         if ((current_plot_size_x_um == 0.0) and (current_number_px_x > 1)) or (
-            (current_plot_size_x_um > 0.0) and (current_number_px_x == 1)
+                (current_plot_size_x_um > 0.0) and (current_number_px_x == 1)
         ):
             self.ui.spinBox_range_x.setStyleSheet("border: 1px solid red;")
             self.ui.spinBox_nx.setStyleSheet("border: 1px solid red;")
         # y
         if ((current_plot_size_y_um == 0.0) and (current_number_px_y > 1)) or (
-            (current_plot_size_y_um > 0.0) and (current_number_px_y == 1)
+                (current_plot_size_y_um > 0.0) and (current_number_px_y == 1)
         ):
             self.ui.spinBox_range_y.setStyleSheet("border: 1px solid red;")
             self.ui.spinBox_ny.setStyleSheet("border: 1px solid red;")
         # z
         if ((current_plot_size_z_um == 0.0) and (current_number_px_z > 1)) or (
-            (current_plot_size_z_um > 0.0) and (current_number_px_z == 1)
+                (current_plot_size_z_um > 0.0) and (current_number_px_z == 1)
         ):
             self.ui.spinBox_range_z.setStyleSheet("border: 1px solid red;")
             self.ui.spinBox_nframe.setStyleSheet("border: 1px solid red;")
 
         # x
         if (self.ui.comboBox_view_projection.currentText().find("x") != -1) and (
-            current_number_px_x == 1
+                current_number_px_x == 1
         ):
             self.ui.comboBox_view_projection.setStyleSheet("border: 1px solid red;")
             self.ui.spinBox_nx.setStyleSheet("border: 1px solid red;")
         # y
         if (self.ui.comboBox_view_projection.currentText().find("y") != -1) and (
-            current_number_px_y == 1
+                current_number_px_y == 1
         ):
             self.ui.comboBox_view_projection.setStyleSheet("border: 1px solid red;")
             self.ui.spinBox_nx.setStyleSheet("border: 1px solid red;")
         # z
         if (self.ui.comboBox_view_projection.currentText().find("z") != -1) and (
-            current_number_px_z == 1
+                current_number_px_z == 1
         ):
             self.ui.comboBox_view_projection.setStyleSheet("border: 1px solid red;")
             self.ui.spinBox_nframe.setStyleSheet("border: 1px solid red;")
 
         if "analog" in (self.ui.comboBox_plot_channel.currentText().lower()) and (
-            not self.ui.radioButton_analog.isChecked()
+                not self.ui.radioButton_analog.isChecked()
         ):
             self.ui.comboBox_plot_channel.setStyleSheet("border: 1px solid red;")
             self.ui.radioButton_analog.setStyleSheet("border: 1px solid red;")
 
         if not ("analog" in (self.ui.comboBox_plot_channel.currentText().lower())) and (
-            not self.ui.radioButton_digital.isChecked()
+                not self.ui.radioButton_digital.isChecked()
         ):
             self.ui.comboBox_plot_channel.setStyleSheet("border: 1px solid red;")
             self.ui.radioButton_digital.setStyleSheet("border: 1px solid red;")
@@ -4252,8 +4436,6 @@ Have fun!
         if len(proj) == 2:
             self.im_widget_plot_item.setLabel("bottom", "%s (um)" % proj[0])
             self.im_widget_plot_item.setLabel("left", "%s (um)" % proj[1])
-
-
 
     def finalizeAcquisition(self):  # ADD METADATA
         # self.rect_roi.show()
@@ -4378,7 +4560,6 @@ Have fun!
         self.update()
         self.repaint()
 
-
         self.started_normal = False
         self.started_preview = False
 
@@ -4422,7 +4603,7 @@ Have fun!
     #     else:
     #         return np.zeros(2)
 
-    def plotPreviewImage(self, preview_img=None):
+    def getCurrentPreviewImage(self, preview_img=None):
         # print("plotPreviewImage")
         # print("self.autoscale_image", self.autoscale_image)
         proj = self.ui.comboBox_view_projection.currentText()
@@ -4527,6 +4708,21 @@ Have fun!
             print_dec("NOT IMPLEMENTED BOH!!")
             return
 
+        return (preview_img,
+                ch,
+                autoLevels,
+                autoRange,
+                pos,
+                scale)
+
+    def plotPreviewImage(self, img=None):
+        (preview_img,
+         ch,
+         autoLevels,
+         autoRange,
+         pos,
+         scale) = self.getCurrentPreviewImage(img)
+
         if ch.startswith("RGB"):
             print(preview_img.shape)
             self.im_widget.setImage(
@@ -4547,7 +4743,6 @@ Have fun!
                 pos=pos,
                 scale=scale,
             )
-
 
     def plotCurrentImage(self):
         print_dec(self.currentImage.shape)
