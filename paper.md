@@ -1,11 +1,12 @@
 ---
 title: 'BrightEyes-MCS: a control software for multichannel scanning microscopy'
 tags:
-  - Python
-  - imaging
-  - microscopy
-  - flim
-  - image scanning microscopy
+  - Image Scanning Microscopy
+  - Fluorescence Microscopy
+  - Super-Resolution Microscopy
+  - Scanning Microscopy
+  - Microscope automation
+  
 authors:
   - name: Mattia Donato
     orcid: 0000-0003-0026-747X
