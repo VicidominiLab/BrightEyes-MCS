@@ -96,6 +96,7 @@ class PluginSignals(QObject):
 
 class MainWindow(QMainWindow):
     def __init__(self, args=None):
+        self.http_server_thread = None
         self.guiReadyFlag = False
         self.init_ready = False
         desktop = QDesktopWidget()
@@ -483,16 +484,34 @@ class MainWindow(QMainWindow):
     #     )
     #
     #     plot_widget.fitInView(zoom_rect)
-    def testServer_start(self):
-        server_thread = FastAPIServerThread(self, "0.0.0.0")
-        server_thread.start()
 
-    def testServer_stop(self):
-        print("stop")
-        server_thread.stop()
-        print("stopped")
-        server_thread.join()
-        print("joined")
+
+    @Slot()
+    def httpServerCheckBoxChanged(self):
+        if self.ui.checkBox_httpServer.isChecked():
+            self.httpApiServer_start()
+        else:
+            self.httpApiServer_stop()
+    def httpApiServer_start(self):
+        print_dec("httpApiServer_start()")
+        if self.http_server_thread is None:
+            self.http_server_thread = FastAPIServerThread(self, self.ui.lineEdit_httpAddr.text(), int(self.ui.lineEdit_httpPort.text()))
+            print_dec("HTTP Server FastAPIServerThread Start")
+            self.http_server_thread.start()
+            self.ui.label_httpLink.setOpenExternalLinks(True)
+            self.ui.label_httpLink.setText('<a href="http://%s:%s/docs">http://%s:%s/docs</a>' %
+                                           (self.ui.lineEdit_httpAddr.text(), self.ui.lineEdit_httpPort.text(),
+                                            self.ui.lineEdit_httpAddr.text(), self.ui.lineEdit_httpPort.text()))
+        else:
+            print_dec("HTTP Server FastAPIServerThread ALREADY RUNNING")
+            
+    def httpApiServer_stop(self):
+        print_dec("htttApiServer_stop()")
+        self.http_server_thread.stop()
+        print_dec("HTTP Server FastAPIServerThread Stop")
+        self.http_server_thread.join()
+        print_dec("HTTP Server FastAPIServerThread Join")
+        self.http_server_thread=None
 
     def configuration_helper_init(self):
         configuration_helper = {}
