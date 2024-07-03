@@ -16,4 +16,5 @@ nifpga-fast-fifo-recv>=0.100.1
 #pprofile
 atomics
 matplotlib
+fastapi
 #brighteyes-flim #facultative activate in case of FLIM analysis/preview
