@@ -107,7 +107,7 @@ BrightEyes-MCS supports only FPGA from NI. At the moment the bitfile are built f
 | 2    | NI FPGA USB-7856R (Single-board)                   | -                           | Full supported, currently in use in our lab |
 | 3    | NI FPGA USB-7856R OEM (Single-board)               | -                           | Should work but not fully tested            |
 | 4    | NI FPGA PXIe-7822 + NI FPGA PXIe-7856 (Dual-board) | NI Chassis + NI Thunderbolt | Full supported, currently in use in our lab |
-| 4    | NI FPGA PXIe-7822 (Singel-board)                   |  NI Chassis + NI Thunderbolt +  External DAC required       | Full supported, currently in use in our lab |
+| 4    | NI FPGA PXIe-7822 (Single-board)                   |  NI Chassis + NI Thunderbolt +  External DAC required       | Full supported, currently in use in our lab |
 | 5    | NI FPGA PCIe-7820R                                 | External DAC required       | Full supported, currently in use in our lab |
 
 **Warning!! To avoid any damage of your equipment, please verify that the pinout described in I/O Table are compatible with your actual system.**
