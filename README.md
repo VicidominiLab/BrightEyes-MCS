@@ -73,6 +73,7 @@ The authors are thanked for their valuable contributions. Below is a breakdown o
   - **Giuseppe Vicidomini** _(Principal Investigator)_
   - Luca Bega
   - Andrea Bucci
+  - Mattia Donato
   - Francesco Fersini
   - Giacomo Garre'
   - Marcus Held
