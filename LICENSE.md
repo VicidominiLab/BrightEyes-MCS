@@ -1,18 +1,3 @@
-BrightEyes-MCS is a Microscope Control Software for image-scanning microscopy designed by the Molecular Microscopy and Spectroscopy group of the Italian Institute of Technology.
-
-This program is distributed in the hope that it will be useful, 
-but WITHOUT ANY WARRANTY; without even the implied warranty of 
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-This is free software, and you are welcome to redistribute it
-under certain conditions; this software code is licensed under
-the **GNU General Public License version 3** (GPLv3), with the 
-exception of certain parts where a different license is specified.
-Please refer to the individual source files for details on specific 
-licensing exceptions.
-
-----
-
-# GNU GENERAL PUBLIC LICENSE - Version 3
 
                       GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
