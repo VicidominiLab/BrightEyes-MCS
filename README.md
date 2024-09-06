@@ -113,6 +113,7 @@ BrightEyes-MCS supports only FPGA from NI. At the moment the bitfile are built f
 **Warning!! To avoid any damage of your equipment, please verify that the pinout described in I/O Table are compatible with your actual system.**
 
 ## Software
+- Windows OS
 - Python 3.10 ( https://www.python.org/downloads/ )
 - Git ( https://desktop.github.com/ )
 - NI FPGA drivers installed ( https://www.ni.com/en/support/downloads/software-products/download.labview-fpga-module.html )
