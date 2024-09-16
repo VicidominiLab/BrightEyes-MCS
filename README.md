@@ -116,7 +116,7 @@ BrightEyes-MCS supports only FPGA from NI. At the moment the bitfile are built f
 - Windows OS
 - Python 3.10 ( https://www.python.org/downloads/ )
 - Git ( https://desktop.github.com/ )
-- NI FPGA drivers installed ( https://www.ni.com/en/support/downloads/software-products/download.labview-fpga-module.html )
+- NI FPGA drivers installed ( https://www.ni.com/en/support/downloads/drivers/download.ni-r-series-multifunction-rio.html )
 - A C compiler:
   - [MSYS2](https://www.msys2.org/), we strongly suggest it as open-source project. Please install it in the default folder and after the installation remind to install `gcc` on MSYS2 terminal with the command `pacman -S mingw-w64-ucrt-x86_64-gcc`.
   - Otherwise you can use Microsoft Visual Studio (with development C++ build).
