@@ -918,6 +918,11 @@ class MainWindow(QMainWindow):
             self.ui.comboBox_AnalogOut[ch].addItem("Y")
             self.ui.comboBox_AnalogOut[ch].addItem("Z")
             self.ui.comboBox_AnalogOut[ch].addItem("Constant")
+            self.ui.comboBox_AnalogOut[ch].addItem("Laser 1")
+            self.ui.comboBox_AnalogOut[ch].addItem("Laser 2")
+            self.ui.comboBox_AnalogOut[ch].addItem("Laser 3")
+            self.ui.comboBox_AnalogOut[ch].addItem("Laser 4")
+
 
             if ch == 0:
                 self.ui.comboBox_AnalogOut[ch].setCurrentIndex(0)
@@ -950,7 +955,7 @@ class MainWindow(QMainWindow):
         mydict = {}
         for ch in range(0, 8):
             sel = self.ui.comboBox_AnalogOut[ch].currentIndex()
-            if sel == 3:
+            if self.ui.comboBox_AnalogOut[ch].currentText() == "Constant":
                 sel = 15
 
             mydict["AnalogSelector_%d" % ch] = sel
@@ -1742,6 +1747,19 @@ class MainWindow(QMainWindow):
                 }
             )
 
+            if self.CHANNELS == 49:
+                mydict.update(
+                    {
+                        "49_enable": True
+                    }
+                )
+            else:
+                mydict.update(
+                    {
+                        "49_enable": False
+                    }
+                )
+
             # self.spadfcsmanager_inst.set(self.ui.spinBox_fifo_buffer_size.value())
             self.spadfcsmanager_inst.set_preview_buffer_size_in_words(
                 self.ui.spinBox_preview_buffer_size.value()
@@ -2336,6 +2354,8 @@ class MainWindow(QMainWindow):
         if not self.spadfcsmanager_inst.is_connected:
             print_dec("not self.spadfcsmanager_inst.is_connected")
             self.connectFPGA()
+        else:
+            print_dec("FPGA Already connected!")
 
         self.updatePreviewConfiguration()
 
@@ -4054,6 +4074,8 @@ Have fun!
         if not self.spadfcsmanager_inst.is_connected:
             print_dec("not self.spadfcsmanager_inst.is_connected")
             self.connectFPGA()
+        else:
+            print_dec("FPGA Already connected!")
 
         self.updatePreviewConfiguration()
 

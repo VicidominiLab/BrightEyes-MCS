@@ -73,6 +73,8 @@ class FpgaHandle(object):
         self.configuration["initial_registers"].clear()
         self.configuration["initial_registers"].update(initial_registers)
         print_dec("self.fpga_handle_process.start()")
+        print_dec("initial_registers")
+        print_dec(initial_registers)
         self.fpga_handle_process = FpgaHandleProcess(
             self.configuration, use_rust_fifo=self.use_rust_fifo
         )

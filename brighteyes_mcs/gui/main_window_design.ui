@@ -2080,7 +2080,7 @@
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>-50</y>
+          <y>0</y>
           <width>384</width>
           <height>291</height>
          </rect>
@@ -2916,6 +2916,12 @@
                  <property name="decimals">
                   <number>6</number>
                  </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
                  <property name="value">
                   <double>8.900000000000000</double>
                  </property>
@@ -2954,6 +2960,12 @@
                  <property name="decimals">
                   <number>6</number>
                  </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
                  <property name="value">
                   <double>10.000000000000000</double>
                  </property>
@@ -2977,6 +2989,12 @@
                 <widget class="QDoubleSpinBox" name="spinBox_calib_y">
                  <property name="decimals">
                   <number>6</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
                  </property>
                  <property name="value">
                   <double>8.900000000000000</double>

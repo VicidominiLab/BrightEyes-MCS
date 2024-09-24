@@ -1198,7 +1198,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, -50, 384, 291))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 384, 291))
         self.gridLayout_64 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_64.setObjectName(u"gridLayout_64")
         self.tabWidget_2 = QTabWidget(self.scrollAreaWidgetContents_2)
@@ -1744,6 +1744,8 @@ class Ui_MainWindowDesign(object):
         self.spinBox_calib_x = QDoubleSpinBox(self.tab_8)
         self.spinBox_calib_x.setObjectName(u"spinBox_calib_x")
         self.spinBox_calib_x.setDecimals(6)
+        self.spinBox_calib_x.setMinimum(-1000.000000000000000)
+        self.spinBox_calib_x.setMaximum(1000.000000000000000)
         self.spinBox_calib_x.setValue(8.900000000000000)
 
         self.gridLayout_16.addWidget(self.spinBox_calib_x, 0, 1, 1, 1)
@@ -1771,6 +1773,8 @@ class Ui_MainWindowDesign(object):
         self.spinBox_calib_z = QDoubleSpinBox(self.tab_8)
         self.spinBox_calib_z.setObjectName(u"spinBox_calib_z")
         self.spinBox_calib_z.setDecimals(6)
+        self.spinBox_calib_z.setMinimum(-1000.000000000000000)
+        self.spinBox_calib_z.setMaximum(1000.000000000000000)
         self.spinBox_calib_z.setValue(10.000000000000000)
 
         self.gridLayout_16.addWidget(self.spinBox_calib_z, 2, 1, 1, 1)
@@ -1788,6 +1792,8 @@ class Ui_MainWindowDesign(object):
         self.spinBox_calib_y = QDoubleSpinBox(self.tab_8)
         self.spinBox_calib_y.setObjectName(u"spinBox_calib_y")
         self.spinBox_calib_y.setDecimals(6)
+        self.spinBox_calib_y.setMinimum(-1000.000000000000000)
+        self.spinBox_calib_y.setMaximum(1000.000000000000000)
         self.spinBox_calib_y.setValue(8.900000000000000)
 
         self.gridLayout_16.addWidget(self.spinBox_calib_y, 1, 1, 1, 1)

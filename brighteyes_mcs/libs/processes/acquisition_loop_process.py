@@ -479,7 +479,7 @@ class AcquisitionLoopProcess(mp.Process):
 
                     self.saturation[:] = 0
 
-                    print_dec("self.gap", self.gap )
+                    # print_dec("self.gap", self.gap )
                     if (
                         converter(
                             data_from_queue,
@@ -596,33 +596,80 @@ class AcquisitionLoopProcess(mp.Process):
                             self.trace[1, :] = temporalBinner.get_bins()
 
                     elif selected_channel.startswith("RGB"):
-                        if self.activate_show_preview == True:
-                            channelA = int(selected_channel.split(" ")[1])
-                            channelB = int(selected_channel.split(" ")[2])
-                            channelC = int(selected_channel.split(" ")[3])
+                        if selected_channel.startswith("RGB "):
+                            if self.activate_show_preview == True:
+                                channelA = int(selected_channel.split(" ")[1])
+                                channelB = int(selected_channel.split(" ")[2])
+                                channelC = int(selected_channel.split(" ")[3])
 
+                                self.image_xy_rgb_lock.acquire()
+                                self.image_xy_rgb[list_y, list_x, 0] = 0
+                                self.image_xy_rgb[list_y, list_x, 1] = 0
+                                self.image_xy_rgb[list_y, list_x, 2] = 0
+
+                                np.add.at(
+                                    self.image_xy_rgb[:, :, 0],
+                                    (list_y, list_x),
+                                    buffer_up_to_gap[:, channelA],
+                                )
+                                np.add.at(
+                                    self.image_xy_rgb[:, :, 1],
+                                    (list_y, list_x),
+                                    buffer_up_to_gap[:, channelB],
+                                )
+                                np.add.at(
+                                    self.image_xy_rgb[:, :, 2],
+                                    (list_y, list_x),
+                                    buffer_up_to_gap[:, channelC],
+                                )
+                                self.image_xy_rgb_lock.release()
+                        if selected_channel.startswith("RGB2"):
+                            if self.activate_show_preview == True:
+                                self.image_xy_rgb_lock.acquire()
+                                self.image_xy_rgb[list_y, list_x, 0] = 0
+                                self.image_xy_rgb[list_y, list_x, 1] = 0
+                                self.image_xy_rgb[list_y, list_x, 2] = 0
+
+                                if self.buffer_sum_SPAD_ch.shape[0] > 2:
+
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 0],
+                                        (list_y[::2], list_x[::2]),
+                                        self.buffer_sum_SPAD_ch[: self.gap:2],
+                                    )
+
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 1],
+                                        (list_y[1::2], list_x[1::2]),
+                                        self.buffer_sum_SPAD_ch[1: self.gap:2],
+                                    )
+
+                                self.image_xy_rgb_lock.release()
+                        if selected_channel.startswith("RGB3"):
                             self.image_xy_rgb_lock.acquire()
                             self.image_xy_rgb[list_y, list_x, 0] = 0
                             self.image_xy_rgb[list_y, list_x, 1] = 0
                             self.image_xy_rgb[list_y, list_x, 2] = 0
+                            if self.buffer_sum_SPAD_ch.shape[0]>2:
+                                np.add.at(
+                                    self.image_xy_rgb[:, :, 0],
+                                    (list_y[::3], list_x[::3]),
+                                    self.buffer_sum_SPAD_ch[: self.gap:3],
+                                )
 
-                            np.add.at(
-                                self.image_xy_rgb[:, :, 0],
-                                (list_y, list_x),
-                                buffer_up_to_gap[:, channelA],
-                            )
-                            np.add.at(
-                                self.image_xy_rgb[:, :, 1],
-                                (list_y, list_x),
-                                buffer_up_to_gap[:, channelB],
-                            )
-                            np.add.at(
-                                self.image_xy_rgb[:, :, 2],
-                                (list_y, list_x),
-                                buffer_up_to_gap[:, channelC],
-                            )
+                                np.add.at(
+                                    self.image_xy_rgb[:, :, 1],
+                                    (list_y[1::3], list_x[1::3]),
+                                    self.buffer_sum_SPAD_ch[1: self.gap:3],
+                                )
+
+                                np.add.at(
+                                    self.image_xy_rgb[:, :, 2],
+                                    (list_y[2::3], list_x[2::3]),
+                                    self.buffer_sum_SPAD_ch[2: self.gap:3],
+                                )
+
                             self.image_xy_rgb_lock.release()
-
                         if self.active_autocorrelation:
                             correlator.add(self.buffer_sum_SPAD_ch[: self.gap])
                             self.autocorrelation[

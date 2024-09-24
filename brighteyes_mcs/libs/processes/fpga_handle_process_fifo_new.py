@@ -14,7 +14,10 @@ def emptyQueue(queue):
 class FpgaHandleProcess(mp.Process):
     def __init__(self, configuration, debug=True, use_rust_fifo=True):
         print_dec("FpgaHandleProcess INIT")
-
+        # print_dec("=> configuration", configuration)
+        # for i in configuration:
+        #     print("==", i, "==")
+        #     print(configuration[i])
         super().__init__()
         self.configuration = configuration
         self.timeout_fifos = self.configuration["timeout_fifos"]
@@ -280,6 +283,7 @@ class FpgaHandleProcess(mp.Process):
                     self.nifpga_session.registers[register].write(
                         self.initial_registers[register]
                     )
+                print_dec(register, self.initial_registers[register])
             except Exception as e:
                 print_dec(
                     "self.queueRegisterWrite",
