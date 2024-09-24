@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse, Response
 import io
 from pyqtgraph import exporters
 import json
+import numpy as np
 
 from PySide2.QtCore import (
     Signal,
@@ -78,9 +79,18 @@ class FastAPIServerThread(threading.Thread):
         async def update_item(request: Request):
             try:
                 mydict = await request.json()
-                print(mydict)
-                self.main_window.setGUI_data(mydict)
-                return {"status": "OK"}
+                mydict_processed = {}
+                for i in mydict.keys():
+                    d = mydict[i]
+                    if d != '':
+                        mydict_processed.update({i:d})
+                    print(mydict)
+                if len(mydict_processed.keys()) > 0:
+                    print(mydict_processed)
+                    self.main_window.setGUI_data(mydict_processed)
+                    return {"status": "OK"}
+                else:
+                    return {"status": "BAD"}
             except Exception as e:
                 print(f"Error: {e}")
                 raise HTTPException(status_code=400, detail=str(e))

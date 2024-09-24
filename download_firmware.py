@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         container_layout = QVBoxLayout()
 
         self.browser = QWebEngineView()
-        self.browser.setUrl(QUrl("https://github.com/VicidominiLab/BrightEyes-MCSLL"))
+        self.browser.setUrl(QUrl("https://github.com/VicidominiLab/BrightEyes-MCSLL/blob/main/LICENSE.md"))
 
         container_layout.addWidget(self.browser)
 

@@ -1665,6 +1665,64 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_58.addItem(self.verticalSpacer_11, 1, 0, 1, 1)
 
         self.tabWidget_2.addTab(self.tab_13, "")
+        self.tab_12 = QWidget()
+        self.tab_12.setObjectName(u"tab_12")
+        self.gridLayout_73 = QGridLayout(self.tab_12)
+        self.gridLayout_73.setObjectName(u"gridLayout_73")
+        self.verticalSpacer_10 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.gridLayout_73.addItem(self.verticalSpacer_10, 3, 0, 1, 1)
+
+        self.gridLayout_72 = QGridLayout()
+        self.gridLayout_72.setObjectName(u"gridLayout_72")
+        self.checkBox_httpServer = QCheckBox(self.tab_12)
+        self.checkBox_httpServer.setObjectName(u"checkBox_httpServer")
+
+        self.gridLayout_72.addWidget(self.checkBox_httpServer, 1, 1, 1, 1)
+
+        self.label_100 = QLabel(self.tab_12)
+        self.label_100.setObjectName(u"label_100")
+
+        self.gridLayout_72.addWidget(self.label_100, 1, 0, 1, 1)
+
+        self.lineEdit_httpPort = QLineEdit(self.tab_12)
+        self.lineEdit_httpPort.setObjectName(u"lineEdit_httpPort")
+        sizePolicy2.setHeightForWidth(self.lineEdit_httpPort.sizePolicy().hasHeightForWidth())
+        self.lineEdit_httpPort.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_72.addWidget(self.lineEdit_httpPort, 3, 1, 1, 1)
+
+        self.lineEdit_httpAddr = QLineEdit(self.tab_12)
+        self.lineEdit_httpAddr.setObjectName(u"lineEdit_httpAddr")
+        sizePolicy2.setHeightForWidth(self.lineEdit_httpAddr.sizePolicy().hasHeightForWidth())
+        self.lineEdit_httpAddr.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_72.addWidget(self.lineEdit_httpAddr, 2, 1, 1, 1)
+
+        self.label_99 = QLabel(self.tab_12)
+        self.label_99.setObjectName(u"label_99")
+
+        self.gridLayout_72.addWidget(self.label_99, 3, 0, 1, 1)
+
+        self.label_44 = QLabel(self.tab_12)
+        self.label_44.setObjectName(u"label_44")
+
+        self.gridLayout_72.addWidget(self.label_44, 2, 0, 1, 1)
+
+        self.label_102 = QLabel(self.tab_12)
+        self.label_102.setObjectName(u"label_102")
+
+        self.gridLayout_72.addWidget(self.label_102, 4, 0, 1, 1)
+
+        self.label_httpLink = QLabel(self.tab_12)
+        self.label_httpLink.setObjectName(u"label_httpLink")
+
+        self.gridLayout_72.addWidget(self.label_httpLink, 4, 1, 1, 1)
+
+
+        self.gridLayout_73.addLayout(self.gridLayout_72, 0, 0, 1, 1)
+
+        self.tabWidget_2.addTab(self.tab_12, "")
         self.tab_8 = QWidget()
         self.tab_8.setObjectName(u"tab_8")
         self.gridLayout_46 = QGridLayout(self.tab_8)
@@ -2703,10 +2761,11 @@ class Ui_MainWindowDesign(object):
         self.checkBox_circular.clicked.connect(MainWindowDesign.circularMotionActivateChanged)
         self.spinBox_circular_points.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
         self.pushButton_19.clicked.connect(MainWindowDesign.test_analog_digital)
+        self.checkBox_httpServer.stateChanged.connect(MainWindowDesign.httpServerCheckBoxChanged)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(0)
-        self.tabWidget_2.setCurrentIndex(5)
+        self.tabWidget_2.setCurrentIndex(6)
         self.comboBox_analogSelect_B.setCurrentIndex(0)
 
 
@@ -3052,6 +3111,15 @@ class Ui_MainWindowDesign(object):
         self.label_86.setText(QCoreApplication.translate("MainWindowDesign", u"External Call", None))
         self.lineEdit_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"%python -m napari %lastfilename", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_13), QCoreApplication.translate("MainWindowDesign", u"Ext.", None))
+        self.checkBox_httpServer.setText(QCoreApplication.translate("MainWindowDesign", u"http API Server", None))
+        self.label_100.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
+        self.lineEdit_httpPort.setText(QCoreApplication.translate("MainWindowDesign", u"8000", None))
+        self.lineEdit_httpAddr.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
+        self.label_99.setText(QCoreApplication.translate("MainWindowDesign", u"Port", None))
+        self.label_44.setText(QCoreApplication.translate("MainWindowDesign", u"Address", None))
+        self.label_102.setText(QCoreApplication.translate("MainWindowDesign", u"Link", None))
+        self.label_httpLink.setText(QCoreApplication.translate("MainWindowDesign", u".", None))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_12), QCoreApplication.translate("MainWindowDesign", u"http Server", None))
         self.label_10.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
         self.label_8.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
         self.label_11.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))

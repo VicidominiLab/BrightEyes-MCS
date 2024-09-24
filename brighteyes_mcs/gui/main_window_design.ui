@@ -2089,7 +2089,7 @@
          <item row="0" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
            <property name="currentIndex">
-            <number>5</number>
+            <number>6</number>
            </property>
            <widget class="QWidget" name="tab_2">
             <attribute name="title">
@@ -2798,6 +2798,98 @@
                 </size>
                </property>
               </spacer>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tab_12">
+            <attribute name="title">
+             <string>http Server</string>
+            </attribute>
+            <layout class="QGridLayout" name="gridLayout_73">
+             <item row="3" column="0">
+              <spacer name="verticalSpacer_10">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="0" column="0">
+              <layout class="QGridLayout" name="gridLayout_72">
+               <item row="1" column="1">
+                <widget class="QCheckBox" name="checkBox_httpServer">
+                 <property name="text">
+                  <string>http API Server</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_100">
+                 <property name="text">
+                  <string>Activate</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QLineEdit" name="lineEdit_httpPort">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>8000</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLineEdit" name="lineEdit_httpAddr">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>127.0.0.1</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_99">
+                 <property name="text">
+                  <string>Port</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_44">
+                 <property name="text">
+                  <string>Address</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="label_102">
+                 <property name="text">
+                  <string>Link</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QLabel" name="label_httpLink">
+                 <property name="text">
+                  <string>.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -4399,7 +4491,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1383</x>
-     <y>746</y>
+     <y>743</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -4415,7 +4507,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1493</x>
-     <y>746</y>
+     <y>743</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -4431,7 +4523,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1602</x>
-     <y>746</y>
+     <y>743</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -4447,7 +4539,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>115</x>
-     <y>1027</y>
+     <y>1101</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -4463,7 +4555,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>115</x>
-     <y>1053</y>
+     <y>1127</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4479,7 +4571,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>115</x>
-     <y>1079</y>
+     <y>1153</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4495,7 +4587,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>119</x>
-     <y>1126</y>
+     <y>1200</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4511,7 +4603,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>119</x>
-     <y>1152</y>
+     <y>1226</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4527,7 +4619,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>119</x>
-     <y>1178</y>
+     <y>1252</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -4591,7 +4683,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1383</x>
-     <y>775</y>
+     <y>772</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -4607,7 +4699,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1493</x>
-     <y>775</y>
+     <y>772</y>
     </hint>
     <hint type="destinationlabel">
      <x>689</x>
@@ -4623,7 +4715,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1602</x>
-     <y>775</y>
+     <y>772</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -4639,7 +4731,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1383</x>
-     <y>804</y>
+     <y>801</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -4655,7 +4747,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1493</x>
-     <y>804</y>
+     <y>801</y>
     </hint>
     <hint type="destinationlabel">
      <x>690</x>
@@ -4671,7 +4763,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1602</x>
-     <y>804</y>
+     <y>801</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -4703,7 +4795,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>119</x>
-     <y>1027</y>
+     <y>1101</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -4719,7 +4811,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>119</x>
-     <y>1053</y>
+     <y>1127</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -4735,7 +4827,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>119</x>
-     <y>1079</y>
+     <y>1153</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -4943,7 +5035,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1438</x>
-     <y>606</y>
+     <y>604</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -4959,7 +5051,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1612</x>
-     <y>606</y>
+     <y>604</y>
     </hint>
     <hint type="destinationlabel">
      <x>871</x>
@@ -4975,7 +5067,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1438</x>
-     <y>633</y>
+     <y>631</y>
     </hint>
     <hint type="destinationlabel">
      <x>874</x>
@@ -4991,7 +5083,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1612</x>
-     <y>633</y>
+     <y>631</y>
     </hint>
     <hint type="destinationlabel">
      <x>862</x>
@@ -5071,7 +5163,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>370</x>
-     <y>1114</y>
+     <y>1188</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -5118,8 +5210,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>335</x>
-     <y>452</y>
+     <x>207</x>
+     <y>459</y>
     </hint>
     <hint type="destinationlabel">
      <x>311</x>
@@ -5134,8 +5226,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>335</x>
-     <y>426</y>
+     <x>207</x>
+     <y>433</y>
     </hint>
     <hint type="destinationlabel">
      <x>314</x>
@@ -5150,8 +5242,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>335</x>
-     <y>374</y>
+     <x>207</x>
+     <y>381</y>
     </hint>
     <hint type="destinationlabel">
      <x>316</x>
@@ -5182,8 +5274,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>335</x>
-     <y>400</y>
+     <x>207</x>
+     <y>407</y>
     </hint>
     <hint type="destinationlabel">
      <x>318</x>
@@ -5231,7 +5323,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>262</x>
-     <y>1186</y>
+     <y>1260</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -5247,7 +5339,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>262</x>
-     <y>1134</y>
+     <y>1208</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -5278,8 +5370,8 @@
    <slot>radio_ttm_local()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1018</y>
+     <x>217</x>
+     <y>1105</y>
     </hint>
     <hint type="destinationlabel">
      <x>1195</x>
@@ -5294,8 +5386,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>339</x>
-     <y>1031</y>
+     <x>370</x>
+     <y>1105</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -5455,7 +5547,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>370</x>
-     <y>1189</y>
+     <y>1263</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -5518,8 +5610,8 @@
    <slot>updatePixelValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>407</x>
-     <y>481</y>
+     <x>207</x>
+     <y>488</y>
     </hint>
     <hint type="destinationlabel">
      <x>367</x>
@@ -5663,7 +5755,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1383</x>
-     <y>717</y>
+     <y>714</y>
     </hint>
     <hint type="destinationlabel">
      <x>1255</x>
@@ -5767,6 +5859,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>checkBox_httpServer</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>httpServerCheckBoxChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>247</x>
+     <y>1076</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>427</x>
+     <y>1179</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>temporalSettingsChanged()</slot>
@@ -5848,5 +5956,6 @@
   <slot>numberChannelsChanged()</slot>
   <slot>circularMotionActivateChanged()</slot>
   <slot>test_analog_digital()</slot>
+  <slot>httpServerCheckBoxChanged()</slot>
  </slots>
 </ui>
