@@ -79,6 +79,6 @@ echo [INFO] Script execution complete.
 :: Activate virtual environment
 echo venv\Scripts\activate.bat
 call venv\Scripts\activate.bat
-python -c "import brighteyes_mcs.libs.cython.fastconverter as fc; print ('\n=======================================================================\nCython BrightEyes-MCS library has been installed correctly!! \n=======================================================================\n' if fc.convertRawDataToCountsDirect.__name__ == 'convertRawDataToCountsDirect' else 'Something went wrong during compilation of BrightEyes-MCS cython libraries')"
+python -c "import brighteyes_mcs.libs.cython.fastconverter as fc;  print ('\n=======================================================================\nCython BrightEyes-MCS library has been installed correctly!! \n=======================================================================\n' if fc.convertRawDataToCountsDirect.__name__ == 'convertRawDataToCountsDirect' else 'Something went wrong during compilation of BrightEyes-MCS cython libraries')"
 
 pause
