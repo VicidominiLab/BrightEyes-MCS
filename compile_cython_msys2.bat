@@ -1,3 +1,5 @@
+echo venv\Scripts\activate.bat
+call venv\Scripts\activate.bat
 
 @REM VERSION WITH MSYS2
 @ECHO This is the script to compile the Cython part of the code
