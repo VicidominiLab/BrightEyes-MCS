@@ -56,13 +56,26 @@ def build_cython_with_vs():
 def build_cython_with_msys2(msys2_path):
     """Builds the Cython part of the code using MSYS2 (mingw32)."""
     try:
+        bash_path = msys2_path + os.path.sep + "usr" + os.path.sep + "bin"  + os.path.sep + "bash.exe"
+        bash_cmd =  'pacman --noconfirm -Sy mingw-w64-ucrt-x86_64-gcc'
+        print("Installing GCC with MSYS2.")        
+        subprocess.run([bash_path, '-lc', bash_cmd], check=True, shell=True, env=os.environ)
+        print("GCC installation done.")        
+    except subprocess.CalledProcessError as e:
+        print(f"Error during installing GCC with MSYS2: {e}")
+        
+    try:
         env = os.environ
         path = env["PATH"]        
         path1 = msys2_path + os.path.sep + "usr" + os.path.sep + "bin"
         path2 = msys2_path + os.path.sep + "ucrt64" + os.path.sep + "bin"        
         path = path + r";" + path1 + r";" + path2 + r";"
         os.environ["PATH"]=path
+        
+        
         print("Building the Cython part of the code with MSYS2 (mingw32)...")
+        
+        
         subprocess.run(['python', 'setup.py', 'build_ext', '--inplace', '--force', '--compiler=mingw32', '-DMS_WIN64'], check=True, shell=True, env=os.environ)
         print("Cython build with MSYS2 completed successfully.")
     except subprocess.CalledProcessError as e:
@@ -71,13 +84,31 @@ def build_cython_with_msys2(msys2_path):
         
         
 if __name__ == "__main__":
+    if "--help" in sys.argv or "-h" in sys.argv or "/?" in sys.argv:
+        print("This script help to compile BrightEyes-MCS libaries written in Cython\r\n\r\n"
+              "Arguments\r\n"
+              "[no arguments] = Try to compile with Visual Studio C++ if not found use MSYS2\r\n"
+              "--force_msys2  = Force compilation with MSYS2\r\n"
+              "--force-vs     = Force compilation with Visual Studio C++\r\n")
+        exit()
+    
     vs_installed = check_vs_build_tools()
     msys2_installed, msys2_path = check_msys2()
+       
+    force_msys2 = '--force-msys2' in sys.argv
+    force_vs = '--force-vs' in sys.argv
+    
+    
+    if force_msys2:
+        print("Force compilation with MSYS2")
+    if force_vs:
+        print("Force compilation with MSVSC")
+    
 
-    if vs_installed:
+    if (vs_installed or force_vs) and not force_msys2:
         build_cython_with_vs()
 
-    elif msys2_installed:
+    elif (msys2_installed or force_msys2) and not force_vs:
         build_cython_with_msys2(msys2_path)
     else:
         print("NO COMPILER FOUND!!")
