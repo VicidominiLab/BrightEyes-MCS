@@ -15,7 +15,7 @@ Main Features
 - Support up 2 analog channels (PMT)
 - Pan & Zoom in realtime
 - Scan along each axis and XYZ multi-stack
-  - (Supported any linear voltage-controlled actuator *i.e.* galvo mirror or piezo-stage)
+  - (Supported up to 3 linear voltage-controlled actuator *i.e.* galvo mirror or piezo-stage)
 - Time lapse / Macro
 - Data saved in HDF5 with metadata (current configurations, extra information, users comments etc etc).
   - The saved data can be analyzed with Napari (through Napari-ISM plugin) just by a few click
