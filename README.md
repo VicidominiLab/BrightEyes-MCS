@@ -1,6 +1,6 @@
 # BrightEyes-MCS
 
-BrightEyes-MCS, a Microscope Control Software for image-scanning microscopy designed by the Molecular Microscopy and Spectroscopy group of the Italian Institute of Technology.
+BrightEyes-MCS, a Microscope Control Software for image-scanning microscopy designed by the Molecular Microscopy and Spectroscopy group of the Italian Institute of Technology. 
 
 [docs_video_brighteyes-mcs.webm](https://user-images.githubusercontent.com/61466143/202733339-2524c826-74d9-4ebc-8885-56855706200f.webm)
 
@@ -17,8 +17,10 @@ Main Features
 - Scan along each axis and XYZ multi-stack
   - (Supported up to 3 linear voltage-controlled actuator *i.e.* galvo mirror or piezo-stage)
 - Time lapse / Macro
-- Data saved in HDF5 with metadata (current configurations, extra information, users comments etc etc).
-  - The saved data can be analyzed with Napari (through Napari-ISM plugin) just by a few click
+- Data saved in HDF5:
+  - Multi-dimensional `[repetition, z, y, x, t_bin, channel]` array.
+  - Metadata (current configurations, extra information, users comments etc etc).
+  - The data can be analyzed a visualized directly with Napari (through [Napari-ISM](https://www.napari-hub.org/plugins/napari-ISM) plugin) just by a few click
 - The pixel is subdivided in temporal bins:
   - Normal acquisition down-to:
     - 0.5 us for USB hardware
