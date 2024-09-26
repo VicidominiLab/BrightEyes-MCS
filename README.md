@@ -90,8 +90,8 @@ The I/O table depeands by the firmware. The tables are available on the document
 
 
 There are two possibility:
-- Download the [Zip](https://github.com/VicidominiLab/BrightEyes-MCS/archive/refs/heads/main.zip) of the repository and extract it where you prefer OR
-- Clone the repo:
+- Download the [Zip](https://github.com/VicidominiLab/BrightEyes-MCS/archive/refs/heads/main.zip) of the repository and extract it where you prefer
+- Or clone the repo:
 - - `git clone https://github.com/VicidominiLab/BrightEyes-MCS.git`
 
 Python **3.10** and the MSYS2 or Visual Studio C++ MUST BE installed before run the installer!
