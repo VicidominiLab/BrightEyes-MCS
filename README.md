@@ -15,6 +15,7 @@ Main Features
 - Support up 2 analog channels (PMT)
 - Pan & Zoom in realtime
 - Scan along each axis and XYZ multi-stack
+  - (Supported any linear voltage-controlled actuator *i.e.* galvo mirror or piezo-stage)
 - Time lapse / Macro
 - Data saved in HDF5 with metadata (current configurations, extra information, users comments etc etc).
   - The saved data can be analyzed with Napari (through Napari-ISM plugin) just by a few click
@@ -43,6 +44,71 @@ single-photon time-tagging microscopy therefore fluorescence spectroscopy, fluor
 
 ---
 
+
+---
+
+# Requirements 
+
+## Software
+- Windows OS
+- Python **3.10**
+- - Download [installer](https://www.python.org/ftp/python/3.10.8/python-3.10.8-amd64.exe)
+- - Or `winget install -e --id Python.Python.3.10`
+- Git
+- - [Git for Windows] (https://gitforwindows.org/)
+- - Or `winget install -e --id Git.Git`
+- FPGA drivers installed,
+- - NI R Series Multifunction [RIO driver](https://www.ni.com/en/support/downloads/drivers/download.ni-r-series-multifunction-rio.html)
+- A **C compiler** installer, either
+  - GCC [MSYS2](https://www.msys2.org/) (`winget install -e --id MSYS2.MSYS2`)
+  - or Microsoft Visual Studio with C++ build tools.
+
+
+## Hardware
+BrightEyes-MCS supports only FPGA from NI. At the moment the bitfile are built for the following boards.
+
+| Type | Board                                              | Extra req.                  | Tested                                      |
+|------|----------------------------------------------------|-----------------------------|---------------------------------------------|
+| 1    | NI FPGA PXIe-7856 (Single-board)                   | NI Chassis + NI Thunderbolt | Full supported, currently in use in our lab |
+| 2    | NI FPGA USB-7856R (Single-board)                   | -                           | Full supported, currently in use in our lab |
+| 3    | NI FPGA USB-7856R OEM (Single-board)               | -                           | Should work but not fully tested            |
+| 4    | NI FPGA PXIe-7822 + NI FPGA PXIe-7856 (Dual-board) | NI Chassis + NI Thunderbolt | Full supported, currently in use in our lab |
+| 4    | NI FPGA PXIe-7822 (Single-board)                   |  NI Chassis + NI Thunderbolt +  External DAC required       | Full supported, currently in use in our lab |
+| 5    | NI FPGA PCIe-7820R                                 | External DAC required       | Full supported, currently in use in our lab |
+
+**Warning!! To avoid any damage of your equipment, please verify that the pinout described in I/O Table are compatible with your actual system.**
+
+## I/O table
+The I/O table depeands by the firmware. The tables are available on the documentations of [BrightEyes-MCSLL](https://github.com/VicidominiLab/BrightEyes-MCSLL)
+
+
+
+
+
+# Getting started
+## Installation 
+
+
+There are two possibility:
+- Download the [Zip](https://github.com/VicidominiLab/BrightEyes-MCS/archive/refs/heads/main.zip) of the repository and extract it where you prefer OR
+- Clone the repo:
+- - `git clone https://github.com/VicidominiLab/BrightEyes-MCS.git`
+
+Python **3.10** and the MSYS2 or Visual Studio C++ MUST BE installed before run the installer!
+
+From the cmd.exe (NOT powershell!)
+
+```
+cd BrightEyes-MCS
+install.bat
+```
+
+and following the instructions on the terminal.
+Once installed you will have the link with icon of BrightEyes-MCS and on your Desktop.
+
+---
+
+
 # License
 
 This program is distributed in the hope that it will be useful, 
@@ -56,6 +122,11 @@ Please refer to the individual source files for details on specific
 licensing exceptions.
 See [LICENSE.md](LICENSE.md) file for details.
 
+## Firmware License
+**IMPORTANT**
+The firmwares needed for running the NI FPGA are not included in the BrightEyes-MCS tree.
+It is present during the installation phase a graphical tool to download and extract them.
+In case of issues it is possible download directly from the repository of [BrightEyes-MCSLL](https://github.com/VicidominiLab/BrightEyes-MCSLL).
 
 # Credits
 
@@ -93,125 +164,4 @@ The authors are thanked for their valuable contributions. Below is a breakdown o
 - A Compact and Effective Photon-Resolved Image Scanning Microscope. _Giorgio Tortarolo, Alessandro Zunino, Simonluca Piazza, Mattia Donato, Sabrina Zappone, Agnieszka Pierzyńska-Mach, Marco Castello, Giuseppe Vicidomini_ 
 bioRxiv 2023.07.28.549477; doi: https://doi.org/10.1101/2023.07.28.549477
 
-
-
----
-
-# Requirements
-## Hardware
-BrightEyes-MCS supports only FPGA from NI. At the moment the bitfile are built for the following boards.
-
-| Type | Board                                              | Extra req.                  | Tested                                      |
-|------|----------------------------------------------------|-----------------------------|---------------------------------------------|
-| 1    | NI FPGA PXIe-7856 (Single-board)                   | NI Chassis + NI Thunderbolt | Full supported, currently in use in our lab |
-| 2    | NI FPGA USB-7856R (Single-board)                   | -                           | Full supported, currently in use in our lab |
-| 3    | NI FPGA USB-7856R OEM (Single-board)               | -                           | Should work but not fully tested            |
-| 4    | NI FPGA PXIe-7822 + NI FPGA PXIe-7856 (Dual-board) | NI Chassis + NI Thunderbolt | Full supported, currently in use in our lab |
-| 4    | NI FPGA PXIe-7822 (Single-board)                   |  NI Chassis + NI Thunderbolt +  External DAC required       | Full supported, currently in use in our lab |
-| 5    | NI FPGA PCIe-7820R                                 | External DAC required       | Full supported, currently in use in our lab |
-
-**Warning!! To avoid any damage of your equipment, please verify that the pinout described in I/O Table are compatible with your actual system.**
-
-## Software
-- Windows OS
-- Python 3.10 ( https://www.python.org/downloads/ )
-- Git ( https://desktop.github.com/ )
-- NI FPGA drivers installed ( https://www.ni.com/en/support/downloads/drivers/download.ni-r-series-multifunction-rio.html )
-- A C compiler:
-  - [MSYS2](https://www.msys2.org/), we strongly suggest it as open-source project. Please install it in the default folder and after the installation remind to install `gcc` on MSYS2 terminal with the command `pacman -S mingw-w64-ucrt-x86_64-gcc`.
-  - Otherwise you can use Microsoft Visual Studio (with development C++ build).
-
-
-If you are a normal user jump to "Installation (for user)"
-
-Otherwise if you are a developer, we strongly suggest to use PyCharm IDE Community editions ( https://www.jetbrains.com/pycharm/download ) for install and develop the BrightEyes-MCS.
-
-PyCharm provides a easy graphical interfaces to donwload the source code, to create a virtual environment ("local interpreter") and to install automatically the requirements.txt. Note in any case you need to compile the Cython modules.
-
-
-
-## Firmware
-**IMPORTANT**
-The firmwares needed for running the NI FPGA are not included in the BrightEyes-MCS tree.
-It is present during the installation phase a graphical tool to download and extract them.
-In case of issues it is possible download directly from the repository of [BrightEyes-MCSLL](https://github.com/VicidominiLab/BrightEyes-MCSLL).
-
-## I/O table
-The I/O table depeands by the firmware. The tables are available on the documentations of [BrightEyes-MCSLL](https://github.com/VicidominiLab/BrightEyes-MCSLL)
-
-# Getting started
-
-
-## Installation (for user)
-Download the Zip from the repository. Extract it where you prefer.
-Be sure to have Python 3.10 installed.
-
-Then run the command 
-```
-install.bat
-```
-and following the instructions on the terminal.
-
-Once installed you will have the link with icon of BrightEyes-MCS and on your Desktop.
-
----
-
-## Installation (for developer / with PyCharm)
-
-- Open PyCharm Community Edition
-- Close if other project 
-  - "Get from VCS"
-    - URL: ```https://github.com/VicidominiLab/BrightEyes-MCS.git```
-    - Clone
-- File -> Settings -> Project: brighteyes-mcs -> Python Interpreter
-  - gear button (setting) -> Add
-    - Virtualenv Environment  -> New environment 
-      - Base interpreter select Python 3.10
-      - OK
-    - OK
-- Add configuration
-  - Add new -> Python 
-  - Module -> select ```brighteyes_mcs```
-- Select ```brighteyes-mcs/brighteyes-mcs/__main__.py```
-- It will appers "Package requirement '....'" -> Install requirements
-- Wait the installation of the packages
-- Terminal
-    - ```python setup.py build_ext --inplace --force``` 
-- Once the file are compiled 
-- Click play button
-
-
-
-
-### Installation (Manual) 
-
-Get the source tree:
-
-```git clone https://github.com/VicidominiLab/BrightEyes-MCS.git```
-
-
-
-Create the virtual environment:
-
-```cd brighteyes-mcs```
-
-```python -m venv venv```
-
-Activate the environment 
-
-```venv\Scripts\activate.bat``` (if you use cmd.exe)
-
-```.\venv\Scripts\activate.ps1``` (if you use powershell)
-
-Install requirements:
-
-```pip install -r requirements.txt ```
-
-Compile the Cython modules:
-
-```python setup.py build_ext --inplace --force```
-
-Run BrightEyes-MCS:
-
-```run-brighteys-mcs.bat```
 
