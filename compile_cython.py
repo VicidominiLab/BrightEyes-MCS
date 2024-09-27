@@ -1,6 +1,5 @@
 import os
 import subprocess
-import shutil
 import sys
 
 
@@ -97,13 +96,11 @@ if __name__ == "__main__":
        
     force_msys2 = '--force-msys2' in sys.argv
     force_vs = '--force-vs' in sys.argv
-    
-    
+
     if force_msys2:
         print("Force compilation with MSYS2")
     if force_vs:
         print("Force compilation with MSVSC")
-    
 
     if (vs_installed or force_vs) and not force_msys2:
         build_cython_with_vs()
@@ -113,12 +110,6 @@ if __name__ == "__main__":
     else:
         print("NO COMPILER FOUND!!")
         
-    
-    import brighteyes_mcs.libs.cython.fastconverter as fc
-            
-    print ("\n\n\n========================================================================")
-    print (" Try to import BrightEyes-MCS Cython;")
-    print (" Result: ", "OK INSTALLED" if fc.convertRawDataToCountsDirect.__name__ == 'convertRawDataToCountsDirect' else "NOT INSTALLED!")
-    print ("========================================================================\n\n\n")
-    
+    from test import check_cython_lib
+    check_cython_lib.test()
     
