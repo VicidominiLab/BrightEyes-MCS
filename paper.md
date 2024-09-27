@@ -145,7 +145,7 @@ The specifications of BrightEyes-MCS depend on the hardware features of the NI F
 
 This sketch shows the main electronics components controlled by BrightEyes-MCS. 
 
-The sample positioning and the scanning are controlled by the analog outputs connected to positioner. They can be either linear galvo mirrors or piezo stages analog controller. The analog outputs supported are 8 and the user can select for each channel to be used as X,  Y,  Z, or a constant voltage. The possibility of setting a constant voltage is useful for other types of elements such as Acousto-optic modulators (AOM).
+The sample positioning and the scanning are controlled by the analog outputs connected to positioner. They can be either linear galvo mirrors or piezo stages. The analog outputs supported are 8 and the user can select for each channel to be used as X,  Y,  Z, or a constant voltage. The possibility of setting a constant voltage is useful for other types of elements such as Acousto-optic modulators (AOM).
 
 The support of photomultiplier tubes (PMTs) is given by reading out two analog inputs at the same time. The user can select the two analog  inputs out of 8 channels.
 
