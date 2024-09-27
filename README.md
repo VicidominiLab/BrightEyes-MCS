@@ -6,6 +6,9 @@ BrightEyes-MCS, a Microscope Control Software for image-scanning microscopy desi
 
 <!-- [![video session](docs/video/brighteyes-frame.png)](https://user-images.githubusercontent.com/61466143/202123174-e9019c5c-bc9c-403d-b710-0516af8346b9.webm) -->
 **Click on the video**
+## Development Notice
+
+**Important:** This software is currently under active development and may contain bugs or incomplete features. Please use it with caution and report any issues you encounter to help us improve the application.
 
 Main Features
 --------
@@ -120,17 +123,34 @@ The GUI is designed around the preview image, and it is composed by three parts.
 
 - **Left Panel**:
 
-  * **Detector Selection**: Choose between analogue and digital detectors and initiate either acquisition or preview mode. In acquisition, options include DFD mode for lifetime analysis and TTM activation (not part of this project).
+  * **Top**:
+    * Start/stop the preview or the real acquisition.
+    * Choose between analogue and digital detectors and initiate either acquisition or preview mode. In acquisition, options include DFD mode for lifetime analysis and TTM activation (not part of this project).
+    * Laser tab to turn on/off each lasers.
+    * Advanced configuration includes bidirectional scanning (snake walk) and the cirucular motion (for circular FCS)
 
   * **Temporal Settings**: Configure time resolution, dwell time, and laser delays.
 
-  * **Acquisition Parameters**: Set pixel, line, frame, and repetition values for your imaging session.
+  * **Spatial settings**: Set pixel, line, frame, and repetition values for your imaging session.
 
-  * **Configuration**: Adjust position, range, metadata, file storage preferences, selection of firmware, and advanced parameters for precise customization.
+  * **Bottom**:
+    * Position: position and range, preset load/save, list of markers
+    * File: destinatio folder, filename (DEFAULT.h5 force a actual time as filename) and textbox where is possible to set comments saved on the metadata
+    * List File: list of the acquired data
+    * Advanced:
+      * Calibration settings
+      * Board configurations
+      * SPAD (for old SPAD prototype electronics configuration)
+      * Default FOV
+      * Limits (and offset) of positioner
+      * External tools: set the string for integration with napari
+      * Http Server: configuration of the REST API server
+      * TTM: configuration for integration with TTM data receiver
+      * FIFOs: settings of the FIFOs - for developer.
 
 - **Central Area**:
   
-  * **Preview Tab**: Observe real-time image preview during acquisition. Pan and zoom functionalities are enabled.
+  * **Preview Tab**: Observe real-time image preview during acquisition. Pan and zoom functionalities are enabled. Double-click on a position centering the image on it. CTRL+Double-click add a marker.
 
   * **FCS & Batch acq.**: Allow the autocorrelation preview for FCS, set up batch (macro) acquisiton
 
@@ -146,21 +166,22 @@ The GUI is designed around the preview image, and it is composed by three parts.
 
   * **Micro-Image Display**: View a 5x5 micro-image with options for cumulative or end-of-frame updates. Pixel saturation indication are highlighted in blue.
 
-  * **Photon Flux Trace**: Track photon flux trends for the selected channel or sum throughout the scanning process.
+  * **Trace**: Track photon flux trends for the selected channel or sum throughout the scanning process. Double-click on the trace reset it. And tab for its configuration.
 
-  * **Settings Tabs**:
+  * **Middle**:
 
     - **Statistics**: Access imaging statistics for in-depth analysis.
 
-    - **Input Selection**: Choose input options for analogue inputs.
+    - **Analog IN**: Choose input options for analogue inputs.
 
-    - **Output Configuration**: Define functionality for analogue outputs (scanning X, Y, Z, or constant voltage).
+    - **Analog OUT**: Define functionality for analogue outputs (scanning X, Y, Z, or constant voltage).
 
-    - **Test Menu**: Explore test functionalities.
+    - **Menu & Debug**: Explore test functionalities.
 
-    - **Plugin Management**: Load and manage plugins seamlessly.
+    - **Plug-ins Management**: Load and manage plugins seamlessly.
 
-    - **Panorama Image**: Generate and update a panoramic image with the current preview image.
+  * **Panorama Image**: Generate and update a panoramic image with the current preview image.
+  * **Image Script**: Placeholder that can be used by the script.
 
 The commands are intuitive, and the software highlights possible error of configuration such to minimize the user errors.
 
