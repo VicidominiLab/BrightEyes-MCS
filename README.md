@@ -111,6 +111,61 @@ Once installed you will have the link with icon of BrightEyes-MCS and on your De
 ---
 
 
+# Graphical User Interface (GUI)
+
+The GUI is designed around the preview image, and it is composed by three parts.
+
+![Screenshot of BrightEyes-MCS GUI\label{fig:fig4}](paper/screenshot.png)
+
+
+- **Left Panel**:
+
+  * **Detector Selection**: Choose between analogue and digital detectors and initiate either acquisition or preview mode. In acquisition, options include DFD mode for lifetime analysis and TTM activation (not part of this project).
+
+  * **Temporal Settings**: Configure time resolution, dwell time, and laser delays.
+
+  * **Acquisition Parameters**: Set pixel, line, frame, and repetition values for your imaging session.
+
+  * **Configuration**: Adjust position, range, metadata, file storage preferences, selection of firmware, and advanced parameters for precise customization.
+
+- **Central Area**:
+  
+  * **Preview Tab**: Observe real-time image preview during acquisition. Pan and zoom functionalities are enabled.
+
+  * **FCS & Batch acq.**: Allow the autocorrelation preview for FCS, set up batch (macro) acquisiton
+
+  * **Status**: A debug function for reading the status of the registers
+
+  * **Cam**: A preview for external camera 
+
+  * **ScriptLauncher**: A Python QTConsole in which all objects of the running software are exposed.
+  
+  * **DFD Preview**: A post-acquistion preview for FLIM
+
+- **Right Panel**:
+
+  * **Micro-Image Display**: View a 5x5 micro-image with options for cumulative or end-of-frame updates. Pixel saturation indication are highlighted in blue.
+
+  * **Photon Flux Trace**: Track photon flux trends for the selected channel or sum throughout the scanning process.
+
+  * **Settings Tabs**:
+
+    - **Statistics**: Access imaging statistics for in-depth analysis.
+
+    - **Input Selection**: Choose input options for analogue inputs.
+
+    - **Output Configuration**: Define functionality for analogue outputs (scanning X, Y, Z, or constant voltage).
+
+    - **Test Menu**: Explore test functionalities.
+
+    - **Plugin Management**: Load and manage plugins seamlessly.
+
+    - **Panorama Image**: Generate and update a panoramic image with the current preview image.
+
+The commands are intuitive, and the software highlights possible error of configuration such to minimize the user errors.
+
+
+
 # License
 
 This program is distributed in the hope that it will be useful, 
