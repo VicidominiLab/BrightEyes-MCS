@@ -117,12 +117,19 @@ class TableManager(object):
 
         self.item_changed(self.table_widget.item(0, k))
 
-    def add_list_of_dict(self, markers_list):
+    def add_list_of_dict(self, markers_list, fcs=False):
         print_dec("copyPositionMarkers")
         self.table_lock = True
 
         for selected_configuration in markers_list:
-            self.add_dict(selected_configuration)
+            if fcs:
+                selected_configuration["range_x"] = 0.
+                selected_configuration["range_y"] = 0.
+                selected_configuration["range_z"] = 0.
+                selected_configuration["fcs"] = True
+                self.add_dict(selected_configuration)
+            else:
+                self.add_dict(selected_configuration)
 
         self.table_lock = False
 

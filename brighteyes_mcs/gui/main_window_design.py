@@ -41,27 +41,6 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_4 = QGridLayout()
         self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.checkBox_autoscale_img = QCheckBox(self.tab_preview)
-        self.checkBox_autoscale_img.setObjectName(u"checkBox_autoscale_img")
-        self.checkBox_autoscale_img.setChecked(True)
-
-        self.gridLayout_4.addWidget(self.checkBox_autoscale_img, 2, 0, 1, 1)
-
-        self.checkBox_lockMove = QCheckBox(self.tab_preview)
-        self.checkBox_lockMove.setObjectName(u"checkBox_lockMove")
-
-        self.gridLayout_4.addWidget(self.checkBox_lockMove, 0, 0, 1, 1)
-
-        self.label_60 = QLabel(self.tab_preview)
-        self.label_60.setObjectName(u"label_60")
-
-        self.gridLayout_4.addWidget(self.label_60, 0, 2, 1, 1)
-
-        self.label_plot_ch = QLabel(self.tab_preview)
-        self.label_plot_ch.setObjectName(u"label_plot_ch")
-
-        self.gridLayout_4.addWidget(self.label_plot_ch, 2, 2, 1, 1)
-
         self.comboBox_view_projection = QComboBox(self.tab_preview)
         self.comboBox_view_projection.addItem("")
         self.comboBox_view_projection.addItem("")
@@ -72,6 +51,17 @@ class Ui_MainWindowDesign(object):
         self.comboBox_view_projection.setObjectName(u"comboBox_view_projection")
 
         self.gridLayout_4.addWidget(self.comboBox_view_projection, 0, 3, 1, 1)
+
+        self.checkBox_autoscale_img = QCheckBox(self.tab_preview)
+        self.checkBox_autoscale_img.setObjectName(u"checkBox_autoscale_img")
+        self.checkBox_autoscale_img.setChecked(True)
+
+        self.gridLayout_4.addWidget(self.checkBox_autoscale_img, 2, 0, 1, 1)
+
+        self.label_plot_ch = QLabel(self.tab_preview)
+        self.label_plot_ch.setObjectName(u"label_plot_ch")
+
+        self.gridLayout_4.addWidget(self.label_plot_ch, 2, 2, 1, 1)
 
         self.comboBox_plot_channel = QComboBox(self.tab_preview)
         self.comboBox_plot_channel.addItem("")
@@ -107,6 +97,30 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_4.addWidget(self.comboBox_plot_channel, 2, 3, 1, 1)
 
+        self.label_60 = QLabel(self.tab_preview)
+        self.label_60.setObjectName(u"label_60")
+
+        self.gridLayout_4.addWidget(self.label_60, 0, 2, 1, 1)
+
+        self.checkBox_lockMove = QCheckBox(self.tab_preview)
+        self.checkBox_lockMove.setObjectName(u"checkBox_lockMove")
+
+        self.gridLayout_4.addWidget(self.checkBox_lockMove, 0, 0, 1, 1)
+
+        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_13, 0, 4, 1, 1)
+
+        self.label_106 = QLabel(self.tab_preview)
+        self.label_106.setObjectName(u"label_106")
+
+        self.gridLayout_4.addWidget(self.label_106, 0, 5, 1, 1)
+
+        self.label_107 = QLabel(self.tab_preview)
+        self.label_107.setObjectName(u"label_107")
+
+        self.gridLayout_4.addWidget(self.label_107, 2, 5, 1, 1)
+
 
         self.gridLayout_im.addLayout(self.gridLayout_4, 2, 0, 1, 1)
 
@@ -122,27 +136,37 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_44.setObjectName(u"gridLayout_44")
         self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.gridLayout_44.addItem(self.horizontalSpacer_8, 0, 3, 1, 1)
-
-        self.pushButton_16 = QPushButton(self.tab_fcs)
-        self.pushButton_16.setObjectName(u"pushButton_16")
-
-        self.gridLayout_44.addWidget(self.pushButton_16, 1, 1, 1, 1)
-
-        self.pushButton_copyPositionsMarkers = QPushButton(self.tab_fcs)
-        self.pushButton_copyPositionsMarkers.setObjectName(u"pushButton_copyPositionsMarkers")
-
-        self.gridLayout_44.addWidget(self.pushButton_copyPositionsMarkers, 0, 1, 1, 1)
-
-        self.pushButton_copyPositionsMarkers_2 = QPushButton(self.tab_fcs)
-        self.pushButton_copyPositionsMarkers_2.setObjectName(u"pushButton_copyPositionsMarkers_2")
-
-        self.gridLayout_44.addWidget(self.pushButton_copyPositionsMarkers_2, 0, 0, 2, 1)
+        self.gridLayout_44.addItem(self.horizontalSpacer_8, 0, 4, 1, 1)
 
         self.pushButton_13 = QPushButton(self.tab_fcs)
         self.pushButton_13.setObjectName(u"pushButton_13")
 
-        self.gridLayout_44.addWidget(self.pushButton_13, 0, 4, 2, 1)
+        self.gridLayout_44.addWidget(self.pushButton_13, 0, 5, 2, 1)
+
+        self.pushButton_copyPositionsMarkersFCS = QPushButton(self.tab_fcs)
+        self.pushButton_copyPositionsMarkersFCS.setObjectName(u"pushButton_copyPositionsMarkersFCS")
+
+        self.gridLayout_44.addWidget(self.pushButton_copyPositionsMarkersFCS, 1, 2, 1, 1)
+
+        self.pushButton_copyPositionsMarkers = QPushButton(self.tab_fcs)
+        self.pushButton_copyPositionsMarkers.setObjectName(u"pushButton_copyPositionsMarkers")
+
+        self.gridLayout_44.addWidget(self.pushButton_copyPositionsMarkers, 0, 2, 1, 1)
+
+        self.pushButton_currentConfToBatch = QPushButton(self.tab_fcs)
+        self.pushButton_currentConfToBatch.setObjectName(u"pushButton_currentConfToBatch")
+
+        self.gridLayout_44.addWidget(self.pushButton_currentConfToBatch, 0, 1, 1, 1)
+
+        self.pushButton_currentConfToBatchFCS = QPushButton(self.tab_fcs)
+        self.pushButton_currentConfToBatchFCS.setObjectName(u"pushButton_currentConfToBatchFCS")
+
+        self.gridLayout_44.addWidget(self.pushButton_currentConfToBatchFCS, 1, 1, 1, 1)
+
+        self.label_103 = QLabel(self.tab_fcs)
+        self.label_103.setObjectName(u"label_103")
+
+        self.gridLayout_44.addWidget(self.label_103, 1, 3, 1, 1)
 
 
         self.gridLayout_39.addLayout(self.gridLayout_44, 0, 0, 1, 1)
@@ -2723,7 +2747,6 @@ class Ui_MainWindowDesign(object):
         self.pushButton_14.clicked.connect(MainWindowDesign.addToBatch)
         self.toolButton_destinationfolder.clicked.connect(MainWindowDesign.cmd_path_destinationfolder)
         self.pushButton_FPGA_file_selection.clicked.connect(MainWindowDesign.bit_file_clicked)
-        self.pushButton_16.clicked.connect(MainWindowDesign.copyPositionsMarkers)
         self.pushButton_grabPanorama.clicked.connect(MainWindowDesign.grabPanorama)
         self.spinBox_nrepetition.valueChanged.connect(MainWindowDesign.spatialSettingsChanged)
         self.spinBox_nframe.valueChanged.connect(MainWindowDesign.spatialSettingsChanged)
@@ -2767,9 +2790,11 @@ class Ui_MainWindowDesign(object):
         self.spinBox_circular_points.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
         self.pushButton_19.clicked.connect(MainWindowDesign.test_analog_digital)
         self.checkBox_httpServer.stateChanged.connect(MainWindowDesign.httpServerCheckBoxChanged)
-        self.pushButton_copyPositionsMarkers_2.clicked.connect(MainWindowDesign.addcurrentconfmacro)
+        self.pushButton_currentConfToBatch.clicked.connect(MainWindowDesign.addcurrentconfmacro)
+        self.pushButton_currentConfToBatchFCS.clicked.connect(MainWindowDesign.addcurrentconfmacrofcs)
+        self.pushButton_copyPositionsMarkersFCS.clicked.connect(MainWindowDesign.copyPositionsMarkersFCS)
 
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(6)
         self.comboBox_analogSelect_B.setCurrentIndex(0)
@@ -2780,13 +2805,6 @@ class Ui_MainWindowDesign(object):
 
     def retranslateUi(self, MainWindowDesign):
         MainWindowDesign.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"MainWindow", None))
-        self.checkBox_autoscale_img.setText(QCoreApplication.translate("MainWindowDesign", u"Autoscale", None))
-#if QT_CONFIG(tooltip)
-        self.checkBox_lockMove.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>It is locking the autorange of the image.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_lockMove.setText(QCoreApplication.translate("MainWindowDesign", u"Lock Move", None))
-        self.label_60.setText(QCoreApplication.translate("MainWindowDesign", u"View Projection", None))
-        self.label_plot_ch.setText(QCoreApplication.translate("MainWindowDesign", u"View Ch.", None))
         self.comboBox_view_projection.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"xy", None))
         self.comboBox_view_projection.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"zy", None))
         self.comboBox_view_projection.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"xz", None))
@@ -2794,6 +2812,8 @@ class Ui_MainWindowDesign(object):
         self.comboBox_view_projection.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"zx", None))
         self.comboBox_view_projection.setItemText(5, QCoreApplication.translate("MainWindowDesign", u"yx", None))
 
+        self.checkBox_autoscale_img.setText(QCoreApplication.translate("MainWindowDesign", u"Autoscale", None))
+        self.label_plot_ch.setText(QCoreApplication.translate("MainWindowDesign", u"View Ch.", None))
         self.comboBox_plot_channel.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.comboBox_plot_channel.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
         self.comboBox_plot_channel.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
@@ -2823,11 +2843,20 @@ class Ui_MainWindowDesign(object):
         self.comboBox_plot_channel.setItemText(26, QCoreApplication.translate("MainWindowDesign", u"Analog A", None))
         self.comboBox_plot_channel.setItemText(27, QCoreApplication.translate("MainWindowDesign", u"Analog B", None))
 
+        self.label_60.setText(QCoreApplication.translate("MainWindowDesign", u"View Projection", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_lockMove.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>It is locking the autorange of the image.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_lockMove.setText(QCoreApplication.translate("MainWindowDesign", u"Lock Move", None))
+        self.label_106.setText(QCoreApplication.translate("MainWindowDesign", u"Click: Move to position", None))
+        self.label_107.setText(QCoreApplication.translate("MainWindowDesign", u"Double-Click: set a Marker", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_preview), QCoreApplication.translate("MainWindowDesign", u"Preview", None))
-        self.pushButton_16.setText(QCoreApplication.translate("MainWindowDesign", u"Copy Markers for FCS Batch ", None))
-        self.pushButton_copyPositionsMarkers.setText(QCoreApplication.translate("MainWindowDesign", u"Copy Markers for Batch", None))
-        self.pushButton_copyPositionsMarkers_2.setText(QCoreApplication.translate("MainWindowDesign", u"Add current conf to Macro", None))
         self.pushButton_13.setText(QCoreApplication.translate("MainWindowDesign", u"Move to selected offset", None))
+        self.pushButton_copyPositionsMarkersFCS.setText(QCoreApplication.translate("MainWindowDesign", u"Add Markers in Batch acq. (FCS)", None))
+        self.pushButton_copyPositionsMarkers.setText(QCoreApplication.translate("MainWindowDesign", u"Add Markers in Batch acq.", None))
+        self.pushButton_currentConfToBatch.setText(QCoreApplication.translate("MainWindowDesign", u"Add current configuration in Batch acq.", None))
+        self.pushButton_currentConfToBatchFCS.setText(QCoreApplication.translate("MainWindowDesign", u"Add current configuration in Batch acq. (FCS)", None))
+        self.label_103.setText(QCoreApplication.translate("MainWindowDesign", u"FCS Mode: X,Y,Z range forced to 0", None))
         self.label_68.setText("")
         self.label_69.setText(QCoreApplication.translate("MainWindowDesign", u"Number of FCS bins", None))
         self.pushButton_FCS_reset.setText(QCoreApplication.translate("MainWindowDesign", u"Reset FCS Buffer", None))

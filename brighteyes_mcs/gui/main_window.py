@@ -2030,13 +2030,9 @@ class MainWindow(QMainWindow):
             elif projection == "zx":
                 a = (pos.y(), self.ui.spinBox_off_y_um.value(), pos.x())
 
-            if event.modifiers() == Qt.CTRL:
-                print_dec("imageClicked() + Qt.CTRL")
-                self.ui.spinBox_off_x_um.setValue(a[0])
-                self.ui.spinBox_off_y_um.setValue(a[1])
-                self.ui.spinBox_off_z_um.setValue(a[2])
-                self.offset_um_Changed()
-            else:
+            print_dec("event.modifiers()", event.modifiers())
+
+            if event.modifiers() and Qt.CTRL:
                 conf = self.getGUI_data()
 
                 conf["offset_x_um"] = a[0]
@@ -2046,6 +2042,13 @@ class MainWindow(QMainWindow):
                 self.markers_list.append(conf)
                 self.drawMarkers()
                 self.markersViewTable()
+            else:
+                print_dec("imageClicked() + Qt.CTRL")
+                self.ui.spinBox_off_x_um.setValue(a[0])
+                self.ui.spinBox_off_y_um.setValue(a[1])
+                self.ui.spinBox_off_z_um.setValue(a[2])
+                self.offset_um_Changed()
+
 
     def drawMarkers(self):
         projection = self.ui.comboBox_view_projection.currentText()
@@ -2574,17 +2577,27 @@ class MainWindow(QMainWindow):
     @Slot()
     def addcurrentconfmacro(self):
         print_dec("addcurrentconfmacro")
-        self.table_manager.add_dict(self.getGUI_data())
-
+        conf = self.getGUI_data()
+        self.table_manager.add_dict(conf)
+    @Slot()
+    def addcurrentconfmacrofcs(self):
+        print_dec("addcurrentconfmacrofcs")
+        conf = self.getGUI_data()
+        conf["range_x"] = 0.
+        conf["range_y"] = 0.
+        conf["range_z"] = 0.
+        conf["fcs"] = True
+        print(conf)
+        self.table_manager.add_dict(conf)
     @Slot()
     def copyPositionsMarkers(self):
         print_dec("copyPositionMarkers")
         self.table_manager.add_list_of_dict(self.markers_list)
 
-    # @Slot()
-    # def copyPositionsMarkersFCS(self):
-    #     print_dec("copyPositionMarkers")
-    #     self.table_manager.add_list_of_dict(self.markers_list)
+    @Slot()
+    def copyPositionsMarkersFCS(self):
+        print_dec("copyPositionMarkersFCS")
+        self.table_manager.add_list_of_dict(self.markers_list,  fcs=True)
 
     @Slot()
     def startBatchFCS(self):

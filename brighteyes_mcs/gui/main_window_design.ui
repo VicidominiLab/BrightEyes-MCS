@@ -20,7 +20,7 @@
       <item row="0" column="0">
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -47,40 +47,6 @@
             </item>
             <item row="2" column="0">
              <layout class="QGridLayout" name="gridLayout_4">
-              <item row="2" column="0">
-               <widget class="QCheckBox" name="checkBox_autoscale_img">
-                <property name="text">
-                 <string>Autoscale</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QCheckBox" name="checkBox_lockMove">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;It is locking the autorange of the image.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>Lock Move</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QLabel" name="label_60">
-                <property name="text">
-                 <string>View Projection</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2">
-               <widget class="QLabel" name="label_plot_ch">
-                <property name="text">
-                 <string>View Ch.</string>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="3">
                <widget class="QComboBox" name="comboBox_view_projection">
                 <item>
@@ -113,6 +79,23 @@
                   <string>yx</string>
                  </property>
                 </item>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QCheckBox" name="checkBox_autoscale_img">
+                <property name="text">
+                 <string>Autoscale</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QLabel" name="label_plot_ch">
+                <property name="text">
+                 <string>View Ch.</string>
+                </property>
                </widget>
               </item>
               <item row="2" column="3">
@@ -262,6 +245,50 @@
                 </item>
                </widget>
               </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_60">
+                <property name="text">
+                 <string>View Projection</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="checkBox_lockMove">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;It is locking the autorange of the image.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string>Lock Move</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="4">
+               <spacer name="horizontalSpacer_13">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="0" column="5">
+               <widget class="QLabel" name="label_106">
+                <property name="text">
+                 <string>Click: Move to position</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="5">
+               <widget class="QLabel" name="label_107">
+                <property name="text">
+                 <string>Double-Click: set a Marker</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </item>
            </layout>
@@ -275,7 +302,7 @@
          <layout class="QGridLayout" name="gridLayout_39">
           <item row="0" column="0">
            <layout class="QGridLayout" name="gridLayout_44">
-            <item row="0" column="3">
+            <item row="0" column="4">
              <spacer name="horizontalSpacer_8">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -288,31 +315,45 @@
               </property>
              </spacer>
             </item>
-            <item row="1" column="1">
-             <widget class="QPushButton" name="pushButton_16">
+            <item row="0" column="5" rowspan="2">
+             <widget class="QPushButton" name="pushButton_13">
               <property name="text">
-               <string>Copy Markers for FCS Batch </string>
+               <string>Move to selected offset</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="pushButton_copyPositionsMarkersFCS">
+              <property name="text">
+               <string>Add Markers in Batch acq. (FCS)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="pushButton_copyPositionsMarkers">
+              <property name="text">
+               <string>Add Markers in Batch acq.</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QPushButton" name="pushButton_copyPositionsMarkers">
+             <widget class="QPushButton" name="pushButton_currentConfToBatch">
               <property name="text">
-               <string>Copy Markers for Batch</string>
+               <string>Add current configuration in Batch acq.</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="0" rowspan="2">
-             <widget class="QPushButton" name="pushButton_copyPositionsMarkers_2">
+            <item row="1" column="1">
+             <widget class="QPushButton" name="pushButton_currentConfToBatchFCS">
               <property name="text">
-               <string>Add current conf to Macro</string>
+               <string>Add current configuration in Batch acq. (FCS)</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="4" rowspan="2">
-             <widget class="QPushButton" name="pushButton_13">
+            <item row="1" column="3">
+             <widget class="QLabel" name="label_103">
               <property name="text">
-               <string>Move to selected offset</string>
+               <string>FCS Mode: X,Y,Z range forced to 0</string>
               </property>
              </widget>
             </item>
@@ -4801,8 +4842,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>84</x>
-     <y>1066</y>
+     <x>101</x>
+     <y>1095</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -4817,8 +4858,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>84</x>
-     <y>1069</y>
+     <x>114</x>
+     <y>1127</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -4833,8 +4874,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>84</x>
-     <y>1071</y>
+     <x>114</x>
+     <y>1153</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -4945,8 +4986,8 @@
    <slot>plotSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1231</x>
-     <y>1789</y>
+     <x>1043</x>
+     <y>1792</y>
     </hint>
     <hint type="destinationlabel">
      <x>468</x>
@@ -4961,8 +5002,8 @@
    <slot>selectedAutoscaleImg()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>704</x>
-     <y>1787</y>
+     <x>547</x>
+     <y>1790</y>
     </hint>
     <hint type="destinationlabel">
      <x>215</x>
@@ -4977,8 +5018,8 @@
    <slot>projChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1231</x>
-     <y>1763</y>
+     <x>1074</x>
+     <y>1766</y>
     </hint>
     <hint type="destinationlabel">
      <x>469</x>
@@ -5169,28 +5210,12 @@
    <slot>bit_file_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>110</x>
-     <y>1071</y>
+     <x>370</x>
+     <y>1188</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
      <y>1436</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton_16</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>copyPositionsMarkers()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>732</x>
-     <y>345</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>628</x>
-     <y>29</y>
     </hint>
    </hints>
   </connection>
@@ -5329,8 +5354,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>111</x>
-     <y>1076</y>
+     <x>262</x>
+     <y>1260</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -5345,8 +5370,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>111</x>
-     <y>1071</y>
+     <x>262</x>
+     <y>1208</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -5377,8 +5402,8 @@
    <slot>radio_ttm_local()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>82</x>
-     <y>1062</y>
+     <x>129</x>
+     <y>1091</y>
     </hint>
     <hint type="destinationlabel">
      <x>1195</x>
@@ -5393,8 +5418,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>111</x>
-     <y>1062</y>
+     <x>337</x>
+     <y>1105</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -5553,8 +5578,8 @@
    <slot>bit_file_clicked2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>110</x>
-     <y>1076</y>
+     <x>370</x>
+     <y>1263</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -5873,8 +5898,8 @@
    <slot>httpServerCheckBoxChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>110</x>
-     <y>1061</y>
+     <x>303</x>
+     <y>1079</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -5883,18 +5908,50 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton_copyPositionsMarkers_2</sender>
+   <sender>pushButton_currentConfToBatch</sender>
    <signal>clicked()</signal>
    <receiver>MainWindowDesign</receiver>
    <slot>addcurrentconfmacro()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>489</x>
-     <y>258</y>
+     <x>672</x>
+     <y>190</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
      <y>289</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_currentConfToBatchFCS</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>addcurrentconfmacrofcs()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>551</x>
+     <y>340</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>428</x>
+     <y>352</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_copyPositionsMarkersFCS</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>copyPositionsMarkersFCS()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>804</x>
+     <y>337</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>427</x>
+     <y>391</y>
     </hint>
    </hints>
   </connection>
@@ -5981,5 +6038,7 @@
   <slot>test_analog_digital()</slot>
   <slot>httpServerCheckBoxChanged()</slot>
   <slot>addcurrentconfmacro()</slot>
+  <slot>addcurrentconfmacrofcs()</slot>
+  <slot>copyPositionMarkers()</slot>
  </slots>
 </ui>
