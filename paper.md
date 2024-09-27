@@ -73,7 +73,7 @@ BrightEyes-MCS not only features a user-friendly graphical interface (GUI) for m
 
 ---
 
-BrighEyes is the name of the project founded by the ERC in 2018 (Consolidator Grant, N. 818699). In this context, other open-source tools have been developed, like BrighEyes-TTM, an open-hardware time-tagging module [@Rossetta1], BrightEyes-ISM[@Zunino2], a python library for ISM data analysis.
+BrightEyes is the name of the project founded by the ERC in 2018 (Consolidator Grant, N. 818699). In this context, other open-source tools have been developed, like BrighEyes-TTM, an open-hardware time-tagging module [@Rossetta1], BrightEyes-ISM[@Zunino2], a python library for ISM data analysis.
 
 # System Architecture
 
