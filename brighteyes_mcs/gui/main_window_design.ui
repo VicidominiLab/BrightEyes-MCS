@@ -20,7 +20,7 @@
       <item row="0" column="0">
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -276,27 +276,6 @@
           <item row="0" column="0">
            <layout class="QGridLayout" name="gridLayout_44">
             <item row="0" column="3">
-             <widget class="QPushButton" name="pushButton_13">
-              <property name="text">
-               <string>Move to selected offset</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QPushButton" name="pushButton_copyPositionsMarkers">
-              <property name="text">
-               <string>Copy Markers for Batch</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QPushButton" name="pushButton_16">
-              <property name="text">
-               <string>Copy Markers for FCS Batch </string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
              <spacer name="horizontalSpacer_8">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -308,6 +287,34 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item row="1" column="1">
+             <widget class="QPushButton" name="pushButton_16">
+              <property name="text">
+               <string>Copy Markers for FCS Batch </string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="pushButton_copyPositionsMarkers">
+              <property name="text">
+               <string>Copy Markers for Batch</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0" rowspan="2">
+             <widget class="QPushButton" name="pushButton_copyPositionsMarkers_2">
+              <property name="text">
+               <string>Add current conf to Macro</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="4" rowspan="2">
+             <widget class="QPushButton" name="pushButton_13">
+              <property name="text">
+               <string>Move to selected offset</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -4794,8 +4801,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1101</y>
+     <x>84</x>
+     <y>1066</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -4810,8 +4817,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1127</y>
+     <x>84</x>
+     <y>1069</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -4826,8 +4833,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1153</y>
+     <x>84</x>
+     <y>1071</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -5002,8 +5009,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>567</x>
-     <y>268</y>
+     <x>732</x>
+     <y>190</y>
     </hint>
     <hint type="destinationlabel">
      <x>555</x>
@@ -5099,7 +5106,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1232</x>
-     <y>268</y>
+     <y>267</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -5162,8 +5169,8 @@
    <slot>bit_file_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>370</x>
-     <y>1188</y>
+     <x>110</x>
+     <y>1071</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -5178,8 +5185,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>719</x>
-     <y>268</y>
+     <x>732</x>
+     <y>345</y>
     </hint>
     <hint type="destinationlabel">
      <x>628</x>
@@ -5322,8 +5329,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>1260</y>
+     <x>111</x>
+     <y>1076</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -5338,8 +5345,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>1208</y>
+     <x>111</x>
+     <y>1071</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -5370,8 +5377,8 @@
    <slot>radio_ttm_local()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>217</x>
-     <y>1105</y>
+     <x>82</x>
+     <y>1062</y>
     </hint>
     <hint type="destinationlabel">
      <x>1195</x>
@@ -5386,8 +5393,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>370</x>
-     <y>1105</y>
+     <x>111</x>
+     <y>1062</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -5546,8 +5553,8 @@
    <slot>bit_file_clicked2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>370</x>
-     <y>1263</y>
+     <x>110</x>
+     <y>1076</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -5866,12 +5873,28 @@
    <slot>httpServerCheckBoxChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>247</x>
-     <y>1076</y>
+     <x>110</x>
+     <y>1061</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
      <y>1179</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_copyPositionsMarkers_2</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>addcurrentconfmacro()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>489</x>
+     <y>258</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>427</x>
+     <y>289</y>
     </hint>
    </hints>
   </connection>
@@ -5957,5 +5980,6 @@
   <slot>circularMotionActivateChanged()</slot>
   <slot>test_analog_digital()</slot>
   <slot>httpServerCheckBoxChanged()</slot>
+  <slot>addcurrentconfmacro()</slot>
  </slots>
 </ui>

@@ -2571,6 +2571,10 @@ class MainWindow(QMainWindow):
         # self.ui.progressBar_frame.setMaximum(0)
         #
         # self.startAcquisition(activate_preview=True)
+    @Slot()
+    def addcurrentconfmacro(self):
+        print_dec("addcurrentconfmacro")
+        self.table_manager.add_dict(self.getGUI_data())
 
     @Slot()
     def copyPositionsMarkers(self):

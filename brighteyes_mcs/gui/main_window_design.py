@@ -120,24 +120,29 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_39.setObjectName(u"gridLayout_39")
         self.gridLayout_44 = QGridLayout()
         self.gridLayout_44.setObjectName(u"gridLayout_44")
-        self.pushButton_13 = QPushButton(self.tab_fcs)
-        self.pushButton_13.setObjectName(u"pushButton_13")
+        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.gridLayout_44.addWidget(self.pushButton_13, 0, 3, 1, 1)
-
-        self.pushButton_copyPositionsMarkers = QPushButton(self.tab_fcs)
-        self.pushButton_copyPositionsMarkers.setObjectName(u"pushButton_copyPositionsMarkers")
-
-        self.gridLayout_44.addWidget(self.pushButton_copyPositionsMarkers, 0, 0, 1, 1)
+        self.gridLayout_44.addItem(self.horizontalSpacer_8, 0, 3, 1, 1)
 
         self.pushButton_16 = QPushButton(self.tab_fcs)
         self.pushButton_16.setObjectName(u"pushButton_16")
 
-        self.gridLayout_44.addWidget(self.pushButton_16, 0, 1, 1, 1)
+        self.gridLayout_44.addWidget(self.pushButton_16, 1, 1, 1, 1)
 
-        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.pushButton_copyPositionsMarkers = QPushButton(self.tab_fcs)
+        self.pushButton_copyPositionsMarkers.setObjectName(u"pushButton_copyPositionsMarkers")
 
-        self.gridLayout_44.addItem(self.horizontalSpacer_8, 0, 2, 1, 1)
+        self.gridLayout_44.addWidget(self.pushButton_copyPositionsMarkers, 0, 1, 1, 1)
+
+        self.pushButton_copyPositionsMarkers_2 = QPushButton(self.tab_fcs)
+        self.pushButton_copyPositionsMarkers_2.setObjectName(u"pushButton_copyPositionsMarkers_2")
+
+        self.gridLayout_44.addWidget(self.pushButton_copyPositionsMarkers_2, 0, 0, 2, 1)
+
+        self.pushButton_13 = QPushButton(self.tab_fcs)
+        self.pushButton_13.setObjectName(u"pushButton_13")
+
+        self.gridLayout_44.addWidget(self.pushButton_13, 0, 4, 2, 1)
 
 
         self.gridLayout_39.addLayout(self.gridLayout_44, 0, 0, 1, 1)
@@ -2762,8 +2767,9 @@ class Ui_MainWindowDesign(object):
         self.spinBox_circular_points.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
         self.pushButton_19.clicked.connect(MainWindowDesign.test_analog_digital)
         self.checkBox_httpServer.stateChanged.connect(MainWindowDesign.httpServerCheckBoxChanged)
+        self.pushButton_copyPositionsMarkers_2.clicked.connect(MainWindowDesign.addcurrentconfmacro)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         self.tabWidget_circular.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(6)
         self.comboBox_analogSelect_B.setCurrentIndex(0)
@@ -2818,9 +2824,10 @@ class Ui_MainWindowDesign(object):
         self.comboBox_plot_channel.setItemText(27, QCoreApplication.translate("MainWindowDesign", u"Analog B", None))
 
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_preview), QCoreApplication.translate("MainWindowDesign", u"Preview", None))
-        self.pushButton_13.setText(QCoreApplication.translate("MainWindowDesign", u"Move to selected offset", None))
-        self.pushButton_copyPositionsMarkers.setText(QCoreApplication.translate("MainWindowDesign", u"Copy Markers for Batch", None))
         self.pushButton_16.setText(QCoreApplication.translate("MainWindowDesign", u"Copy Markers for FCS Batch ", None))
+        self.pushButton_copyPositionsMarkers.setText(QCoreApplication.translate("MainWindowDesign", u"Copy Markers for Batch", None))
+        self.pushButton_copyPositionsMarkers_2.setText(QCoreApplication.translate("MainWindowDesign", u"Add current conf to Macro", None))
+        self.pushButton_13.setText(QCoreApplication.translate("MainWindowDesign", u"Move to selected offset", None))
         self.label_68.setText("")
         self.label_69.setText(QCoreApplication.translate("MainWindowDesign", u"Number of FCS bins", None))
         self.pushButton_FCS_reset.setText(QCoreApplication.translate("MainWindowDesign", u"Reset FCS Buffer", None))
