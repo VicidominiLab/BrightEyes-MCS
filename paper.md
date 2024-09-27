@@ -71,11 +71,7 @@ In contrast, BrightEyes-MCS (Microscope Control Suite) is an open-source softwar
 
 BrightEyes-MCS not only features a user-friendly graphical interface (GUI) for microscope control, but also supports real-time previews and efficient data saving in the HDF5 format, which is ready for internal processing or integration with external analysis tools. Although tailored for ISM, BrightEyes-MCS is versatile and can be adapted for various applications, including fluorescence correlation spectroscopy (FCS), spectroscopy, and other advanced imaging techniques. This flexibility makes it a valuable resource for researchers working with diverse microscopy setups that require precise control and high-performance data acquisition.
 
-
 ---
-
-
-Integrating an imaging-scanning microscope's control system, which supports multichannel scanning microscopy, ensures the synchronization of acquisition with a pixel dwell time as low as 1 µs, and manages high photon flux reaching megahertz rates, would compromise the performance of the aforementioned software architectures. Thus, those solutions are not practical for ISM instruments, necessitating tailored software. In this context, the BrightEye-MCS (Microscope Control Suite) is the new open-source tool written in Python, which allows the user to control a laser-scanning microscope equipped with a SPAD detector, providing a user-friendly GUI, real-time preview, and data saving in HDF5 ready to be processed internally or with external tools.
 
 BrighEyes is the name of the project founded by the ERC in 2018 (Consolidator Grant, N. 818699). In this context, other open-source tools have been developed, like BrighEyes-TTM, an open-hardware time-tagging module [@Rossetta1], BrightEyes-ISM[@Zunino2], a python library for ISM data analysis.
 
