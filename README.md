@@ -128,8 +128,6 @@ The FPGA address is defined by the NI Driver configuration. If you have only a s
 In the case you need to use a second NI FPGA acting as DAC/ADC ("double-board" firmware) please select in "FPGA 2nd BitFile" and "FPGA 2nd Addr." board, respectivily the firmware and the address of the board which have the analog IN/OUT.
 In case you do not use a "double-board" firmware "FPGA 2nd BitFile" and "FPGA 2nd Addr." must be let empty.
 
-Then click to "Save .cfg file" and click on make this configuration permanent.
-
 ### Calibration
 
 In the bottom-left panel select the tab "Adv." then the internal tab "Calibration". Here you can set the calibration factor (µm/V) for each axis of your microscope.
@@ -138,7 +136,7 @@ In the bottom-left panel select the tab "Adv." then the internal tab "Calibratio
 In the bottom-left panel select the tab "Adv." then the internal tab "Limits".
 In the section "Set Voltage Ranges" you can set the voltage hardware limit of your positioning system.
 
-In the section "Offset" you can set the voltage offset of the center of your positioning system. For example, some piezo stages can have the center at +5V instead and other have it a 0V.
+In the section "Offset" you can set the voltage offset of the center of your positioning system. (Some piezo stages can have the center at +5V instead other ones have it a 0V.)
 
 **PLEASE TO AVOID HARDWARE DAMAGE PLEASE SET THESE PARAMETERS ACCORDING YOUR HARWARE**
 
@@ -146,6 +144,14 @@ In the section "Offset" you can set the voltage offset of the center of your pos
 In the bottom-left panel select the tab "File". Here you can set the destination folder.
 
 It is suggested to let the filename set to "DEFAULT.h5": this create automatically a filename with date and time like "data-30-12-2023-16-22-45.h5".
+
+### Save the default configuration
+**REMIND TO SAVE YOUR DEFAULT CONFIGURATION**
+
+In the bottom-left panel select the tab "Adv." then the internal tab "Board configuration".
+
+Then click to "Save .cfg file", you can use the default.cfg or another name, then click on make this configuration permanent.
+
 
 ## Minimal usage instructions
 
