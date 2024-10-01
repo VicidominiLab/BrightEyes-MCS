@@ -12,7 +12,59 @@ from ..libs.mp_shared_array import MemorySharedNumpyArray
 
 
 class SpadFcsManager(QObject):
+    """
+    Manages the SPAD FCS (Single-Photon Avalanche Diode Fluorescence Correlation Spectroscopy) operations, including FPGA connections, data acquisition, and processing.
+
+    Attributes:
+        channels (int): Number of channels.
+        dim_detector (int): Dimension of the detector.
+        niAddr (str): NI address.
+        bitfile (str): Path to the bitfile.
+        timeout_fifos (float): Timeout for the FIFOs.
+        fpga_handle (FpgaHandle): Handle for the FPGA.
+        shared_arrays_ready (bool): Flag indicating if shared arrays are ready.
+        mp_manager (multiprocessing.Manager): Manager for multiprocessing.
+        ultra_dict_inst (dict): Dictionary for ultra configuration.
+        shared_dict (dict): Shared dictionary for multiprocessing.
+        default_configuration (dict): Default configuration for the registers.
+        requested_depth (int): Requested depth for acquisition.
+        actual_depth (int): Actual depth for acquisition.
+        timebins_per_pixel (int): Number of time bins per pixel.
+        time_resolution (float): Time resolution.
+        dim_x (int): Number of pixels in x dimension.
+        dim_y (int): Number of pixels in y dimension.
+        dim_z (int): Number of frames.
+        dim_rep (int): Number of repetitions.
+        previewProcess (AcquisitionLoopProcess): Process for previewing data.
+        expected_raw_data (int): Expected raw data.
+        expected_raw_data_per_frame (int): Expected raw data per frame.
+        registers_configuration (dict): Configuration of the registers.
+        shared_memory_buffer (MemorySharedNumpyArray): Shared memory buffer.
+        shared_image_xy (MemorySharedNumpyArray): Shared image in xy plane.
+        shared_fingerprint (MemorySharedNumpyArray): Shared fingerprint data.
+        shared_fingerprint_mask (MemorySharedNumpyArray): Shared fingerprint mask.
+        is_connected (bool): Flag indicating if connected to FPGA.
+        fifo_chuck_size (int): Size of the FIFO chuck.
+        acquisition_done_event (multiprocessing.Event): Event for acquisition done.
+        acquisition_almost_done_event (multiprocessing.Event): Event for acquisition almost done.
+        acquisition_run_event (multiprocessing.Event): Event for acquisition run.
+        acquisition_stop_event (multiprocessing.Event): Event for acquisition stop.
+        activate_preview_event (multiprocessing.Event): Event for activating preview.
+        autocorrelation_maxx (int): Maximum value for autocorrelation.
+        trace_bins (int): Number of trace bins.
+        trace_sample_per_bins (int): Number of samples per trace bin.
+        preview_buffer_size_in_words (int): Size of the preview buffer in words.
+        len_fifo_prebuffer (int): Length of the FIFO prebuffer.
+        activated_fifos_list (list): List of activated FIFOs.
+        DFD_Activate (bool): Flag for DFD activation.
+        snake_walk (bool): Flag for snake walk mode.
+        use_rust_fifo (bool): Flag for using Rust FIFO.
+        debug (bool): Debug flag.
+    """
     def __init__(self, filename="bitfiles/MyBitfileUSB.lvbitx", address="RIO0", channels=25):
+        """
+        Constructor of the class of SpaFCSManager
+        """
         super().__init__()
         # def __init__(self, filename="C:/Users/madonato/PycharmProjects/pyspad-fcs/bitfiles/laser_wait4.lvbitx", address="RIO0"):
         self.channels = channels
@@ -129,43 +181,76 @@ class SpadFcsManager(QObject):
         self.debug = False
 
     def __del__(self):
+        """
+        Destructor of the class
+        """
         print_dec("Destructor called.")
 
     def set_channels(self, ch):
+        """
+        Set the number of channels
+        """
         print_dec("Channels", ch)
         self.channels = ch
         self.dim_detector = int(np.sqrt(self.channels))
 
     def activateShowPreview(self, enable):
+        """
+        Activate the preview flag
+        """
         print_dec("activate_show_preview", enable)
         self.activate_show_preview = enable
 
     def setActivatedFifo(self, fifos_list):
+        """
+        Set the activated FIFOs
+        """
         print_dec("self.activated_fifos_list", fifos_list)
         self.activated_fifos_list = fifos_list
 
     def acquisition_stop(self):
+        """
+        Stop the acquisition
+        """
         self.acquisition_stop_event.set()
         self.acquisition_run_event.clear()
 
     def acquisition_run(self):
+        """
+        Run the acquisition
+        """
         self.acquisition_stop_event.clear()
         self.acquisition_run_event.set()
 
     def acquisition_done_reset(self):
+        """
+        Reset the acquisition done event
+        """
         self.acquisition_done_event.clear()
 
     def acquisition_almost_done_reset(self):
+        """
+        Reset the acquisition almost done event
+        """
         self.acquisition_almost_done_event.clear()
 
     def acquisition_is_done(self):
+        """
+        Check if the acquisition is done
+        """
         return self.acquisition_done_event.is_set()
 
     def acquisition_is_almost_done(self):
+        """
+        Check if the acquisition is almost done
+        """
         return self.acquisition_almost_done_event.is_set()
 
 
     def set_activate_preview(self, active=True):
+        """
+        Activate the preview
+        """
         if active:
             self.activate_preview_event.set()
             print_dec("self.activate_preview_event.set()")
@@ -174,10 +259,16 @@ class SpadFcsManager(QObject):
             print_dec("self.activate_preview_event.clear()")
 
     def set_activate_DFD(self, activate=True):
+        """
+        Activate the DFD mode
+        """
         print_dec("set_activate_DFD() set to ", activate)
         self.DFD_Activate = activate
 
     def set_activate_snake_walk(self, activate=True):
+        """
+        Set the snake walk (bidirectional scanning)
+        """
         print_dec("set_activate_snake_walk() set to ", activate)
         self.snake_walk = activate
 
@@ -185,18 +276,30 @@ class SpadFcsManager(QObject):
     #     self.default_destination_folder = folder
 
     def set_bit_file(self, bitfile=""):
+        """
+        Set the bit file for the 1st FPGA
+        """
         print_dec("set_bit_file", bitfile)
         self.bitfile = bitfile
 
     def set_ni_addr(self, niAddr=""):
+        """
+        Set the NI address for the 1st FPGA
+        """
         print_dec("set_ni_addr", niAddr)
         self.niAddr = niAddr
 
     def set_bit_file_second_fpga(self, bitfile=""):
+        """
+        Set the bit file for the 2nd FPGA
+        """
         print_dec("set_bit_file 2nd FPGA", bitfile)
         self.bitfile2 = bitfile
 
     def set_ni_addr_second_fpga(self, niAddr=""):
+        """
+        Set the NI address for the 2nd FPGA
+        """
         print_dec("set_ni_addr 2nd FPGA", niAddr)
         self.niAddr2 = niAddr
 
@@ -206,17 +309,29 @@ class SpadFcsManager(QObject):
         self.requested_depth = requested_depth
 
     def set_preview_buffer_size_in_words(self, preview_buffer_size_in_words):
+        """
+        Set the preview buffer size in words
+        """
         print_dec("preview_buffer_size_in_words", preview_buffer_size_in_words)
         self.preview_buffer_size_in_words = preview_buffer_size_in_words
 
     def set_len_fifo_prebuffer(self, len_fifo_prebuffer):
+        """
+        Set the length of the FIFO prebuffer
+        """
         self.len_fifo_prebuffer = len_fifo_prebuffer
 
     def set_timeout_fifos(self, timeout):
+        """
+        Set the timeout for the FIFOs
+        """
         print_dec("set_timeout_fifos", timeout)
         self.timeout_fifos = timeout
 
     def connect(self, initial_registers={}, list_fifos=[]):
+        """
+        Connect to the FPGA using FPGA handle class
+        """
         print_dec("FPGA connect()")
         # self.nifpga_session = nifpga.Session(self.bitfile, self.niAddr)
         try:
@@ -246,15 +361,27 @@ class SpadFcsManager(QObject):
         print_dec("self.fpga_handle.run()")
 
     def set_filename_h5(self, filename):
+        """
+        Set the filename for the HDF5 file
+        """
         self.filenameh5 = filename
 
     def set_fingerprint_mask(self, fingerprint_mask):
+        """
+        Set the fingerprint mask
+        """
         self.shared_fingerprint_mask.get_numpy_handle()[:] = np.copy(fingerprint_mask)
 
     def set_use_rust_fifo(self, value=True):
+        """
+        Set the use of rust FIFO
+        """
         self.use_rust_fifo = value
 
     def run(self):
+        """
+        Run the FPGA, start the data process, the preview process and run the FPGA handle class
+        """
         activate_preview = self.activate_preview_event.is_set()
 
         print_dec("spadfcsmanager.run()")
@@ -423,21 +550,33 @@ class SpadFcsManager(QObject):
         self.fpga_handle.runfpga()
 
     def previewProcess_isAlive(self):
+        """
+        Preview process is alive
+        """
         try:
             return self.previewProcess.is_alive()
         except:
             return False
 
     def dataProcess_isAlive(self):
+        """
+        dataProcess is alive
+        """
         try:
             return self.dataProcess.is_alive()
         except:
             return False
 
     def freeMemory(self):
+        """
+        Free the memory
+        """
         self.shared_image_xy = None
 
     def setRegistersDict(self, myconf):
+        """
+        Set the registers dictionary
+        """
         # print_dec("setRegistersDict")
         temp_dict = {}
         for i in myconf:
@@ -453,6 +592,9 @@ class SpadFcsManager(QObject):
         self.registers_configuration.update(temp_dict)
 
     def readRegistersDict(self):
+        """
+        Read the registers dictionary
+        """
         print_dec("readRegistersDict()")
         if self.is_connected:
             self.registers_configuration.update(self.fpga_handle.register_read_all())
@@ -492,6 +634,9 @@ class SpadFcsManager(QObject):
         self.update_chuck()
 
     def update_chuck(self):
+        """
+        Update the chuck size
+        """
         try:
             self.timebins_per_pixel = self.registers_configuration["#timebinsPerPixel"]
         except:
@@ -517,33 +662,57 @@ class SpadFcsManager(QObject):
         )
 
     def getCurrentPreviewElement(self, fifo_name="FIFO"):
+        """
+        Get the current preview element
+        """
         return self.loc_previewed[fifo_name].value * 2
 
     def getCurrentAcquistionElement(self, fifo_name="FIFO"):
+        """
+        Get the current acquisition element
+        """
         return self.loc_acquired[fifo_name].value
 
     def getLastPreprocessedLen(self, fifo_name="FIFO"):
+        """
+        Get the last preprocessed length
+        """
         return self.last_preprocessed_len[fifo_name]
 
     def getExpectedFifoElements(self):
+        """
+        Get the expected FIFO elements
+        """
         return self.expected_raw_data
 
     def getExpectedFifoElementsPerFrame(self):
+        """
+        Get the expected FIFO elements per frame
+        """
         return self.expected_raw_data_per_frame
 
     # def getCurrentData(self):
     #     return self.acquisitionThread.data
 
     def stopFPGA(self):
+        """
+        stop the FPGA
+        """
         print_dec("stopAcquisition.stop()")
         self.fpga_handle.stop()
 
     def stopAcquisition(self):
+        """
+        Stop the acquisition
+        """
         print_dec("stopAcquisition.stop()")
         self.dataProcess.stop()
         self.is_connected = False
 
     def stopPreview(self):
+        """
+        Stop the preview
+        """
         print_dec("myfpga.stopPreview()")
         # if self.previewEnabled:
         self.previewProcess.stop()
@@ -551,36 +720,69 @@ class SpadFcsManager(QObject):
         print_dec("self.previewThread.join() done")
 
     def get_current_z(self):
+        """
+        Get the current z
+        """
         return self.shared_dict["current_z"]
 
     def get_current_rep(self):
+        """
+        Get the current repetition
+        """
         return self.shared_dict["current_rep"]
 
     def get_total_photon(self):
+        """
+        Get the number of total photon
+        """
         return self.shared_dict["total_photon"]
 
     def get_number_of_threads_h5(self):
+        """
+        Get the number of threads
+        """
         return self.number_of_threads_h5.value
 
     def reset(self):
+        """
+        Reset the FPGA
+        """
         self.fpga_handle.reset()
 
     def getFingerprint(self):
+        """
+        Get the fingerprint
+        """
         return self.shared_fingerprint.get_numpy_handle()[1, :, :]
 
     def getFingerprintCumulative(self):
+        """
+        Get the fingerprint cumulative
+        """
         return self.shared_fingerprint.get_numpy_handle()[0, :, :]
 
     def getFingerprintCumulativeLast10000(self):
+        """
+        Get the fingerprint cumulative last 10000 data packets
+        """
         return self.shared_fingerprint.get_numpy_handle()[2, :, :]
 
     def getFingerprintCumulativeLastFrame(self):
+        """
+        Get the fingerprint cumulative last frame
+        """
         return self.shared_fingerprint.get_numpy_handle()[3, :, :]
 
     def getFingerprintSaturation(self):
+        """
+        Get the fingerprint saturation
+        """
         return self.shared_fingerprint.get_numpy_handle()[4, :, :]
 
     def getImage(self):
+        """
+        Get the image
+        """
         # self.dataCounts = np.zeros((self.dim_x*self.dim_y*self.dim_z*self.timebins_per_pixel, self.channels),
         #                           dtype = np.uint64)
         # #print(id(self.shared_memory_buffer))
@@ -609,22 +811,40 @@ class SpadFcsManager(QObject):
         return d
 
     def setSelectedChannel(self, ch):
+        """
+        Set the selected channel
+        """
         self.update_shared_dict({"channel": ch})
 
     def set_autocorrelation_maxx(self, value=20):
+        """
+        Set the autocorrelation maxx
+        """
         print("set_autocorrelation_maxx", value)
         self.autocorrelation_maxx = value
 
     def set_trace_bins(self, trace_bins=30000):
+        """
+        Set the trace bins
+        """
         self.trace_bins = trace_bins
 
     def set_trace_sample_per_bins(self, trace_sample_per_bins=10000):
+        """
+        Set the trace sample per bins
+        """
         self.trace_sample_per_bins = trace_sample_per_bins
 
     def getAutocorrelation(self):
+        """
+        Get the autocorrelation
+        """
         return self.shared_autocorrelation.get_numpy_handle()
 
     def getTrace(self):
+        """
+        Get the trace
+        """
         if self.DFD_Activate:
             a = self.shared_trace.get_numpy_handle() * 1.0
             a[1, :] = a[1, :]
@@ -639,6 +859,9 @@ class SpadFcsManager(QObject):
             return a, self.trace_pos.value
 
     def getPreviewImage(self, projection="xy", rgb=False):
+        """
+        Get the preview image with at selected projection
+        """
         # print(self.previewThread.current_x,self.previewThread.current_y,self.previewThread.current_f, self.previewThread.data_len)
         if projection == "xy":
             shared_image = self.shared_image_xy
@@ -662,22 +885,43 @@ class SpadFcsManager(QObject):
         return array
 
     def getPreviewFlatData(self, frame=0, channel=10):
+        """
+        Get the preview flat data
+        """
         return self.shared_image_xy.get_numpy_handle()[:, :].flatten()
 
     def get_registers_configuration(self):
+        """
+        Get the registers configuration
+        """
         return self.registers_configuration
 
     def update_shared_dict(self, ndict={}):
+        """
+        Update the shared dictionary
+        """
         self.shared_dict.update(ndict)
 
     def read_shared_dict(self):
+        """
+        Read the shared dictionary
+        """
         return dict(self.shared_dict)
 
     def get_FIFO_status(self):
+        """
+        Get the status of the FIFO
+        """
         return self.shared_dict["FIFO_status"], self.shared_dict["FIFOAnalog_status"]
 
     def trace_reset(self):
+        """
+        Reset the trace process
+        """
         self.previewProcess.trace_reset()
 
     def FCS_reset(self):
+        """
+        Reset the FCS process
+        """
         self.previewProcess.FCS_reset()

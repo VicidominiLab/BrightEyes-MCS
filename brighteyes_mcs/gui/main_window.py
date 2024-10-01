@@ -91,10 +91,23 @@ pg.setConfigOption("foreground", "w")
 
 
 class PluginSignals(QObject):
+    """
+    Class for defining custom signals for the plugins
+    """
     signal = Signal(str)
 
 
 class MainWindow(QMainWindow):
+    """
+    Main window class for the BrightEyes-MCS application.
+
+    Attributes:
+        http_server_thread (FastAPIServerThread): Thread for the HTTP server.
+        guiReadyFlag (bool): Flag indicating if the GUI is ready.
+        init_ready (bool): Flag indicating if the initialization is ready.
+        splash (QSplashScreen): Splash screen for the application.
+    """
+
     def __init__(self, args=None):
         self.http_server_thread = None
         self.guiReadyFlag = False
@@ -488,11 +501,17 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def httpServerCheckBoxChanged(self):
+        """
+        Slot for the HTTP server checkbox changed event
+        """
         if self.ui.checkBox_httpServer.isChecked():
             self.httpApiServer_start()
         else:
             self.httpApiServer_stop()
     def httpApiServer_start(self):
+        """
+        Starts the FastAPI HTTP server
+        """
         print_dec("httpApiServer_start()")
         if self.http_server_thread is None:
             self.http_server_thread = FastAPIServerThread(self, self.ui.lineEdit_httpAddr.text(), int(self.ui.lineEdit_httpPort.text()))
@@ -504,8 +523,11 @@ class MainWindow(QMainWindow):
                                             self.ui.lineEdit_httpAddr.text(), self.ui.lineEdit_httpPort.text()))
         else:
             print_dec("HTTP Server FastAPIServerThread ALREADY RUNNING")
-            
+
     def httpApiServer_stop(self):
+        """
+        Stops the FastAPI HTTP server
+        """
         print_dec("htttApiServer_stop()")
         self.http_server_thread.stop()
         print_dec("HTTP Server FastAPIServerThread Stop")
@@ -514,6 +536,10 @@ class MainWindow(QMainWindow):
         self.http_server_thread=None
 
     def configuration_helper_init(self):
+        """
+        Return a dictionary with the configuration helper for the GUI elements
+        They are used both for configuration saving and loading, and macros.
+        """
         configuration_helper = {}
 
         configuration_helper["fcs"] = (
@@ -907,6 +933,9 @@ class MainWindow(QMainWindow):
         return configuration_helper
 
     def setupAnalogOutputGUI(self):
+        """
+        Build the Analog Output GUI menu
+        """
         self.ui.spinBox_AnalogOut.deleteLater()
         self.ui.comboBox_AnalogOut.deleteLater()
         self.ui.label_AnalogOut.deleteLater()
@@ -969,6 +998,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def analogOutChanged(self):
+        """
+        Slot for the Analog Output changed event
+        """
         print_dec("analogOutChanged()")
 
         mydict = {}
@@ -984,6 +1016,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def laserChanged(self):
+        """
+        Slot for the Laser changed event
+        """
         print_dec("laserChanged")
         self.setRegistersDict(
             {
@@ -996,6 +1031,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def table_keyPressEvent(self, event):
+        """
+        Slot for the table key pressed
+        """
         widget = self.ui.tableWidget
         print_dec(
             "Remove from",
@@ -1011,16 +1049,28 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def traceReset(self):
+        """
+        Slot for the trace reset event
+        It resets the time trace
+        """
         print_dec("traceReset")
         self.spadfcsmanager_inst.trace_reset()
 
     @Slot()
     def FCSReset(self):
+        """
+        Slot for the FCS reset event.
+        """
+
         print_dec("FCSReset")
         self.spadfcsmanager_inst.FCS_reset()
 
     @Slot()
     def table_markers_keyPressEvent(self, event):
+        """
+        Slot for the table of the markers when a key pressed
+        It handles the delete key
+        """
         widget = self.ui.tableWidget_markers
         print_dec(
             "Remove from",
@@ -1040,6 +1090,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def traceClicked(self, event):
+        """
+        Slot for the time trace clicked event
+        """
         mouse_event = event
         mouse_point = mouse_event.pos()
         projection = self.ui.comboBox_view_projection.currentText()
@@ -1049,6 +1102,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def cmd_path_ttm(self):
+        """
+        Slot for the TTM path command
+        """
         print_dec("cmd_path_ttm")
 
         dialog = QFileDialog(self)
@@ -1063,6 +1119,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def cmd_path_destinationfolder(self):
+        """
+        Slot for the data destination folder command
+        """
         print_dec("cmd_path_destinationfolder")
 
         dialog = QFileDialog(self)
@@ -1072,6 +1131,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def numberChannelsChanged(self):
+        """
+        Slot for the number of channels changed event
+        """
         ch = int(self.ui.comboBox_channels.currentText())
         print_dec("numberChannelsChanged to", self.ui.comboBox_channels.currentText())
         self.CHANNELS = ch
@@ -1081,6 +1143,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def cmd_filename(self):
+        """
+        Slot for selecting the filename
+        """
         print_dec("cmd_filename")
 
         dialog = QFileDialog(self)
@@ -1098,6 +1163,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def cmd_moveToSelectedRowMarker(self):
+        """
+        Slot for moving to the selected row marker
+        """
         print_dec("cmd_moveToSelectedRowMarker")
         if len(self.markers_list) > 0:
             self.setGUI_data(
@@ -1107,6 +1175,9 @@ class MainWindow(QMainWindow):
             )
 
     def moveToSelectedColumnFCS(self, k):
+        """
+        Set the GUI configuration to the selected column in the Macro/FCS table
+        """
         print_dec("moveToSelectedColumnFCS")
         widget = self.ui.tableWidget
 
@@ -1139,6 +1210,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def cmd_moveToSelectedColumnFCS(self, k=None):
+        """
+        Set the GUI configuration to the current column in the Macro/FCS table
+        """
         print_dec("cmd_moveToSelectedColumnFCS")
         widget = self.ui.tableWidget
         k = widget.currentColumn()
@@ -1148,10 +1222,16 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def prova(self, ev):
+        """
+        dummy button
+        """
         print_dec("prova", ev)
 
     @Slot()
     def getTabWinMinimization(self, widget, event):
+        """
+        Slot for the tab window minimization event
+        """
         print_dec(widget, event, event.type())
         if event.type() is QEvent.Type.WindowStateChange:
             print_dec("WindowStateChange")
@@ -1162,6 +1242,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def tabDoubleClick(self, number):
+        """
+        Slot for the tab double click event: it moves the tab to a new window
+        """
         print_dec("tabDoubleClick", number)
         w = self.ui.tabWidget.widget(number)
         pos = w.mapToGlobal(w.pos())
@@ -1184,6 +1267,9 @@ class MainWindow(QMainWindow):
         w.changeEvent = lambda event: self.getTabWinMinimization(w, event)
 
     def guiReadyEvent(self):
+        """
+        Slot for the GUI ready event, normally called when the GUI is ready to be used
+        """
         print_dec("guiReadyEvent()")
         self.im_widget.show()
         default_cfg = self.checkDefaultCfg()
@@ -1206,6 +1292,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def showEvent(self, event):
+        """
+        Overridden showEvent method for generating the GUI ready event
+        """
         print_dec("showEvent", event.spontaneous())
         super(MainWindow, self).showEvent(event)
 
@@ -1245,6 +1334,9 @@ class MainWindow(QMainWindow):
     #     self.ask_to_save_cfg_as_permanent(file_cfg_nicer)
 
     def ask_to_save_cfg_as_permanent(self, file_cfg_nicer):
+        """
+        Message box to ask if the configuration file should be saved as permanent
+        """
         msgBox = QMessageBox()
         msgBox.setText("The file " + file_cfg_nicer + " was selected")
         msgBox.setInformativeText(
@@ -1263,6 +1355,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def bit_file_clicked(self):
+        """
+        Slot for the selecting the bitfile of the 1st FPGA
+        """
         print_dec("bit_file_clicked()")
 
         file_bit = QFileDialog.getOpenFileName(
@@ -1280,6 +1375,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def bit_file_clicked2(self):
+        """
+        Slot for the selecting the bitfile of the 2nd FPGA
+        """
         print_dec("bit_file_clicked2()")
 
         file_bit = QFileDialog.getOpenFileName(
@@ -1296,6 +1394,9 @@ class MainWindow(QMainWindow):
             self.ui.lineEdit_fpga2bitfile.setText(file_bit_nicer)
 
     def checkDefaultCfg(self, default_name="cfg/current_system"):
+        """
+        Check if the default configuration file exists
+        """
         if os.path.exists(default_name):
             with open(default_name, "r") as f:
                 a = f.read().splitlines()
@@ -1308,6 +1409,9 @@ class MainWindow(QMainWindow):
         raise ("Error in checkDefaultCfg")
 
     def setNewDefaultCfg(self, default_cfg, default_name="cfg/current_system"):
+        """
+        Set a new default configuration file
+        """
         with open(default_name, "w") as f:
             f.write(
                 "\n".join(
@@ -1327,6 +1431,9 @@ class MainWindow(QMainWindow):
         return default_cfg
 
     def getGUI_data(self):
+        """
+        Get the GUI data and return it as a dictionary
+        """
         configuration = {}
         for n, (name, (caption, mtype, ref_obj, visible)) in enumerate(
                 self.configuration_helper.items()
@@ -1363,6 +1470,9 @@ class MainWindow(QMainWindow):
         return configuration
 
     def setGUI_data(self, configuration={}):
+        """
+        Set the GUI data from a dictionary (it can be also a partial configuration)
+        """
         # lock_old = self.lock_parameters_changed_call
         # self.lock_parameters_changed_call = True
 
@@ -1408,6 +1518,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def delete_list_file(self):
+        """
+        delete the selected files in the list
+        """
         print_dec("delete_list_file()")
         sel = []
         while len(self.ui.listWidget.selectedItems()) > 0:
@@ -1418,6 +1531,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def copy_list_file(self):
+        '''
+        Actually is "cut" the files ready to be "paste" in some folder
+        '''
         print_dec("copy_list_file()")
         list_urls = []
         for i in self.ui.listWidget.selectedItems():
@@ -1432,6 +1548,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def cmd_load_plugin(self):
+        """
+        Load the selected plugin
+        """
         item = self.ui.listWidget_plugins.currentItem()
         if item is not None:
             plugin_to_be_loaded = item.text()
@@ -1440,10 +1559,16 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def cmd_close_plugin(self):
+        """
+        Close the selected plugin
+        """
         pass
 
     @Slot()
     def cmd_update_plugin_list(self):
+        """
+        Update the plugin list
+        """
         self.ui.listWidget_plugins.clear()
         l = self.plugin_manager.plugin_list()
         print_dec("cmd_update_plugin_list()", l)
@@ -1452,6 +1577,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def axesRangeChanged(self, ev=None):
+        """
+        Slot for the axes range changed event, when the range of the axes of the Image Preview is changed
+        """
         print_dec("axesRangeChanged(...)")
         if not self.ui.checkBox_lockMove.isChecked():
             proj = self.ui.comboBox_view_projection.currentText()
@@ -1661,6 +1789,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def closeEvent(self, event):
+        """
+        Overridden closeEvent method for closing the application
+        """
         print_dec("=======================")
         print_dec("   CLOSE EVERYTHING")
         print_dec("=======================")
@@ -1705,6 +1836,9 @@ class MainWindow(QMainWindow):
         )
 
     def bitfile_check(self, path):
+        """
+        Check if the bitfile exists
+        """
         if not os.path.isfile(path):
             msgBox = QMessageBox()
             msgBox.setText("The firmware file %s does not exist!\n"
@@ -1716,6 +1850,9 @@ class MainWindow(QMainWindow):
             raise (ValueError("Firmware file not found!"))
 
     def connectFPGA(self):
+        """
+        Connect to the FPGA(s)
+        """
         print_dec("ConnectFPGA")
 
         self.bitfile_check(self.ui.lineEdit_fpgabitfile.text())
@@ -1807,6 +1944,9 @@ class MainWindow(QMainWindow):
             # self.spadfcsmanager_inst.start()
 
     def setRegistersDict(self, myconf):
+        """
+        Set the registers dictionary which is mapped to the FPGA
+        """
         self.configurationFPGA_dict.update(myconf)
         # print_dec("setRegistersDict", self.configurationFPGA_dict)
         self.spadfcsmanager_inst.setRegistersDict(myconf)
@@ -1814,6 +1954,10 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def panoramaButton(self):
+        """
+        Slot for the panorama button event
+        It copy the current image to the panorama image place
+        """
         xr = self.ui.spinBox_default_range_x.value()
         yr = self.ui.spinBox_default_range_y.value()
         xoff = self.ui.spinBox_default_off_x_um.value()
@@ -1918,6 +2062,9 @@ class MainWindow(QMainWindow):
     #         print_dec("self.rect_roi_panorama_modified_lock")
 
     def AutoRange_im_widget(self):
+        """
+        Auto range the image widget
+        """
         lock_range_changing = self.lock_range_changing
         roi_visible = self.rect_roi.isVisible()
 
@@ -1937,6 +2084,9 @@ class MainWindow(QMainWindow):
         self.updateRoiPanaorama()
 
     def updateRoiPanaorama(self):
+        """
+        update the panorama ROI
+        """
         print_dec("updateRoiPanaorama")
         self.rect_roi_panorama_modified_lock = True
 
@@ -1952,6 +2102,9 @@ class MainWindow(QMainWindow):
         self.rect_roi_panorama_modified_lock = False
 
     def roiModified(self, event):
+        """
+        roiModified event - DUMMY
+        """
         print_dec("SKIP roiModified")
         return
         # self.rect_roi_panorama.setPos(self.rect_roi.pos())
@@ -1976,6 +2129,9 @@ class MainWindow(QMainWindow):
         #     print_dec("self.rect_roi_modified_lock")
 
     def setSelectedChannel(self, ch):
+        """
+        set the selected channel
+        """
         self.selected_channel = ch
         print_dec("setSelectedChannel", ch)
         i = self.ui.comboBox_plot_channel.findText("%d" % ch)
@@ -1989,6 +2145,10 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def about(self):
+        """
+        Show the about dialog box with license
+        """
+
         self.textBrowser = QTextBrowser(None)
         self.textBrowser.setObjectName("textBrowser")
         f = open("gui/about.html", "r")
@@ -2003,11 +2163,19 @@ class MainWindow(QMainWindow):
         self.textBrowser.move(60, 60)
 
     def imageMoved(self, event):
+        """
+        image moved event
+        """
         mouse_point = event
         pos = self.im_widget.view.vb.mapToView(mouse_point)
         self.statusBar_mousePosition.setText("x: %f   y: %f" % (pos.x(), pos.y()))
 
     def imageClicked(self, event):
+        """
+        image clicked event.
+        if the CTRL key is pressed, it will add a marker
+        else it will center the image on the clicked point
+        """
         mouse_event = event
         mouse_point = mouse_event.pos()
         projection = self.ui.comboBox_view_projection.currentText()
@@ -2051,6 +2219,9 @@ class MainWindow(QMainWindow):
 
 
     def drawMarkers(self):
+        """
+        draw the markers on the image
+        """
         projection = self.ui.comboBox_view_projection.currentText()
 
         i = "offset_x_um"
@@ -2095,6 +2266,9 @@ class MainWindow(QMainWindow):
             )
 
     def fingerprintClicked(self, event):
+        """
+        fingerprint clicked event
+        """
         mouse_point = event.pos()
 
         if event.double():
@@ -2129,6 +2303,9 @@ class MainWindow(QMainWindow):
             # self.plotCurrentImage()
 
     def update_fingerprint_mask(self):
+        """
+        update the fingerprint mask
+        """
         print_dec("update_fingerprint_mask")
         self.fingerprint_markers_mask.clear()
         for xxx in range(self.CHANNELS_x):
@@ -2217,6 +2394,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def radio_ttm_local(self):
+        """
+        activate or disactivate the checkbox TTM in local mode
+        """
         self.ui.radioButton_ttm_remote.setChecked(
             not self.ui.radioButton_ttm_local.isChecked()
         )
@@ -2225,6 +2405,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def radio_ttm_remote(self):
+        """
+        activate or disactivate the checkbox TTM in remote mode
+        """
         self.ui.radioButton_ttm_local.setChecked(
             not self.ui.radioButton_ttm_remote.isChecked()
         )
@@ -2233,11 +2416,17 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def selectedAutoscaleImg(self):
+        """
+        Slot for the autoscale image checkbox
+        """
         self.autoscale_image = self.ui.checkBox_autoscale_img.isChecked()
         print_dec("selectedAutoscaleImg()", self.autoscale_image)
 
     @Slot()
     def selectedAutoscaleFingerprint(self):
+        """
+        Slot for the autoscale fingerprint checkbox
+        """
         self.autoscale_fingerprint = self.ui.checkBox_autoscale_fingerprint.isChecked()
         print_dec("selectedAutoscaleFingerprint", self.autoscale_fingerprint)
 
@@ -2248,6 +2437,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def microimageType(self, num):
+        """
+        Slot for the microimage type selection
+        """
         print_dec("microimageType ", num)
         self.fingerprint_visualization = num
         # if num == 0:    # cumulative
@@ -2282,6 +2474,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def updateTables(self):
+        """
+        Update the Status tables
+        """
         if self.spadfcsmanager_inst.is_connected == True:
             fff = self.spadfcsmanager_inst.fpga_handle.register_read_all()
         else:
@@ -2323,16 +2518,25 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def test1(self):
+        """
+        dummy button clicked event for test
+        """
         print_dec("test1()")
         self.finalizeImage()
 
     @Slot()
     def test2(self):
+        """
+        dummy button clicked event for test
+        """
         print_dec("test2()")
         self.webcam_capture = iio.get_reader("<video0>")
 
     @Slot()
     def test3(self):
+        """
+        dummy button clicked event for test
+        """
         frame = self.webcam_capture.get_next_data()
         print_dec(frame.shape)
         self.webcam_widget.setImage(np.moveaxis(frame, [0, 1, 2], [1, 0, 2]))
@@ -2340,11 +2544,17 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def test4(self):
+        """
+        dummy button clicked event for test
+        """
         pass
         # self.openConsoleWidget()
 
     @Slot()
     def test5(self):
+        """
+        dummy button clicked event for test
+        """
         print_dec("test5()")
         import ipykernel.kernelbase
 
@@ -2359,10 +2569,16 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def test6(self):
+        """
+        dummy button clicked event for test
+        """
         self.updateTables()
 
     @Slot()
     def test7(self):
+        """
+        dummy button clicked event for test
+        """
         print_dec("test7() as start but no run")
 
         if self.ui.checkBox_ttmActivate.isChecked():
@@ -2402,10 +2618,16 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def test8(self):
+        """
+        dummy button clicked event for test
+        """
         pass
         # self.define_circular()
 
     def define_circular(self, circular_points):
+        """
+        define the points for the circular scan
+        """
         xx = self.ui.spinBox_range_x.value()
         yy = self.ui.spinBox_range_y.value()
         zz = self.ui.spinBox_range_z.value()
@@ -2499,10 +2721,16 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def test9(self):
+        """
+        dummy button clicked event for test
+        """
         self.load_circular()
 
     @Slot()
     def circularMotionActivateChanged(self):
+        """
+        activate or disactivate the circular motion
+        """
         if self.ui.checkBox_circular.isChecked():
             circular_points = self.ui.spinBox_circular_points.value()
             self.define_circular(circular_points)
@@ -2516,6 +2744,9 @@ class MainWindow(QMainWindow):
             self.marker_plot_circular_scan.clear()
 
     def load_circular(self, ARRAY_SIZE=32):
+        """
+        load the circular scan position to the FPGA registers
+        """
         # CIRCULAR MODE
         # ScanXVoltages <==== self.X_array
         # ScanYVoltages <==== self.Y_array
@@ -2576,11 +2807,18 @@ class MainWindow(QMainWindow):
         # self.startAcquisition(activate_preview=True)
     @Slot()
     def addcurrentconfmacro(self):
+        """
+        Slot for the add current configuration to the table for macros
+        """
         print_dec("addcurrentconfmacro")
         conf = self.getGUI_data()
         self.table_manager.add_dict(conf)
     @Slot()
     def addcurrentconfmacrofcs(self):
+        """
+        Slot for the add current configuration to the table for macros
+        activating FCS preview and forcing to zero the range
+        """
         print_dec("addcurrentconfmacrofcs")
         conf = self.getGUI_data()
         conf["range_x"] = 0.
@@ -2591,21 +2829,34 @@ class MainWindow(QMainWindow):
         self.table_manager.add_dict(conf)
     @Slot()
     def copyPositionsMarkers(self):
+        """
+        copy the markers to the table for macros
+        """
         print_dec("copyPositionMarkers")
         self.table_manager.add_list_of_dict(self.markers_list)
 
     @Slot()
     def copyPositionsMarkersFCS(self):
+        """
+        copy the markers to the table for macros
+        activating FCS preview and forcing to zero the range
+        """
         print_dec("copyPositionMarkersFCS")
         self.table_manager.add_list_of_dict(self.markers_list,  fcs=True)
 
     @Slot()
     def startBatchFCS(self):
+        """
+        start the batch event
+        """
         self.runBatchFCS = True
         self.batchFCS()
 
     @Slot()
     def batchFCS(self):
+        """
+        the actual loop for the batch event
+        """
         print_dec("startBatchFCS started")
         column = self.ui.tableWidget.columnCount()
         self.ui.label_batch.setText("Starting...")
@@ -2665,11 +2916,18 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def stopBatchFCS(self):
+        """
+        stop the batch event
+        """
         self.runBatchFCS = False
         print_dec("stopBatchFCS")
 
     @Slot()
     def timerConfigurationViewer_tick(self):
+        """
+        timer tick event for the configuration viewer
+        it set the status bar with the CPU and RAM usage
+        """
         self.timerConfigurationViewer_tick_mutex.lock()
         if self.ui.checkBox_updateStatus.isChecked():
             self.updateTables()
@@ -2721,6 +2979,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def markersViewTable(self):
+        """
+        update the markers table
+        """
         self.ui.tableWidget_markers.setRowCount(len(self.markers_list))
         self.ui.tableWidget_markers.setColumnCount(4)
 
@@ -2734,6 +2995,10 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def timerPreviewImg_tick(self):
+        """
+        timer tick event for the preview image
+        continuosly update the preview image
+        """
         if not self.timerPreviewImg_tick_mutex.tryLock():
             print_dec("self.timerPreviewImg_tick_lock called but busy")
             return
@@ -2991,6 +3256,9 @@ class MainWindow(QMainWindow):
         self.timerPreviewImg_tick_mutex.unlock()
 
     def draw_fingerprint(self, data_finger_print, saturation_data):
+        """
+
+        """
         # TEST data_finger_printdata_finger_printdata_finger_printdata_finger_printdata_finger_printdata_finger_printdata_finger_printdata_finger_printdata_finger_print
 
         # data_finger_print = log(copy(data_finger_print)+1)
@@ -3047,6 +3315,9 @@ class MainWindow(QMainWindow):
                     )
 
     def openConsoleWidget(self):
+        """
+        open the console widget
+        """
         print_dec("Start QTConsole")
         namespace = {
             "np": np,
@@ -3088,6 +3359,9 @@ Have fun!
         self.console_widget.kernel_manager.kernel.shell.user_ns.update(namespace)
 
     def microimage_analysis(self, data_finger_print):
+        """
+        microimage analysis in live, useful for alligment
+        """
         data_finger_print = data_finger_print.astype(float)
         n = np.sum(data_finger_print)
         if n > 0:
@@ -3142,6 +3416,9 @@ Have fun!
 
     @Slot()
     def temporalSettingsChanged(self):
+        """
+
+        """
         time_res = self.ui.spinBox_timeresolution.value()
         time_bin = self.ui.spinBox_time_bin_per_px.value()
         clock_duration = time_bin * time_res * 20
@@ -3183,12 +3460,18 @@ Have fun!
 
     @Slot()
     def checkBoxLockRatioChanged(self):
+        """
+        lock the ratio of the ROI
+        """
         self.ui.spinBox_range_y.setEnabled(not self.ui.checkBoxLockRatio.isChecked())
         self.rect_roi.aspectLocked = self.ui.checkBoxLockRatio.isChecked()
         self.rect_roi_panorama.aspectLocked = self.ui.checkBoxLockRatio.isChecked()
 
     @Slot()
     def loadPreset(self):
+        """
+        load the preset configuration
+        """
         print_dec("loadPreset")
         combo_str = self.ui.comboBox_preset.currentText()
         self.setGUI_data(self.preset_dict[combo_str])
@@ -3196,6 +3479,9 @@ Have fun!
 
     @Slot()
     def savePreset(self):
+        """
+        save the preset configuration
+        """
         print_dec("savePreset")
         combo_str = self.ui.comboBox_preset.currentText()
         self.preset_dict[combo_str] = self.getGUI_data()
@@ -3210,19 +3496,32 @@ Have fun!
 
     @Slot()
     def calibrationFactorChanged(self):
+        """
+        calibration factor changed event
+        """
         self.positionSettingsChanged_apply()
 
     @Slot()
     def offset_V_Changed(self):
+        """
+        offset in Volts changed event
+        """
         self.positionSettingsChanged_apply()
 
     @Slot()
     def offset_um_Changed(self, force=False):
+        """
+        offset in um changed event
+        """
+
         self.offset_um_update(force)
         self.rangeValueChanged()
 
     @Slot()
     def updatePixelValueChanged(self, number=None):
+        """
+        update the number of pixel, line, frame changed event
+        """
         print_dec("updatePixelValueChanged")
 
         if self.ui.spinBox_nx.value() == 1:
@@ -3398,6 +3697,10 @@ Have fun!
 
     @Slot()
     def rangeValueChanged(self, number=None):
+        """
+        the range in um is changed event
+        """
+
         lock = self.lock_range_changing
         self.lock_range_changing = False
         self.positionSettingsChanged_apply(force=True)
@@ -3414,6 +3717,9 @@ Have fun!
 
     @Slot()
     def offset_um_update(self, force=False):
+        """
+        called when the offset in um is changed
+        """
         oldlock_range_changing = self.lock_range_changing
         oldlock_parameters_changed_call = self.lock_parameters_changed_call
         if not self.lock_parameters_changed_call or force:
@@ -3481,6 +3787,9 @@ Have fun!
 
     @Slot()
     def spatialSettingsChanged(self, force=False):
+        """
+        spatial settings changed event
+        """
         if self.lockspatialSettingsChanged == False:
             lockmove = self.ui.checkBox_lockMove.isChecked()
 
@@ -3528,10 +3837,16 @@ Have fun!
 
     @Slot()
     def positionSettingsChanged(self, force=False):
+        """
+        position settings changed event
+        """
         self.offset_um_update(force)
         self.positionSettingsChanged_apply(force)
 
     def positionSettingsChanged_apply(self, force=False):
+        """
+        actuation of the position settings changed event
+        """
         if not self.lock_parameters_changed_call or force:
             print_dec("positionSettingsChanged_apply")
             xx = self.ui.spinBox_range_x.value()
@@ -3615,12 +3930,18 @@ Have fun!
 
     @Slot()
     def DFD_clicked(self):
+        """
+        activate the DFD mode
+        """
         if self.ui.checkBox_DFD.isChecked():
             self.ui.spinBox_time_bin_per_px.setValue(81)
             self.ui.spinBox_timeresolution.setValue(2.0)
 
     @Slot()
     def updateMaxMinVoltages(self):
+        """
+        event when the max and min voltages are changed
+        """
         print_dec("updateMaxMinVoltages")
         min_x_V = self.ui.spinBox_min_x_V.value()
         min_y_V = self.ui.spinBox_min_y_V.value()
@@ -3643,20 +3964,32 @@ Have fun!
 
     @Slot()
     def plotSettingsChanged(self):
+        """
+
+        """
         print_dec("plotSettingsChanged")
         self.updatePreviewConfiguration()
         self.checkAlerts()
 
     @Slot()
     def previewButtonClicked(self):
+        """
+        preview button clicked event
+        """
         self.previewLoop()
 
     @Slot()
     def startButtonClicked(self):
+        """
+        start button clicked event
+        """
         self.start()
 
     @Slot()
     def stopButtonClicked(self):
+        """
+        stop button clicked event
+        """
         self.stop()
 
     # @Slot()
@@ -3667,6 +4000,9 @@ Have fun!
     #     pass
 
     def startAcquisition(self, activate_preview=False, do_run=True):
+        """
+        the actual start acquisition function
+        """
         self.activate_preview = activate_preview
 
         self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
@@ -3933,6 +4269,7 @@ Have fun!
 
     @Slot()
     def test_analog_digital(self):
+        """experimental mixed analog and digital mode"""
         print_dec("test_analog_digital()")
         self.ui.radioButton_analog.setAutoExclusive(False)
         self.ui.radioButton_digital.setAutoExclusive(False)
@@ -3940,6 +4277,7 @@ Have fun!
 
     @Slot()
     def trace_parameters_changed(self):
+        """trace parameters changed event"""
         trace_bins = int(
             self.ui.doubleSpinBox_binsize.value()
             * 1e3
@@ -3958,6 +4296,9 @@ Have fun!
             self.ui.label_trace_total_bins.setStyleSheet("")
 
     def configure_analog(self):
+        """
+        configure the dictionary for the analog input
+        """
         print_dec("Configure Analog")
         # ANALOG CONFIGURATION
         # self.ui.checkBox_analog_in_integrate_AI0
@@ -3994,9 +4335,16 @@ Have fun!
         )
 
     def activateShowPreview(self, enable):
+        """
+        activate the preview mode
+        """
         self.spadfcsmanager_inst.activateShowPreview(enable)
 
     def activateFIFOflag(self):
+        """
+        activate the FIFO flag
+        """
+
         print_dec("activateFIFOflag")
         print_dec("DFD", self.DFD_Activate)
 
@@ -4027,6 +4375,9 @@ Have fun!
 
     @Slot()
     def grabPanorama(self):
+        """
+        grab the panorama image
+        """
         print_dec("Panorama")
 
         pos_x = self.im_widget.getImageItem().x()
@@ -4051,6 +4402,9 @@ Have fun!
         # self.im_widget_panorama.setItem(img)
 
     def updatePreviewConfiguration(self):
+        """
+        update the preview configuration - channel selection
+        """
         print_dec("updatePreviewConfiguration")
 
         t = self.ui.comboBox_plot_channel.currentText()
@@ -4072,6 +4426,9 @@ Have fun!
         print_dec(self.spadfcsmanager_inst.read_shared_dict())
 
     def defineFilename(self, with_folder=True):
+        """
+        helper for define the filename of the data output
+        """
         folder = self.ui.lineEdit_destinationfolder.text()
         filename = self.ui.lineEdit_filename.text()
         if not ".h5" in filename:
@@ -4098,6 +4455,9 @@ Have fun!
 
     @Slot()
     def start(self):
+        """
+        start the acquisition
+        """
         print_dec("start()")
 
         if self.ui.checkBox_ttmActivate.isChecked():
@@ -4138,6 +4498,9 @@ Have fun!
 
     @Slot()
     def ttm_activate_change_state(self):
+        """
+        activate or deactivate the TTM
+        """
         if self.ui.checkBox_ttmActivate.isChecked():
             if self.ttm_remote_manager is None:
                 ip = self.ui.label_ttm_IP.text()
@@ -4169,6 +4532,9 @@ Have fun!
                 self.ttm_remote_manager = None
 
     def ttm_remote_is_up(self):
+        """
+        check if the TTM is up
+        """
         print_dec("check if ttm_remote_is_up")
         if self.ttm_remote_manager is not None:
             if self.ttm_remote_manager.is_ready():
@@ -4177,6 +4543,9 @@ Have fun!
 
     @Slot()
     def checkAlerts(self):
+        """
+        check the GUI alerts i.e. potential wrong parameters
+        """
         print_dec("checkAlerts")
 
         current_plot_size_x_um = self.ui.spinBox_range_x.value()
@@ -4259,6 +4628,9 @@ Have fun!
             self.ui.checkBox_DFD.setEnabled(False)
 
     def previewLoop(self):
+        """
+        the actual preview loop
+        """
         print_dec("previewLoop <======================================================")
 
         self.nrepetition_before_run_preview = self.ui.spinBox_nrepetition.value()
@@ -4320,7 +4692,11 @@ Have fun!
             self.im_widget_plot_item.setLabel("bottom", "%s (um)" % proj[0])
             self.im_widget_plot_item.setLabel("left", "%s (um)" % proj[1])
 
-    def finalizeAcquisition(self):  # ADD METADATA
+    def finalizeAcquisition(self):
+        """
+        finalize the acquisition: save the data, add metadata, etc.
+        """
+
         # self.rect_roi.show()
         print_dec("finalizeAcquisition")
 
@@ -4383,6 +4759,9 @@ Have fun!
 
     @Slot()
     def cmd_filename_ttm(self):
+        """
+        call the dialog for setting the filename for the TTM data receiver
+        """
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.Directory)
         if dialog.exec_():
@@ -4390,6 +4769,9 @@ Have fun!
             self.ui.lineEdit_ttm_filename.setText(dialog.selectedFiles()[0])
 
     def analog_before_stop(self):
+        """
+        set the analog output to 0V before stopping the acquisition
+        """
         print_dec("analog_before_stop()")
 
         mydict = {}
@@ -4402,6 +4784,9 @@ Have fun!
         # time.sleep(0.2)
 
     def stopAcquisition(self):
+        """
+        stop the acquisition
+        """
         print_dec("stopAcquisition")
         self.sendCmdStop()
         self.spadfcsmanager_inst.stopPreview()
@@ -4413,6 +4798,9 @@ Have fun!
 
     @Slot()
     def stop(self):
+        """
+        stop the acquisition clicked event
+        """
         self.analog_before_stop()
         print_dec("GUI.Stop")
 
@@ -4456,14 +4844,23 @@ Have fun!
     #     self.connectFPGA()
 
     def sendCmdRun(self):
+        """
+        send the run command to the FPGA
+        """
         self.setRegistersDict({"stop": False, "Run": False})
         self.setRegistersDict({"Run": True})
 
     def sendCmdStop(self):
+        """
+        send the stop command to the FPGA
+        """
         self.setRegistersDict({"stop": False})
         self.setRegistersDict({"stop": True})
 
     def getPreviewImage(self, projection="xy", rgb=False):
+        """
+        get the preview image
+        """
         if self.spadfcsmanager_inst.shared_arrays_ready:
             # print_dec("ready self.spadfcsmanager_inst.shared_arrays_ready")
             return self.spadfcsmanager_inst.getPreviewImage(projection, rgb)
@@ -4473,6 +4870,9 @@ Have fun!
             return self.currentImage  # DUMMY
 
     def getPreviewFlatData(self):
+        """
+        get the preview flat data
+        """
         if not self.activeFile:
             return self.spadfcsmanager_inst.getPreviewFlatData()
         else:
@@ -4487,6 +4887,9 @@ Have fun!
     #         return np.zeros(2)
 
     def getCurrentPreviewImage(self, preview_img=None):
+        """
+        get the current preview image
+        """
         # print("plotPreviewImage")
         # print("self.autoscale_image", self.autoscale_image)
         proj = self.ui.comboBox_view_projection.currentText()
@@ -4599,6 +5002,9 @@ Have fun!
                 scale)
 
     def plotPreviewImage(self, img=None):
+        """
+        plot the preview image
+        """
         (preview_img,
          ch,
          autoLevels,
@@ -4628,6 +5034,9 @@ Have fun!
             )
 
     def plotCurrentImage(self):
+        """
+        plot the current image
+        """
         print_dec(self.currentImage.shape)
         print_dec("Calculating sum")
         img = np.sum(
@@ -4673,6 +5082,9 @@ Have fun!
 
     @Slot()
     def selectChannelSum(self):
+        """
+        select the sum channel
+        """
         self.setSelectedChannel(-1)
         # self.plotCurrentImage()
 
@@ -4683,10 +5095,16 @@ Have fun!
 
     @Slot()
     def SaveConfigurationCmd(self):
+        """
+        save the configuration clicked event
+        """
         self.SaveConfiguration()
 
     @Slot()
     def SaveConfiguration(self):
+        """
+        save the configuration to a .cfg file
+        """
         configuration = self.getGUI_data()
         filecfg = QFileDialog().getSaveFileName(
             caption="Save Configuration",
@@ -4713,10 +5131,16 @@ Have fun!
 
     @Slot()
     def LoadConfigurationCmd(self):
+        """
+        load the configuration clicked event
+        """
         self.LoadConfiguration()
 
     @Slot()
     def LoadConfiguration(self, filecfg=""):
+        """
+        load the configuration from a .cfg file
+        """
         filecfg = filecfg.strip()
         print_dec("Load_Configuration'", filecfg, "'")
 
@@ -4768,9 +5192,15 @@ Have fun!
                     pass
 
     def script_plot_fingerprint(self, fingerprint):
+        """
+        plot the fingerprint, handle for scripts
+        """
         self.fingerprint_widget.setImage(fingerprint.T)
 
     def script_plot_shiftvector(self, sv=None):
+        """
+        plot the shift vector, handle for scripts
+        """
         if sv is not None:
             if hasattr(self, "panorama_marker_text"):
                 for i in self.panorama_marker_text:
@@ -4812,6 +5242,9 @@ Have fun!
 
 
 class NumpyEncoder(json.JSONEncoder):
+    """
+    helper class for encoding numpy arrays to json
+    """
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()

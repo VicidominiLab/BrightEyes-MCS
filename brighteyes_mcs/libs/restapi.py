@@ -17,6 +17,9 @@ from PySide2.QtCore import (
 
 
 class NumpyEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder for NumPy arrays
+    """
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
@@ -24,7 +27,13 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 class FastAPIServerThread(threading.Thread):
+    """
+    Thread class for running the FastAPI server
+    """
     def __init__(self, main_window, host="127.0.0.1", port=8000):
+        """
+        Constructor for the FastAPIServerThread class that initializes the FastAPI app and the server configuration parameters (host and port)
+        """
         super().__init__()
         self.host = host
         self.port = port
@@ -33,6 +42,9 @@ class FastAPIServerThread(threading.Thread):
         self.server = None
 
         class MySignal(QObject):
+            """
+            Custom signal class for emitting signals to the main window
+            """
             start = Signal()
             stop = Signal()
             preview = Signal()
@@ -44,16 +56,27 @@ class FastAPIServerThread(threading.Thread):
 
         @self.app.get("/")
         async def read_root():
+            """
+            route that returns a simple JSON message
+            """
             return {"message": "Hello, World!"}
 
         @self.app.get("/gui/")
         async def read_item():
+            """
+            route that returns the GUI data as a JSON string
+            """
             mydict = self.main_window.getGUI_data()
 
             return json.dumps(mydict, cls=NumpyEncoder)
 
         @self.app.get("/gui/{item}")
         async def read_item(item: str = None):
+            """
+            route that returns a specific item from the GUI data as a JSON string
+            if the item is 'all', the entire GUI data is returned
+            otherwise, the specific item is returned
+            """
             mydict = self.main_window.getGUI_data()
 
             if item == 'all':
@@ -63,6 +86,12 @@ class FastAPIServerThread(threading.Thread):
 
         @self.app.get("/cmd/{item}")
         async def read_item(item: str = None):
+            """
+             route that receives a command and emits a signal to the main window based on the command
+             preview: emits the preview signal
+             acquisition: emits the start signal
+             stop: emits the stop signal
+            """
             if item == "preview":
                 print("preview")
                 self.signal.preview.emit()
@@ -77,6 +106,10 @@ class FastAPIServerThread(threading.Thread):
 
         @self.app.put("/set")
         async def update_item(request: Request):
+            """
+            route that receives a JSON object and updates the GUI data with the received object
+            sets a particular GUI data to the received object and returns a JSON response with the status
+            """
             try:
                 mydict = await request.json()
                 mydict_processed = {}
@@ -97,6 +130,10 @@ class FastAPIServerThread(threading.Thread):
 
         @self.app.post("/array/")
         async def receive_array(file: UploadFile = File(...), shape: str = "", dtype: str = "float64"):
+            """
+            DUMMY FOR TESTING PURPOSES
+            route that receives a NumPy array as a binary file and converts it to a NumPy array
+            """
             try:
                 # Read the file contents into bytes
                 data = await file.read()
@@ -121,6 +158,9 @@ class FastAPIServerThread(threading.Thread):
 
         @self.app.get("/preview.png")
         async def send_array():
+            """
+            route that returns the preview image as a PNG image
+            """
             try:
                 # Create a sample NumPy array
 
@@ -142,6 +182,9 @@ class FastAPIServerThread(threading.Thread):
 
         @self.app.get("/fingerprint.png")
         async def send_array():
+            """
+            route that returns the fingerprint image as a PNG image
+            """
             try:
 
                 exporter = exporters.ImageExporter(main_window.fingerprint_widget.imageItem)
@@ -161,6 +204,9 @@ class FastAPIServerThread(threading.Thread):
 
         @self.app.get("/preview.np")
         async def send_array():
+            """
+            route that returns the preview image as a NumPy array
+            """
             try:
                 # Create a sample NumPy array
                 np_array = main_window.im_widget.getImageItem().image
@@ -180,6 +226,9 @@ class FastAPIServerThread(threading.Thread):
 
         @self.app.get("/fingerprint.np")
         async def send_array():
+            """
+            route that returns the fingerprint image as a NumPy array
+            """
             try:
                 # Create a sample NumPy array
                 np_array = main_window.fingerprint_widget.getImageItem().image
@@ -199,10 +248,16 @@ class FastAPIServerThread(threading.Thread):
 
 
     def run(self):
+        """
+        Method to run the FastAPI server
+        """
         uvicorn_config = uvicorn.Config(app=self.app, host=self.host, port=self.port, log_level="info")
         self.server = uvicorn.Server(config=uvicorn_config)
         self.server.run()
 
     def stop(self):
+        """
+        Method to stop the FastAPI server
+        """
         if self.server:
             self.server.should_exit = True
