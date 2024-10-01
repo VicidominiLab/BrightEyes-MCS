@@ -111,6 +111,58 @@ install.bat
 and following the instructions on the terminal.
 Once installed you will have the link with icon of BrightEyes-MCS and on your Desktop.
 
+# Example of usage
+
+## Minimal Configuration
+
+### Firmware selection.
+
+The firmware must be chosen according to your hardware.
+Please check from [BrightEyes-MCSLL](https://github.com/VicidominiLab/BrightEyes-MCSLL) documentation.
+
+In the bottom-left panel select the tab "Adv." then the internal tab "Board configuration".
+Here you can select the "FPGA BitFile" and the "FPGA Addr.".
+
+The FPGA address is defined by the NI Driver configuration. If you have only a single FPGA the default is "RIO0". You can check it by using using the NI tool named NI MAX.
+
+In the case you need to use a second NI FPGA acting as DAC/ADC ("double-board" firmware) please select in "FPGA 2nd BitFile" and "FPGA 2nd Addr." board, respectivily the firmware and the address of the board which have the analog IN/OUT.
+In case you do not use a "double-board" firmware "FPGA 2nd BitFile" and "FPGA 2nd Addr." must be let empty.
+
+Then click to "Save .cfg file" and click on make this configuration permanent.
+
+### Calibration
+
+In the bottom-left panel select the tab "Adv." then the internal tab "Calibration". Here you can set the calibration factor (µm/V) for each axis of your microscope.
+
+### Voltage Ranges
+In the bottom-left panel select the tab "Adv." then the internal tab "Limits".
+In the section "Set Voltage Ranges" you can set the voltage hardware limit of your positioning system.
+
+In the section "Offset" you can set the voltage offset of the center of your positioning system. For example, some piezo stages can have the center at +5V instead and other have it a 0V.
+
+**PLEASE TO AVOID HARDWARE DAMAGE PLEASE SET THESE PARAMETERS ACCORDING YOUR HARWARE**
+
+### Destination Folder
+In the bottom-left panel select the tab "File". Here you can set the destination folder.
+
+It is suggested to let the filename set to "DEFAULT.h5": this create automatically a filename with date and time like "data-30-12-2023-16-22-45.h5".
+
+## Minimal usage instructions
+
+### Position
+In the bottom-left panel select the tab "Position". Here you can set the parameter for the acquisiton like central position and range.
+
+### Acquisition
+
+#### Preview
+This button start an infinite loop: the number of repetition is ignored. The data are NOT saved.
+
+During the preview is possible to pan and zoom by point-drag the mouse and use the mouse wheel on the preview image. Double-click on it will move the center of the image to the position selected. Ctrl+Double-click will add a marker.
+
+#### Start
+This button start the acquisition and automatically stop it and the data saved.
+
+
 ---
 
 
