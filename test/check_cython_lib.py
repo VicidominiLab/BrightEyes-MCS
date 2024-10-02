@@ -1,4 +1,6 @@
-
+"""
+Test the brighteyes_mcs.libs.cython libraries.
+"""
 import os
 import sys
 # insert root directory into python module search path

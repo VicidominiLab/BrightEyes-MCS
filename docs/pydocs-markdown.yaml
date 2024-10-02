@@ -1,0 +1,16 @@
+loaders:
+- type: python
+  search_path: [../]
+renderer:
+  type: markdown
+  pages:
+  - title: API Documentation
+    name: index
+    contents:
+    - brighteyes_mcs.libs.*
+    - brighteyes_mcs.gui.main_window
+    - brighteyes_mcs.plugins.ao_system.*
+    - brighteyes_mcs.plugins.myplugin.*
+    - brighteyes_mcs.plugins.script_launcher.*
+
+# pydoc-markdown.exe .\pydocs-markdown.yaml > docs.md

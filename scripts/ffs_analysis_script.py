@@ -1,3 +1,8 @@
+"""
+Script that can be launched directly on the ScriptLauncher.
+Calculate and shows the FSC correlation of the last data acquired.
+"""
+
 from spad_ffs_eli.FCS.FCS2Corr import (
     FCSLoadAndCorrSplit,
     FCSCrossCenterAv,

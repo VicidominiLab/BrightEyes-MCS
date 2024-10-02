@@ -1,3 +1,11 @@
+"""
+Script that can be launched directly on the ScriptLauncher.
+This script can be used with by using a grid sample
+It calculates the distances between the grid cell,
+and it is useful to perform calculate the calibration factor
+of the positioner (galvo mirror)
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import numpy.fft as ft

@@ -14,6 +14,9 @@ def set_debug(debug=False):
 
 
 def print_dec(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
+    """
+    A print "decorated": it add information about line and the file in which this command is called
+    """
     global internal_debug
 
     if internal_debug:

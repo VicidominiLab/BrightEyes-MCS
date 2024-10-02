@@ -1,3 +1,9 @@
+"""
+    An example of implementation of the QWidget used by the plugin
+    This script is can run also as stand-alone form.
+"""
+
+
 if __name__ == "__main__":
     from gui.plugin_gui import Ui_Form
 else:
@@ -13,6 +19,10 @@ from ...gui.console_widget import ConsoleWidget
 
 
 class myForm(Ui_Form, QWidget):
+    """
+        An example of implementation of the QWidget used by the plugin
+    """
+
     def __init__(self):
         super().__init__()
 
