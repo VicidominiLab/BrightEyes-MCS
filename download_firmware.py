@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, time
 import requests, zipfile
 from io import BytesIO
 import markdown
@@ -24,15 +24,23 @@ class DownloadThread(QThread):
     def run(self):
         try:
             # Start streaming the download
-            self.response = requests.get(self.url)
-            self.response.raise_for_status()  # Check for HTTP errors
-            self.total_size = int(self.response.headers.get('content-length', 0))
-            self.response.close()
-
+            for i in range(0,10):
+                self.response = requests.get(self.url)
+                self.response.raise_for_status()  # Check for HTTP errors
+                self.total_size = int(self.response.headers.get('content-length', 0))
+                print("attempt", i, self.total_size)
+                self.response.close()
+                time.sleep(0.1)
+                if self.total_size>0:
+                    break
+            if self.total_size == 0:
+                raise(ValueError(f"The length of the 'content-length'=0 of \n{self.url}\n"
+                                "Probabily too many downloads attempts.     \n "
+                                "Try later or download it manually from {self.url}\n"
+                                "and extract in the folder brighteyes_mcs/bitfiles.\n"))
             self.response = requests.get(self.url, stream=True)
             self.response.raise_for_status()  # Check for HTTP errors
 
-            print(self.total_size)
             print(self.url)
             print(self.response)
             print(self.response.headers.get('content-length', 0))
