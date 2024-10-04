@@ -19,3 +19,4 @@ atomics
 matplotlib
 fastapi
 #brighteyes-flim #facultative activate in case of FLIM analysis/preview
+markdown
