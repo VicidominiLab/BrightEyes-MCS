@@ -24,12 +24,19 @@ class DownloadThread(QThread):
     def run(self):
         try:
             # Start streaming the download
-            self.response = requests.get(self.url, stream=True)
+            self.response = requests.get(self.url)
             self.response.raise_for_status()  # Check for HTTP errors
             self.total_size = int(self.response.headers.get('content-length', 0))
+            self.response.close()
+
+            self.response = requests.get(self.url, stream=True)
+            self.response.raise_for_status()  # Check for HTTP errors
+
+            print(self.total_size)
             print(self.url)
             print(self.response)
             print(self.response.headers.get('content-length', 0))
+
             if self.total_size==0:
                 msgBox = QMessageBox()
                 msgBox.setText(f"The length of the 'content-length'=0 of \n{self.url}\n"
