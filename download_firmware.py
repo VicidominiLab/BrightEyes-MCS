@@ -25,8 +25,26 @@ class DownloadThread(QThread):
             self.response = requests.get(self.url, stream=True)
             self.response.raise_for_status()  # Check for HTTP errors
             self.total_size = int(self.response.headers.get('content-length', 0))
+            print(self.url)
             print(self.response)
             print(self.response.headers.get('content-length', 0))
+            if self.total_size==0:
+                msgBox = QMessageBox()
+                msgBox.setText(f"The length of the 'content-length'=0 of \n{self.url}\n"
+                                "Probabily too many downloads attempts.     \n "
+                                "Try later or download it manually from {self.url}\n"
+                                "and extract in the folder brighteyes_mcs/bitfiles.\n"
+)
+                msgBox.exec_()
+                error_message = (
+                    "====================================================\n"
+                    "ERROR: Firmware Downloading Failed\n"
+                    f"Please download it manually from {self.url}\n"
+                    "and extract in the folder brighteyes_mcs/bitfiles.\n"
+                    "====================================================\n"
+                )
+                print(error_message)
+
 
             downloaded_size = 0
             chunk_size = 1024  # 1KB
@@ -48,7 +66,8 @@ class DownloadThread(QThread):
             error_message = (
                 "=============================================\n"
                 "ERROR: Firmware Downloading Failed\n"
-                f"Please download it manually from: {self.url}\n"
+                f"Please download it manually from {self.url}\n"
+                "and extract in the folder brighteyes_mcs/bitfiles."
                 "============================================="
             )
             print(error_message)
