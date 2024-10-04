@@ -128,11 +128,11 @@ class MainWindow(QMainWindow):
         self.accept_button.clicked.connect(self.accept)
 
         # Decline button
-        decline_button = QPushButton("Decline", self)
-        decline_button.clicked.connect(self.decline)
+        self.decline_button = QPushButton("Decline", self)
+        self.decline_button.clicked.connect(self.decline)
 
         button_layout.addWidget(self.accept_button)
-        button_layout.addWidget(decline_button)
+        button_layout.addWidget(self.decline_button)
 
         bottom_frame.setLayout(button_layout)
         container_layout.addWidget(bottom_frame)
@@ -172,6 +172,8 @@ class MainWindow(QMainWindow):
         print("Accepted")
 
         # Show a progress dialog during the download
+        self.accept_button.setEnabled(False)
+        self.decline_button.setEnabled(False)
         self.progress_dialog = ProgressDialog()
         self.progress_dialog.show()
 
