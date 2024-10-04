@@ -7,7 +7,9 @@ from PySide2.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, Q
 
 # Define the URL of the Markdown file you want to download
 md_url = "https://raw.githubusercontent.com/VicidominiLab/BrightEyes-MCSLL/refs/heads/main/LICENSE.md"
+
 zip_url = "https://github.com/VicidominiLab/BrightEyes-MCSLL/archive/refs/heads/main.zip"
+
 extract_directory = "brighteyes_mcs/bitfiles"
 
 class DownloadThread(QThread):
