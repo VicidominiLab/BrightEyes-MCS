@@ -12,7 +12,7 @@ authors:
     #equal-contrib: true
     affiliation: "1" # (Multiple affiliations must be quoted)
   - name: Eli Slenders
-    #orcid:
+    orcid: 0000-0002-6757-1372
     #equal-contrib: false
     affiliation: "1" # (Multiple affiliations must be quoted)
   - name: Alessandro Zunino
