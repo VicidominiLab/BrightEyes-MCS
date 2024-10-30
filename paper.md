@@ -11,6 +11,8 @@ authors:
     orcid: 0000-0003-0026-747X
     #equal-contrib: true
     affiliation: "1" # (Multiple affiliations must be quoted)
+    corresponding: true
+    email: mattia.donato@iit.it
   - name: Eli Slenders
     orcid: 0000-0002-6757-1372
     #equal-contrib: false
@@ -26,8 +28,6 @@ authors:
   - name: Giuseppe Vicidomini
     orcid: 0000-0002-3085-730X
     #equal-contrib: false
-    corresponding: true
-    email: giuseppe.vicidomini@iit.it
     affiliation: "1" # (Multiple affiliations must be quoted)
 
 #  - name: Author Without ORCID
