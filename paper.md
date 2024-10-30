@@ -8,11 +8,11 @@ tags:
   - image scanning microscopy
 authors:
   - name: Mattia Donato
+    email: mattia.donato@iit.it
     orcid: 0000-0003-0026-747X
     #equal-contrib: true
     affiliation: "1" # (Multiple affiliations must be quoted)
-    corresponding: true
-    email: mattia.donato@iit.it
+    corresponding: true    
   - name: Eli Slenders
     orcid: 0000-0002-6757-1372
     #equal-contrib: false
