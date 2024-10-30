@@ -9,23 +9,24 @@ tags:
 authors:
   - name: Mattia Donato
     orcid: 0000-0003-0026-747X
-    #equal-contrib: true
+    first-author: true
+    equal-contrib: true
     affiliation: "1" # (Multiple affiliations must be quoted)
   - name: Eli Slenders
     orcid: 0000-0002-6757-1372
-    #equal-contrib: false
+    equal-contrib: false
     affiliation: "1" # (Multiple affiliations must be quoted)
   - name: Alessandro Zunino
     orcid: 0000-0002-2512-8751
     #orcid:
-    #equal-contrib: false
+    equal-contrib: false
     affiliation: "1" # (Multiple affiliations must be quoted)
   - name: Luca Bega
-    #equal-contrib: false
+    equal-contrib: false
     affiliation: "1" # (Multiple affiliations must be quoted)
   - name: Giuseppe Vicidomini
     orcid: 0000-0002-3085-730X
-    #equal-contrib: false
+    equal-contrib: false
     corresponding: true
     email: giuseppe.vicidomini@iit.it
     affiliation: "1" # (Multiple affiliations must be quoted)
