@@ -15,7 +15,9 @@ To get started, refer to the detailed instructions and guidelines available on t
 
 ## Development Notice
 
-**Important:** This software is currently under active development and may contain bugs or incomplete features. Please use it with caution and report any issues you encounter to help us improve the application.
+**Important:** This software is currently under active development and may contain bugs or incomplete features. Please use it with caution and report any issues you encounter to help us improve the application. 
+
+For contribution guidelines, refer to the [Community Guidelines](CONTRIBUTING.MD).
 
 ## License
 License
