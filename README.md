@@ -22,3 +22,17 @@ For contribution guidelines, refer to the [contributing.md](CONTRIBUTING.md).
 ## License
 License
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This is free software, and you are welcome to redistribute it under certain conditions; this software code is licensed under the GNU General Public License version 3 (GPLv3), with the exception of certain parts where a different license is specified. Please refer to the individual source files for details on specific licensing exceptions. See LICENSE.md file for details.
+
+If you use this work in a scientific article, please cite the following:
+- BrightEyes-MCS: a control software for multichannel scanning microscopy. _Donato et al._, Journal of Open Source Software (2024), 9(103), 7125, doi: https://doi.org/10.21105/joss.07125
+
+
+# Reference
+- BrightEyes-MCS: a control software for multichannel scanning microscopy. _Donato et al._, Journal of Open Source Software (2024), 9(103), 7125, doi: https://doi.org/10.21105/joss.07125
+
+
+- A robust and versatile platform for image scanning microscopy enabling super-resolution FLIM. _Castello M. et al._ Nature Methods 16, 175–178 (2019). doi: https://doi.org/10.1038/s41592-018-0291-9
+
+
+- A Compact and Effective Photon-Resolved Image Scanning Microscope. _Tortarolo G. et al._ 
+Advanced Photonics, Vol. 6, Issue 1, 016003 (January 2024). doi: https://doi.org/10.1117/1.AP.6.1.016003
