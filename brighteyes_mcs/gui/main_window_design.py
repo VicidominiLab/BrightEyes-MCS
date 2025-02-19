@@ -1154,13 +1154,30 @@ class Ui_MainWindowDesign(object):
         self.groupBox_2.setObjectName(u"groupBox_2")
         self.gridLayout_20 = QGridLayout(self.groupBox_2)
         self.gridLayout_20.setObjectName(u"gridLayout_20")
-        self.spinBox_circular_points = QSpinBox(self.groupBox_2)
-        self.spinBox_circular_points.setObjectName(u"spinBox_circular_points")
-        self.spinBox_circular_points.setMinimum(1)
-        self.spinBox_circular_points.setMaximum(32)
-        self.spinBox_circular_points.setValue(32)
+        self.spinBox_circular_radius_nm = sciSpinBox(self.groupBox_2)
+        self.spinBox_circular_radius_nm.setObjectName(u"spinBox_circular_radius_nm")
+        self.spinBox_circular_radius_nm.setKeyboardTracking(False)
+        self.spinBox_circular_radius_nm.setDecimals(3)
+        self.spinBox_circular_radius_nm.setMinimum(-1000000.000000000000000)
+        self.spinBox_circular_radius_nm.setMaximum(1000000.000000000000000)
+        self.spinBox_circular_radius_nm.setValue(0.000000000000000)
 
-        self.gridLayout_20.addWidget(self.spinBox_circular_points, 2, 1, 1, 1)
+        self.gridLayout_20.addWidget(self.spinBox_circular_radius_nm, 4, 1, 1, 1)
+
+        self.label_109 = QLabel(self.groupBox_2)
+        self.label_109.setObjectName(u"label_109")
+
+        self.gridLayout_20.addWidget(self.label_109, 4, 2, 1, 1)
+
+        self.label_108 = QLabel(self.groupBox_2)
+        self.label_108.setObjectName(u"label_108")
+
+        self.gridLayout_20.addWidget(self.label_108, 4, 0, 1, 1)
+
+        self.checkBox_circular = QCheckBox(self.groupBox_2)
+        self.checkBox_circular.setObjectName(u"checkBox_circular")
+
+        self.gridLayout_20.addWidget(self.checkBox_circular, 0, 0, 1, 3)
 
         self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
@@ -1171,10 +1188,26 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_20.addWidget(self.label_43, 2, 0, 1, 1)
 
-        self.checkBox_circular = QCheckBox(self.groupBox_2)
-        self.checkBox_circular.setObjectName(u"checkBox_circular")
+        self.spinBox_circular_points = QSpinBox(self.groupBox_2)
+        self.spinBox_circular_points.setObjectName(u"spinBox_circular_points")
+        self.spinBox_circular_points.setMinimum(1)
+        self.spinBox_circular_points.setMaximum(32)
+        self.spinBox_circular_points.setValue(1)
 
-        self.gridLayout_20.addWidget(self.checkBox_circular, 0, 0, 1, 3)
+        self.gridLayout_20.addWidget(self.spinBox_circular_points, 2, 1, 1, 1)
+
+        self.label_110 = QLabel(self.groupBox_2)
+        self.label_110.setObjectName(u"label_110")
+
+        self.gridLayout_20.addWidget(self.label_110, 3, 0, 1, 1)
+
+        self.spinBox_circular_repetition = QSpinBox(self.groupBox_2)
+        self.spinBox_circular_repetition.setObjectName(u"spinBox_circular_repetition")
+        self.spinBox_circular_repetition.setMinimum(1)
+        self.spinBox_circular_repetition.setMaximum(32)
+        self.spinBox_circular_repetition.setValue(1)
+
+        self.gridLayout_20.addWidget(self.spinBox_circular_repetition, 3, 1, 1, 1)
 
 
         self.gridLayout_27.addWidget(self.groupBox_2, 4, 2, 1, 1)
@@ -2793,10 +2826,12 @@ class Ui_MainWindowDesign(object):
         self.pushButton_currentConfToBatch.clicked.connect(MainWindowDesign.addcurrentconfmacro)
         self.pushButton_currentConfToBatchFCS.clicked.connect(MainWindowDesign.addcurrentconfmacrofcs)
         self.pushButton_copyPositionsMarkersFCS.clicked.connect(MainWindowDesign.copyPositionsMarkersFCS)
+        self.spinBox_circular_radius_nm.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
+        self.spinBox_circular_repetition.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(0)
-        self.tabWidget_2.setCurrentIndex(6)
+        self.tabWidget_2.setCurrentIndex(3)
         self.comboBox_analogSelect_B.setCurrentIndex(0)
 
 
@@ -3078,11 +3113,17 @@ class Ui_MainWindowDesign(object):
         self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
 
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindowDesign", u"Circular Motion", None))
-        self.label_43.setText(QCoreApplication.translate("MainWindowDesign", u"Number of points", None))
+#if QT_CONFIG(tooltip)
+        self.spinBox_circular_radius_nm.setToolTip(QCoreApplication.translate("MainWindowDesign", u"X position \u00b5m", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_109.setText(QCoreApplication.translate("MainWindowDesign", u"[nm]", None))
+        self.label_108.setText(QCoreApplication.translate("MainWindowDesign", u"Radius", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_circular.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_circular.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
+        self.label_43.setText(QCoreApplication.translate("MainWindowDesign", u"Number of points", None))
+        self.label_110.setText(QCoreApplication.translate("MainWindowDesign", u"Repetition", None))
         self.dockWidget_laser.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Laser configuration", None))
         self.checkBox_laser2.setText(QCoreApplication.translate("MainWindowDesign", u"Laser 2", None))
         self.checkBox_laser0.setText(QCoreApplication.translate("MainWindowDesign", u"Laser 0", None))

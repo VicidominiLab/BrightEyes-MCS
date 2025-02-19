@@ -118,6 +118,8 @@ class SpadFcsManager(QObject):
             "ry2": None,
             "rx2": None,
             "#timebinsPerPixel": 10,
+            "#circular_points": 1,
+            '#circular_rep': 1,
             "#pixels": 512,
             "#lines": 512,
             "#frames": 1,
@@ -134,6 +136,8 @@ class SpadFcsManager(QObject):
 
         self.timebins_per_pixel = 0
         self.time_resolution = 0
+        self.circ_repetition = 0
+        self.circ_points = 0
 
         self.dim_x = 0
         self.dim_y = 0
@@ -502,6 +506,8 @@ class SpadFcsManager(QObject):
         self.shared_dict["shape"] = [self.dim_x, self.dim_y, self.dim_z]
         self.shared_dict["channels"] = self.channels
         self.shared_dict["timebins_per_pixel"] = self.timebins_per_pixel
+        self.shared_dict["circ_repetition"] = self.circ_repetition
+        self.shared_dict["circ_points"] = self.circ_points
         self.shared_dict["time_resolution"] = self.time_resolution
         self.shared_dict["expected_raw_data"] = self.expected_raw_data
         self.shared_dict[
@@ -606,6 +612,9 @@ class SpadFcsManager(QObject):
             print_dec("register_read_all() not called due to FPGAhandle not connected")
 
         self.timebins_per_pixel = self.registers_configuration["#timebinsPerPixel"]
+        self.circ_repetition = self.registers_configuration["#circular_rep"]
+        self.circ_points = self.registers_configuration["#circular_points"]
+
         self.time_resolution = self.registers_configuration["Cx"] / 40.0
 
         self.dim_x = self.registers_configuration["#pixels"]
@@ -615,12 +624,12 @@ class SpadFcsManager(QObject):
 
         if self.channels == 25:
             self.expected_raw_data_per_frame = (
-                2 * self.timebins_per_pixel * self.dim_x * self.dim_y
+                2 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
             print_dec("self.expected_raw_data_per_frame calculated for 25 channels ",self.expected_raw_data_per_frame)
         elif self.channels == 49:
             self.expected_raw_data_per_frame = (
-                    8 * self.timebins_per_pixel * self.dim_x * self.dim_y
+                    8 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
             print_dec("self.expected_raw_data_per_frame calculated for 49 channels", self.expected_raw_data_per_frame)
 
@@ -639,14 +648,18 @@ class SpadFcsManager(QObject):
         """
         try:
             self.timebins_per_pixel = self.registers_configuration["#timebinsPerPixel"]
+            self.circ_repetition = self.registers_configuration["#circular_rep"]
+            self.circ_points = self.registers_configuration["#circular_points"]
         except:
             self.timebins_per_pixel = self.default_configuration["#timebinsPerPixel"]
+            self.circ_repetition = self.default_configuration["#circular_rep"]
+            self.circ_points = self.default_configuration["#circular_points"]
 
         if self.channels==25:
-            self.fifo_chuck_size = 2 * self.timebins_per_pixel
+            self.fifo_chuck_size = 2 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
             print_dec("update_chuck self.channels == 25")
         elif self.channels == 49:
-            self.fifo_chuck_size = 8 * self.timebins_per_pixel
+            self.fifo_chuck_size = 8 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
             print_dec("update_chuck self.channels == 49")
 
         # self.fifo_chuck_size = 2 * max(self.timebins_per_pixel, 100)
@@ -779,36 +792,36 @@ class SpadFcsManager(QObject):
         """
         return self.shared_fingerprint.get_numpy_handle()[4, :, :]
 
-    def getImage(self):
-        """
-        Get the image
-        """
-        # self.dataCounts = np.zeros((self.dim_x*self.dim_y*self.dim_z*self.timebins_per_pixel, self.channels),
-        #                           dtype = np.uint64)
-        # #print(id(self.shared_memory_buffer))
-        # #print(self.shared_memory_buffer.get_numpy_handle())
-        # ddd = np.copy(self.shared_memory_buffer.get_numpy_handle())
-        # print(ddd.shape, type(ddd), ddd.sum())
-        # convertRawDataToCounts(ddd, self.dataCounts)
-        # d = self.dataCounts.reshape(self.dim_z,
-        #                             self.dim_y,
-        #                             self.dim_x,
-        #                             self.timebins_per_pixel,
-        #                             self.channels)
-        d = np.memmap(
-            "test.raw",
-            dtype="uint16",
-            mode="r",
-            shape=(
-                self.dim_z,
-                self.dim_y,
-                self.dim_x,
-                self.timebins_per_pixel,
-                self.channels,
-            ),
-        )
-        print_dec(d.shape, type(d))
-        return d
+    # def getImage(self):
+    #     """
+    #     Get the image
+    #     """
+    #     # self.dataCounts = np.zeros((self.dim_x*self.dim_y*self.dim_z*self.timebins_per_pixel, self.channels),
+    #     #                           dtype = np.uint64)
+    #     # #print(id(self.shared_memory_buffer))
+    #     # #print(self.shared_memory_buffer.get_numpy_handle())
+    #     # ddd = np.copy(self.shared_memory_buffer.get_numpy_handle())
+    #     # print(ddd.shape, type(ddd), ddd.sum())
+    #     # convertRawDataToCounts(ddd, self.dataCounts)
+    #     # d = self.dataCounts.reshape(self.dim_z,
+    #     #                             self.dim_y,
+    #     #                             self.dim_x,
+    #     #                             self.timebins_per_pixel,
+    #     #                             self.channels)
+    #     d = np.memmap(
+    #         "test.raw",
+    #         dtype="uint16",
+    #         mode="r",
+    #         shape=(
+    #             self.dim_z,
+    #             self.dim_y,
+    #             self.dim_x,
+    #             self.timebins_per_pixel,
+    #             self.channels,
+    #         ),
+    #     )
+    #     print_dec(d.shape, type(d))
+    #     return d
 
     def setSelectedChannel(self, ch):
         """

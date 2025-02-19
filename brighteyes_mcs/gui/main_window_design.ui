@@ -2011,16 +2011,49 @@
         <string>Circular Motion</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_20">
-        <item row="2" column="1">
-         <widget class="QSpinBox" name="spinBox_circular_points">
+        <item row="4" column="1">
+         <widget class="sciSpinBox" name="spinBox_circular_radius_nm">
+          <property name="toolTip">
+           <string>X position µm</string>
+          </property>
+          <property name="keyboardTracking">
+           <bool>false</bool>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="minimum">
-           <number>1</number>
+           <double>-1000000.000000000000000</double>
           </property>
           <property name="maximum">
-           <number>32</number>
+           <double>1000000.000000000000000</double>
           </property>
           <property name="value">
-           <number>32</number>
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QLabel" name="label_109">
+          <property name="text">
+           <string>[nm]</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_108">
+          <property name="text">
+           <string>Radius</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="3">
+         <widget class="QCheckBox" name="checkBox_circular">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Activate</string>
           </property>
          </widget>
         </item>
@@ -2044,13 +2077,36 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="0" colspan="3">
-         <widget class="QCheckBox" name="checkBox_circular">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <item row="2" column="1">
+         <widget class="QSpinBox" name="spinBox_circular_points">
+          <property name="minimum">
+           <number>1</number>
           </property>
+          <property name="maximum">
+           <number>32</number>
+          </property>
+          <property name="value">
+           <number>1</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_110">
           <property name="text">
-           <string>Activate</string>
+           <string>Repetition</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QSpinBox" name="spinBox_circular_repetition">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>32</number>
+          </property>
+          <property name="value">
+           <number>1</number>
           </property>
          </widget>
         </item>
@@ -2137,7 +2193,7 @@
          <item row="0" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
            <property name="currentIndex">
-            <number>6</number>
+            <number>3</number>
            </property>
            <widget class="QWidget" name="tab_2">
             <attribute name="title">
@@ -4586,8 +4642,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>1101</y>
+     <x>129</x>
+     <y>1121</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -4602,8 +4658,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>1127</y>
+     <x>129</x>
+     <y>1121</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4618,8 +4674,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>1153</y>
+     <x>129</x>
+     <y>1121</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4634,8 +4690,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1200</y>
+     <x>121</x>
+     <y>1129</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4650,8 +4706,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1226</y>
+     <x>121</x>
+     <y>1129</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4666,8 +4722,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1252</y>
+     <x>121</x>
+     <y>1129</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -4842,8 +4898,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>101</x>
-     <y>1095</y>
+     <x>119</x>
+     <y>1127</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -4858,8 +4914,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>114</x>
-     <y>1127</y>
+     <x>119</x>
+     <y>1153</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -4874,8 +4930,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>114</x>
-     <y>1153</y>
+     <x>119</x>
+     <y>1179</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -4986,7 +5042,7 @@
    <slot>plotSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1043</x>
+     <x>674</x>
      <y>1792</y>
     </hint>
     <hint type="destinationlabel">
@@ -5002,7 +5058,7 @@
    <slot>selectedAutoscaleImg()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>547</x>
+     <x>520</x>
      <y>1790</y>
     </hint>
     <hint type="destinationlabel">
@@ -5018,7 +5074,7 @@
    <slot>projChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1074</x>
+     <x>674</x>
      <y>1766</y>
     </hint>
     <hint type="destinationlabel">
@@ -5034,8 +5090,8 @@
    <slot>startBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1232</x>
-     <y>1031</y>
+     <x>545</x>
+     <y>79</y>
     </hint>
     <hint type="destinationlabel">
      <x>747</x>
@@ -5050,8 +5106,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>732</x>
-     <y>190</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>555</x>
@@ -5066,8 +5122,8 @@
    <slot>stopBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1232</x>
-     <y>1147</y>
+     <x>545</x>
+     <y>79</y>
     </hint>
     <hint type="destinationlabel">
      <x>870</x>
@@ -5146,8 +5202,8 @@
    <slot>cmd_moveToSelectedColumnFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1232</x>
-     <y>267</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -5210,8 +5266,8 @@
    <slot>bit_file_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>370</x>
-     <y>1188</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -5322,8 +5378,8 @@
    <slot>FCSReset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1109</x>
-     <y>1264</y>
+     <x>545</x>
+     <y>79</y>
     </hint>
     <hint type="destinationlabel">
      <x>840</x>
@@ -5354,8 +5410,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>1260</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -5370,8 +5426,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>1208</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -5403,7 +5459,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>129</x>
-     <y>1091</y>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>1195</x>
@@ -5418,8 +5474,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>337</x>
-     <y>1105</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -5578,8 +5634,8 @@
    <slot>bit_file_clicked2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>370</x>
-     <y>1263</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -5850,8 +5906,8 @@
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>304</x>
-     <y>930</y>
+     <x>401</x>
+     <y>914</y>
     </hint>
     <hint type="destinationlabel">
      <x>424</x>
@@ -5866,8 +5922,8 @@
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>948</y>
+     <x>340</x>
+     <y>940</y>
     </hint>
     <hint type="destinationlabel">
      <x>430</x>
@@ -5898,8 +5954,8 @@
    <slot>httpServerCheckBoxChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>303</x>
-     <y>1079</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -5914,8 +5970,8 @@
    <slot>addcurrentconfmacro()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>672</x>
-     <y>190</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -5930,8 +5986,8 @@
    <slot>addcurrentconfmacrofcs()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>551</x>
-     <y>340</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>428</x>
@@ -5946,12 +6002,44 @@
    <slot>copyPositionsMarkersFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>804</x>
-     <y>337</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
      <y>391</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_circular_radius_nm</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>circularMotionActivateChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>340</x>
+     <y>992</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>427</x>
+     <y>986</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_circular_repetition</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>circularMotionActivateChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>959</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>432</x>
+     <y>975</y>
     </hint>
    </hints>
   </connection>

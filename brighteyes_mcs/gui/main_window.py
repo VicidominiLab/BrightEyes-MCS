@@ -2628,96 +2628,78 @@ class MainWindow(QMainWindow):
         """
         define the points for the circular scan
         """
-        xx = self.ui.spinBox_range_x.value()
-        yy = self.ui.spinBox_range_y.value()
-        zz = self.ui.spinBox_range_z.value()
+        radius = self.ui.spinBox_circular_radius_nm.value() / 1000.
 
         calib_xx = self.ui.spinBox_calib_x.value()
         calib_yy = self.ui.spinBox_calib_y.value()
         calib_zz = self.ui.spinBox_calib_z.value()
 
-        offset_xx_um = self.ui.spinBox_off_x_um.value()
-        offset_yy_um = self.ui.spinBox_off_y_um.value()
-        offset_zz_um = self.ui.spinBox_off_z_um.value()
-
-        self.ui.spinBox_off_x_V.setValue(offset_xx_um / calib_xx)
-        self.ui.spinBox_off_y_V.setValue(offset_yy_um / calib_yy)
-        self.ui.spinBox_off_z_V.setValue(offset_zz_um / calib_zz)
-
-        offset_xx = self.ui.spinBox_off_x_V.value()
-        offset_yy = self.ui.spinBox_off_y_V.value()
-        offset_zz = self.ui.spinBox_off_z_V.value()
-
-        offExtra_x_V = self.ui.spinBox_offExtra_x_V.value()
-        offExtra_y_V = self.ui.spinBox_offExtra_y_V.value()
-        offExtra_z_V = self.ui.spinBox_offExtra_z_V.value()
-
         t = np.linspace(0, 2 * np.pi, circular_points + 1)[:-1]
 
-        self.X_array_um = (np.cos(t) * xx / 2) + offset_xx_um
-        self.Y_array_um = (np.sin(t) * yy / 2) + offset_yy_um
-        self.Z_array_um = (np.zeros(circular_points) * zz) + offset_zz_um
+        self.X_array_um = (np.cos(t) * radius)
+        self.Y_array_um = (np.sin(t) * radius)
+        self.Z_array_um = np.zeros(circular_points + 1)
 
-        self.X_array = self.X_array_um / calib_xx + offExtra_x_V
-        self.Y_array = self.Y_array_um / calib_yy + offExtra_y_V
-        self.Z_array = self.Z_array_um / calib_zz + offExtra_z_V
+        self.X_array = self.X_array_um / calib_xx
+        self.Y_array = self.Y_array_um / calib_yy
+        self.Z_array = self.Z_array_um / calib_zz
 
         self.marker_plot_circular_scan.clear()
 
         self.markers_list_circular = []
-
-        for i in range(circular_points):
-            conf = {}
-            # conf["offset_x_um"] = (self.X_array[i] - (offExtra_x_V + offset_xx))/calib_xx
-            # conf["offset_y_um"] = (self.Y_array[i] - (offExtra_y_V + offset_yy))/calib_yy
-            # conf["offset_z_um"] = (self.Z_array[i] - (offExtra_z_V + offset_zz))/calib_zz
-
-            conf["offset_x_um"] = (self.X_array[i] - offExtra_x_V) * calib_xx
-            conf["offset_y_um"] = (self.Y_array[i] - offExtra_y_V) * calib_yy
-            conf["offset_z_um"] = (self.Z_array[i] - offExtra_z_V) * calib_zz
-
-            self.markers_list_circular.append(conf)
-
-        projection = self.ui.comboBox_view_projection.currentText()
-
-        i = "offset_x_um"
-        j = "offset_y_um"
-        if projection == "xy":
-            i = "offset_x_um"
-            j = "offset_y_um"
-        elif projection == "zy":
-            i = "offset_z_um"
-            j = "offset_y_um"
-        elif projection == "xz":
-            i = "offset_x_um"
-            j = "offset_z_um"
-        elif projection == "yx":
-            i = "offset_y_um"
-            j = "offset_x_um"
-        elif projection == "yz":
-            i = "offset_y_um"
-            j = "offset_z_um"
-        elif projection == "zx":
-            j = "offset_x_um"
-            i = "offset_z_um"
-        else:
-            i = "offset_x_um"
-            j = "offset_y_um"
-            print_dec("NO PROJECTION IN DRAWMARKES")
-
-        for n, k in enumerate(self.markers_list_circular):
-            self.marker_plot_circular_scan.addPoints(
-                x=[
-                    k[i],
-                ],
-                y=[
-                    k[j],
-                ],
-                pen="w",
-                brush="r",
-                size=10,
-                symbol="x",
-            )
+        #
+        # for i in range(circular_points):
+        #     conf = {}
+        #     # conf["offset_x_um"] = (self.X_array[i] - (offExtra_x_V + offset_xx))/calib_xx
+        #     # conf["offset_y_um"] = (self.Y_array[i] - (offExtra_y_V + offset_yy))/calib_yy
+        #     # conf["offset_z_um"] = (self.Z_array[i] - (offExtra_z_V + offset_zz))/calib_zz
+        #
+        #     conf["offset_x_um"] = self.X_array[i] * calib_xx
+        #     conf["offset_y_um"] = self.Y_array[i] * calib_yy
+        #     conf["offset_z_um"] = self.Z_array[i] * calib_zz
+        #
+        #     self.markers_list_circular.append(conf)
+        #
+        # projection = self.ui.comboBox_view_projection.currentText()
+        #
+        # i = "offset_x_um"
+        # j = "offset_y_um"
+        # if projection == "xy":
+        #     i = "offset_x_um"
+        #     j = "offset_y_um"
+        # elif projection == "zy":
+        #     i = "offset_z_um"
+        #     j = "offset_y_um"
+        # elif projection == "xz":
+        #     i = "offset_x_um"
+        #     j = "offset_z_um"
+        # elif projection == "yx":
+        #     i = "offset_y_um"
+        #     j = "offset_x_um"
+        # elif projection == "yz":
+        #     i = "offset_y_um"
+        #     j = "offset_z_um"
+        # elif projection == "zx":
+        #     j = "offset_x_um"
+        #     i = "offset_z_um"
+        # else:
+        #     i = "offset_x_um"
+        #     j = "offset_y_um"
+        #     print_dec("NO PROJECTION IN DRAWMARKES")
+        #
+        # for n, k in enumerate(self.markers_list_circular):
+        #     self.marker_plot_circular_scan.addPoints(
+        #         x=[
+        #             k[i],
+        #         ],
+        #         y=[
+        #             k[j],
+        #         ],
+        #         pen="w",
+        #         brush="r",
+        #         size=10,
+        #         symbol="x",
+        #     )
 
     @Slot()
     def test9(self):
@@ -2735,10 +2717,11 @@ class MainWindow(QMainWindow):
             circular_points = self.ui.spinBox_circular_points.value()
             self.define_circular(circular_points)
             # self.ui.spinBox_time_bin_per_px.setValue(32)
-            self.ui.spinBox_nx.setValue(circular_points)
-            self.ui.spinBox_ny.setValue(100)
+            # self.ui.spinBox_nx.setValue(circular_points)
+            # self.ui.spinBox_ny.setValue(100)
             # self.ui.spinBox_time_bin_per_px.setValue(32)
             self.load_circular()
+            self.temporalSettingsChanged()
         else:
             self.markers_list_circular = []
             self.marker_plot_circular_scan.clear()
@@ -3421,6 +3404,9 @@ Have fun!
         """
         time_res = self.ui.spinBox_timeresolution.value()
         time_bin = self.ui.spinBox_time_bin_per_px.value()
+        circ_repetition = self.ui.spinBox_circular_repetition.value()
+        circ_points = self.ui.spinBox_circular_points.value()
+
         clock_duration = time_bin * time_res * 20
         Cx = time_res * 40
         print_dec("temporalSettingsChanged")
@@ -3439,6 +3425,8 @@ Have fun!
                 "WaitForLaser": int(waitForLaserInCycle),
                 "WaitAfterFrame": int(waitAfterFrame),
                 "WaitOnlyFirstTime": waitOnlyFirstTime,
+                "#circular_points": circ_points,
+                "#circular_rep": circ_repetition
             }
         )
 
@@ -3449,11 +3437,11 @@ Have fun!
 
         self.ui.label_dwell_time_val.setText("%0.3f" % (time_res * time_bin))
         self.ui.label_frame_time_val.setText(
-            "%0.3f" % (time_res * time_bin * numbers_xx * numbers_yy * 1e-6)
+            "%0.3f" % (time_res * time_bin * circ_points * circ_repetition * numbers_xx * numbers_yy * 1e-6)
         )
         self.ui.label_expected_dur_val.setText(
             "%0.3f"
-            % (time_res * time_bin * numbers_xx * numbers_yy * numbers_ff * rep * 1e-6)
+            % (time_res * time_bin * circ_points * circ_repetition * numbers_xx * numbers_yy * numbers_ff * rep * 1e-6)
         )
 
         self.checkAlerts()
@@ -3798,6 +3786,9 @@ Have fun!
 
             time_res = self.ui.spinBox_timeresolution.value()
             time_bin = self.ui.spinBox_time_bin_per_px.value()
+            circ_repetition = self.ui.spinBox_circular_repetition.value()
+            circ_points = self.ui.spinBox_circular_points.value()
+
             clock_duration = time_bin * time_res * 20
             Cx = time_res * 40
 
@@ -4042,6 +4033,9 @@ Have fun!
 
         time_res = self.ui.spinBox_timeresolution.value()
         time_bin = self.ui.spinBox_time_bin_per_px.value()
+        circ_repetition = self.ui.spinBox_circular_repetition.value()
+        circ_points = self.ui.spinBox_circular_points.value()
+
         clock_duration = time_bin * time_res * 20
         Cx = time_res * 40
 
@@ -4062,6 +4056,8 @@ Have fun!
                 "WaitForLaser": int(waitForLaserInCycle),
                 "WaitAfterFrame": int(waitAfterFrame),
                 "WaitOnlyFirstTime": waitOnlyFirstTime,
+                "#circular_points": circ_points,
+                "#circular_rep": circ_repetition,
                 "CircularMotionActivate": circular_motion,
                 "DummyData": dummy_data,
                 # "AD5764_MaxBit": 1,

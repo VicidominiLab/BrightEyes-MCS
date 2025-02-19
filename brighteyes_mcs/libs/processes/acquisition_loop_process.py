@@ -89,7 +89,10 @@ class AcquisitionLoopProcess(mp.Process):
         self.trace_sample_per_bins = shared_objects["trace_sample_per_bins"]
         self.trace_pos = shared_objects["trace_pos"]
 
-        self.timebinsPerPixel = shared_dict["timebins_per_pixel"]
+        self.timebinsPerPixel = shared_dict["timebins_per_pixel"] * \
+                                shared_dict["circ_repetition"] * \
+                                shared_dict["circ_points"]
+
         self.time_resolution = shared_dict["time_resolution"]
         self.expected_raw_data = shared_dict["expected_raw_data"]
         self.expected_raw_data_per_frame = shared_dict["expected_raw_data_per_frame"]
