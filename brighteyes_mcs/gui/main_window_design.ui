@@ -1946,19 +1946,6 @@
     <layout class="QGridLayout" name="gridLayout_27">
      <item row="4" column="1">
       <layout class="QGridLayout" name="gridLayout_28">
-       <item row="0" column="1" colspan="2">
-        <widget class="QCheckBox" name="checkBox_showPreview">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Show Image Preview</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="1" colspan="2">
         <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
          <property name="toolTip">
@@ -1972,13 +1959,6 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="label_35">
-         <property name="text">
-          <string>SPAD Channels</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="1" colspan="2">
         <widget class="QCheckBox" name="checkBox_snake">
          <property name="toolTip">
@@ -1989,7 +1969,7 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="2">
+       <item row="4" column="2">
         <widget class="QComboBox" name="comboBox_channels">
          <item>
           <property name="text">
@@ -2001,6 +1981,43 @@
            <string>49</string>
           </property>
          </item>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QCheckBox" name="checkBox_showPreview">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Show Image Preview</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLabel" name="label_35">
+         <property name="text">
+          <string>SPAD Channels</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QSpinBox" name="spinBox_DFD_nbins">
+         <property name="maximum">
+          <number>1023</number>
+         </property>
+         <property name="value">
+          <number>81</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_111">
+         <property name="text">
+          <string>DFD N. Bins</string>
+         </property>
         </widget>
        </item>
       </layout>

@@ -178,17 +178,27 @@ class SpadFcsManager(QObject):
         self.activated_fifos_list = []
 
         self.DFD_Activate = False
+        self.DFD_nbins = 81
         self.snake_walk = False
 
         self.use_rust_fifo = True
 
         self.debug = False
 
+
+
     def __del__(self):
         """
         Destructor of the class
         """
         print_dec("Destructor called.")
+
+    def set_DFD_nbins(self, DFD_nbins):
+        """
+        Set the number of DFD_nbins
+        """
+        print_dec("DFD_nbins", DFD_nbins)
+        self.DFD_nbins = DFD_nbins
 
     def set_channels(self, ch):
         """
@@ -527,7 +537,7 @@ class SpadFcsManager(QObject):
                 "preview_buffer_size_in_words": self.preview_buffer_size_in_words,
                 "last_packet_size": 0,
                 "DFD_Activate": self.DFD_Activate,
-                "DFD_nBins": 81,
+                "DFD_nBins": self.DFD_nbins,
                 "snake_walk": self.snake_walk,
             }
         )

@@ -456,6 +456,7 @@ class MainWindow(QMainWindow):
         self.last_saved_filename = None
 
         self.DFD_Activate = False
+        self.DFD_nbins = 81
         self.snake_walk_Activate = False
 
         self.setupAnalogOutputGUI()
@@ -3924,8 +3925,9 @@ Have fun!
         """
         activate the DFD mode
         """
+        self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
         if self.ui.checkBox_DFD.isChecked():
-            self.ui.spinBox_time_bin_per_px.setValue(81)
+            self.ui.spinBox_time_bin_per_px.setValue(self.DFD_nbins)
             self.ui.spinBox_timeresolution.setValue(2.0)
 
     @Slot()
@@ -3997,11 +3999,13 @@ Have fun!
         self.activate_preview = activate_preview
 
         self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
+        self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
 
         self.numberChannelsChanged()
         self.spadfcsmanager_inst.set_channels(int(self.ui.comboBox_channels.currentText()))
 
         self.spadfcsmanager_inst.set_activate_DFD(self.DFD_Activate)
+        self.spadfcsmanager_inst.set_DFD_nbins(self.DFD_nbins)
 
         self.ui.progressBar_fifo_digital.setMaximum(5)
         self.ui.progressBar_fifo_analog.setMaximum(5)
@@ -4207,9 +4211,9 @@ Have fun!
         )
 
         if self.DFD_Activate:
-            trace_bins = 81
+            trace_bins = self.DFD_nbins
 
-            trace_length = 81
+            trace_length = self.DFD_nbins
 
             trace_sample_per_bins = int(trace_length // trace_bins)
 

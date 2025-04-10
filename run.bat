@@ -4,8 +4,8 @@ cd %~dp0
 @REM activate env
 echo venv\Scripts\activate.bat
 call venv\Scripts\activate.bat
-echo running python -m brighteyes_mcs
-python -m brighteyes_mcs
+echo running python -m brighteyes_mcs debug
+python -m brighteyes_mcs debug
 echo:
 echo:
 

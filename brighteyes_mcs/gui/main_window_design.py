@@ -1118,22 +1118,11 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_27.setObjectName(u"gridLayout_27")
         self.gridLayout_28 = QGridLayout()
         self.gridLayout_28.setObjectName(u"gridLayout_28")
-        self.checkBox_showPreview = QCheckBox(self.dockWidgetContents_4)
-        self.checkBox_showPreview.setObjectName(u"checkBox_showPreview")
-        self.checkBox_showPreview.setChecked(True)
-
-        self.gridLayout_28.addWidget(self.checkBox_showPreview, 0, 1, 1, 2)
-
         self.checkBox_DFD_LaserDebug = QCheckBox(self.dockWidgetContents_4)
         self.checkBox_DFD_LaserDebug.setObjectName(u"checkBox_DFD_LaserDebug")
         self.checkBox_DFD_LaserDebug.setChecked(True)
 
         self.gridLayout_28.addWidget(self.checkBox_DFD_LaserDebug, 1, 1, 1, 2)
-
-        self.label_35 = QLabel(self.dockWidgetContents_4)
-        self.label_35.setObjectName(u"label_35")
-
-        self.gridLayout_28.addWidget(self.label_35, 3, 1, 1, 1)
 
         self.checkBox_snake = QCheckBox(self.dockWidgetContents_4)
         self.checkBox_snake.setObjectName(u"checkBox_snake")
@@ -1145,7 +1134,30 @@ class Ui_MainWindowDesign(object):
         self.comboBox_channels.addItem("")
         self.comboBox_channels.setObjectName(u"comboBox_channels")
 
-        self.gridLayout_28.addWidget(self.comboBox_channels, 3, 2, 1, 1)
+        self.gridLayout_28.addWidget(self.comboBox_channels, 4, 2, 1, 1)
+
+        self.checkBox_showPreview = QCheckBox(self.dockWidgetContents_4)
+        self.checkBox_showPreview.setObjectName(u"checkBox_showPreview")
+        self.checkBox_showPreview.setChecked(True)
+
+        self.gridLayout_28.addWidget(self.checkBox_showPreview, 0, 1, 1, 2)
+
+        self.label_35 = QLabel(self.dockWidgetContents_4)
+        self.label_35.setObjectName(u"label_35")
+
+        self.gridLayout_28.addWidget(self.label_35, 4, 1, 1, 1)
+
+        self.spinBox_DFD_nbins = QSpinBox(self.dockWidgetContents_4)
+        self.spinBox_DFD_nbins.setObjectName(u"spinBox_DFD_nbins")
+        self.spinBox_DFD_nbins.setMaximum(1023)
+        self.spinBox_DFD_nbins.setValue(81)
+
+        self.gridLayout_28.addWidget(self.spinBox_DFD_nbins, 3, 2, 1, 1)
+
+        self.label_111 = QLabel(self.dockWidgetContents_4)
+        self.label_111.setObjectName(u"label_111")
+
+        self.gridLayout_28.addWidget(self.label_111, 3, 1, 1, 1)
 
 
         self.gridLayout_27.addLayout(self.gridLayout_28, 4, 1, 1, 1)
@@ -3097,14 +3109,9 @@ class Ui_MainWindowDesign(object):
 
         self.dockWidget_activatefifo.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Adv.", None))
 #if QT_CONFIG(tooltip)
-        self.checkBox_showPreview.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The live-preview can be disabled.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_showPreview.setText(QCoreApplication.translate("MainWindowDesign", u"Show Image Preview", None))
-#if QT_CONFIG(tooltip)
         self.checkBox_DFD_LaserDebug.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_DFD_LaserDebug.setText(QCoreApplication.translate("MainWindowDesign", u"Laser in CH26 (for DFD)", None))
-        self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD Channels", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_snake.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Use for the scanning a &quot;snake-walk&quot; instead of a normal &quot;raster-scan&quot;</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -3112,6 +3119,12 @@ class Ui_MainWindowDesign(object):
         self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
         self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
 
+#if QT_CONFIG(tooltip)
+        self.checkBox_showPreview.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The live-preview can be disabled.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_showPreview.setText(QCoreApplication.translate("MainWindowDesign", u"Show Image Preview", None))
+        self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD Channels", None))
+        self.label_111.setText(QCoreApplication.translate("MainWindowDesign", u"DFD N. Bins", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindowDesign", u"Circular Motion", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_circular_radius_nm.setToolTip(QCoreApplication.translate("MainWindowDesign", u"X position \u00b5m", None))
