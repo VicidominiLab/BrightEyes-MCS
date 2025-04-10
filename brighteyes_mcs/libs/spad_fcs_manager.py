@@ -178,7 +178,7 @@ class SpadFcsManager(QObject):
         self.activated_fifos_list = []
 
         self.DFD_Activate = False
-        self.DFD_nbins = 81
+        self.DFD_nbins = 0
         self.snake_walk = False
 
         self.use_rust_fifo = True
@@ -524,6 +524,7 @@ class SpadFcsManager(QObject):
             "expected_raw_data_per_frame"
         ] = self.expected_raw_data_per_frame
         self.shared_dict["filenameh5"] = self.filenameh5
+        self.shared_dict["DFD_nbins"] = self.DFD_nbins
 
         print_dec("self.activate_show_preview", self.activate_show_preview)
         self.shared_dict.update(

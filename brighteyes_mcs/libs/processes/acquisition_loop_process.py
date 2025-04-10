@@ -98,7 +98,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.expected_raw_data_per_frame = shared_dict["expected_raw_data_per_frame"]
 
         self.DFD_Activate = shared_dict["DFD_Activate"]
-        self.DFD_nbins = 81
+        self.DFD_nbins = shared_dict["DFD_nbins"]
 
         self.snake_walk = shared_dict["snake_walk"]
 
