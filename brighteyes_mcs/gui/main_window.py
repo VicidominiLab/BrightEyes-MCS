@@ -3254,10 +3254,13 @@ class MainWindow(QMainWindow):
             if self.autoscale_fingerprint:
                 self.fingerprint_widget.setImage(
                     data_finger_print.T,
-                    autoLevels=True,
-                    autoRange=True,
-                    autoHistogramRange=True,
+                    autoLevels=False,
+                    autoRange=False,
+                    autoHistogramRange=False,
                 )
+
+                self.fingerprint_widget.setLevels(np.min(data_finger_print[self.fingerprint_mask == 1]),
+                                                  np.max(data_finger_print[self.fingerprint_mask == 1]))
             else:
                 self.fingerprint_widget.setImage(
                     data_finger_print.T,
