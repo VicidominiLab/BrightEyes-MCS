@@ -922,6 +922,13 @@ class MainWindow(QMainWindow):
             False,
         )
 
+        configuration_helper["DFDnbins"] = (
+            "DFDnbins",
+            float,
+            self.ui.spinBox_DFD_nbins,
+            False,
+        )
+
         configuration_helper["backendDataRecv"] = (
             "backendDataRecv",
             str,
@@ -4055,6 +4062,16 @@ Have fun!
         circular_motion = self.ui.checkBox_circular.isChecked()
         dummy_data = self.ui.checkBox_DummyData.isChecked()
 
+        laser_seq_gui = [int(self.ui.comboLaserSeq_1.currentText()),
+                        int(self.ui.comboLaserSeq_2.currentText()),
+                        int(self.ui.comboLaserSeq_3.currentText()),
+                        int(self.ui.comboLaserSeq_4.currentText()),
+                        int(self.ui.comboLaserSeq_5.currentText()),
+                        int(self.ui.comboLaserSeq_6.currentText())]
+
+        laser_sequence =  [0, laser_seq_gui[0], 0, laser_seq_gui[1], 0, laser_seq_gui[2], 0, laser_seq_gui[3], 0,
+                                laser_seq_gui[4], 0, laser_seq_gui[5]]
+
         self.setRegistersDict(
             {
                 "Cx": int(Cx),
@@ -4067,6 +4084,7 @@ Have fun!
                 "#circular_rep": circ_repetition,
                 "CircularMotionActivate": circular_motion,
                 "DummyData": dummy_data,
+                "excitation sequence": laser_sequence,
                 # "AD5764_MaxBit": 1,
             }
         )
