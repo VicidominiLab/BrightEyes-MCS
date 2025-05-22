@@ -70,10 +70,6 @@ echo Build Cython code
 echo:
 python compile_cython.py
 echo:
-echo Creating Links
-echo:
-python create_links.py
-echo:
 python download_firmware.py
 echo:
 echo BrightEyes-MCS installation DONE!

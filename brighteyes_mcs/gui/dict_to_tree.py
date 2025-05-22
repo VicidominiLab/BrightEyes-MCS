@@ -1,7 +1,7 @@
 # TreeModel inspired by
 # https://stackoverflow.com/questions/60443167/qt-for-python-qtreeview-from-a-dictionary
 
-from PySide2.QtCore import Qt, QAbstractItemModel, QModelIndex
+from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex
 
 class TreeModel(QAbstractItemModel):
     def __init__(self, headers, data, parent=None, debug=False):

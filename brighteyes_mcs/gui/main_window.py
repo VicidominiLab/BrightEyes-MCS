@@ -5,23 +5,22 @@ __license__ = "GPL"
 __version__ = "0.0.1"
 __email__ = ["mattia.donato@iit.it", "giuseppe.vicidomini@iit.it"]
 
-# pyside2-uic main_design.ui -o main_design.py
+# pyside6-uic main_design.ui -o main_design.py
 
-
-from PySide2.QtWidgets import QMainWindow, QSplashScreen, QFileDialog
-from PySide2.QtWidgets import QMessageBox, QTableWidgetItem, QDesktopWidget, QLabel
-from PySide2.QtWidgets import (
+from PySide6.QtWidgets import QMainWindow, QSplashScreen, QFileDialog
+from PySide6.QtWidgets import QMessageBox, QTableWidgetItem, QLabel
+from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QComboBox,
     QCheckBox,
     QWidget,
     QTextBrowser,
 )
+from PySide6.QtGui import QScreen  # Replaces QDesktopWidget
 
-from PySide2.QtCore import (
+from PySide6.QtCore import (
     Slot,
     Signal,
-    SIGNAL,
     QTimer,
     Qt,
     QDir,
@@ -31,8 +30,8 @@ from PySide2.QtCore import (
     QIODevice,
     QBuffer
 )
-from PySide2.QtCore import QEvent, QRectF, QObject, QThread, QMutex, QMimeData, QUrl
-from PySide2.QtGui import QPixmap, QIcon, QGuiApplication
+from PySide6.QtCore import QEvent, QRectF, QObject, QThread, QMutex, QMimeData, QUrl
+from PySide6.QtGui import QPixmap, QIcon, QGuiApplication
 
 from datetime import datetime
 
@@ -85,11 +84,6 @@ except:
 pg.setConfigOption("background", "k")
 pg.setConfigOption("foreground", "w")
 
-
-
-
-
-
 class PluginSignals(QObject):
     """
     Class for defining custom signals for the plugins
@@ -112,14 +106,16 @@ class MainWindow(QMainWindow):
         self.http_server_thread = None
         self.guiReadyFlag = False
         self.init_ready = False
-        desktop = QDesktopWidget()
-        half_desktop = desktop.size() / 2
+        primary_screen = QGuiApplication.primaryScreen()
         splash_image = QPixmap("images/splash.png").scaled(
-            half_desktop, aspectMode=Qt.KeepAspectRatio, mode=Qt.SmoothTransformation
+            primary_screen.size().width() // 2,
+            primary_screen.size().height() // 2,
+            aspectMode=Qt.AspectRatioMode.KeepAspectRatio,
+            mode=Qt.TransformationMode.SmoothTransformation
         )
 
         self.splash = QSplashScreen(splash_image)
-        self.splash.setWindowFlags(Qt.SplashScreen | Qt.WindowStaysOnTopHint)
+        self.splash.setWindowFlags(Qt.WindowType.SplashScreen | Qt.WindowType.WindowStaysOnTopHint)
 
         LICENSE = (
                 """BrightEyes-MCS (Version: %s)                  
@@ -135,13 +131,13 @@ class MainWindow(QMainWindow):
         if "debug" in sys.argv:
             self.splash.showMessage(
                 LICENSE + "\n" + "UNTESTED                                   \n" * 15,
-                Qt.AlignTop | Qt.AlignRight,
+                Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight,
                 "white",
             )
         else:
             self.splash.showMessage(
                 LICENSE,
-                Qt.AlignTop | Qt.AlignRight,
+                Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight,
                 "white",
             )
 
@@ -412,7 +408,16 @@ class MainWindow(QMainWindow):
 
         self.ui.tabWidget.tabBarDoubleClicked.connect(self.tabDoubleClick)
 
-        self.ui.tabWidget.connect(SIGNAL("dragEnterEvent()"), self.prova)
+        self.ui.tabWidget.setAcceptDrops(True)
+
+        # PySide6 do not work anymore this
+        # self.ui.tabWidget.connect(Signal("dragEnterEvent()"), self.prova)
+        # FIXED WITH A VERY BAD HACK - WHICH NEEDS TO BE FIXED!!
+        def drag_enter_event(event):
+            self.ui.tabWidget.__class__.dragEnterEvent(self.ui.tabWidget, event)
+            self.prova()
+
+        self.ui.tabWidget.dragEnterEvent = drag_enter_event
 
         self.ui.tableWidget.keyPressEvent = self.table_keyPressEvent
         self.ui.tableWidget_markers.keyPressEvent = self.table_markers_keyPressEvent
@@ -1260,7 +1265,7 @@ class MainWindow(QMainWindow):
         title = self.ui.tabWidget.tabText(number)
         self.ui.tabWidget.removeTab(number)
         w.setWindowTitle(title)
-        # w.setWindowFlags(PySide2.QtCore.Qt.Window & ~PySide2.QtCore.Qt.WindowCloseButtonHint)
+        # w.setWindowFlags(PySide6.QtCore.Qt.Window & ~PySide6.QtCore.Qt.WindowCloseButtonHint)
         w.setWindowFlags(
             Qt.Window
             | Qt.CustomizeWindowHint

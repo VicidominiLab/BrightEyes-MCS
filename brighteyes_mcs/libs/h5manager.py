@@ -3,7 +3,7 @@ from decimal import Decimal
 import h5py
 import threading
 import numpy as np
-from PySide2.QtCore import QByteArray, QBuffer, QIODevice
+from PySide6.QtCore import QByteArray, QBuffer, QIODevice
 
 from ..libs.print_dec import print_dec
 

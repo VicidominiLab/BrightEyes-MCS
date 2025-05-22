@@ -3,9 +3,12 @@ Author: Luca Bega. Istituto Italiano di Tecnologia
 '''
 
 import sys
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import QRegularExpression, Signal, QRect, Qt, QMetaObject, QCoreApplication
+from PySide6.QtGui import QRegularExpressionValidator, QValidator
+from PySide6.QtWidgets import (QDoubleSpinBox, QWidget, QMainWindow,
+                              QMenuBar, QStatusBar, QApplication)
+
+
 import math
 from decimal import *
 
@@ -73,8 +76,8 @@ class sciSpinBox(QDoubleSpinBox):
     def __init__(self, QDoubleSpinBox):
         self.decimal = 1
         super().__init__(QDoubleSpinBox)
-        self.validator = QRegExpValidator(
-            QRegExp("\s*$[[\-\+]\d{1,9}a-zA-Z+-^,.]"), self
+        self.validator = QRegularExpressionValidator(
+            QRegularExpression(r"\s*$[[\-\+]\d{1,9}a-zA-Z+-^,.]"), self
         )
         super().setDecimals(300)
         self.setMaximum(1e99)

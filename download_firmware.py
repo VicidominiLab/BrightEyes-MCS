@@ -2,8 +2,8 @@ import sys, os, time
 import requests, zipfile
 from io import BytesIO
 import markdown
-from PySide2.QtCore import Qt, QThread, Signal
-from PySide2.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QVBoxLayout, QHBoxLayout, QFrame, QLabel, QMessageBox, QTextBrowser, QProgressDialog, QDialog, QProgressBar, QVBoxLayout
+from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QVBoxLayout, QHBoxLayout, QFrame, QLabel, QMessageBox, QTextBrowser, QProgressDialog, QDialog, QProgressBar, QVBoxLayout
 
 # Define the URL of the Markdown file you want to download
 md_url = "https://raw.githubusercontent.com/VicidominiLab/BrightEyes-MCSLL/refs/heads/main/LICENSE.md"

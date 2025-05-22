@@ -1,4 +1,4 @@
-from PySide2.QtCore import Slot, QRunnable
+from PySide6.QtCore import Slot, QRunnable
 
 
 class Worker(QRunnable):

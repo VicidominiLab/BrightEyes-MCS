@@ -3,17 +3,28 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window_design.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
+    QDockWidget, QDoubleSpinBox, QGridLayout, QGroupBox,
+    QHBoxLayout, QHeaderView, QLabel, QLayout,
+    QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
+    QProgressBar, QPushButton, QRadioButton, QScrollArea,
+    QSizePolicy, QSpacerItem, QSpinBox, QStatusBar,
+    QTabWidget, QTableWidget, QTableWidgetItem, QTextEdit,
+    QToolButton, QTreeView, QVBoxLayout, QWidget)
 
 from .scispinbox import sciSpinBox
-
 
 class Ui_MainWindowDesign(object):
     def setupUi(self, MainWindowDesign):
@@ -35,7 +46,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_32.setObjectName(u"gridLayout_32")
         self.gridLayout_im = QGridLayout()
         self.gridLayout_im.setObjectName(u"gridLayout_im")
-        self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_im.addItem(self.verticalSpacer_5, 0, 0, 1, 1)
 
@@ -107,7 +118,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_4.addWidget(self.checkBox_lockMove, 0, 0, 1, 1)
 
-        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_4.addItem(self.horizontalSpacer_13, 0, 4, 1, 1)
 
@@ -134,7 +145,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_39.setObjectName(u"gridLayout_39")
         self.gridLayout_44 = QGridLayout()
         self.gridLayout_44.setObjectName(u"gridLayout_44")
-        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_44.addItem(self.horizontalSpacer_8, 0, 4, 1, 1)
 
@@ -173,13 +184,13 @@ class Ui_MainWindowDesign(object):
 
         self.tableWidget = QTableWidget(self.tab_fcs)
         self.tableWidget.setObjectName(u"tableWidget")
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tableWidget.sizePolicy().hasHeightForWidth())
         self.tableWidget.setSizePolicy(sizePolicy)
         font = QFont()
-        font.setFamily(u"MS Shell Dlg 2")
+        font.setFamilies([u"MS Shell Dlg 2"])
         font.setPointSize(8)
         self.tableWidget.setFont(font)
         self.tableWidget.setRowCount(0)
@@ -199,7 +210,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_40.setObjectName(u"gridLayout_40")
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_3)
 
@@ -270,7 +281,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout.addWidget(self.checkBox_updateStatus, 0, 0, 1, 1)
 
-        self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout.addItem(self.horizontalSpacer_11, 0, 1, 1, 1)
 
@@ -396,7 +407,7 @@ class Ui_MainWindowDesign(object):
         self.pushButton_stop = QPushButton(self.dockWidgetContents_8)
         self.pushButton_stop.setObjectName(u"pushButton_stop")
         self.pushButton_stop.setEnabled(False)
-        sizePolicy1 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
@@ -408,7 +419,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_15.addLayout(self.gridLayout_55, 0, 1, 1, 1)
 
         self.dockWidget_preview.setWidget(self.dockWidgetContents_8)
-        MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_preview)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_preview)
         self.dockWidget_temporal = QDockWidget(MainWindowDesign)
         self.dockWidget_temporal.setObjectName(u"dockWidget_temporal")
         self.dockWidget_temporal.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -498,7 +509,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_9.addLayout(self.gridLayout_8, 0, 0, 1, 1)
 
         self.dockWidget_temporal.setWidget(self.dockWidgetContents_3)
-        MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_temporal)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_temporal)
         self.dockWidget_2 = QDockWidget(MainWindowDesign)
         self.dockWidget_2.setObjectName(u"dockWidget_2")
         self.dockWidget_2.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -506,7 +517,7 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_2.setObjectName(u"dockWidgetContents_2")
         self.gridLayout_6 = QGridLayout(self.dockWidgetContents_2)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_6.addItem(self.verticalSpacer, 4, 0, 1, 1)
 
@@ -609,7 +620,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_6.addLayout(self.gridLayout_5, 0, 0, 1, 1)
 
         self.dockWidget_2.setWidget(self.dockWidgetContents_2)
-        MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_2)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_2)
         self.dockWidget_fingerprint = QDockWidget(MainWindowDesign)
         self.dockWidget_fingerprint.setObjectName(u"dockWidget_fingerprint")
         self.dockWidget_fingerprint.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -645,7 +656,7 @@ class Ui_MainWindowDesign(object):
         self.comboBox_fingerprint.addItem("")
         self.comboBox_fingerprint.addItem("")
         self.comboBox_fingerprint.setObjectName(u"comboBox_fingerprint")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.comboBox_fingerprint.sizePolicy().hasHeightForWidth())
@@ -665,7 +676,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_47.addWidget(self.checkBox_autoscale_fingerprint, 2, 4, 1, 2)
 
-        self.verticalSpacer_15 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_15 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_47.addItem(self.verticalSpacer_15, 3, 4, 1, 1)
 
@@ -680,7 +691,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_12.addWidget(self.scrollArea_6, 0, 0, 1, 1)
 
         self.dockWidget_fingerprint.setWidget(self.dockWidgetContents_5)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_fingerprint)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_fingerprint)
         self.dockWidget_trace = QDockWidget(MainWindowDesign)
         self.dockWidget_trace.setObjectName(u"dockWidget_trace")
         self.dockWidget_trace.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -694,7 +705,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_19.addLayout(self.gridLayout_trace, 0, 0, 1, 1)
 
         self.dockWidget_trace.setWidget(self.dockWidgetContents_19)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_trace)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_trace)
         self.dockWidget_statistics = QDockWidget(MainWindowDesign)
         self.dockWidget_statistics.setObjectName(u"dockWidget_statistics")
         self.dockWidget_statistics.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -707,7 +718,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_13.setSizeConstraint(QLayout.SetMinimumSize)
         self.progressBar_repetition = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_repetition.setObjectName(u"progressBar_repetition")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.progressBar_repetition.sizePolicy().hasHeightForWidth())
@@ -827,7 +838,7 @@ class Ui_MainWindowDesign(object):
 
         self.label_tot_num_dat_point = QLabel(self.dockWidgetContents_6)
         self.label_tot_num_dat_point.setObjectName(u"label_tot_num_dat_point")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.label_tot_num_dat_point.sizePolicy().hasHeightForWidth())
@@ -865,12 +876,12 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_14.addLayout(self.gridLayout_13, 4, 0, 1, 1)
 
-        self.verticalSpacer_13 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_13 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_14.addItem(self.verticalSpacer_13, 5, 0, 1, 1)
 
         self.dockWidget_statistics.setWidget(self.dockWidgetContents_6)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_statistics)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_statistics)
         self.statusBar = QStatusBar(MainWindowDesign)
         self.statusBar.setObjectName(u"statusBar")
         MainWindowDesign.setStatusBar(self.statusBar)
@@ -881,7 +892,7 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_9.setObjectName(u"dockWidgetContents_9")
         self.gridLayout_17 = QGridLayout(self.dockWidgetContents_9)
         self.gridLayout_17.setObjectName(u"gridLayout_17")
-        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_17.addItem(self.verticalSpacer_3, 15, 0, 1, 1)
 
@@ -1015,7 +1026,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_18.addWidget(self.label_25, 0, 7, 1, 1)
 
-        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_18.addItem(self.horizontalSpacer_7, 1, 5, 1, 1)
 
@@ -1024,7 +1035,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_18.addWidget(self.label_22, 2, 6, 1, 1)
 
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_18.addItem(self.horizontalSpacer_4, 0, 9, 1, 1)
 
@@ -1099,7 +1110,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_17.addWidget(self.groupBox, 3, 0, 2, 1)
 
         self.dockWidget_pos.setWidget(self.dockWidgetContents_9)
-        MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_pos)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_pos)
         self.dockWidget_activatefifo = QDockWidget(MainWindowDesign)
         self.dockWidget_activatefifo.setObjectName(u"dockWidget_activatefifo")
         self.dockWidget_activatefifo.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -1182,7 +1193,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_20.addWidget(self.checkBox_circular, 0, 0, 1, 3)
 
-        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_20.addItem(self.horizontalSpacer_14, 2, 2, 1, 1)
 
@@ -1216,7 +1227,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_27.addWidget(self.groupBox_2, 4, 2, 1, 1)
 
         self.dockWidget_activatefifo.setWidget(self.dockWidgetContents_4)
-        MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_activatefifo)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_activatefifo)
         self.dockWidget_laser = QDockWidget(MainWindowDesign)
         self.dockWidget_laser.setObjectName(u"dockWidget_laser")
         sizePolicy4.setHeightForWidth(self.dockWidget_laser.sizePolicy().hasHeightForWidth())
@@ -1337,7 +1348,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_42.addWidget(self.groupBox_6, 2, 0, 1, 1)
 
         self.dockWidget_laser.setWidget(self.dockWidgetContents_13)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_laser)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_laser)
         self.dockWidget_adv = QDockWidget(MainWindowDesign)
         self.dockWidget_adv.setObjectName(u"dockWidget_adv")
         self.dockWidget_adv.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -1460,7 +1471,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_24.addWidget(self.label_65, 5, 0, 1, 1)
 
-        self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_24.addItem(self.verticalSpacer_7, 8, 1, 1, 1)
 
@@ -1484,7 +1495,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_59.addWidget(self.label_94, 1, 0, 1, 1)
 
-        self.verticalSpacer_12 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_12 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_59.addItem(self.verticalSpacer_12, 3, 1, 1, 1)
 
@@ -1576,7 +1587,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_33.addWidget(self.label_54, 2, 2, 1, 1)
 
-        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_33.addItem(self.horizontalSpacer_9, 1, 3, 1, 1)
 
@@ -1632,7 +1643,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_43.addLayout(self.gridLayout_33, 0, 0, 1, 1)
 
-        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_43.addItem(self.verticalSpacer_6, 1, 0, 1, 1)
 
@@ -1687,7 +1698,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_25.addWidget(self.label_34, 2, 2, 1, 1)
 
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_25.addItem(self.horizontalSpacer_5, 2, 3, 1, 1)
 
@@ -1781,7 +1792,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_26.addWidget(self.spinBox_min_y_V, 2, 1, 1, 1)
 
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_26.addItem(self.horizontalSpacer_6, 2, 3, 1, 1)
 
@@ -1793,7 +1804,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_45.addWidget(self.label_37, 2, 0, 1, 1)
 
-        self.verticalSpacer_8 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_8 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_45.addItem(self.verticalSpacer_8, 4, 0, 1, 1)
 
@@ -1812,7 +1823,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_58.addWidget(self.lineEdit_externalProgram, 0, 1, 1, 1)
 
-        self.verticalSpacer_11 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_11 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_58.addItem(self.verticalSpacer_11, 1, 0, 1, 1)
 
@@ -1821,7 +1832,7 @@ class Ui_MainWindowDesign(object):
         self.tab_12.setObjectName(u"tab_12")
         self.gridLayout_73 = QGridLayout(self.tab_12)
         self.gridLayout_73.setObjectName(u"gridLayout_73")
-        self.verticalSpacer_10 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_10 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_73.addItem(self.verticalSpacer_10, 3, 0, 1, 1)
 
@@ -1932,7 +1943,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_21.addWidget(self.label_7, 0, 0, 1, 1)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_21.addItem(self.horizontalSpacer_2, 2, 3, 1, 1)
 
@@ -2008,14 +2019,14 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_16.addWidget(self.spinBox_calib_y, 1, 1, 1, 1)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_16.addItem(self.horizontalSpacer, 0, 3, 1, 1)
 
 
         self.gridLayout_46.addLayout(self.gridLayout_16, 1, 0, 1, 1)
 
-        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_46.addItem(self.verticalSpacer_4, 4, 0, 1, 1)
 
@@ -2134,7 +2145,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_52.addWidget(self.label_64, 1, 0, 1, 1)
 
-        self.verticalSpacer_9 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_9 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_52.addItem(self.verticalSpacer_9, 9, 0, 1, 1)
 
@@ -2216,7 +2227,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_37.addWidget(self.scrollArea_2, 0, 0, 1, 1)
 
         self.dockWidget_adv.setWidget(self.dockWidgetContents_15)
-        MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_adv)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_adv)
         self.dockWidget_debug = QDockWidget(MainWindowDesign)
         self.dockWidget_debug.setObjectName(u"dockWidget_debug")
         self.dockWidgetContents = QWidget()
@@ -2236,7 +2247,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_67.addWidget(self.checkBox_correlationMatrix, 1, 0, 1, 1)
 
-        self.verticalSpacer_16 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_16 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_67.addItem(self.verticalSpacer_16, 6, 0, 1, 1)
 
@@ -2323,7 +2334,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_38.addWidget(self.scrollArea_5, 0, 0, 1, 1)
 
         self.dockWidget_debug.setWidget(self.dockWidgetContents)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_debug)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_debug)
         self.dockWidget_panorama = QDockWidget(MainWindowDesign)
         self.dockWidget_panorama.setObjectName(u"dockWidget_panorama")
         self.dockWidget_panorama.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -2342,7 +2353,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_3.addWidget(self.pushButton_grabPanorama, 1, 0, 1, 1)
 
         self.dockWidget_panorama.setWidget(self.dockWidgetContents_7)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_panorama)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_panorama)
         self.dockWidget_filename = QDockWidget(MainWindowDesign)
         self.dockWidget_filename.setObjectName(u"dockWidget_filename")
         self.dockWidget_filename.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -2396,7 +2407,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_51.addWidget(self.lineEdit_comment, 1, 0, 1, 1)
 
         self.dockWidget_filename.setWidget(self.dockWidgetContents_11)
-        MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_filename)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_filename)
         self.dockWidget_listfile = QDockWidget(MainWindowDesign)
         self.dockWidget_listfile.setObjectName(u"dockWidget_listfile")
         self.dockWidget_listfile.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -2411,7 +2422,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_49.addWidget(self.listWidget, 0, 0, 1, 3)
 
-        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_49.addItem(self.horizontalSpacer_12, 1, 0, 1, 1)
 
@@ -2426,7 +2437,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_49.addWidget(self.pushButton_17, 1, 1, 1, 1)
 
         self.dockWidget_listfile.setWidget(self.dockWidgetContents_12)
-        MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_listfile)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_listfile)
         self.dockWidget_AnalogCfg = QDockWidget(MainWindowDesign)
         self.dockWidget_AnalogCfg.setObjectName(u"dockWidget_AnalogCfg")
         self.dockWidget_AnalogCfg.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -2585,7 +2596,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_53.addWidget(self.scrollArea, 0, 0, 1, 1)
 
         self.dockWidget_AnalogCfg.setWidget(self.dockWidgetContents_14)
-        MainWindowDesign.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_AnalogCfg)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_AnalogCfg)
         self.dockWidget_plugins = QDockWidget(MainWindowDesign)
         self.dockWidget_plugins.setObjectName(u"dockWidget_plugins")
         self.dockWidget_plugins.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -2606,7 +2617,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_66.addWidget(self.pushButton_loadPlugin, 1, 0, 1, 1)
 
-        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_66.addItem(self.horizontalSpacer_10, 1, 2, 1, 1)
 
@@ -2630,7 +2641,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_57.addWidget(self.scrollArea_4, 0, 0, 1, 1)
 
         self.dockWidget_plugins.setWidget(self.dockWidgetContents_17)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_plugins)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_plugins)
         self.dockWidget_analogOut = QDockWidget(MainWindowDesign)
         self.dockWidget_analogOut.setObjectName(u"dockWidget_analogOut")
         self.dockWidget_analogOut.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -2698,7 +2709,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_65.addLayout(self.gridLayout_AO, 0, 0, 1, 1)
 
-        self.verticalSpacer_14 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_14 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_65.addItem(self.verticalSpacer_14, 1, 0, 1, 1)
 
@@ -2707,7 +2718,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_60.addWidget(self.scrollArea_3, 0, 0, 1, 1)
 
         self.dockWidget_analogOut.setWidget(self.dockWidgetContents_18)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_analogOut)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_analogOut)
         self.dockWidget_traceConf = QDockWidget(MainWindowDesign)
         self.dockWidget_traceConf.setObjectName(u"dockWidget_traceConf")
         self.dockWidget_traceConf.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -2783,7 +2794,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_70.addLayout(self.gridLayout_62, 0, 0, 1, 1)
 
         self.dockWidget_traceConf.setWidget(self.dockWidgetContents_20)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_traceConf)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_traceConf)
         self.dockWidget_pluginImage = QDockWidget(MainWindowDesign)
         self.dockWidget_pluginImage.setObjectName(u"dockWidget_pluginImage")
         self.dockWidget_pluginImage.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
@@ -2797,7 +2808,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_71.addLayout(self.gridLayout_pluginImage, 0, 0, 1, 1)
 
         self.dockWidget_pluginImage.setWidget(self.dockWidgetContents_21)
-        MainWindowDesign.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_pluginImage)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_pluginImage)
         QWidget.setTabOrder(self.spinBox_waitForLaser, self.spinBox_time_bin_per_px)
         QWidget.setTabOrder(self.spinBox_time_bin_per_px, self.spinBox_timeresolution)
         QWidget.setTabOrder(self.spinBox_timeresolution, self.spinBox_waitAfterFrame)

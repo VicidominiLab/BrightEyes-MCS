@@ -2,7 +2,7 @@ import numpy as np
 import multiprocessing as mp
 #from UltraDict import UltraDict
 
-from PySide2.QtCore import QObject
+from PySide6.QtCore import QObject
 
 from ..libs.processes.data_pre_process import DataPreProcess
 from ..libs.processes.acquisition_loop_process import AcquisitionLoopProcess

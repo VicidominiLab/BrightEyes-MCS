@@ -1,9 +1,9 @@
-pyqtgraph~=0.12.3
-numpy~=1.24
-PySide2~=5.15.2
-setuptools~=68.2.2
-nifpga~=20.0.0
-Cython~=0.29.24
+pyqtgraph
+numpy
+PySide6
+setuptools
+nifpga
+Cython
 h5py
 scipy
 pyqtdarktheme

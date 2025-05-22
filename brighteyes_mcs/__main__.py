@@ -12,8 +12,8 @@ if __name__ == "__main__":
     os.chdir(path)
     print("Current Working Directory moved to ", os.getcwd())
 
-    from PySide2.QtWidgets import QApplication
-    from PySide2.QtCore import Qt
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import Qt
 
     # import qdarkstyle # fancy dark style
 
@@ -31,13 +31,12 @@ if __name__ == "__main__":
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-    qdarktheme.enable_hi_dpi()
 
     app = QApplication(sys.argv)
-    app.setAttribute(Qt.AA_EnableHighDpiScaling)
+    # app.setAttribute(Qt.Dpi)
     # app.setStyleSheet(qdarkstyle.load_stylesheet())
-
-    qdarktheme.setup_theme()
+    #qdarktheme.load_stylesheet()
+    qdarktheme.load_palette()
 
     window = MainWindow(sys.argv)
     window.show()
