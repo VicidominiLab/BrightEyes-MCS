@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # import qdarkstyle # fancy dark style
 
-    import qdarktheme
+    # import qdarktheme
 
     # import gui.MainWindow as MainWindow
     from .gui import MainWindow
@@ -32,11 +32,14 @@ if __name__ == "__main__":
 
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
+    sys.argv += ['-platform', 'windows:darkmode=2']
     app = QApplication(sys.argv)
+    app.setStyle('Fusion')
+
     # app.setAttribute(Qt.Dpi)
     # app.setStyleSheet(qdarkstyle.load_stylesheet())
     #qdarktheme.load_stylesheet()
-    qdarktheme.load_palette()
+    # qdarktheme.load_palette()
 
     window = MainWindow(sys.argv)
     window.show()
