@@ -441,11 +441,6 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_8.addWidget(self.label_time_bin_per_px, 2, 0, 1, 1)
 
-        self.label_dwell_time_val = QLabel(self.dockWidgetContents_3)
-        self.label_dwell_time_val.setObjectName(u"label_dwell_time_val")
-
-        self.gridLayout_8.addWidget(self.label_dwell_time_val, 1, 3, 1, 1)
-
         self.checkBox_waitOnlyFirstTime = QCheckBox(self.dockWidgetContents_3)
         self.checkBox_waitOnlyFirstTime.setObjectName(u"checkBox_waitOnlyFirstTime")
 
@@ -455,11 +450,6 @@ class Ui_MainWindowDesign(object):
         self.label_frame_time.setObjectName(u"label_frame_time")
 
         self.gridLayout_8.addWidget(self.label_frame_time, 3, 0, 1, 1)
-
-        self.label_dwell_time_2 = QLabel(self.dockWidgetContents_3)
-        self.label_dwell_time_2.setObjectName(u"label_dwell_time_2")
-
-        self.gridLayout_8.addWidget(self.label_dwell_time_2, 1, 2, 1, 1)
 
         self.spinBox_timeresolution = QDoubleSpinBox(self.dockWidgetContents_3)
         self.spinBox_timeresolution.setObjectName(u"spinBox_timeresolution")
@@ -504,6 +494,16 @@ class Ui_MainWindowDesign(object):
         self.spinBox_time_bin_per_px.setValue(10)
 
         self.gridLayout_8.addWidget(self.spinBox_time_bin_per_px, 2, 1, 1, 1)
+
+        self.label_dwell_time_2 = QLabel(self.dockWidgetContents_3)
+        self.label_dwell_time_2.setObjectName(u"label_dwell_time_2")
+
+        self.gridLayout_8.addWidget(self.label_dwell_time_2, 1, 2, 2, 1)
+
+        self.label_dwell_time_val = QLabel(self.dockWidgetContents_3)
+        self.label_dwell_time_val.setObjectName(u"label_dwell_time_val")
+
+        self.gridLayout_8.addWidget(self.label_dwell_time_val, 1, 3, 2, 1)
 
 
         self.gridLayout_9.addLayout(self.gridLayout_8, 0, 0, 1, 1)
@@ -3043,15 +3043,10 @@ class Ui_MainWindowDesign(object):
 #endif // QT_CONFIG(tooltip)
         self.label_time_bin_per_px.setText(QCoreApplication.translate("MainWindowDesign", u"Time bins per pixel", None))
 #if QT_CONFIG(tooltip)
-        self.label_dwell_time_val.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Pixel_dwell_time = time_resolution * time_bins_per_pixel</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.label_dwell_time_val.setText("")
-#if QT_CONFIG(tooltip)
         self.checkBox_waitOnlyFirstTime.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The delay laser is applied only the first acquisition and not each repetition.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_waitOnlyFirstTime.setText(QCoreApplication.translate("MainWindowDesign", u"Only First Time", None))
         self.label_frame_time.setText(QCoreApplication.translate("MainWindowDesign", u"Delay Laser [s]", None))
-        self.label_dwell_time_2.setText(QCoreApplication.translate("MainWindowDesign", u"Pixel dwell time [\u00b5s]", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_timeresolution.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The time resolution is the time duration of a single &quot;time bin&quot;.</p><p>Pixel_dwell_time = time_resolution * time_bins_per_pixel</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -3068,6 +3063,11 @@ class Ui_MainWindowDesign(object):
 #if QT_CONFIG(tooltip)
         self.spinBox_time_bin_per_px.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The number of bin in which the pixel is subdivided.</p><p>Pixel_dwell_time = time_resolution * time_bins_per_pixel</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
+        self.label_dwell_time_2.setText(QCoreApplication.translate("MainWindowDesign", u"Pixel dwell time [\u00b5s]", None))
+#if QT_CONFIG(tooltip)
+        self.label_dwell_time_val.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Pixel_dwell_time = time_resolution * time_bins_per_pixel</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_dwell_time_val.setText("")
         self.dockWidget_2.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Spatial settings", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_nrepetition.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Number of repetition</p></body></html>", None))

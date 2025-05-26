@@ -738,16 +738,6 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
-        <widget class="QLabel" name="label_dwell_time_val">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pixel_dwell_time = time_resolution * time_bins_per_pixel&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
        <item row="3" column="2">
         <widget class="QCheckBox" name="checkBox_waitOnlyFirstTime">
          <property name="toolTip">
@@ -762,13 +752,6 @@
         <widget class="QLabel" name="label_frame_time">
          <property name="text">
           <string>Delay Laser [s]</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QLabel" name="label_dwell_time_2">
-         <property name="text">
-          <string>Pixel dwell time [µs]</string>
          </property>
         </widget>
        </item>
@@ -848,6 +831,23 @@
          </property>
          <property name="value">
           <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2" rowspan="2">
+        <widget class="QLabel" name="label_dwell_time_2">
+         <property name="text">
+          <string>Pixel dwell time [µs]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3" rowspan="2">
+        <widget class="QLabel" name="label_dwell_time_val">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pixel_dwell_time = time_resolution * time_bins_per_pixel&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string/>
          </property>
         </widget>
        </item>

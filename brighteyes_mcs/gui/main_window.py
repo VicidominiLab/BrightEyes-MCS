@@ -2738,6 +2738,7 @@ class MainWindow(QMainWindow):
         else:
             self.markers_list_circular = []
             self.marker_plot_circular_scan.clear()
+            self.temporalSettingsChanged()
 
     def load_circular(self, ARRAY_SIZE=32):
         """
@@ -3420,8 +3421,13 @@ Have fun!
         """
         time_res = self.ui.spinBox_timeresolution.value()
         time_bin = self.ui.spinBox_time_bin_per_px.value()
-        circ_repetition = self.ui.spinBox_circular_repetition.value()
-        circ_points = self.ui.spinBox_circular_points.value()
+
+        if self.ui.checkBox_circular.isChecked():
+            circ_repetition = self.ui.spinBox_circular_repetition.value()
+            circ_points = self.ui.spinBox_circular_points.value()
+        else:
+            circ_repetition = 1
+            circ_points = 1
 
         clock_duration = time_bin * time_res * 20
         Cx = time_res * 40
@@ -3802,8 +3808,13 @@ Have fun!
 
             time_res = self.ui.spinBox_timeresolution.value()
             time_bin = self.ui.spinBox_time_bin_per_px.value()
-            circ_repetition = self.ui.spinBox_circular_repetition.value()
-            circ_points = self.ui.spinBox_circular_points.value()
+
+            if self.ui.checkBox_circular.isChecked():
+                circ_repetition = self.ui.spinBox_circular_repetition.value()
+                circ_points = self.ui.spinBox_circular_points.value()
+            else:
+                circ_repetition = 1
+                circ_points = 1
 
             clock_duration = time_bin * time_res * 20
             Cx = time_res * 40
@@ -4052,8 +4063,13 @@ Have fun!
 
         time_res = self.ui.spinBox_timeresolution.value()
         time_bin = self.ui.spinBox_time_bin_per_px.value()
-        circ_repetition = self.ui.spinBox_circular_repetition.value()
-        circ_points = self.ui.spinBox_circular_points.value()
+
+        if self.ui.checkBox_circular.isChecked():
+            circ_repetition = self.ui.spinBox_circular_repetition.value()
+            circ_points = self.ui.spinBox_circular_points.value()
+        else:
+            circ_repetition = 1
+            circ_points = 1
 
         clock_duration = time_bin * time_res * 20
         Cx = time_res * 40
