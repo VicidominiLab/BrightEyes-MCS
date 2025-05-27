@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (QDoubleSpinBox, QWidget, QMainWindow,
 
 
 import math
-from decimal import *
+from decimal import Decimal
 
 
 def eng_string(x, format="%0.3f", format_exp=None, si=False, decimal_sep="."):
