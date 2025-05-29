@@ -36,6 +36,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
 
+    app.styleHints().setColorScheme(Qt.ColorScheme.Dark)
+
     # app.setAttribute(Qt.Dpi)
     # app.setStyleSheet(qdarkstyle.load_stylesheet())
     #qdarktheme.load_stylesheet()

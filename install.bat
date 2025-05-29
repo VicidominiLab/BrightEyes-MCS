@@ -53,14 +53,14 @@ set "SelectedPython=!SelectedPython!"
 echo Selected Python installation: %SelectedPython%
 
 echo:
-echo Generating the new venv environment in the folder venv\
+echo Generating the new venv environment in the folder .venv\
 echo:
-"%SelectedPython%" -m venv venv
+"%SelectedPython%" -m venv .venv
 echo:
 echo:
 echo Activate the venv
 echo:
-call venv\Scripts\activate
+call .venv\Scripts\activate
 echo:
 echo Installing the pip requirements
 echo:
