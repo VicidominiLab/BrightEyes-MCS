@@ -6,7 +6,7 @@ plugin_manager.addTab(context["widget"], "myplugin")
 """
 
 from .plugin_form import myForm
-from PySide2.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget
 
 
 def load_plugin(plugin_manager=None, context={}):

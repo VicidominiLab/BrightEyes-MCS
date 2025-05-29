@@ -9,7 +9,7 @@ from pyqtgraph import exporters
 import json
 import numpy as np
 
-from PySide2.QtCore import (
+from PySide6.QtCore import (
     Signal,
     QIODevice,
     QBuffer,

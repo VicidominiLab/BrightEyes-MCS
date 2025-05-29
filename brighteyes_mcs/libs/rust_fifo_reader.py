@@ -4,7 +4,7 @@ from .print_dec import print_dec
 
 
 class RustFastFifoReader:
-    def __init__(self, bitfile, list_fifo, chunk=2, requested_depth=10000, nifpga_addr="RIO0"):
+    def __init__(self, bitfile, list_fifo, chunk=2, requested_depth=10000, nifpga_addr="RIO0", delay_us=1):
         self.fast_fifo_recv_inst = {}
         print_dec(list_fifo)
 
@@ -34,6 +34,7 @@ class RustFastFifoReader:
                 "dma_buffer_size" : dma_buffer_size,
                 "fifo_reading_buffer" : fifo_buffer_size,
                 "min_packet" : chunk,
+                "delay_us" : delay_us,
                 "debug" : False
                 }
 
@@ -49,6 +50,7 @@ class RustFastFifoReader:
                 dma_buffer_size=dma_buffer_size,
                 fifo_reading_buffer=fifo_buffer_size,
                 min_packet=chunk,
+                #delay_us=delay_us,
                 debug=False
             )
             print("RUST: %s" % fifo, self.fast_fifo_recv_inst[fifo].get_conf())

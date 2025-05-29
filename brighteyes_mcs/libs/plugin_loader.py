@@ -1,7 +1,7 @@
 from .print_dec import print_dec
 from os import listdir
 from os.path import isfile, join, isdir
-from PySide2.QtCore import Slot
+from PySide6.QtCore import Slot
 
 
 class PluginsManager:

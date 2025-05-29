@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1623</width>
+    <width>1637</width>
     <height>1838</height>
    </rect>
   </property>
@@ -35,7 +35,7 @@
             <item row="0" column="0">
              <spacer name="verticalSpacer_5">
               <property name="orientation">
-               <enum>Qt::Vertical</enum>
+               <enum>Qt::Orientation::Vertical</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -265,7 +265,7 @@
               <item row="0" column="4">
                <spacer name="horizontalSpacer_13">
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -305,7 +305,7 @@
             <item row="0" column="4">
              <spacer name="horizontalSpacer_8">
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -390,7 +390,7 @@
           <item row="4" column="0">
            <layout class="QGridLayout" name="gridLayout_FCS">
             <property name="sizeConstraint">
-             <enum>QLayout::SetMaximumSize</enum>
+             <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
             </property>
            </layout>
           </item>
@@ -401,7 +401,7 @@
               <item>
                <spacer name="horizontalSpacer_3">
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -507,7 +507,7 @@
           <item row="0" column="1">
            <spacer name="horizontalSpacer_11">
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -584,7 +584,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_preview">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Commands</string>
@@ -706,7 +706,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_temporal">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Temporal settings</string>
@@ -718,37 +718,16 @@
     <layout class="QGridLayout" name="gridLayout_9">
      <item row="0" column="0">
       <layout class="QGridLayout" name="gridLayout_8">
-       <item row="5" column="1">
-        <widget class="QDoubleSpinBox" name="spinBox_waitForLaser">
+       <item row="4" column="1">
+        <widget class="QDoubleSpinBox" name="spinBox_waitAfterFrame">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser is turned on and before the scanning a &amp;quot;delay laser&amp;quot; is waited. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delay betweent two repetition in second.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="keyboardTracking">
           <bool>false</bool>
          </property>
          <property name="maximum">
           <double>3600000.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="0">
-        <widget class="QLabel" name="label_29">
-         <property name="text">
-          <string>Turn OFF Laser between rep.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0">
-        <widget class="QLabel" name="label_frame_time_2">
-         <property name="text">
-          <string>Delay between rep. [s]</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_dwell_time_2">
-         <property name="text">
-          <string>Pixel dwell time [µs]</string>
          </property>
         </widget>
        </item>
@@ -759,34 +738,7 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_frame_time">
-         <property name="text">
-          <string>Delay Laser [s]</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="1">
-        <widget class="QCheckBox" name="checkBox_laserOffAfterMeas">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If activated between two repetition the laser is switched off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_timeresolution">
-         <property name="text">
-          <string>Time Resolution [us]</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="2">
+       <item row="3" column="2">
         <widget class="QCheckBox" name="checkBox_waitOnlyFirstTime">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The delay laser is applied only the first acquisition and not each repetition.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -796,23 +748,14 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1" colspan="2">
-        <widget class="QSpinBox" name="spinBox_time_bin_per_px">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of bin in which the pixel is subdivided.&lt;/p&gt;&lt;p&gt;Pixel_dwell_time = time_resolution * time_bins_per_pixel&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="keyboardTracking">
-          <bool>false</bool>
-         </property>
-         <property name="maximum">
-          <number>100000</number>
-         </property>
-         <property name="value">
-          <number>10</number>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_frame_time">
+         <property name="text">
+          <string>Delay Laser [s]</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1" colspan="2">
+       <item row="1" column="1">
         <widget class="QDoubleSpinBox" name="spinBox_timeresolution">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The time resolution is the time duration of a single &amp;quot;time bin&amp;quot;.&lt;/p&gt;&lt;p&gt;Pixel_dwell_time = time_resolution * time_bins_per_pixel&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -828,20 +771,10 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1" colspan="2">
-        <widget class="QLabel" name="label_dwell_time_val">
+       <item row="3" column="1">
+        <widget class="QDoubleSpinBox" name="spinBox_waitForLaser">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pixel_dwell_time = time_resolution * time_bins_per_pixel&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="1" colspan="2">
-        <widget class="QDoubleSpinBox" name="spinBox_waitAfterFrame">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delay betweent two repetition in second.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser is turned on and before the scanning a &amp;quot;delay laser&amp;quot; is waited. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="keyboardTracking">
           <bool>false</bool>
@@ -851,30 +784,81 @@
          </property>
         </widget>
        </item>
+       <item row="4" column="2">
+        <widget class="QLabel" name="label_29">
+         <property name="text">
+          <string>Turn OFF Laser bw. rep.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_frame_time_2">
+         <property name="text">
+          <string>Delay between rep. [s]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_timeresolution">
+         <property name="text">
+          <string>Time Resolution [us]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
+        <widget class="QCheckBox" name="checkBox_laserOffAfterMeas">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If activated between two repetition the laser is switched off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QSpinBox" name="spinBox_time_bin_per_px">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of bin in which the pixel is subdivided.&lt;/p&gt;&lt;p&gt;Pixel_dwell_time = time_resolution * time_bins_per_pixel&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="maximum">
+          <number>100000</number>
+         </property>
+         <property name="value">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2" rowspan="2">
+        <widget class="QLabel" name="label_dwell_time_2">
+         <property name="text">
+          <string>Pixel dwell time [µs]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3" rowspan="2">
+        <widget class="QLabel" name="label_dwell_time_val">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pixel_dwell_time = time_resolution * time_bins_per_pixel&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
       </layout>
-     </item>
-     <item row="1" column="0">
-      <spacer name="verticalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="3" column="0">
-      <layout class="QVBoxLayout" name="verticalLayout"/>
      </item>
     </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockWidget_2">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Spatial settings</string>
@@ -884,97 +868,11 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
     <layout class="QGridLayout" name="gridLayout_6">
-     <item row="4" column="0">
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="2" column="0">
-      <layout class="QGridLayout" name="gridLayout_7"/>
-     </item>
      <item row="0" column="0">
       <layout class="QGridLayout" name="gridLayout_5">
        <property name="sizeConstraint">
-        <enum>QLayout::SetMinimumSize</enum>
+        <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
        </property>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_nx">
-         <property name="text">
-          <string>N. of pixel X</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_ny">
-         <property name="text">
-          <string>N. of pixel Y</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_nrepetition">
-         <property name="text">
-          <string>N. of repetition</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="spinBox_nframe">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of pixel along Z&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>999999999</number>
-         </property>
-         <property name="value">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QSpinBox" name="spinBox_nx">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of pixel along X&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>999999999</number>
-         </property>
-         <property name="value">
-          <number>512</number>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QPushButton" name="pushButton_18">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this button each time you modified the number of pixel (X,Y,Z)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Update View</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_nframe">
-         <property name="text">
-          <string>N. of pixel Z</string>
-         </property>
-        </widget>
-       </item>
        <item row="3" column="1">
         <widget class="QSpinBox" name="spinBox_nrepetition">
          <property name="toolTip">
@@ -1007,38 +905,47 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="3">
-        <widget class="QLabel" name="label_pixelsize_x">
-         <property name="text">
-          <string>0.0 µm</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="2">
-        <widget class="QLabel" name="label_101">
-         <property name="text">
-          <string>Z pixel size</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="QLabel" name="label_pixelsize_y">
-         <property name="text">
-          <string>0.0 µm</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="3">
-        <widget class="QLabel" name="label_pixelsize_z">
-         <property name="text">
-          <string>0.0 µm</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="2">
         <widget class="QLabel" name="label_104">
          <property name="text">
           <string>Y pixel size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_nframe">
+         <property name="text">
+          <string>N. of pixel Z</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QSpinBox" name="spinBox_nframe">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of pixel along Z&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>999999999</number>
+         </property>
+         <property name="value">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_ny">
+         <property name="text">
+          <string>N. of pixel Y</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_nx">
+         <property name="text">
+          <string>N. of pixel X</string>
          </property>
         </widget>
        </item>
@@ -1049,6 +956,67 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="3">
+        <widget class="QLabel" name="label_pixelsize_z">
+         <property name="text">
+          <string>0.0 µm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLabel" name="label_pixelsize_x">
+         <property name="text">
+          <string>0.0 µm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_nrepetition">
+         <property name="text">
+          <string>N. of repetition</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLabel" name="label_101">
+         <property name="text">
+          <string>Z pixel size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QSpinBox" name="spinBox_nx">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of pixel along X&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>999999999</number>
+         </property>
+         <property name="value">
+          <number>512</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLabel" name="label_pixelsize_y">
+         <property name="text">
+          <string>0.0 µm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2" colspan="2">
+        <widget class="QPushButton" name="pushButton_18">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this button each time you modified the number of pixel (X,Y,Z)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Update View</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
     </layout>
@@ -1056,7 +1024,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_fingerprint">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Micro image</string>
@@ -1076,15 +1044,15 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>342</width>
-          <height>168</height>
+          <width>366</width>
+          <height>155</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_68">
          <item row="0" column="0">
           <layout class="QGridLayout" name="gridLayout_3434">
            <property name="sizeConstraint">
-            <enum>QLayout::SetMinimumSize</enum>
+            <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
            </property>
            <item row="0" column="0">
             <layout class="QGridLayout" name="gridLayout_47">
@@ -1107,7 +1075,7 @@
                 </sizepolicy>
                </property>
                <property name="sizeAdjustPolicy">
-                <enum>QComboBox::AdjustToContents</enum>
+                <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
                </property>
                <item>
                 <property name="text">
@@ -1146,7 +1114,7 @@
              <item row="3" column="4">
               <spacer name="verticalSpacer_15">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -1169,7 +1137,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_trace">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Trace</string>
@@ -1187,7 +1155,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_statistics">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Statistics</string>
@@ -1200,7 +1168,7 @@
      <item row="4" column="0">
       <layout class="QGridLayout" name="gridLayout_13">
        <property name="sizeConstraint">
-        <enum>QLayout::SetMinimumSize</enum>
+        <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
        </property>
        <item row="9" column="2" colspan="10">
         <widget class="QProgressBar" name="progressBar_repetition">
@@ -1240,7 +1208,7 @@
           <string>0</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1250,7 +1218,7 @@
           <string>Frame Duration  [s]</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1267,7 +1235,7 @@
           <string>0</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1324,7 +1292,7 @@
           <string>0</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1353,7 +1321,7 @@
           <string>0</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1370,7 +1338,7 @@
           <string>Expected Total Time [s]</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1413,7 +1381,7 @@
           <string>Visualization delay [s]</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1429,7 +1397,7 @@
           <string>Raw data</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1439,7 +1407,7 @@
           <string>Time [s]</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1449,7 +1417,7 @@
           <string>0</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1459,7 +1427,7 @@
           <string>0</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1475,7 +1443,7 @@
           <string>0</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -1484,7 +1452,7 @@
      <item row="5" column="0">
       <spacer name="verticalSpacer_13">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -1500,7 +1468,7 @@
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="dockWidget_pos">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Position</string>
@@ -1510,19 +1478,6 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_9">
     <layout class="QGridLayout" name="gridLayout_17">
-     <item row="15" column="0">
-      <spacer name="verticalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item row="10" column="0">
       <layout class="QHBoxLayout" name="horizontalLayout"/>
      </item>
@@ -1748,7 +1703,7 @@
        <item row="1" column="5">
         <spacer name="horizontalSpacer_7">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -1768,7 +1723,7 @@
        <item row="0" column="9">
         <spacer name="horizontalSpacer_4">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -1789,68 +1744,6 @@
         </widget>
        </item>
       </layout>
-     </item>
-     <item row="4" column="3">
-      <widget class="QPushButton" name="pushButton_15">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Move the offset to the position on the row selected on the table below &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>Move to selected row</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="0" colspan="5">
-      <widget class="QTableWidget" name="tableWidget_markers">
-       <property name="font">
-        <font>
-         <family>MS Shell Dlg 2</family>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Table of position selected on the image. To add a point double-click on the image.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="columnCount">
-        <number>4</number>
-       </property>
-       <attribute name="horizontalHeaderMinimumSectionSize">
-        <number>10</number>
-       </attribute>
-       <attribute name="verticalHeaderMinimumSectionSize">
-        <number>10</number>
-       </attribute>
-       <attribute name="verticalHeaderDefaultSectionSize">
-        <number>10</number>
-       </attribute>
-       <column>
-        <property name="text">
-         <string>X</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Y</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Z</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Comments</string>
-        </property>
-       </column>
-      </widget>
-     </item>
-     <item row="3" column="3">
-      <widget class="QPushButton" name="pushButton_Panorama">
-       <property name="text">
-        <string>Move to Default FOV</string>
-       </property>
-      </widget>
      </item>
      <item row="3" column="0" rowspan="2">
       <widget class="QGroupBox" name="groupBox">
@@ -1929,12 +1822,100 @@
        </layout>
       </widget>
      </item>
+     <item row="15" column="0">
+      <spacer name="verticalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="7" column="0" colspan="5">
+      <widget class="QTableWidget" name="tableWidget_markers">
+       <property name="font">
+        <font>
+         <family>MS Shell Dlg 2</family>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Table of position selected on the image. To add a point double-click on the image.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="columnCount">
+        <number>4</number>
+       </property>
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>10</number>
+       </attribute>
+       <attribute name="verticalHeaderMinimumSectionSize">
+        <number>10</number>
+       </attribute>
+       <attribute name="verticalHeaderDefaultSectionSize">
+        <number>10</number>
+       </attribute>
+       <column>
+        <property name="text">
+         <string>X</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Y</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Z</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Comments</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item row="11" column="1">
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="4" column="1">
+      <widget class="QPushButton" name="pushButton_15">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Move the offset to the position on the row selected on the table below &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Move to selected row</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QPushButton" name="pushButton_Panorama">
+       <property name="text">
+        <string>Move to Default FOV</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockWidget_activatefifo">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Adv.</string>
@@ -1946,19 +1927,6 @@
     <layout class="QGridLayout" name="gridLayout_27">
      <item row="4" column="1">
       <layout class="QGridLayout" name="gridLayout_28">
-       <item row="0" column="1" colspan="2">
-        <widget class="QCheckBox" name="checkBox_showPreview">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Show Image Preview</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="1" colspan="2">
         <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
          <property name="toolTip">
@@ -1972,13 +1940,6 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="label_35">
-         <property name="text">
-          <string>SPAD Channels</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="1" colspan="2">
         <widget class="QCheckBox" name="checkBox_snake">
          <property name="toolTip">
@@ -1989,7 +1950,7 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="2">
+       <item row="4" column="2">
         <widget class="QComboBox" name="comboBox_channels">
          <item>
           <property name="text">
@@ -2003,6 +1964,43 @@
          </item>
         </widget>
        </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QCheckBox" name="checkBox_showPreview">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Show Image Preview</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLabel" name="label_35">
+         <property name="text">
+          <string>SPAD Channels</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QSpinBox" name="spinBox_DFD_nbins">
+         <property name="maximum">
+          <number>1023</number>
+         </property>
+         <property name="value">
+          <number>81</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_111">
+         <property name="text">
+          <string>DFD N. Bins</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item row="4" column="2">
@@ -2011,23 +2009,56 @@
         <string>Circular Motion</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_20">
-        <item row="2" column="1">
-         <widget class="QSpinBox" name="spinBox_circular_points">
+        <item row="4" column="1">
+         <widget class="sciSpinBox" name="spinBox_circular_radius_nm">
+          <property name="toolTip">
+           <string>X position µm</string>
+          </property>
+          <property name="keyboardTracking">
+           <bool>false</bool>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="minimum">
-           <number>1</number>
+           <double>-1000000.000000000000000</double>
           </property>
           <property name="maximum">
-           <number>32</number>
+           <double>1000000.000000000000000</double>
           </property>
           <property name="value">
-           <number>32</number>
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QLabel" name="label_109">
+          <property name="text">
+           <string>[nm]</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_108">
+          <property name="text">
+           <string>Radius</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="3">
+         <widget class="QCheckBox" name="checkBox_circular">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Activate</string>
           </property>
          </widget>
         </item>
         <item row="2" column="2">
          <spacer name="horizontalSpacer_14">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
@@ -2044,13 +2075,36 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="0" colspan="3">
-         <widget class="QCheckBox" name="checkBox_circular">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <item row="2" column="1">
+         <widget class="QSpinBox" name="spinBox_circular_points">
+          <property name="minimum">
+           <number>1</number>
           </property>
+          <property name="maximum">
+           <number>32</number>
+          </property>
+          <property name="value">
+           <number>1</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_110">
           <property name="text">
-           <string>Activate</string>
+           <string>Repetition</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QSpinBox" name="spinBox_circular_repetition">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>32</number>
+          </property>
+          <property name="value">
+           <number>1</number>
           </property>
          </widget>
         </item>
@@ -2061,6 +2115,12 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockWidget_laser">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="windowTitle">
     <string>Laser configuration</string>
    </property>
@@ -2070,46 +2130,285 @@
    <widget class="QWidget" name="dockWidgetContents_13">
     <layout class="QGridLayout" name="gridLayout_42">
      <item row="0" column="0">
-      <layout class="QGridLayout" name="gridLayout_41">
-       <item row="1" column="0">
-        <widget class="QCheckBox" name="checkBox_laser2">
-         <property name="text">
-          <string>Laser 2</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="checkBox_laser0">
-         <property name="text">
-          <string>Laser 0</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QCheckBox" name="checkBox_laser1">
-         <property name="text">
-          <string>Laser 1</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QCheckBox" name="checkBox_laser3">
-         <property name="text">
-          <string>Laser 3</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QGroupBox" name="groupBox_3">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="title">
+        <string>Activate</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_75">
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="checkBox_laser0">
+          <property name="text">
+           <string>L1</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QCheckBox" name="checkBox_laser3">
+          <property name="text">
+           <string>L4</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="checkBox_laser1">
+          <property name="text">
+           <string>L2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QCheckBox" name="checkBox_laser2">
+          <property name="text">
+           <string>L3</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QGroupBox" name="groupBox_6">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="title">
+        <string>Sequence</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_41">
+        <item row="0" column="2">
+         <widget class="QComboBox" name="comboLaserSeq_3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <item>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QComboBox" name="comboLaserSeq_5">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <item>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QComboBox" name="comboLaserSeq_1">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QComboBox" name="comboLaserSeq_4">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <item>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="comboLaserSeq_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <item>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="0" column="5">
+         <widget class="QComboBox" name="comboLaserSeq_6">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <item>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </item>
     </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockWidget_adv">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Adv.</string>
@@ -2129,15 +2428,15 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>384</width>
-          <height>291</height>
+          <width>400</width>
+          <height>316</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_64">
          <item row="0" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
            <property name="currentIndex">
-            <number>6</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="tab_2">
             <attribute name="title">
@@ -2294,7 +2593,7 @@
                <item row="8" column="1">
                 <spacer name="verticalSpacer_7">
                  <property name="orientation">
-                  <enum>Qt::Vertical</enum>
+                  <enum>Qt::Orientation::Vertical</enum>
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
@@ -2332,7 +2631,7 @@
                <item row="3" column="1">
                 <spacer name="verticalSpacer_12">
                  <property name="orientation">
-                  <enum>Qt::Vertical</enum>
+                  <enum>Qt::Orientation::Vertical</enum>
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
@@ -2466,7 +2765,7 @@
                <item row="1" column="3">
                 <spacer name="horizontalSpacer_9">
                  <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                  <enum>Qt::Orientation::Horizontal</enum>
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
@@ -2550,7 +2849,7 @@
              <item row="1" column="0">
               <spacer name="verticalSpacer_6">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -2634,7 +2933,7 @@
                <item row="2" column="3">
                 <spacer name="horizontalSpacer_5">
                  <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                  <enum>Qt::Orientation::Horizontal</enum>
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
@@ -2781,7 +3080,7 @@
                <item row="2" column="3">
                 <spacer name="horizontalSpacer_6">
                  <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                  <enum>Qt::Orientation::Horizontal</enum>
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
@@ -2803,7 +3102,7 @@
              <item row="4" column="0">
               <spacer name="verticalSpacer_8">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -2837,7 +3136,7 @@
              <item row="1" column="0">
               <spacer name="verticalSpacer_11">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -2857,7 +3156,7 @@
              <item row="3" column="0">
               <spacer name="verticalSpacer_10">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -3023,7 +3322,7 @@
                <item row="2" column="3">
                 <spacer name="horizontalSpacer_2">
                  <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                  <enum>Qt::Orientation::Horizontal</enum>
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
@@ -3144,7 +3443,7 @@
                <item row="0" column="3">
                 <spacer name="horizontalSpacer">
                  <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                  <enum>Qt::Orientation::Horizontal</enum>
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
@@ -3159,7 +3458,7 @@
              <item row="4" column="0">
               <spacer name="verticalSpacer_4">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -3184,7 +3483,7 @@
                   <string>127.0.0.1</string>
                  </property>
                  <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                  </property>
                 </widget>
                </item>
@@ -3341,7 +3640,7 @@
              <item row="9" column="0">
               <spacer name="verticalSpacer_9">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -3478,8 +3777,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>342</width>
-          <height>355</height>
+          <width>366</width>
+          <height>335</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_67">
@@ -3493,7 +3792,7 @@
          <item row="6" column="0">
           <spacer name="verticalSpacer_16">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -3516,7 +3815,7 @@
             <string>0t</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -3617,7 +3916,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_panorama">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Panorama</string>
@@ -3642,7 +3941,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_filename">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>File</string>
@@ -3728,7 +4027,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_listfile">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>List File</string>
@@ -3744,7 +4043,7 @@
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The list of the saved files&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::MultiSelection</enum>
+        <enum>QAbstractItemView::SelectionMode::MultiSelection</enum>
        </property>
        <property name="selectionRectVisible">
         <bool>true</bool>
@@ -3754,7 +4053,7 @@
      <item row="1" column="0">
       <spacer name="horizontalSpacer_12">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -3786,7 +4085,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_AnalogCfg">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Analog IN</string>
@@ -3806,8 +4105,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>384</width>
-          <height>167</height>
+          <width>391</width>
+          <height>184</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_63">
@@ -4120,12 +4419,25 @@
        </widget>
       </widget>
      </item>
+     <item row="1" column="0">
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockWidget_plugins">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Plug-ins</string>
@@ -4145,8 +4457,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>342</width>
-          <height>282</height>
+          <width>366</width>
+          <height>253</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -4160,7 +4472,7 @@
          <item row="1" column="2">
           <spacer name="horizontalSpacer_10">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -4196,7 +4508,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_analogOut">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Analog OUT</string>
@@ -4216,8 +4528,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>342</width>
-          <height>127</height>
+          <width>366</width>
+          <height>117</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_65">
@@ -4307,7 +4619,7 @@
          <item row="1" column="0">
           <spacer name="verticalSpacer_14">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -4326,7 +4638,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_traceConf">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Conf.</string>
@@ -4339,7 +4651,7 @@
      <item row="0" column="0">
       <layout class="QGridLayout" name="gridLayout_62">
        <property name="sizeConstraint">
-        <enum>QLayout::SetMinimumSize</enum>
+        <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
        </property>
        <item row="2" column="0">
         <widget class="QLabel" name="label_73">
@@ -4445,7 +4757,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_pluginImage">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Image Script</string>
@@ -4470,10 +4782,8 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>spinBox_waitForLaser</tabstop>
   <tabstop>spinBox_time_bin_per_px</tabstop>
   <tabstop>spinBox_timeresolution</tabstop>
-  <tabstop>spinBox_waitAfterFrame</tabstop>
   <tabstop>pushButton</tabstop>
   <tabstop>pushButton_7</tabstop>
   <tabstop>pushButton_3</tabstop>
@@ -4586,8 +4896,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>1101</y>
+     <x>129</x>
+     <y>1121</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -4602,8 +4912,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>1127</y>
+     <x>129</x>
+     <y>1121</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4618,8 +4928,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>115</x>
-     <y>1153</y>
+     <x>129</x>
+     <y>1121</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4634,8 +4944,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1200</y>
+     <x>121</x>
+     <y>1129</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4650,8 +4960,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1226</y>
+     <x>121</x>
+     <y>1129</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -4666,8 +4976,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>119</x>
-     <y>1252</y>
+     <x>121</x>
+     <y>1129</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -4842,8 +5152,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>101</x>
-     <y>1095</y>
+     <x>119</x>
+     <y>1127</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -4858,8 +5168,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>114</x>
-     <y>1127</y>
+     <x>119</x>
+     <y>1153</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -4874,8 +5184,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>114</x>
-     <y>1153</y>
+     <x>119</x>
+     <y>1179</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -4986,7 +5296,7 @@
    <slot>plotSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1043</x>
+     <x>674</x>
      <y>1792</y>
     </hint>
     <hint type="destinationlabel">
@@ -5002,7 +5312,7 @@
    <slot>selectedAutoscaleImg()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>547</x>
+     <x>520</x>
      <y>1790</y>
     </hint>
     <hint type="destinationlabel">
@@ -5018,7 +5328,7 @@
    <slot>projChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1074</x>
+     <x>674</x>
      <y>1766</y>
     </hint>
     <hint type="destinationlabel">
@@ -5034,8 +5344,8 @@
    <slot>startBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1232</x>
-     <y>1031</y>
+     <x>545</x>
+     <y>79</y>
     </hint>
     <hint type="destinationlabel">
      <x>747</x>
@@ -5050,8 +5360,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>732</x>
-     <y>190</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>555</x>
@@ -5066,8 +5376,8 @@
    <slot>stopBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1232</x>
-     <y>1147</y>
+     <x>545</x>
+     <y>79</y>
     </hint>
     <hint type="destinationlabel">
      <x>870</x>
@@ -5146,8 +5456,8 @@
    <slot>cmd_moveToSelectedColumnFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1232</x>
-     <y>267</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -5210,8 +5520,8 @@
    <slot>bit_file_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>370</x>
-     <y>1188</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -5322,8 +5632,8 @@
    <slot>FCSReset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1109</x>
-     <y>1264</y>
+     <x>545</x>
+     <y>79</y>
     </hint>
     <hint type="destinationlabel">
      <x>840</x>
@@ -5354,8 +5664,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>1260</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -5370,8 +5680,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>1208</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -5403,7 +5713,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>129</x>
-     <y>1091</y>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>1195</x>
@@ -5418,8 +5728,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>337</x>
-     <y>1105</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -5578,8 +5888,8 @@
    <slot>bit_file_clicked2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>370</x>
-     <y>1263</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -5850,8 +6160,8 @@
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>304</x>
-     <y>930</y>
+     <x>401</x>
+     <y>914</y>
     </hint>
     <hint type="destinationlabel">
      <x>424</x>
@@ -5866,8 +6176,8 @@
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>948</y>
+     <x>340</x>
+     <y>940</y>
     </hint>
     <hint type="destinationlabel">
      <x>430</x>
@@ -5898,8 +6208,8 @@
    <slot>httpServerCheckBoxChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>303</x>
-     <y>1079</y>
+     <x>129</x>
+     <y>1117</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -5914,8 +6224,8 @@
    <slot>addcurrentconfmacro()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>672</x>
-     <y>190</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -5930,8 +6240,8 @@
    <slot>addcurrentconfmacrofcs()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>551</x>
-     <y>340</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>428</x>
@@ -5946,12 +6256,44 @@
    <slot>copyPositionsMarkersFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>804</x>
-     <y>337</y>
+     <x>545</x>
+     <y>70</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
      <y>391</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_circular_radius_nm</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>circularMotionActivateChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>340</x>
+     <y>992</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>427</x>
+     <y>986</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_circular_repetition</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>circularMotionActivateChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>959</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>432</x>
+     <y>975</y>
     </hint>
    </hints>
   </connection>

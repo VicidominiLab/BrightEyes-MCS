@@ -1,5 +1,5 @@
 from .gui.plugin_gui import Ui_Form
-from PySide2.QtCore import Slot
+from PySide6.QtCore import Slot
 
 class myForm(Ui_Form):
     """

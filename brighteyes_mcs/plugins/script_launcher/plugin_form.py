@@ -13,8 +13,8 @@ import os
 from os.path import isfile, join, isdir
 
 import pyqtgraph as pg
-from PySide2.QtCore import Slot, QDir
-from PySide2.QtWidgets import QApplication, QFileDialog, QWidget
+from PySide6.QtCore import Slot, QDir
+from PySide6.QtWidgets import QApplication, QFileDialog, QWidget
 from ...gui.console_widget import ConsoleWidget
 
 
@@ -107,7 +107,7 @@ class myForm(Ui_Form, QWidget):
 
 # This is needed to run this plugin in stand-alone mode
 if __name__ == "__main__":
-    from PySide2.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
     import sys
 
     app = QApplication(sys.argv)

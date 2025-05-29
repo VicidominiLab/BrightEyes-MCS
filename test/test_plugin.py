@@ -6,7 +6,7 @@ sys.path.insert(1, os.getcwd())
 
 import unittest
 from unittest.mock import MagicMock, patch
-from PySide2.QtCore import Slot
+from PySide6.QtCore import Slot
 from brighteyes_mcs.libs.plugin_loader import PluginsManager
 
 class TestPluginsManager(unittest.TestCase):

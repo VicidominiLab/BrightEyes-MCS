@@ -1,5 +1,5 @@
-from PySide2.QtWidgets import QTableWidgetItem
-from PySide2.QtCore import Qt, SIGNAL, Slot
+from PySide6.QtWidgets import QTableWidgetItem
+from PySide6.QtCore import Qt, Signal, Slot
 from .print_dec import print_dec
 
 
@@ -9,9 +9,18 @@ class TableManager(object):
 
         self.table_widget = table_widget
 
-        self.table_widget.connect(
-            SIGNAL("itemChanged(QTableWidgetItem *)"), self.item_changed
-        )
+        # FIXED WITH A VERY BAD HACK - WHICH NEEDS TO BE FIXED!!
+        self.table_widget.setAcceptDrops(True)
+        def itemChanged(*event):
+            self.item_changed(*event)
+            self.table_widget.__class__.itemChanged(self.table_widget, *event)
+
+        self.table_widget.__class__.itemChanged = itemChanged
+
+        #
+        # self.table_widget.connect(
+        #     Signal("itemChanged(QTableWidgetItem *)"), self.item_changed
+        # )
 
         self.table_header = (("Active", bool, True),)
         # "FCS"]

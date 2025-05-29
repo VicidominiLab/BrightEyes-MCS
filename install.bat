@@ -7,7 +7,7 @@ set "SelectedPython="
 echo Welcome to BrightEyes-MCS installation.
 echo:
 echo This script will install BrightEyes-MCS in a Virtual Environment in the current folder.
-echo In order to proceed, you need to have installed in your system Python 3.10.
+echo In order to proceed, you need to have installed in your system Python 3.13.
 echo:
 echo Found Python installation:
 
@@ -21,7 +21,7 @@ for /f "tokens=* delims=" %%i in ('where python.exe') do (
 
 :: Prompt the user for input
 echo:
-echo Type the number of the Python 3.10 installation you want to use.
+echo Type the number of the Python 3.13 installation you want to use.
 echo If you want to choose a different installation, please enter the full path to python.exe.
 set /p "Choice=Then, press Enter (Default [1]):"
 if "%Choice%"=="" set "Choice=1"
@@ -53,14 +53,14 @@ set "SelectedPython=!SelectedPython!"
 echo Selected Python installation: %SelectedPython%
 
 echo:
-echo Generating the new venv environment in the folder venv\
+echo Generating the new venv environment in the folder .venv\
 echo:
-"%SelectedPython%" -m venv venv
+"%SelectedPython%" -m venv .venv
 echo:
 echo:
 echo Activate the venv
 echo:
-call venv\Scripts\activate
+call .venv\Scripts\activate
 echo:
 echo Installing the pip requirements
 echo:
@@ -69,10 +69,6 @@ echo:
 echo Build Cython code
 echo:
 python compile_cython.py
-echo:
-echo Creating Links
-echo:
-python create_links.py
 echo:
 python download_firmware.py
 echo:

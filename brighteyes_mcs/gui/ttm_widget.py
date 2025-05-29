@@ -1,10 +1,10 @@
-from PySide2.QtWidgets import (
+from PySide6.QtWidgets import (
     QWidget,
     QFileDialog,
 )  # QDoubleSpinBox, QComboBox, QCheckBox,
 
-from PySide2.QtCore import Slot, Qt, QAbstractTableModel  # , QUrl, QObject,
-from PySide2.QtGui import QFont
+from PySide6.QtCore import Slot, Qt, QAbstractTableModel  # , QUrl, QObject,
+from PySide6.QtGui import QFont
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -21,9 +21,9 @@ from matplotlib.figure import Figure
 #
 # from ..libs.multithread_caller_helper import pushButton_multithread_call
 #
-# from PySide2.QtCore import (
+# from PySide6.QtCore import (
 #     QThreadPool,
-# )  # , Slot, Signal, SIGNAL, QTimer, Qt, QDir, QFile, QCoreApplication, QTime, QRunnable
+# )  # , Slot, Signal, Signal, QTimer, Qt, QDir, QFile, QCoreApplication, QTime, QRunnable
 
 
 #
