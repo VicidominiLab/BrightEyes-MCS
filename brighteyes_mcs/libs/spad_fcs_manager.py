@@ -61,7 +61,7 @@ class SpadFcsManager(QObject):
         use_rust_fifo (bool): Flag for using Rust FIFO.
         debug (bool): Debug flag.
     """
-    def __init__(self, filename="bitfiles/MyBitfileUSB.lvbitx", address="RIO0", channels=25):
+    def __init__(self, filename="bitfiles/MyBitfileUSB.lvbitx", address="RIO0", channels=25, clock_base=40):
         """
         Constructor of the class of SpaFCSManager
         """
@@ -73,6 +73,7 @@ class SpadFcsManager(QObject):
 
         self.niAddr = address
         self.bitfile = filename
+        self.clock_base = clock_base
         self.timeout_fifos = 0.5e6
         # self.fifo = None
         # self.nifpga_session = None
@@ -626,7 +627,7 @@ class SpadFcsManager(QObject):
         self.circ_repetition = self.registers_configuration["#circular_rep"]
         self.circ_points = self.registers_configuration["#circular_points"]
 
-        self.time_resolution = self.registers_configuration["Cx"] / 40.0
+        self.time_resolution = self.registers_configuration["Cx"] / self.clock_base
 
         self.dim_x = self.registers_configuration["#pixels"]
         self.dim_y = self.registers_configuration["#lines"]

@@ -84,6 +84,13 @@ except:
 pg.setConfigOption("background", "k")
 pg.setConfigOption("foreground", "w")
 
+class RectROI_noHandle(pg.RectROI):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Remove existing handles
+        for h in self.getHandles():
+            self.removeHandle(h)
+
 class PluginSignals(QObject):
     """
     Class for defining custom signals for the plugins
@@ -310,7 +317,22 @@ class MainWindow(QMainWindow):
 
         self.rect_roi.hide()
 
-        self.rect_roi_panorama = pg.RectROI(
+
+
+        self.rect_roi_panorama_limit = RectROI_noHandle(
+            0,
+            512,
+            0,
+            512,
+            movable=False,
+            rotatable=False,
+            resizable=False,
+            removable=False,
+        )
+
+        self.rect_roi_panorama_limit.setPen(pg.mkPen(color=(50, 50, 50), width=2))
+
+        self.rect_roi_panorama = RectROI_noHandle(
             0,
             512,
             0,
@@ -323,6 +345,7 @@ class MainWindow(QMainWindow):
 
         self.rect_roi_panorama_modified_lock = False
         self.im_panorama_widget.getView().addItem(self.rect_roi_panorama)
+        self.im_panorama_widget.getView().addItem(self.rect_roi_panorama_limit)
 
         self.im_widget.scene.sigMouseClicked.connect(self.imageClicked)
         self.im_widget.scene.sigMouseMoved.connect(self.imageMoved)
@@ -459,6 +482,8 @@ class MainWindow(QMainWindow):
         self.cmd_update_plugin_list()
 
         self.last_saved_filename = None
+
+        self.clock_base = 40 #MHz
 
         self.DFD_Activate = False
         self.DFD_nbins = 81
@@ -1786,12 +1811,7 @@ class MainWindow(QMainWindow):
                     "axesRangeChanged self.lock_parameters_changed_call UNSET False"
                 )
 
-                self.ui.label_pixelsize_x.setText(
-                    "%.3f nm" % (1000 * self.ui.spinBox_range_x.value() / self.ui.spinBox_nx.value()))
-                self.ui.label_pixelsize_y.setText(
-                    "%.3f nm" % (1000 * self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value()))
-                self.ui.label_pixelsize_z.setText(
-                    "%.3f nm" % (1000 * self.ui.spinBox_range_z.value() / self.ui.spinBox_nframe.value()))
+                self.updateLabelPixelSize()
 
                 self.lock_range_changing = False
 
@@ -3430,7 +3450,7 @@ Have fun!
             circ_points = 1
 
         clock_duration = time_bin * time_res * 20
-        Cx = time_res * 40
+        Cx = time_res * self.clock_base
         print_dec("temporalSettingsChanged")
 
         waitForLaserInCycle = self.ui.spinBox_waitForLaser.value() * 40e6
@@ -3705,6 +3725,28 @@ Have fun!
             print_dec("self.im_widget.autoRange()")
             self.im_widget.autoRange()
 
+    def updateLabelPixelSize(self):
+        if self.ui.spinBox_nx.value() != 1:
+            self.ui.label_pixelsize_x.setText(
+                "%.3f nm" % (1000 * self.ui.spinBox_range_x.value() / (self.ui.spinBox_nx.value() - 1.)))
+        else:
+            self.ui.label_pixelsize_x.setText(
+                "∞")
+
+        if self.ui.spinBox_ny.value() != 1:
+            self.ui.label_pixelsize_y.setText(
+                "%.3f nm" % (1000 * self.ui.spinBox_range_y.value() / (self.ui.spinBox_ny.value() - 1.)))
+        else:
+            self.ui.label_pixelsize_y.setText(
+                "∞")
+
+        if self.ui.spinBox_nframe.value() != 1:
+            self.ui.label_pixelsize_z.setText(
+                "%.3f nm" % (1000 * self.ui.spinBox_range_z.value() / (self.ui.spinBox_nframe.value() - 1.)))
+        else:
+            self.ui.label_pixelsize_z.setText(
+                "∞")
+
     @Slot()
     def rangeValueChanged(self, number=None):
         """
@@ -3716,12 +3758,7 @@ Have fun!
         self.positionSettingsChanged_apply(force=True)
         self.offset_um_update()
 
-        self.ui.label_pixelsize_x.setText(
-            "%.3f nm" % (1000 * self.ui.spinBox_range_x.value() / self.ui.spinBox_nx.value()))
-        self.ui.label_pixelsize_y.setText(
-            "%.3f nm" % (1000 * self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value()))
-        self.ui.label_pixelsize_z.setText(
-            "%.3f nm" % (1000 * self.ui.spinBox_range_z.value() / self.ui.spinBox_nframe.value()))
+        self.updateLabelPixelSize()
 
         self.lock_range_changing = lock
 
@@ -3816,8 +3853,8 @@ Have fun!
                 circ_repetition = 1
                 circ_points = 1
 
-            clock_duration = time_bin * time_res * 20
-            Cx = time_res * 40
+            clock_duration = time_bin * time_res * self.clock_base/2
+            Cx = time_res * self.clock_base
 
             numbers_xx = self.ui.spinBox_nx.value()
             numbers_yy = self.ui.spinBox_ny.value()
@@ -3846,12 +3883,8 @@ Have fun!
 
             self.ui.pushButton_18.setStyleSheet("border: 1px solid red;")
 
-        self.ui.label_pixelsize_x.setText(
-            "%.3f nm" % (1000 * self.ui.spinBox_range_x.value() / self.ui.spinBox_nx.value()))
-        self.ui.label_pixelsize_y.setText(
-            "%.3f nm" % (1000 * self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value()))
-        self.ui.label_pixelsize_z.setText(
-            "%.3f nm" % (1000 * self.ui.spinBox_range_z.value() / self.ui.spinBox_nframe.value()))
+        self.updateLabelPixelSize()
+
 
     @Slot()
     def positionSettingsChanged(self, force=False):
@@ -3934,10 +3967,11 @@ Have fun!
             )
 
             # for some bug this must be after setSize
-
             self.rect_roi.update()
             print_dec(self.rect_roi.state)
             # self.rect_roi_modified_lock = False
+
+            self.updateRectLimit() #update the rectangle in the panaorma
 
         else:
             print_dec(
@@ -4071,8 +4105,8 @@ Have fun!
             circ_repetition = 1
             circ_points = 1
 
-        clock_duration = time_bin * time_res * 20
-        Cx = time_res * 40
+        clock_duration = time_bin * time_res * self.clock_base/2
+        Cx = time_res * self.clock_base
 
         waitForLaserInCycle = self.ui.spinBox_waitForLaser.value() * 40e6
         waitAfterFrame = self.ui.spinBox_waitAfterFrame.value() * 40e6
@@ -4414,6 +4448,45 @@ Have fun!
                     "activateFIFODigital": self.ui.radioButton_digital.isChecked(),
                 }
             )
+
+    def updateRectLimit(self):
+        """
+        init the panorama image
+        """
+
+        lim_x = (self.ui.spinBox_max_x_V.value() - self.ui.spinBox_min_x_V.value()) * self.ui.spinBox_calib_x.value()
+        lim_y = (self.ui.spinBox_max_y_V.value() - self.ui.spinBox_min_y_V.value()) * self.ui.spinBox_calib_y.value()
+
+        self.rect_roi_panorama_limit.setSize(lim_x, lim_y)
+
+        self.rect_roi_panorama_limit.setPos(-lim_x/2., -lim_y/2.)
+
+        # print_dec("Panorama")
+        #
+        # pos_x = 0.
+        # pos_y = 0.
+        # size_x = (self.ui.spinBox_max_x_V.value() - self.ui.spinBox_min_x_V.value()) * self.ui.spinBox_calib_x.value()
+        # size_y = (self.ui.spinBox_max_y_V.value() - self.ui.spinBox_min_y_V.value()) * self.ui.spinBox_calib_y.value()
+        # img = np.zeros((101, 101))
+        # img[0, :] = 1
+        # img[:, 0] = 1
+        # img[100, :] = 1
+        # img[:, 100] = 1
+        #
+        # self.im_panorama_widget.setImage(
+        #     img=img,
+        #     pos=(
+        #         -size_x / 2.,
+        #         -size_y / 2.,
+        #     ),
+        #     scale=(
+        #         size_x / img.shape[0],
+        #         size_y / img.shape[1],
+        #     ),
+        # )
+        # print_dec(pos_x, pos_y, size_x, size_y)
+        # self.im_widget_panorama.setItem(img)
+
 
     @Slot()
     def grabPanorama(self):
@@ -4944,17 +5017,29 @@ Have fun!
         else:
             preview_img = np.asarray(preview_img)
 
+        currentImage_size = self.currentImage_size
+        currentImage_pos  = self.currentImage_pos
+        currentImage_pixels = self.currentImage_pixels
+
+        if currentImage_size[0] == 0.:
+            currentImage_size[0] = 1e-12
+        if currentImage_size[1] == 0.:
+            currentImage_size[1] = 1e-12
+        if currentImage_size[2] == 0.:
+            currentImage_size[2] = 1e-12
+
+
         if ch.startswith("RGB"):
             preview_img = np.moveaxis(preview_img, 0, 1)
             autoLevels = self.autoscale_image
             autoRange = False
             pos = (
-                self.currentImage_pos[0] - self.currentImage_size[0] / 2.0,
-                self.currentImage_pos[1] - self.currentImage_size[1] / 2.0,
+                currentImage_pos[0] - currentImage_size[0] / 2.0,
+                currentImage_pos[1] - currentImage_size[1] / 2.0,
             )
             scale = (
-                self.currentImage_size[0] / self.currentImage_pixels[0],
-                self.currentImage_size[1] / self.currentImage_pixels[1],
+                currentImage_size[0] / currentImage_pixels[0],
+                currentImage_size[1] / currentImage_pixels[1],
             )
 
         elif proj == "xy":
@@ -4962,24 +5047,24 @@ Have fun!
             autoLevels = self.autoscale_image
             autoRange = False
             pos = (
-                self.currentImage_pos[0] - self.currentImage_size[0] / 2.0,
-                self.currentImage_pos[1] - self.currentImage_size[1] / 2.0,
+                currentImage_pos[0] - currentImage_size[0] / 2.0,
+                currentImage_pos[1] - currentImage_size[1] / 2.0,
             )
             scale = (
-                self.currentImage_size[0] / self.currentImage_pixels[0],
-                self.currentImage_size[1] / self.currentImage_pixels[1],
+                currentImage_size[0] / currentImage_pixels[0],
+                currentImage_size[1] / currentImage_pixels[1],
             )
 
         elif proj == "yx":
             autoLevels = self.autoscale_image
             autoRange = False
             pos = (
-                self.currentImage_pos[1] - self.currentImage_size[1] / 2.0,
-                self.currentImage_pos[0] - self.currentImage_size[0] / 2.0,
+                currentImage_pos[1] - currentImage_size[1] / 2.0,
+                currentImage_pos[0] - currentImage_size[0] / 2.0,
             )
             scale = (
-                self.currentImage_size[1] / self.currentImage_pixels[1],
-                self.currentImage_size[0] / self.currentImage_pixels[0],
+                currentImage_size[1] / currentImage_pixels[1],
+                currentImage_size[0] / currentImage_pixels[0],
             )
 
         elif proj == "zy":
@@ -4987,36 +5072,36 @@ Have fun!
             autoLevels = self.autoscale_image
             autoRange = False
             pos = (
-                self.currentImage_pos[2] - self.currentImage_size[2] / 2.0,
-                self.currentImage_pos[1] - self.currentImage_size[1] / 2.0,
+                currentImage_pos[2] - currentImage_size[2] / 2.0,
+                currentImage_pos[1] - currentImage_size[1] / 2.0,
             )
             scale = (
-                self.currentImage_size[2] / self.currentImage_pixels[2],
-                self.currentImage_size[1] / self.currentImage_pixels[1],
+                currentImage_size[2] / currentImage_pixels[2],
+                currentImage_size[1] / currentImage_pixels[1],
             )
 
         elif proj == "yz":
             autoLevels = self.autoscale_image
             autoRange = False
             pos = (
-                self.currentImage_pos[1] - self.currentImage_size[1] / 2.0,
-                self.currentImage_pos[2] - self.currentImage_size[2] / 2.0,
+                currentImage_pos[1] - currentImage_size[1] / 2.0,
+                currentImage_pos[2] - currentImage_size[2] / 2.0,
             )
             scale = (
-                self.currentImage_size[1] / self.currentImage_pixels[1],
-                self.currentImage_size[2] / self.currentImage_pixels[2],
+                currentImage_size[1] / currentImage_pixels[1],
+                currentImage_size[2] / currentImage_pixels[2],
             )
 
         elif proj == "zx":
             autoLevels = self.autoscale_image
             autoRange = False
             pos = (
-                self.currentImage_pos[2] - self.currentImage_size[2] / 2.0,
-                self.currentImage_pos[0] - self.currentImage_size[0] / 2.0,
+                currentImage_pos[2] - currentImage_size[2] / 2.0,
+                currentImage_pos[0] - currentImage_size[0] / 2.0,
             )
             scale = (
-                self.currentImage_size[2] / self.currentImage_pixels[2],
-                self.currentImage_size[0] / self.currentImage_pixels[0],
+                currentImage_size[2] / currentImage_pixels[2],
+                currentImage_size[0] / currentImage_pixels[0],
             )
 
         elif proj == "xz":
@@ -5024,12 +5109,12 @@ Have fun!
             autoLevels = self.autoscale_image
             autoRange = False
             pos = (
-                self.currentImage_pos[0] - self.currentImage_size[0] / 2.0,
-                self.currentImage_pos[2] - self.currentImage_size[2] / 2.0,
+                currentImage_pos[0] - currentImage_size[0] / 2.0,
+                currentImage_pos[2] - currentImage_size[2] / 2.0,
             )
             scale = (
-                self.currentImage_size[0] / self.currentImage_pixels[0],
-                self.currentImage_size[2] / self.currentImage_pixels[2],
+                currentImage_size[0] / currentImage_pixels[0],
+                currentImage_size[2] / currentImage_pixels[2],
             )
 
         else:  #
