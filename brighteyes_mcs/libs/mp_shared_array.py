@@ -1,94 +1,88 @@
+from ..libs.print_dec import  print_dec
+
 import numpy as np
-from functools import reduce
-import multiprocessing as mp
-import ctypes
+from multiprocessing import shared_memory, Lock
 import uuid
 
 
-class MemorySharedNumpyArray(object):
+class MemorySharedNumpyArray:
     """
-    A shared array (based on multiprocessing Array). Also, you can get a Numpy handle
-    to the shared array with the get_numpy_handle() method. If you need the locking etc.
-    capabilities of the mp.Array, you can access the data attribute directly.
-
-    Attributes:
-        data (mp.Array): the shared array
-        sampling: information about the physical spacing between elements
-        (e.g. pixel size). The information will be the same for all array
-        views. Make sure that when slicing, the dimensionality is appropriate.
-        id (str): a unique identifier (tag) for an array instance. Makes dealing with
-        array views a little bit more straightforward
-        np_shape (tuple): the shape of the array
-        size (int): the size of the flattened array
-        np.dtype (str): the Numpy dtype string
+    A shared memory-backed NumPy array with optional multiprocessing lock.
+    Compatible with the original multiprocessing.Array-based design.
     """
 
-    def __init__(self, dtype, shape, sampling=0, lock=True):
+    def __init__(self, dtype, shape, sampling=0, name=None, create=True, lock=True):
         """
         Args:
-            dtype (str): a Numpy data type string ('uint32' etc.). You can also use the
-            constants defined in Numpy (np.uint32 etc.)
-            shape (tuple): the shape of the array (e.g. (20, 50, 200))
-            sampling:  sampling info, e.g. tuple of pixel spacings in an image
-
-        Keyword Args:
-            lock: Apply a process lock.
+            dtype (str or np.dtype): NumPy dtype (e.g., 'uint8', 'float32')
+            shape (tuple): Shape of the array
+            sampling: Metadata (e.g., pixel spacing)
+            name (str): Name of the shared memory block to attach to (optional)
+            create (bool): If True, create a new block. If False, attach to existing.
+            lock (bool): Whether to use a multiprocessing lock
         """
-
+        self.np_dtype = np.dtype(dtype)
+        self.np_shape = shape
         self.shape = shape
-        size = reduce(lambda x, y: x * y, shape)
-        ctype = self._get_typecodes()[np.dtype(dtype).str]
-
-        if lock:
-            self.lock = mp.Lock()
-            self.data = mp.Array(ctype, size, lock=self.lock)
-        else:
-            print("not lock")
-            self.data = mp.Array(ctype, size, lock=False)
-            self.lock = mp.data.get_lock()
-        # add the new attribute to the created instance
         self.sampling = sampling
         self.id = str(uuid.uuid1())
-        self.np_dtype = dtype
-        self.size = size
-        self.np_shape = shape
+        self.size = int(np.prod(shape))
+        self._nbytes = self.size * self.np_dtype.itemsize
 
-    @staticmethod
-    def _get_typecodes():
-        """Get a ctypes type from a Numpy dtype. This function is included in
-        the ctypeslib from Numpy >1.16, but we are using an older version here.a
-        """
-        ct = ctypes
-        simple_types = [
-            ct.c_byte,
-            ct.c_short,
-            ct.c_int,
-            ct.c_long,
-            ct.c_longlong,
-            ct.c_ubyte,
-            ct.c_ushort,
-            ct.c_uint,
-            ct.c_ulong,
-            ct.c_ulonglong,
-            ct.c_float,
-            ct.c_double,
-        ]
+        self.lock = Lock() if lock else None
 
-        return {np.dtype(ctype).str: ctype for ctype in simple_types}
+        if create:
+            self.shm = shared_memory.SharedMemory(create=True, size=self._nbytes, name=name)
+        else:
+            self.shm = shared_memory.SharedMemory(name=name)
+        actual_size = len(self.shm.buf)
+        if actual_size < self._nbytes:
+            raise ValueError(
+                f"[SHM] Buffer size too small: got {actual_size} bytes, "
+                f"expected {self._nbytes} bytes for dtype={self.np_dtype}, shape={self.np_shape}"
+            )
+
+        print_dec("New shared array created: ", self.shm.name, "bytes ", {self._nbytes}, "bytes for dtype={self.np_dtype}, shape={self.np_shape}" )
 
     def get_numpy_handle(self, reshape=True):
-        """Return a Numpy array handle to the shared array.
+        """
+        Return a NumPy array view into shared memory.
+
+        Args:
+            reshape (bool): If True, reshape to original shape.
 
         Returns:
-            np.ndarray -- the array reshaped to the original shape definition
+            np.ndarray
         """
+        # Slice only the usable part of the shared memory buffer
+        flat = np.frombuffer(self.shm.buf[:self._nbytes], dtype=self.np_dtype)
         if reshape:
-            return np.frombuffer(self.data.get_obj(), dtype=self.np_dtype).reshape(
-                self.np_shape
-            )
-        else:
-            return np.frombuffer(self.data.get_obj(), dtype=self.np_dtype)
-            # return np.ndarray(shape=shape, dtype=self.np_dtype, buffer=self.data.get_obj())
+            try:
+                return flat.reshape(self.np_shape)
+            except ValueError as e:
+                raise ValueError(
+                    f"Cannot reshape array of size {flat.size} to shape {self.np_shape}"
+                ) from e
+        return flat
 
     def get_lock(self):
+        """Return the multiprocessing lock (if enabled)."""
         return self.lock
+
+    def get_name(self):
+        """Return the shared memory block name."""
+        return self.shm.name
+
+    def close(self):
+        """Close the shared memory block (without unlinking)."""
+        self.shm.close()
+
+    def unlink(self):
+        """Unlink the shared memory block (only once, usually by the creator)."""
+        self.shm.unlink()
+
+    def __del__(self):
+        try:
+            self.shm.close()
+        except Exception:
+            pass
