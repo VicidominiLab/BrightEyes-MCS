@@ -2410,13 +2410,6 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_12.setObjectName(u"dockWidgetContents_12")
         self.gridLayout_49 = QGridLayout(self.dockWidgetContents_12)
         self.gridLayout_49.setObjectName(u"gridLayout_49")
-        self.listWidget = QListWidget(self.dockWidgetContents_12)
-        self.listWidget.setObjectName(u"listWidget")
-        self.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
-        self.listWidget.setSelectionRectVisible(True)
-
-        self.gridLayout_49.addWidget(self.listWidget, 0, 0, 1, 3)
-
         self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_49.addItem(self.horizontalSpacer_12, 1, 0, 1, 1)
@@ -2430,6 +2423,18 @@ class Ui_MainWindowDesign(object):
         self.pushButton_17.setObjectName(u"pushButton_17")
 
         self.gridLayout_49.addWidget(self.pushButton_17, 1, 1, 1, 1)
+
+        self.pushButton_openInExplorer = QPushButton(self.dockWidgetContents_12)
+        self.pushButton_openInExplorer.setObjectName(u"pushButton_openInExplorer")
+
+        self.gridLayout_49.addWidget(self.pushButton_openInExplorer, 1, 3, 1, 1)
+
+        self.listWidget = QListWidget(self.dockWidgetContents_12)
+        self.listWidget.setObjectName(u"listWidget")
+        self.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+        self.listWidget.setSelectionRectVisible(True)
+
+        self.gridLayout_49.addWidget(self.listWidget, 0, 0, 1, 4)
 
         self.dockWidget_listfile.setWidget(self.dockWidgetContents_12)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_listfile)
@@ -2926,6 +2931,7 @@ class Ui_MainWindowDesign(object):
         self.pushButton_copyPositionsMarkersFCS.clicked.connect(MainWindowDesign.copyPositionsMarkersFCS)
         self.spinBox_circular_radius_nm.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
         self.spinBox_circular_repetition.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
+        self.pushButton_openInExplorer.clicked.connect(MainWindowDesign.openInExplorer)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(0)
@@ -3410,13 +3416,14 @@ class Ui_MainWindowDesign(object):
         self.lineEdit_comment.setPlaceholderText(QCoreApplication.translate("MainWindowDesign", u"Add your comments here. They will be included in the H5 file as metadata.", None))
         self.dockWidget_listfile.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"List File", None))
 #if QT_CONFIG(tooltip)
-        self.listWidget.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The list of the saved files</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
         self.pushButton_copyListFile.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>This will do the &quot;Ctrl+X&quot; on the selected files, ready to be pasted in another folder.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_copyListFile.setText(QCoreApplication.translate("MainWindowDesign", u"Copy to Clipboard", None))
         self.pushButton_17.setText(QCoreApplication.translate("MainWindowDesign", u"Delete", None))
+        self.pushButton_openInExplorer.setText(QCoreApplication.translate("MainWindowDesign", u"Open in explorer", None))
+#if QT_CONFIG(tooltip)
+        self.listWidget.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The list of the saved files</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.dockWidget_AnalogCfg.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Analog IN", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("MainWindowDesign", u"Analog A", None))
         self.comboBox_analogSelect_A.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"AI 0", None))

@@ -31,7 +31,7 @@ from PySide6.QtCore import (
     QBuffer
 )
 from PySide6.QtCore import QEvent, QRectF, QObject, QThread, QMutex, QMimeData, QUrl
-from PySide6.QtGui import QPixmap, QIcon, QGuiApplication
+from PySide6.QtGui import QPixmap, QIcon, QGuiApplication, QDesktopServices
 
 from datetime import datetime
 
@@ -2233,7 +2233,7 @@ class MainWindow(QMainWindow):
 
             print_dec("event.modifiers()", event.modifiers())
 
-            if event.modifiers() and Qt.CTRL:
+            if event.modifiers()  & Qt.ControlModifier:
                 conf = self.getGUI_data()
 
                 conf["offset_x_um"] = a[0]
@@ -2314,7 +2314,8 @@ class MainWindow(QMainWindow):
         print_dec(event)
         selected_ch_x = int((pos.x()))
         selected_ch_y = int((pos.y()))
-        if event.modifiers() == Qt.CTRL:
+        print_dec(event.modifiers())
+        if event.modifiers() & Qt.ControlModifier:
             print_dec("Qt.CTRL")
             if self.fingerprint_mask[selected_ch_y, selected_ch_x] == 1:
                 self.fingerprint_mask[selected_ch_y, selected_ch_x] = 0
@@ -5317,6 +5318,13 @@ Have fun!
                 except:
                     print("self.dfd_page.UpdateTable() FAILED")
                     pass
+
+    @Slot()
+    def openInExplorer(self):
+        folder_path = os.path.abspath((self.ui.lineEdit_destinationfolder.text().replace("/","\\")))
+        print_dec(folder_path)
+        url = QUrl.fromLocalFile(folder_path)
+        QDesktopServices.openUrl(url)
 
     def script_plot_fingerprint(self, fingerprint):
         """

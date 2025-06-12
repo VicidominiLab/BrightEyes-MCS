@@ -73,16 +73,28 @@ class MemorySharedNumpyArray:
         """Return the shared memory block name."""
         return self.shm.name
 
-    def close(self):
-        """Close the shared memory block (without unlinking)."""
-        self.shm.close()
+    # def close(self):
+    #     """Close the shared memory block (without unlinking)."""
+    #
+    #
+    # def unlink(self):
+    #     """Unlink the shared memory block (only once, usually by the creator)."""
+    #     tmp = "{self.shm.name} bytes {self._nbytes} bytes for dtype={self.np_dtype}, shape={self.np_shape}"
+    #     self.shm.unlink()
+    #     print_dec("SharedMemory Unlinked:", tmp)
 
-    def unlink(self):
-        """Unlink the shared memory block (only once, usually by the creator)."""
-        self.shm.unlink()
-
-    def __del__(self):
-        try:
-            self.shm.close()
-        except Exception:
-            pass
+    # def __del__(self):
+    #     tmp = "name = %s bytes = %s dtype=%s shape=%s" % (self.shm.name, self._nbytes, self.np_dtype, self.np_shape)
+    #
+    #     try:
+    #         self.shm.close()
+    #         print_dec("shared array Closed:", tmp)
+    #
+    #     except Exception:
+    #         print_dec("shared array NOT Closed:", tmp)
+    #
+    #     try:
+    #         self.shm.unlink()
+    #         print_dec("shared array Unlinked:", tmp)
+    #     except Exception:
+    #         print_dec("shared array NOT Unlinked:", tmp)
