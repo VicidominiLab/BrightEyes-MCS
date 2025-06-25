@@ -30,7 +30,7 @@ class Ui_MainWindowDesign(object):
     def setupUi(self, MainWindowDesign):
         if not MainWindowDesign.objectName():
             MainWindowDesign.setObjectName(u"MainWindowDesign")
-        MainWindowDesign.resize(1637, 1838)
+        MainWindowDesign.resize(1667, 1838)
         self.centralwidget = QWidget(MainWindowDesign)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_2 = QGridLayout(self.centralwidget)
@@ -624,7 +624,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_6.setWidgetResizable(True)
         self.scrollAreaWidgetContents_4 = QWidget()
         self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 366, 155))
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 422, 148))
         self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName(u"gridLayout_68")
         self.gridLayout_3434 = QGridLayout()
@@ -1113,51 +1113,44 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_4.setObjectName(u"dockWidgetContents_4")
         self.gridLayout_27 = QGridLayout(self.dockWidgetContents_4)
         self.gridLayout_27.setObjectName(u"gridLayout_27")
-        self.gridLayout_28 = QGridLayout()
-        self.gridLayout_28.setObjectName(u"gridLayout_28")
-        self.checkBox_DFD_LaserDebug = QCheckBox(self.dockWidgetContents_4)
-        self.checkBox_DFD_LaserDebug.setObjectName(u"checkBox_DFD_LaserDebug")
-        self.checkBox_DFD_LaserDebug.setChecked(True)
-
-        self.gridLayout_28.addWidget(self.checkBox_DFD_LaserDebug, 1, 1, 1, 2)
-
         self.checkBox_snake = QCheckBox(self.dockWidgetContents_4)
         self.checkBox_snake.setObjectName(u"checkBox_snake")
 
-        self.gridLayout_28.addWidget(self.checkBox_snake, 2, 1, 1, 2)
-
-        self.comboBox_channels = QComboBox(self.dockWidgetContents_4)
-        self.comboBox_channels.addItem("")
-        self.comboBox_channels.addItem("")
-        self.comboBox_channels.setObjectName(u"comboBox_channels")
-
-        self.gridLayout_28.addWidget(self.comboBox_channels, 4, 2, 1, 1)
+        self.gridLayout_27.addWidget(self.checkBox_snake, 1, 1, 1, 1)
 
         self.checkBox_showPreview = QCheckBox(self.dockWidgetContents_4)
         self.checkBox_showPreview.setObjectName(u"checkBox_showPreview")
         self.checkBox_showPreview.setChecked(True)
 
-        self.gridLayout_28.addWidget(self.checkBox_showPreview, 0, 1, 1, 2)
+        self.gridLayout_27.addWidget(self.checkBox_showPreview, 0, 1, 1, 1)
 
-        self.label_35 = QLabel(self.dockWidgetContents_4)
-        self.label_35.setObjectName(u"label_35")
+        self.groupBox_8 = QGroupBox(self.dockWidgetContents_4)
+        self.groupBox_8.setObjectName(u"groupBox_8")
+        self.gridLayout_28 = QGridLayout(self.groupBox_8)
+        self.gridLayout_28.setObjectName(u"gridLayout_28")
+        self.checkBox_slavemode_enable = QCheckBox(self.groupBox_8)
+        self.checkBox_slavemode_enable.setObjectName(u"checkBox_slavemode_enable")
 
-        self.gridLayout_28.addWidget(self.label_35, 4, 1, 1, 1)
+        self.gridLayout_28.addWidget(self.checkBox_slavemode_enable, 0, 0, 2, 2)
 
-        self.spinBox_DFD_nbins = QSpinBox(self.dockWidgetContents_4)
-        self.spinBox_DFD_nbins.setObjectName(u"spinBox_DFD_nbins")
-        self.spinBox_DFD_nbins.setMaximum(1023)
-        self.spinBox_DFD_nbins.setValue(81)
+        self.label_112 = QLabel(self.groupBox_8)
+        self.label_112.setObjectName(u"label_112")
 
-        self.gridLayout_28.addWidget(self.spinBox_DFD_nbins, 3, 2, 1, 1)
+        self.gridLayout_28.addWidget(self.label_112, 2, 0, 1, 1)
 
-        self.label_111 = QLabel(self.dockWidgetContents_4)
-        self.label_111.setObjectName(u"label_111")
+        self.comboBox_slavemode_type = QComboBox(self.groupBox_8)
+        self.comboBox_slavemode_type.addItem("")
+        self.comboBox_slavemode_type.addItem("")
+        self.comboBox_slavemode_type.addItem("")
+        self.comboBox_slavemode_type.addItem("")
+        self.comboBox_slavemode_type.addItem("")
+        self.comboBox_slavemode_type.addItem("")
+        self.comboBox_slavemode_type.setObjectName(u"comboBox_slavemode_type")
 
-        self.gridLayout_28.addWidget(self.label_111, 3, 1, 1, 1)
+        self.gridLayout_28.addWidget(self.comboBox_slavemode_type, 3, 0, 1, 1)
 
 
-        self.gridLayout_27.addLayout(self.gridLayout_28, 4, 1, 1, 1)
+        self.gridLayout_27.addWidget(self.groupBox_8, 2, 1, 1, 1)
 
         self.groupBox_2 = QGroupBox(self.dockWidgetContents_4)
         self.groupBox_2.setObjectName(u"groupBox_2")
@@ -1182,11 +1175,6 @@ class Ui_MainWindowDesign(object):
         self.label_108.setObjectName(u"label_108")
 
         self.gridLayout_20.addWidget(self.label_108, 4, 0, 1, 1)
-
-        self.checkBox_circular = QCheckBox(self.groupBox_2)
-        self.checkBox_circular.setObjectName(u"checkBox_circular")
-
-        self.gridLayout_20.addWidget(self.checkBox_circular, 0, 0, 1, 3)
 
         self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -1218,8 +1206,13 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_20.addWidget(self.spinBox_circular_repetition, 3, 1, 1, 1)
 
+        self.checkBox_circular = QCheckBox(self.groupBox_2)
+        self.checkBox_circular.setObjectName(u"checkBox_circular")
 
-        self.gridLayout_27.addWidget(self.groupBox_2, 4, 2, 1, 1)
+        self.gridLayout_20.addWidget(self.checkBox_circular, 0, 0, 1, 3)
+
+
+        self.gridLayout_27.addWidget(self.groupBox_2, 0, 2, 3, 1)
 
         self.dockWidget_activatefifo.setWidget(self.dockWidgetContents_4)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_activatefifo)
@@ -1260,6 +1253,43 @@ class Ui_MainWindowDesign(object):
 
 
         self.gridLayout_42.addWidget(self.groupBox_3, 0, 0, 1, 1)
+
+        self.groupBox_7 = QGroupBox(self.dockWidgetContents_13)
+        self.groupBox_7.setObjectName(u"groupBox_7")
+        self.gridLayout_7 = QGridLayout(self.groupBox_7)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.comboBox_channels = QComboBox(self.groupBox_7)
+        self.comboBox_channels.addItem("")
+        self.comboBox_channels.addItem("")
+        self.comboBox_channels.setObjectName(u"comboBox_channels")
+
+        self.gridLayout_7.addWidget(self.comboBox_channels, 2, 1, 1, 1)
+
+        self.label_35 = QLabel(self.groupBox_7)
+        self.label_35.setObjectName(u"label_35")
+
+        self.gridLayout_7.addWidget(self.label_35, 2, 0, 1, 1)
+
+        self.spinBox_DFD_nbins = QSpinBox(self.groupBox_7)
+        self.spinBox_DFD_nbins.setObjectName(u"spinBox_DFD_nbins")
+        self.spinBox_DFD_nbins.setMaximum(1023)
+        self.spinBox_DFD_nbins.setValue(81)
+
+        self.gridLayout_7.addWidget(self.spinBox_DFD_nbins, 1, 1, 1, 1)
+
+        self.label_111 = QLabel(self.groupBox_7)
+        self.label_111.setObjectName(u"label_111")
+
+        self.gridLayout_7.addWidget(self.label_111, 1, 0, 1, 1)
+
+        self.checkBox_DFD_LaserDebug = QCheckBox(self.groupBox_7)
+        self.checkBox_DFD_LaserDebug.setObjectName(u"checkBox_DFD_LaserDebug")
+        self.checkBox_DFD_LaserDebug.setChecked(True)
+
+        self.gridLayout_7.addWidget(self.checkBox_DFD_LaserDebug, 3, 0, 1, 1)
+
+
+        self.gridLayout_42.addWidget(self.groupBox_7, 0, 1, 1, 1)
 
         self.groupBox_6 = QGroupBox(self.dockWidgetContents_13)
         self.groupBox_6.setObjectName(u"groupBox_6")
@@ -1340,7 +1370,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_41.addWidget(self.comboLaserSeq_6, 0, 5, 1, 1)
 
 
-        self.gridLayout_42.addWidget(self.groupBox_6, 2, 0, 1, 1)
+        self.gridLayout_42.addWidget(self.groupBox_6, 2, 0, 1, 2)
 
         self.dockWidget_laser.setWidget(self.dockWidgetContents_13)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_laser)
@@ -2234,7 +2264,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 366, 335))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 422, 323))
         self.gridLayout_67 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_67.setObjectName(u"gridLayout_67")
         self.checkBox_correlationMatrix = QCheckBox(self.scrollAreaWidgetContents_6)
@@ -2450,7 +2480,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 391, 184))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 374, 184))
         self.gridLayout_63 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_63.setObjectName(u"gridLayout_63")
         self.groupBox_4 = QGroupBox(self.scrollAreaWidgetContents)
@@ -2613,7 +2643,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 366, 253))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 422, 244))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -2658,7 +2688,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 366, 117))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 422, 112))
         self.gridLayout_65 = QGridLayout(self.scrollAreaWidgetContents_3)
         self.gridLayout_65.setObjectName(u"gridLayout_65")
         self.gridLayout_AO = QGridLayout()
@@ -2921,7 +2951,6 @@ class Ui_MainWindowDesign(object):
         self.pushButton_about.clicked.connect(MainWindowDesign.about)
         self.radioButton_digital.clicked.connect(MainWindowDesign.checkAlerts)
         self.radioButton_analog.clicked.connect(MainWindowDesign.checkAlerts)
-        self.comboBox_channels.currentIndexChanged.connect(MainWindowDesign.numberChannelsChanged)
         self.checkBox_circular.clicked.connect(MainWindowDesign.circularMotionActivateChanged)
         self.spinBox_circular_points.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
         self.pushButton_19.clicked.connect(MainWindowDesign.test_analog_digital)
@@ -2935,6 +2964,7 @@ class Ui_MainWindowDesign(object):
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(0)
+        self.comboBox_slavemode_type.setCurrentIndex(2)
         self.comboLaserSeq_1.setCurrentIndex(1)
         self.tabWidget_2.setCurrentIndex(0)
         self.comboBox_analogSelect_B.setCurrentIndex(0)
@@ -3202,40 +3232,51 @@ class Ui_MainWindowDesign(object):
         self.pushButton_Panorama.setText(QCoreApplication.translate("MainWindowDesign", u"Move to Default FOV", None))
         self.dockWidget_activatefifo.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Adv.", None))
 #if QT_CONFIG(tooltip)
-        self.checkBox_DFD_LaserDebug.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_DFD_LaserDebug.setText(QCoreApplication.translate("MainWindowDesign", u"Laser in CH26 (for DFD)", None))
-#if QT_CONFIG(tooltip)
         self.checkBox_snake.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Use for the scanning a &quot;snake-walk&quot; instead of a normal &quot;raster-scan&quot;</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_snake.setText(QCoreApplication.translate("MainWindowDesign", u"Snake walk", None))
-        self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
-        self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
-
 #if QT_CONFIG(tooltip)
         self.checkBox_showPreview.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The live-preview can be disabled.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_showPreview.setText(QCoreApplication.translate("MainWindowDesign", u"Show Image Preview", None))
-        self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD Channels", None))
-        self.label_111.setText(QCoreApplication.translate("MainWindowDesign", u"DFD N. Bins", None))
+        self.groupBox_8.setTitle(QCoreApplication.translate("MainWindowDesign", u"Slave Mode", None))
+        self.checkBox_slavemode_enable.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
+        self.label_112.setText(QCoreApplication.translate("MainWindowDesign", u"Wait a trigger for:", None))
+        self.comboBox_slavemode_type.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Circ. Pos.", None))
+        self.comboBox_slavemode_type.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Circ. Rep.", None))
+        self.comboBox_slavemode_type.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"Pixel", None))
+        self.comboBox_slavemode_type.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"Line", None))
+        self.comboBox_slavemode_type.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"Frame", None))
+        self.comboBox_slavemode_type.setItemText(5, QCoreApplication.translate("MainWindowDesign", u"Repetition", None))
+
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindowDesign", u"Circular Motion", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_circular_radius_nm.setToolTip(QCoreApplication.translate("MainWindowDesign", u"X position \u00b5m", None))
 #endif // QT_CONFIG(tooltip)
         self.label_109.setText(QCoreApplication.translate("MainWindowDesign", u"[nm]", None))
         self.label_108.setText(QCoreApplication.translate("MainWindowDesign", u"Radius", None))
+        self.label_43.setText(QCoreApplication.translate("MainWindowDesign", u"Number of points", None))
+        self.label_110.setText(QCoreApplication.translate("MainWindowDesign", u"Repetition", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_circular.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_circular.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
-        self.label_43.setText(QCoreApplication.translate("MainWindowDesign", u"Number of points", None))
-        self.label_110.setText(QCoreApplication.translate("MainWindowDesign", u"Repetition", None))
         self.dockWidget_laser.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Laser configuration", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
         self.checkBox_laser0.setText(QCoreApplication.translate("MainWindowDesign", u"L1", None))
         self.checkBox_laser3.setText(QCoreApplication.translate("MainWindowDesign", u"L4", None))
         self.checkBox_laser1.setText(QCoreApplication.translate("MainWindowDesign", u"L2", None))
         self.checkBox_laser2.setText(QCoreApplication.translate("MainWindowDesign", u"L3", None))
+        self.groupBox_7.setTitle(QCoreApplication.translate("MainWindowDesign", u"DFD", None))
+        self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
+        self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
+
+        self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD Channels", None))
+        self.label_111.setText(QCoreApplication.translate("MainWindowDesign", u"DFD N. Bins", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_DFD_LaserDebug.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_DFD_LaserDebug.setText(QCoreApplication.translate("MainWindowDesign", u"Laser Ref. in CH26 (for DFD)", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("MainWindowDesign", u"Sequence", None))
         self.comboLaserSeq_3.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.comboLaserSeq_3.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))

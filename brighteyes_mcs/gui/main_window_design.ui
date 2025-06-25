@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1637</width>
+    <width>1667</width>
     <height>1838</height>
    </rect>
   </property>
@@ -1044,8 +1044,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>366</width>
-          <height>155</height>
+          <width>422</width>
+          <height>148</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_68">
@@ -1925,85 +1925,90 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_4">
     <layout class="QGridLayout" name="gridLayout_27">
-     <item row="4" column="1">
-      <layout class="QGridLayout" name="gridLayout_28">
-       <item row="1" column="1" colspan="2">
-        <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Laser in CH26 (for DFD)</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1" colspan="2">
-        <widget class="QCheckBox" name="checkBox_snake">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use for the scanning a &amp;quot;snake-walk&amp;quot; instead of a normal &amp;quot;raster-scan&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Snake walk</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="2">
-        <widget class="QComboBox" name="comboBox_channels">
-         <item>
-          <property name="text">
-           <string>25</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>49</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="QCheckBox" name="checkBox_showPreview">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Show Image Preview</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QLabel" name="label_35">
-         <property name="text">
-          <string>SPAD Channels</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="2">
-        <widget class="QSpinBox" name="spinBox_DFD_nbins">
-         <property name="maximum">
-          <number>1023</number>
-         </property>
-         <property name="value">
-          <number>81</number>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="label_111">
-         <property name="text">
-          <string>DFD N. Bins</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+     <item row="1" column="1">
+      <widget class="QCheckBox" name="checkBox_snake">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use for the scanning a &amp;quot;snake-walk&amp;quot; instead of a normal &amp;quot;raster-scan&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Snake walk</string>
+       </property>
+      </widget>
      </item>
-     <item row="4" column="2">
+     <item row="0" column="1">
+      <widget class="QCheckBox" name="checkBox_showPreview">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Show Image Preview</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QGroupBox" name="groupBox_8">
+       <property name="title">
+        <string>Slave Mode</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_28">
+        <item row="0" column="0" rowspan="2" colspan="2">
+         <widget class="QCheckBox" name="checkBox_slavemode_enable">
+          <property name="text">
+           <string>Activate</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_112">
+          <property name="text">
+           <string>Wait a trigger for:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QComboBox" name="comboBox_slavemode_type">
+          <property name="currentIndex">
+           <number>2</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>Circ. Pos.</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Circ. Rep.</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Pixel</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Line</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Frame</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Repetition</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="0" column="2" rowspan="3">
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
         <string>Circular Motion</string>
@@ -2042,16 +2047,6 @@
          <widget class="QLabel" name="label_108">
           <property name="text">
            <string>Radius</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0" colspan="3">
-         <widget class="QCheckBox" name="checkBox_circular">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Activate</string>
           </property>
          </widget>
         </item>
@@ -2105,6 +2100,16 @@
           </property>
           <property name="value">
            <number>1</number>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="3">
+         <widget class="QCheckBox" name="checkBox_circular">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Activate</string>
           </property>
          </widget>
         </item>
@@ -2175,7 +2180,67 @@
        </layout>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="0" column="1">
+      <widget class="QGroupBox" name="groupBox_7">
+       <property name="title">
+        <string>DFD</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_7">
+        <item row="2" column="1">
+         <widget class="QComboBox" name="comboBox_channels">
+          <item>
+           <property name="text">
+            <string>25</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>49</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_35">
+          <property name="text">
+           <string>SPAD Channels</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QSpinBox" name="spinBox_DFD_nbins">
+          <property name="maximum">
+           <number>1023</number>
+          </property>
+          <property name="value">
+           <number>81</number>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_111">
+          <property name="text">
+           <string>DFD N. Bins</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Laser Ref. in CH26 (for DFD)</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="2">
       <widget class="QGroupBox" name="groupBox_6">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -3777,8 +3842,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>366</width>
-          <height>335</height>
+          <width>422</width>
+          <height>323</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_67">
@@ -4112,7 +4177,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>391</width>
+          <width>374</width>
           <height>184</height>
          </rect>
         </property>
@@ -4464,8 +4529,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>366</width>
-          <height>253</height>
+          <width>422</width>
+          <height>244</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -4535,8 +4600,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>366</width>
-          <height>117</height>
+          <width>422</width>
+          <height>112</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_65">
@@ -6141,22 +6206,6 @@
     <hint type="destinationlabel">
      <x>431</x>
      <y>89</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>comboBox_channels</sender>
-   <signal>currentIndexChanged(int)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>numberChannelsChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>155</x>
-     <y>968</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>422</x>
-     <y>1217</y>
     </hint>
    </hints>
   </connection>

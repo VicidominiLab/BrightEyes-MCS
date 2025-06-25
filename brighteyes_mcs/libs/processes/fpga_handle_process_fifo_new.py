@@ -44,6 +44,7 @@ class FpgaHandleProcess(mp.Process):
         self.fifo_chuck_size = self.configuration["fifo_chuck_size"]
         self.expected_raw_data = self.configuration["expected_raw_data"]
         self.initial_registers = self.configuration["initial_registers"]
+        print(self.configuration)
 
         # mp_mng = mp.Manager()
 
@@ -283,10 +284,10 @@ class FpgaHandleProcess(mp.Process):
                     self.nifpga_session.registers[register].write(
                         self.initial_registers[register]
                     )
-                print_dec(register, self.initial_registers[register])
+                print_dec("initial_registers: ", register, self.initial_registers[register])
             except Exception as e:
                 print_dec(
-                    "self.queueRegisterWrite",
+                    "initial_registers - self.queueRegisterWrite",
                     repr(e),
                     " ERROR",
                     register,

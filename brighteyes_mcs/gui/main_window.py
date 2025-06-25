@@ -4128,6 +4128,9 @@ Have fun!
         laser_sequence =  [0, laser_seq_gui[0], 0, laser_seq_gui[1], 0, laser_seq_gui[2], 0, laser_seq_gui[3], 0,
                                 laser_seq_gui[4], 0, laser_seq_gui[5]]
 
+        slave_mode = self.ui.checkBox_slavemode_enable.isChecked()
+        slave_type = self.ui.comboBox_slavemode_type.currentIndex()
+
         self.setRegistersDict(
             {
                 "Cx": int(Cx),
@@ -4141,6 +4144,8 @@ Have fun!
                 "CircularMotionActivate": circular_motion,
                 "DummyData": dummy_data,
                 "excitation sequence": laser_sequence,
+                "ext_px_selector": slave_type,
+                "SlaveMode": slave_mode
                 # "AD5764_MaxBit": 1,
             }
         )
