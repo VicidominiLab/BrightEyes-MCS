@@ -722,7 +722,7 @@ class AcquisitionLoopProcess(mp.Process):
                                     self.buffer_sum_SPAD_ch[: self.gap:][cond0],
                                 )
 
-                                cond0 = list_b < 2*gbins
+                                cond0 = (list_b >= gbins) & (list_b < 2*gbins)
                                 # list_x[::][cond0]
                                 # list_y[::][cond0]
                                 # self.buffer_sum_SPAD_ch[: self.gap:][cond0]
