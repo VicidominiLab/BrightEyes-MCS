@@ -637,14 +637,20 @@ class AcquisitionLoopProcess(mp.Process):
 
                                     np.add.at(
                                         self.image_xy_rgb[:, :, 0],
-                                        (list_y[::2], list_x[::2]),
-                                        self.buffer_sum_SPAD_ch[: self.gap:2],
+                                        (list_y[::3], list_x[::3]),
+                                        self.buffer_sum_SPAD_ch[: self.gap:3],
                                     )
 
                                     np.add.at(
                                         self.image_xy_rgb[:, :, 1],
-                                        (list_y[1::2], list_x[1::2]),
-                                        self.buffer_sum_SPAD_ch[1: self.gap:2],
+                                        (list_y[1::3], list_x[1::3]),
+                                        self.buffer_sum_SPAD_ch[1: self.gap:3],
+                                    )
+
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 2],
+                                        (list_y[2::3], list_x[2::3]),
+                                        self.buffer_sum_SPAD_ch[2: self.gap:3],
                                     )
 
                                 self.image_xy_rgb_lock.release()
@@ -673,6 +679,73 @@ class AcquisitionLoopProcess(mp.Process):
                                 )
 
                             self.image_xy_rgb_lock.release()
+
+                        if selected_channel.startswith("RGBDFD"):
+                            self.image_xy_rgb_lock.acquire()
+                            self.image_xy_rgb[list_y, list_x, 0] = 0
+                            self.image_xy_rgb[list_y, list_x, 1] = 0
+                            self.image_xy_rgb[list_y, list_x, 2] = 0
+
+                            tparts=3
+                            tbins=self.timebinsPerPixel
+                            gbins=self.timebinsPerPixel//tparts
+
+                            # list_pointer = np.arange(
+                            #     self.current_pointer, self.current_pointer + self.gap
+                            # )
+                            # list_pixel = list_pointer // self.timebinsPerPixel
+                            # list_b = list_pointer % self.timebinsPerPixel
+                            # list_x = list_pixel % self.shape[0]
+                            # list_y = (list_pixel // self.shape[0]) % self.shape[1]
+                            # list_z = (
+                            #         list_pixel
+                            #         // (self.shape[0] * self.shape[1])
+                            #         % self.shape[2]
+
+
+                            if self.buffer_sum_SPAD_ch.shape[0] > 2:
+
+                                # print_dec(bins, gbins)
+                                # print_dec(" self.image_xy_rgb[:, :, 0].shape",  self.image_xy_rgb[:, :, 0].shape)
+                                # print_dec(" (list_y[::bins], list_x[::bins])",  (list_y[::bins].max(), list_x[::bins].max()))
+                                # print_dec(" (list_y[::bins], list_x[::bins])",  (list_y[::bins].shape, list_x[::bins].shape))
+                                # print_dec(" self.buffer_sum_SPAD_ch[:min(self.gap, list_y[gbins::bins].shape[0]):bins]",  self.image_xy_rgb[:, :, 0].shape)
+
+                                cond0 = list_b < gbins
+                                # list_x[::][cond0]
+                                # list_y[::][cond0]
+                                # self.buffer_sum_SPAD_ch[: self.gap:][cond0]
+
+                                np.add.at(
+                                    self.image_xy_rgb[:, :, 0],
+                                    (list_y[::][cond0], list_x[::][cond0]),
+                                    self.buffer_sum_SPAD_ch[: self.gap:][cond0],
+                                )
+
+                                cond0 = list_b < 2*gbins
+                                # list_x[::][cond0]
+                                # list_y[::][cond0]
+                                # self.buffer_sum_SPAD_ch[: self.gap:][cond0]
+
+                                np.add.at(
+                                    self.image_xy_rgb[:, :, 1],
+                                    (list_y[::][cond0], list_x[::][cond0]),
+                                    self.buffer_sum_SPAD_ch[: self.gap:][cond0],
+                                )
+
+                                cond0 = list_b >= 2*gbins
+                                # list_x[::][cond0]
+                                # list_y[::][cond0]
+                                # self.buffer_sum_SPAD_ch[: self.gap:][cond0]
+
+                                np.add.at(
+                                    self.image_xy_rgb[:, :, 2],
+                                    (list_y[::][cond0], list_x[::][cond0]),
+                                    self.buffer_sum_SPAD_ch[: self.gap:][cond0],
+                                )
+
+                            self.image_xy_rgb_lock.release()
+
                         if self.active_autocorrelation:
                             correlator.add(self.buffer_sum_SPAD_ch[: self.gap])
                             self.autocorrelation[
