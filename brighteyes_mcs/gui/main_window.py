@@ -266,9 +266,9 @@ class MainWindow(QMainWindow):
 
         self.spadfcsmanager_inst = SpadFcsManager()
         print_dec("SpadFcsManager()")
-        self.qthread = QThread()
-        self.spadfcsmanager_inst.moveToThread(self.qthread)
-        print_dec("spadfcsmanager_inst.moveToThread()")
+        # self.qthread = QThread()
+        # self.spadfcsmanager_inst.moveToThread(self.qthread)
+        # print_dec("spadfcsmanager_inst.moveToThread()")
 
         self.ui.checkBoxLockRatio.setText("🔒")
 

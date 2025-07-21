@@ -2,7 +2,7 @@ import numpy as np
 import multiprocessing as mp
 #from UltraDict import UltraDict
 
-from PySide6.QtCore import QObject
+# from PySide6.QtCore import QObject
 
 from ..libs.processes.data_pre_process import DataPreProcess
 from ..libs.processes.acquisition_loop_process import AcquisitionLoopProcess
@@ -11,7 +11,7 @@ from ..libs.print_dec import print_dec
 from ..libs.mp_shared_array import MemorySharedNumpyArray
 
 
-class SpadFcsManager(QObject):
+class SpadFcsManager():
     """
     Manages the SPAD FCS (Single-Photon Avalanche Diode Fluorescence Correlation Spectroscopy) operations, including FPGA connections, data acquisition, and processing.
 

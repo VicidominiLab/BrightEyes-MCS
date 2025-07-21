@@ -688,33 +688,11 @@ class AcquisitionLoopProcess(mp.Process):
 
                             tparts=3
                             tbins=self.timebinsPerPixel
-                            gbins=self.timebinsPerPixel//tparts
-
-                            # list_pointer = np.arange(
-                            #     self.current_pointer, self.current_pointer + self.gap
-                            # )
-                            # list_pixel = list_pointer // self.timebinsPerPixel
-                            # list_b = list_pointer % self.timebinsPerPixel
-                            # list_x = list_pixel % self.shape[0]
-                            # list_y = (list_pixel // self.shape[0]) % self.shape[1]
-                            # list_z = (
-                            #         list_pixel
-                            #         // (self.shape[0] * self.shape[1])
-                            #         % self.shape[2]
-
+                            gbins=tbins//tparts
 
                             if self.buffer_sum_SPAD_ch.shape[0] > 2:
 
-                                # print_dec(bins, gbins)
-                                # print_dec(" self.image_xy_rgb[:, :, 0].shape",  self.image_xy_rgb[:, :, 0].shape)
-                                # print_dec(" (list_y[::bins], list_x[::bins])",  (list_y[::bins].max(), list_x[::bins].max()))
-                                # print_dec(" (list_y[::bins], list_x[::bins])",  (list_y[::bins].shape, list_x[::bins].shape))
-                                # print_dec(" self.buffer_sum_SPAD_ch[:min(self.gap, list_y[gbins::bins].shape[0]):bins]",  self.image_xy_rgb[:, :, 0].shape)
-
                                 cond0 = list_b < gbins
-                                # list_x[::][cond0]
-                                # list_y[::][cond0]
-                                # self.buffer_sum_SPAD_ch[: self.gap:][cond0]
 
                                 np.add.at(
                                     self.image_xy_rgb[:, :, 0],
@@ -723,9 +701,6 @@ class AcquisitionLoopProcess(mp.Process):
                                 )
 
                                 cond0 = (list_b >= gbins) & (list_b < 2*gbins)
-                                # list_x[::][cond0]
-                                # list_y[::][cond0]
-                                # self.buffer_sum_SPAD_ch[: self.gap:][cond0]
 
                                 np.add.at(
                                     self.image_xy_rgb[:, :, 1],
@@ -734,9 +709,6 @@ class AcquisitionLoopProcess(mp.Process):
                                 )
 
                                 cond0 = list_b >= 2*gbins
-                                # list_x[::][cond0]
-                                # list_y[::][cond0]
-                                # self.buffer_sum_SPAD_ch[: self.gap:][cond0]
 
                                 np.add.at(
                                     self.image_xy_rgb[:, :, 2],
