@@ -30,7 +30,7 @@ class Ui_MainWindowDesign(object):
     def setupUi(self, MainWindowDesign):
         if not MainWindowDesign.objectName():
             MainWindowDesign.setObjectName(u"MainWindowDesign")
-        MainWindowDesign.resize(1667, 1838)
+        MainWindowDesign.resize(1725, 1841)
         self.centralwidget = QWidget(MainWindowDesign)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_2 = QGridLayout(self.centralwidget)
@@ -624,7 +624,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_6.setWidgetResizable(True)
         self.scrollAreaWidgetContents_4 = QWidget()
         self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 422, 148))
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 366, 142))
         self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName(u"gridLayout_68")
         self.gridLayout_3434 = QGridLayout()
@@ -1224,52 +1224,12 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_13.setObjectName(u"dockWidgetContents_13")
         self.gridLayout_42 = QGridLayout(self.dockWidgetContents_13)
         self.gridLayout_42.setObjectName(u"gridLayout_42")
-        self.groupBox_3 = QGroupBox(self.dockWidgetContents_13)
-        self.groupBox_3.setObjectName(u"groupBox_3")
-        sizePolicy4.setHeightForWidth(self.groupBox_3.sizePolicy().hasHeightForWidth())
-        self.groupBox_3.setSizePolicy(sizePolicy4)
-        self.gridLayout_75 = QGridLayout(self.groupBox_3)
-        self.gridLayout_75.setObjectName(u"gridLayout_75")
-        self.checkBox_laser0 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser0.setObjectName(u"checkBox_laser0")
-        self.checkBox_laser0.setChecked(True)
-
-        self.gridLayout_75.addWidget(self.checkBox_laser0, 0, 0, 1, 1)
-
-        self.checkBox_laser3 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser3.setObjectName(u"checkBox_laser3")
-
-        self.gridLayout_75.addWidget(self.checkBox_laser3, 0, 3, 1, 1)
-
-        self.checkBox_laser1 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser1.setObjectName(u"checkBox_laser1")
-
-        self.gridLayout_75.addWidget(self.checkBox_laser1, 0, 1, 1, 1)
-
-        self.checkBox_laser2 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser2.setObjectName(u"checkBox_laser2")
-
-        self.gridLayout_75.addWidget(self.checkBox_laser2, 0, 2, 1, 1)
-
-
-        self.gridLayout_42.addWidget(self.groupBox_3, 0, 0, 1, 1)
-
         self.groupBox_7 = QGroupBox(self.dockWidgetContents_13)
         self.groupBox_7.setObjectName(u"groupBox_7")
+        sizePolicy1.setHeightForWidth(self.groupBox_7.sizePolicy().hasHeightForWidth())
+        self.groupBox_7.setSizePolicy(sizePolicy1)
         self.gridLayout_7 = QGridLayout(self.groupBox_7)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.comboBox_channels = QComboBox(self.groupBox_7)
-        self.comboBox_channels.addItem("")
-        self.comboBox_channels.addItem("")
-        self.comboBox_channels.setObjectName(u"comboBox_channels")
-
-        self.gridLayout_7.addWidget(self.comboBox_channels, 2, 1, 1, 1)
-
-        self.label_35 = QLabel(self.groupBox_7)
-        self.label_35.setObjectName(u"label_35")
-
-        self.gridLayout_7.addWidget(self.label_35, 2, 0, 1, 1)
-
         self.spinBox_DFD_nbins = QSpinBox(self.groupBox_7)
         self.spinBox_DFD_nbins.setObjectName(u"spinBox_DFD_nbins")
         self.spinBox_DFD_nbins.setMaximum(1023)
@@ -1277,16 +1237,32 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_7.addWidget(self.spinBox_DFD_nbins, 1, 1, 1, 1)
 
-        self.label_111 = QLabel(self.groupBox_7)
-        self.label_111.setObjectName(u"label_111")
-
-        self.gridLayout_7.addWidget(self.label_111, 1, 0, 1, 1)
-
         self.checkBox_DFD_LaserDebug = QCheckBox(self.groupBox_7)
         self.checkBox_DFD_LaserDebug.setObjectName(u"checkBox_DFD_LaserDebug")
         self.checkBox_DFD_LaserDebug.setChecked(True)
 
         self.gridLayout_7.addWidget(self.checkBox_DFD_LaserDebug, 3, 0, 1, 1)
+
+        self.label_35 = QLabel(self.groupBox_7)
+        self.label_35.setObjectName(u"label_35")
+
+        self.gridLayout_7.addWidget(self.label_35, 2, 0, 1, 1)
+
+        self.label_111 = QLabel(self.groupBox_7)
+        self.label_111.setObjectName(u"label_111")
+
+        self.gridLayout_7.addWidget(self.label_111, 1, 0, 1, 1)
+
+        self.comboBox_channels = QComboBox(self.groupBox_7)
+        self.comboBox_channels.addItem("")
+        self.comboBox_channels.addItem("")
+        self.comboBox_channels.setObjectName(u"comboBox_channels")
+
+        self.gridLayout_7.addWidget(self.comboBox_channels, 2, 1, 1, 1)
+
+        self.horizontalSpacer_15 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_7.addItem(self.horizontalSpacer_15, 4, 0, 1, 1)
 
 
         self.gridLayout_42.addWidget(self.groupBox_7, 0, 1, 1, 1)
@@ -1297,42 +1273,6 @@ class Ui_MainWindowDesign(object):
         self.groupBox_6.setSizePolicy(sizePolicy4)
         self.gridLayout_41 = QGridLayout(self.groupBox_6)
         self.gridLayout_41.setObjectName(u"gridLayout_41")
-        self.comboLaserSeq_3 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.setObjectName(u"comboLaserSeq_3")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_3.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_3.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_3, 0, 2, 1, 1)
-
-        self.comboLaserSeq_5 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.setObjectName(u"comboLaserSeq_5")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_5.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_5, 0, 4, 1, 1)
-
-        self.comboLaserSeq_1 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.setObjectName(u"comboLaserSeq_1")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_1.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_1, 0, 0, 1, 1)
-
         self.comboLaserSeq_4 = QComboBox(self.groupBox_6)
         self.comboLaserSeq_4.addItem("")
         self.comboLaserSeq_4.addItem("")
@@ -1343,7 +1283,19 @@ class Ui_MainWindowDesign(object):
         sizePolicy2.setHeightForWidth(self.comboLaserSeq_4.sizePolicy().hasHeightForWidth())
         self.comboLaserSeq_4.setSizePolicy(sizePolicy2)
 
-        self.gridLayout_41.addWidget(self.comboLaserSeq_4, 0, 3, 1, 1)
+        self.gridLayout_41.addWidget(self.comboLaserSeq_4, 0, 4, 1, 1)
+
+        self.comboLaserSeq_6 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.setObjectName(u"comboLaserSeq_6")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_6.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_6, 0, 6, 1, 1)
 
         self.comboLaserSeq_2 = QComboBox(self.groupBox_6)
         self.comboLaserSeq_2.addItem("")
@@ -1357,20 +1309,146 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_2, 0, 1, 1, 1)
 
-        self.comboLaserSeq_6 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.setObjectName(u"comboLaserSeq_6")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_6.setSizePolicy(sizePolicy2)
+        self.comboLaserSeq_3 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.setObjectName(u"comboLaserSeq_3")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_3.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_3.setSizePolicy(sizePolicy2)
 
-        self.gridLayout_41.addWidget(self.comboLaserSeq_6, 0, 5, 1, 1)
+        self.gridLayout_41.addWidget(self.comboLaserSeq_3, 0, 3, 1, 1)
+
+        self.comboLaserSeq_12 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.setObjectName(u"comboLaserSeq_12")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_12.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_12.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_12, 1, 6, 1, 1)
+
+        self.comboLaserSeq_11 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.setObjectName(u"comboLaserSeq_11")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_11.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_11.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_11, 1, 5, 1, 1)
+
+        self.comboLaserSeq_1 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.setObjectName(u"comboLaserSeq_1")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_1.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_1, 0, 0, 1, 1)
+
+        self.comboLaserSeq_7 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.setObjectName(u"comboLaserSeq_7")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_7.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_7.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_7, 1, 0, 1, 1)
+
+        self.comboLaserSeq_8 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.setObjectName(u"comboLaserSeq_8")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_8.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_8.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_8, 1, 1, 1, 1)
+
+        self.comboLaserSeq_5 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.setObjectName(u"comboLaserSeq_5")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_5.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_5, 0, 5, 1, 1)
+
+        self.comboLaserSeq_10 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.setObjectName(u"comboLaserSeq_10")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_10.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_10.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_10, 1, 4, 1, 1)
+
+        self.comboLaserSeq_9 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.setObjectName(u"comboLaserSeq_9")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_9.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_9.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_9, 1, 3, 1, 1)
 
 
         self.gridLayout_42.addWidget(self.groupBox_6, 2, 0, 1, 2)
+
+        self.groupBox_3 = QGroupBox(self.dockWidgetContents_13)
+        self.groupBox_3.setObjectName(u"groupBox_3")
+        sizePolicy.setHeightForWidth(self.groupBox_3.sizePolicy().hasHeightForWidth())
+        self.groupBox_3.setSizePolicy(sizePolicy)
+        self.gridLayout_75 = QGridLayout(self.groupBox_3)
+        self.gridLayout_75.setObjectName(u"gridLayout_75")
+        self.checkBox_laser1 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser1.setObjectName(u"checkBox_laser1")
+
+        self.gridLayout_75.addWidget(self.checkBox_laser1, 1, 0, 1, 1)
+
+        self.checkBox_laser0 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser0.setObjectName(u"checkBox_laser0")
+        self.checkBox_laser0.setChecked(True)
+
+        self.gridLayout_75.addWidget(self.checkBox_laser0, 0, 0, 1, 1)
+
+        self.checkBox_laser2 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser2.setObjectName(u"checkBox_laser2")
+
+        self.gridLayout_75.addWidget(self.checkBox_laser2, 2, 0, 1, 1)
+
+        self.checkBox_laser3 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser3.setObjectName(u"checkBox_laser3")
+
+        self.gridLayout_75.addWidget(self.checkBox_laser3, 3, 0, 1, 1)
+
+
+        self.gridLayout_42.addWidget(self.groupBox_3, 0, 0, 1, 1)
 
         self.dockWidget_laser.setWidget(self.dockWidgetContents_13)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_laser)
@@ -2264,7 +2342,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 422, 323))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 366, 309))
         self.gridLayout_67 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_67.setObjectName(u"gridLayout_67")
         self.checkBox_correlationMatrix = QCheckBox(self.scrollAreaWidgetContents_6)
@@ -2480,7 +2558,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 374, 184))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 387, 184))
         self.gridLayout_63 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_63.setObjectName(u"gridLayout_63")
         self.groupBox_4 = QGroupBox(self.scrollAreaWidgetContents)
@@ -2643,7 +2721,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 422, 244))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 366, 234))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -2688,7 +2766,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 422, 112))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 366, 107))
         self.gridLayout_65 = QGridLayout(self.scrollAreaWidgetContents_3)
         self.gridLayout_65.setObjectName(u"gridLayout_65")
         self.gridLayout_AO = QGridLayout()
@@ -3262,51 +3340,22 @@ class Ui_MainWindowDesign(object):
 #endif // QT_CONFIG(tooltip)
         self.checkBox_circular.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
         self.dockWidget_laser.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Laser configuration", None))
-        self.groupBox_3.setTitle(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
-        self.checkBox_laser0.setText(QCoreApplication.translate("MainWindowDesign", u"L1", None))
-        self.checkBox_laser3.setText(QCoreApplication.translate("MainWindowDesign", u"L4", None))
-        self.checkBox_laser1.setText(QCoreApplication.translate("MainWindowDesign", u"L2", None))
-        self.checkBox_laser2.setText(QCoreApplication.translate("MainWindowDesign", u"L3", None))
         self.groupBox_7.setTitle(QCoreApplication.translate("MainWindowDesign", u"DFD", None))
-        self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
-        self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
-
-        self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD Channels", None))
-        self.label_111.setText(QCoreApplication.translate("MainWindowDesign", u"DFD N. Bins", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_DFD_LaserDebug.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_DFD_LaserDebug.setText(QCoreApplication.translate("MainWindowDesign", u"Laser Ref. in CH26 (for DFD)", None))
+        self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD Channels", None))
+        self.label_111.setText(QCoreApplication.translate("MainWindowDesign", u"DFD N. Bins", None))
+        self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
+        self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
+
         self.groupBox_6.setTitle(QCoreApplication.translate("MainWindowDesign", u"Sequence", None))
-        self.comboLaserSeq_3.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_3.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_3.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_3.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_3.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
-        self.comboLaserSeq_5.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_5.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_5.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_5.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_5.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
-        self.comboLaserSeq_1.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_1.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_1.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_1.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_1.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
         self.comboLaserSeq_4.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.comboLaserSeq_4.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
         self.comboLaserSeq_4.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
         self.comboLaserSeq_4.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
         self.comboLaserSeq_4.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
-        self.comboLaserSeq_2.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_2.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_2.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_2.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_2.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
 
         self.comboLaserSeq_6.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.comboLaserSeq_6.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
@@ -3314,6 +3363,71 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_6.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
         self.comboLaserSeq_6.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
 
+        self.comboLaserSeq_2.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_2.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_2.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_2.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_2.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_3.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_3.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_3.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_3.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_3.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_12.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_12.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_12.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_12.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_12.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_11.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_11.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_11.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_11.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_11.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_1.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_1.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_1.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_1.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_1.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_7.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_7.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_7.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_7.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_7.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_8.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_8.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_8.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_8.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_8.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_5.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_5.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_5.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_5.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_5.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_10.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_10.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_10.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_10.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_10.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_9.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_9.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_9.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_9.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_9.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.groupBox_3.setTitle(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
+        self.checkBox_laser1.setText(QCoreApplication.translate("MainWindowDesign", u"L2", None))
+        self.checkBox_laser0.setText(QCoreApplication.translate("MainWindowDesign", u"L1", None))
+        self.checkBox_laser2.setText(QCoreApplication.translate("MainWindowDesign", u"L3", None))
+        self.checkBox_laser3.setText(QCoreApplication.translate("MainWindowDesign", u"L4", None))
         self.dockWidget_adv.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Adv.", None))
         self.lineEdit_fpga2bitfile.setText("")
         self.label_98.setText("")

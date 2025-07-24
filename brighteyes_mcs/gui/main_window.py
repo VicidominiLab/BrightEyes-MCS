@@ -4123,10 +4123,28 @@ Have fun!
                         int(self.ui.comboLaserSeq_3.currentText()),
                         int(self.ui.comboLaserSeq_4.currentText()),
                         int(self.ui.comboLaserSeq_5.currentText()),
-                        int(self.ui.comboLaserSeq_6.currentText())]
+                        int(self.ui.comboLaserSeq_6.currentText()),
+                        int(self.ui.comboLaserSeq_7.currentText()),
+                        int(self.ui.comboLaserSeq_8.currentText()),
+                        int(self.ui.comboLaserSeq_9.currentText()),
+                        int(self.ui.comboLaserSeq_10.currentText()),
+                        int(self.ui.comboLaserSeq_11.currentText()),
+                        int(self.ui.comboLaserSeq_12.currentText())
+                         ]
 
-        laser_sequence =  [0, laser_seq_gui[0], 0, laser_seq_gui[1], 0, laser_seq_gui[2], 0, laser_seq_gui[3], 0,
-                                laser_seq_gui[4], 0, laser_seq_gui[5]]
+        laser_sequence =  [laser_seq_gui[0],
+                           laser_seq_gui[1],
+                           laser_seq_gui[2],
+                           laser_seq_gui[3],
+                           laser_seq_gui[4],
+                           laser_seq_gui[5],
+                           laser_seq_gui[6],
+                           laser_seq_gui[7],
+                           laser_seq_gui[8],
+                           laser_seq_gui[9],
+                           laser_seq_gui[10],
+                           laser_seq_gui[11],
+                           ]
 
         slave_mode = self.ui.checkBox_slavemode_enable.isChecked()
         slave_type = self.ui.comboBox_slavemode_type.currentIndex()
