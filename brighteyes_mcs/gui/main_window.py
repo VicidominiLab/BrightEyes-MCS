@@ -4725,12 +4725,19 @@ Have fun!
         self.ui.label_uttm_ip.setText(ip)
         url =  "http://"+self.ui.lineEdit_uttm_addr.text()
 
-        r = requests.get(url+"/status")
-        self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
+        try:
+            r = requests.get(url+"/status")
+            self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
+        except:
+            print_dec("Failed ", url+"/status")
+            self.ui.checkBox_uttm_watchdog.setChecked(False)
 
-
-        r = requests.get(url+"/log")
-        self.ui.plainTextEdit_uttm_log.setPlainText(r.text)
+        try:
+            r = requests.get(url+"/log_last")
+            self.ui.textEdit_uttm_log.setText(r.text)
+        except:
+            print_dec("Failed ", url + "/log_last")
+            self.ui.checkBox_uttm_watchdog.setChecked(False)
 
     def pushButton_uttm_test_clicked(self):
         print_dec("pushButton_uttm_test_clicked")

@@ -784,19 +784,18 @@
               <string>uTTM</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_83">
-              <item row="0" column="2">
-               <widget class="QPushButton" name="pushButton_uttm_stop">
-                <property name="text">
-                 <string>Stop uTTM</string>
+              <item row="4" column="1" colspan="3">
+               <spacer name="horizontalSpacer_18">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
-               </widget>
-              </item>
-              <item row="0" column="3">
-               <widget class="QPushButton" name="pushButton_uttm_status">
-                <property name="text">
-                 <string>Status</string>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
                 </property>
-               </widget>
+               </spacer>
               </item>
               <item row="0" column="0">
                <layout class="QGridLayout" name="gridLayout_82">
@@ -844,18 +843,12 @@
                 </item>
                </layout>
               </item>
-              <item row="3" column="1" colspan="3">
-               <spacer name="horizontalSpacer_18">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
+              <item row="0" column="1">
+               <widget class="QPushButton" name="pushButton_uttm_start">
+                <property name="text">
+                 <string>Start uTTM</string>
                 </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
+               </widget>
               </item>
               <item row="1" column="2">
                <widget class="QPushButton" name="pushButton_uttm_loop">
@@ -864,21 +857,14 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="1">
-               <widget class="QPushButton" name="pushButton_uttm_start">
+              <item row="0" column="2">
+               <widget class="QPushButton" name="pushButton_uttm_stop">
                 <property name="text">
-                 <string>Start uTTM</string>
+                 <string>Stop uTTM</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="1" colspan="2">
-               <widget class="QCheckBox" name="checkBox_uttm_watchdog">
-                <property name="text">
-                 <string>Activate watchdog</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0" rowspan="5">
+              <item row="1" column="0" rowspan="6">
                <layout class="QGridLayout" name="gridLayout_84">
                 <item row="0" column="0">
                  <widget class="QLabel" name="label_121">
@@ -894,13 +880,27 @@
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="1">
-                 <widget class="QPlainTextEdit" name="plainTextEdit_uttm_log"/>
-                </item>
                 <item row="0" column="1">
                  <widget class="QTextEdit" name="textEdit_uttm_status"/>
                 </item>
+                <item row="1" column="1">
+                 <widget class="QTextEdit" name="textEdit_uttm_log"/>
+                </item>
                </layout>
+              </item>
+              <item row="0" column="3">
+               <widget class="QPushButton" name="pushButton_uttm_status">
+                <property name="text">
+                 <string>Status</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1" colspan="3">
+               <widget class="QCheckBox" name="checkBox_uttm_watchdog">
+                <property name="text">
+                 <string>Activate watchdog</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -3033,7 +3033,7 @@
          <item row="0" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
            <property name="currentIndex">
-            <number>7</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="tab_2">
             <attribute name="title">
@@ -4066,12 +4066,6 @@
               </spacer>
              </item>
             </layout>
-           </widget>
-           <widget class="QWidget" name="tab_9">
-            <attribute name="title">
-             <string>TTM</string>
-            </attribute>
-            <layout class="QGridLayout" name="gridLayout_30"/>
            </widget>
            <widget class="QWidget" name="tab_5">
             <attribute name="title">

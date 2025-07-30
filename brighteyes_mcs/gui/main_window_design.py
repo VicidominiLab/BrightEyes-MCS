@@ -19,11 +19,10 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QDockWidget, QDoubleSpinBox, QGridLayout, QGroupBox,
     QHBoxLayout, QHeaderView, QLabel, QLayout,
     QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
-    QPlainTextEdit, QProgressBar, QPushButton, QRadioButton,
-    QScrollArea, QSizePolicy, QSpacerItem, QSpinBox,
-    QStatusBar, QTabWidget, QTableWidget, QTableWidgetItem,
-    QTextEdit, QToolButton, QTreeView, QVBoxLayout,
-    QWidget)
+    QProgressBar, QPushButton, QRadioButton, QScrollArea,
+    QSizePolicy, QSpacerItem, QSpinBox, QStatusBar,
+    QTabWidget, QTableWidget, QTableWidgetItem, QTextEdit,
+    QToolButton, QTreeView, QVBoxLayout, QWidget)
 
 from .scispinbox import sciSpinBox
 
@@ -467,15 +466,9 @@ class Ui_MainWindowDesign(object):
         self.tab_16.setObjectName(u"tab_16")
         self.gridLayout_83 = QGridLayout(self.tab_16)
         self.gridLayout_83.setObjectName(u"gridLayout_83")
-        self.pushButton_uttm_stop = QPushButton(self.tab_16)
-        self.pushButton_uttm_stop.setObjectName(u"pushButton_uttm_stop")
+        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_83.addWidget(self.pushButton_uttm_stop, 0, 2, 1, 1)
-
-        self.pushButton_uttm_status = QPushButton(self.tab_16)
-        self.pushButton_uttm_status.setObjectName(u"pushButton_uttm_status")
-
-        self.gridLayout_83.addWidget(self.pushButton_uttm_status, 0, 3, 1, 1)
+        self.gridLayout_83.addItem(self.horizontalSpacer_18, 4, 1, 1, 3)
 
         self.gridLayout_82 = QGridLayout()
         self.gridLayout_82.setObjectName(u"gridLayout_82")
@@ -512,24 +505,20 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_83.addLayout(self.gridLayout_82, 0, 0, 1, 1)
 
-        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.pushButton_uttm_start = QPushButton(self.tab_16)
+        self.pushButton_uttm_start.setObjectName(u"pushButton_uttm_start")
 
-        self.gridLayout_83.addItem(self.horizontalSpacer_18, 3, 1, 1, 3)
+        self.gridLayout_83.addWidget(self.pushButton_uttm_start, 0, 1, 1, 1)
 
         self.pushButton_uttm_loop = QPushButton(self.tab_16)
         self.pushButton_uttm_loop.setObjectName(u"pushButton_uttm_loop")
 
         self.gridLayout_83.addWidget(self.pushButton_uttm_loop, 1, 2, 1, 1)
 
-        self.pushButton_uttm_start = QPushButton(self.tab_16)
-        self.pushButton_uttm_start.setObjectName(u"pushButton_uttm_start")
+        self.pushButton_uttm_stop = QPushButton(self.tab_16)
+        self.pushButton_uttm_stop.setObjectName(u"pushButton_uttm_stop")
 
-        self.gridLayout_83.addWidget(self.pushButton_uttm_start, 0, 1, 1, 1)
-
-        self.checkBox_uttm_watchdog = QCheckBox(self.tab_16)
-        self.checkBox_uttm_watchdog.setObjectName(u"checkBox_uttm_watchdog")
-
-        self.gridLayout_83.addWidget(self.checkBox_uttm_watchdog, 2, 1, 1, 2)
+        self.gridLayout_83.addWidget(self.pushButton_uttm_stop, 0, 2, 1, 1)
 
         self.gridLayout_84 = QGridLayout()
         self.gridLayout_84.setObjectName(u"gridLayout_84")
@@ -543,18 +532,28 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_84.addWidget(self.label_114, 1, 0, 1, 1)
 
-        self.plainTextEdit_uttm_log = QPlainTextEdit(self.tab_16)
-        self.plainTextEdit_uttm_log.setObjectName(u"plainTextEdit_uttm_log")
-
-        self.gridLayout_84.addWidget(self.plainTextEdit_uttm_log, 1, 1, 1, 1)
-
         self.textEdit_uttm_status = QTextEdit(self.tab_16)
         self.textEdit_uttm_status.setObjectName(u"textEdit_uttm_status")
 
         self.gridLayout_84.addWidget(self.textEdit_uttm_status, 0, 1, 1, 1)
 
+        self.textEdit_uttm_log = QTextEdit(self.tab_16)
+        self.textEdit_uttm_log.setObjectName(u"textEdit_uttm_log")
 
-        self.gridLayout_83.addLayout(self.gridLayout_84, 1, 0, 5, 1)
+        self.gridLayout_84.addWidget(self.textEdit_uttm_log, 1, 1, 1, 1)
+
+
+        self.gridLayout_83.addLayout(self.gridLayout_84, 1, 0, 6, 1)
+
+        self.pushButton_uttm_status = QPushButton(self.tab_16)
+        self.pushButton_uttm_status.setObjectName(u"pushButton_uttm_status")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_status, 0, 3, 1, 1)
+
+        self.checkBox_uttm_watchdog = QCheckBox(self.tab_16)
+        self.checkBox_uttm_watchdog.setObjectName(u"checkBox_uttm_watchdog")
+
+        self.gridLayout_83.addWidget(self.checkBox_uttm_watchdog, 2, 1, 1, 3)
 
         self.tabWidget_3.addTab(self.tab_16, "")
 
@@ -2336,11 +2335,6 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_46.addItem(self.verticalSpacer_4, 4, 0, 1, 1)
 
         self.tabWidget_2.addTab(self.tab_8, "")
-        self.tab_9 = QWidget()
-        self.tab_9.setObjectName(u"tab_9")
-        self.gridLayout_30 = QGridLayout(self.tab_9)
-        self.gridLayout_30.setObjectName(u"gridLayout_30")
-        self.tabWidget_2.addTab(self.tab_9, "")
         self.tab_5 = QWidget()
         self.tab_5.setObjectName(u"tab_5")
         self.gridLayout_52 = QGridLayout(self.tab_5)
@@ -3236,7 +3230,7 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_3.setCurrentIndex(1)
         self.comboBox_slavemode_type.setCurrentIndex(2)
         self.comboLaserSeq_1.setCurrentIndex(1)
-        self.tabWidget_2.setCurrentIndex(7)
+        self.tabWidget_2.setCurrentIndex(0)
         self.comboBox_analogSelect_B.setCurrentIndex(0)
 
 
@@ -3330,19 +3324,19 @@ class Ui_MainWindowDesign(object):
         self.lineEdit_ttmPort.setText(QCoreApplication.translate("MainWindowDesign", u"56000", None))
         self.label_117.setText("")
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_15), QCoreApplication.translate("MainWindowDesign", u"TTM", None))
-        self.pushButton_uttm_stop.setText(QCoreApplication.translate("MainWindowDesign", u"Stop uTTM", None))
-        self.pushButton_uttm_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status", None))
         self.label_113.setText(QCoreApplication.translate("MainWindowDesign", u"Address uTTM Client [addr:port]", None))
         self.label_uttm_port.setText(QCoreApplication.translate("MainWindowDesign", u"1234", None))
         self.label_118.setText(QCoreApplication.translate("MainWindowDesign", u"Address uTTM Client actual IP", None))
         self.label_115.setText(QCoreApplication.translate("MainWindowDesign", u"Port", None))
         self.lineEdit_uttm_addr.setText(QCoreApplication.translate("MainWindowDesign", u"mmskria2:1234", None))
         self.label_uttm_ip.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
-        self.pushButton_uttm_loop.setText(QCoreApplication.translate("MainWindowDesign", u"Test_uttm_loop", None))
         self.pushButton_uttm_start.setText(QCoreApplication.translate("MainWindowDesign", u"Start uTTM", None))
-        self.checkBox_uttm_watchdog.setText(QCoreApplication.translate("MainWindowDesign", u"Activate watchdog", None))
+        self.pushButton_uttm_loop.setText(QCoreApplication.translate("MainWindowDesign", u"Test_uttm_loop", None))
+        self.pushButton_uttm_stop.setText(QCoreApplication.translate("MainWindowDesign", u"Stop uTTM", None))
         self.label_121.setText(QCoreApplication.translate("MainWindowDesign", u"Status:", None))
         self.label_114.setText(QCoreApplication.translate("MainWindowDesign", u"Log:", None))
+        self.pushButton_uttm_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status", None))
+        self.checkBox_uttm_watchdog.setText(QCoreApplication.translate("MainWindowDesign", u"Activate watchdog", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_16), QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"(u)TTM", None))
         self.dockWidget_preview.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Commands", None))
@@ -3726,7 +3720,6 @@ class Ui_MainWindowDesign(object):
         self.label_20.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m/V]", None))
         self.label_5.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_8), QCoreApplication.translate("MainWindowDesign", u"Calibration", None))
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_9), QCoreApplication.translate("MainWindowDesign", u"TTM", None))
         self.label_90.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Last PreProcessed size", None))
         self.label_63.setText(QCoreApplication.translate("MainWindowDesign", u"Preview Buffer size (divided timebin)", None))
         self.comboBox_fifobackend.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Rust nifpga_fast_fifo_recv", None))
