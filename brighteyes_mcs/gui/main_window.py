@@ -4726,16 +4726,18 @@ Have fun!
         url =  "http://"+self.ui.lineEdit_uttm_addr.text()
 
         try:
-            r = requests.get(url+"/status")
+            r = requests.get(url+"/status", timeout=0.1)
             self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
         except:
+            self.timerUttmWatchDog = None
             print_dec("Failed ", url+"/status")
             self.ui.checkBox_uttm_watchdog.setChecked(False)
 
         try:
-            r = requests.get(url+"/log_last")
+            r = requests.get(url+"/log_last", timeout=0.1)
             self.ui.textEdit_uttm_log.setText(r.text)
         except:
+            self.timerUttmWatchDog = None
             print_dec("Failed ", url + "/log_last")
             self.ui.checkBox_uttm_watchdog.setChecked(False)
 
