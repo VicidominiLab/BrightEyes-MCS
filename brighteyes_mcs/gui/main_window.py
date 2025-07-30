@@ -52,6 +52,7 @@ import numpy as np
 import time
 
 import psutil
+import requests
 
 import json
 import h5py
@@ -406,6 +407,8 @@ class MainWindow(QMainWindow):
         )
         # self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_PMT_adv)
         self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_laser)
+        self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_dfd)
+
         # self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_TTM)
 
         self.tabifyDockWidget(
@@ -2425,6 +2428,19 @@ class MainWindow(QMainWindow):
     #     self.draw_fingerprint(data_finger_print)
     #
     #     self.ui.pushButton_napari.setEnabled(True)
+    @Slot()
+    def radioButton_ttm_type_ttm_toggle(self):
+        self.ui.radioButton_ttm_type_uttm.setChecked(
+            not self.ui.radioButton_ttm_type_ttm.isChecked()
+        )
+
+    @Slot()
+    def radioButton_ttm_type_uttm_toggle(self):
+        self.ui.radioButton_ttm_type_ttm.setChecked(
+            not self.ui.radioButton_ttm_type_uttm.isChecked()
+        )
+
+
 
     @Slot()
     def radio_ttm_local(self):
@@ -4679,6 +4695,63 @@ Have fun!
             if self.ttm_remote_manager.is_ready():
                 return True
         return False
+
+    @Slot()
+    def pushButton_uttm_start_clicked(self):
+        print_dec("pushButton_uttm_start")
+        ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
+        self.ui.label_uttm_ip.setText(ip)
+        url =  "http://"+self.ui.lineEdit_uttm_addr.text()
+        data = {}
+        r = requests.post(url+"/start", data=data)
+        self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
+
+
+    @Slot()
+    def pushButton_uttm_stop_clicked(self):
+        print_dec("pushButton_uttm_stop_clicked")
+        ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
+        self.ui.label_uttm_ip.setText(ip)
+        url =  "http://"+self.ui.lineEdit_uttm_addr.text()
+        data = {}
+        r = requests.post(url+"/stop", data=data)
+        self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
+
+    @Slot()
+    def pushButton_uttm_status_clicked(self):
+        print_dec("pushButton_uttm_status")
+
+        ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
+        self.ui.label_uttm_ip.setText(ip)
+        url =  "http://"+self.ui.lineEdit_uttm_addr.text()
+
+        r = requests.get(url+"/status")
+        self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
+
+
+        r = requests.get(url+"/log")
+        self.ui.plainTextEdit_uttm_log.setPlainText(r.text)
+
+    def pushButton_uttm_test_clicked(self):
+        print_dec("pushButton_uttm_test_clicked")
+
+
+    @Slot()
+    def checkBox_uttm_watchdog_clicked(self):
+        print_dec("checkBox_uttm_watchdog_clicked")
+        if self.ui.checkBox_uttm_watchdog.isChecked():
+            self.timerUttmWatchDog = QTimer(None)
+            self.timerUttmWatchDog_mutex = QMutex()
+            self.timerUttmWatchDog.timeout.connect(self.uttm_watchdog_trigger)
+            self.timerUttmWatchDog.setInterval(1500)
+            self.timerUttmWatchDog.start()
+        else:
+            self.timerUttmWatchDog = None
+
+    def uttm_watchdog_trigger(self):
+        self.timerUttmWatchDog_mutex.lock()
+        self.pushButton_uttm_status_clicked()
+        self.timerUttmWatchDog_mutex.unlock()
 
     @Slot()
     def checkAlerts(self):

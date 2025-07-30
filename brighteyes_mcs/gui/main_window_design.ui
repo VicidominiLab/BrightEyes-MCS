@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1725</width>
-    <height>1841</height>
+    <width>1692</width>
+    <height>1484</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <item row="0" column="0">
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>4</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -576,6 +576,338 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="tab_14">
+         <attribute name="title">
+          <string>(u)TTM</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_76">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_ttm_IP_7">
+            <property name="text">
+             <string>Type:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QRadioButton" name="radioButton_ttm_type_uttm">
+            <property name="text">
+             <string>uTTM</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="3" rowspan="2">
+           <spacer name="horizontalSpacer_17">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_ttm_IP_6">
+            <property name="text">
+             <string>Location:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QRadioButton" name="radioButton_ttm_type_ttm">
+            <property name="text">
+             <string>TTM</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QRadioButton" name="radioButton_ttm_remote">
+            <property name="text">
+             <string>Remote</string>
+            </property>
+            <property name="autoExclusive">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QRadioButton" name="radioButton_ttm_local">
+            <property name="text">
+             <string>Local</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="4">
+           <widget class="QTabWidget" name="tabWidget_3">
+            <property name="currentIndex">
+             <number>1</number>
+            </property>
+            <widget class="QWidget" name="tab_15">
+             <attribute name="title">
+              <string>TTM</string>
+             </attribute>
+             <layout class="QGridLayout" name="gridLayout_77">
+              <item row="1" column="2">
+               <spacer name="verticalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>505</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="0" column="2">
+               <layout class="QGridLayout" name="gridLayout_29">
+                <item row="6" column="0">
+                 <widget class="QLabel" name="label_ttm_IP_5">
+                  <property name="text">
+                   <string>TTM-File Folder</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="2">
+                 <widget class="QToolButton" name="toolButton_ttm_executable_path">
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_ttm_IP_4">
+                  <property name="text">
+                   <string>Server IP (this machine):</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="1">
+                 <widget class="QLineEdit" name="lineEdit_ttm_executable_path">
+                  <property name="text">
+                   <string>C:/Users/Developer/BrightEyes-TTM/DataReceiverGUI/Debug/BrightEyesTTMrecv.exe</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="1">
+                 <widget class="QLineEdit" name="lineEdit_ttm_filename">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLabel" name="label_ttm_IP">
+                  <property name="text">
+                   <string>127.0.0.1</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="0">
+                 <widget class="QLabel" name="label_ttm_IP_3">
+                  <property name="text">
+                   <string>TTM reader:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="2">
+                 <widget class="QToolButton" name="toolButton_ttm_filename">
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="2">
+                 <widget class="QLabel" name="label_116">
+                  <property name="text">
+                   <string>Port:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="3">
+                 <widget class="QLineEdit" name="lineEdit_ttmPort">
+                  <property name="text">
+                   <string>56000</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QLabel" name="label_117">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="tab_16">
+             <attribute name="title">
+              <string>uTTM</string>
+             </attribute>
+             <layout class="QGridLayout" name="gridLayout_83">
+              <item row="0" column="2">
+               <widget class="QPushButton" name="pushButton_uttm_stop">
+                <property name="text">
+                 <string>Stop uTTM</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QPushButton" name="pushButton_uttm_status">
+                <property name="text">
+                 <string>Status</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="gridLayout_82">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_113">
+                  <property name="text">
+                   <string>Address uTTM Client [addr:port]</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLabel" name="label_uttm_port">
+                  <property name="text">
+                   <string>1234</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_118">
+                  <property name="text">
+                   <string>Address uTTM Client actual IP</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_115">
+                  <property name="text">
+                   <string>Port</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLineEdit" name="lineEdit_uttm_addr">
+                  <property name="text">
+                   <string>mmskria2:1234</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLabel" name="label_uttm_ip">
+                  <property name="text">
+                   <string>127.0.0.1</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="3" column="1" colspan="3">
+               <spacer name="horizontalSpacer_18">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="pushButton_uttm_loop">
+                <property name="text">
+                 <string>Test_uttm_loop</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QPushButton" name="pushButton_uttm_start">
+                <property name="text">
+                 <string>Start uTTM</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1" colspan="2">
+               <widget class="QCheckBox" name="checkBox_uttm_watchdog">
+                <property name="text">
+                 <string>Activate watchdog</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" rowspan="5">
+               <layout class="QGridLayout" name="gridLayout_84">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_121">
+                  <property name="text">
+                   <string>Status:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_114">
+                  <property name="text">
+                   <string>Log:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QPlainTextEdit" name="plainTextEdit_uttm_log"/>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QTextEdit" name="textEdit_uttm_status"/>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
      </layout>
@@ -616,15 +948,97 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="2" rowspan="4">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QRadioButton" name="radioButton_digital">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Digital</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="radioButton_analog">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Analog</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_ttmActivate">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>TTM</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_DFD">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the Digital Frequency Domain data acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>DFD</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_18">
+           <property name="orientation">
+            <enum>Qt::Orientation::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
        <item row="1" column="1">
-        <widget class="QPushButton" name="pushButton_14">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add the current configuration to the Batch acquisition table&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Add to Batch</string>
-         </property>
-        </widget>
+        <layout class="QGridLayout" name="gridLayout_78">
+         <item row="0" column="0">
+          <widget class="QPushButton" name="pushButton_14">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add the current configuration to the Batch acquisition table&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Add to Batch</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item row="2" column="1">
         <widget class="QPushButton" name="pushButton_externalProgram">
@@ -638,47 +1052,6 @@
           <string>Ext. Viewer/Analysis</string>
          </property>
         </widget>
-       </item>
-       <item row="0" column="2" rowspan="3">
-        <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
-          <widget class="QRadioButton" name="radioButton_digital">
-           <property name="text">
-            <string>Digital</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioButton_analog">
-           <property name="text">
-            <string>Analog</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkBox_ttmActivate">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>TTM</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkBox_DFD">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the Digital Frequency Domain data acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>DFD</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
        <item row="1" column="0" rowspan="2">
         <widget class="QPushButton" name="pushButton_stop">
@@ -700,6 +1073,19 @@
         </widget>
        </item>
       </layout>
+     </item>
+     <item row="1" column="1">
+      <spacer name="verticalSpacer_17">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </widget>
@@ -731,30 +1117,6 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_time_bin_per_px">
-         <property name="text">
-          <string>Time bins per pixel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="2">
-        <widget class="QCheckBox" name="checkBox_waitOnlyFirstTime">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The delay laser is applied only the first acquisition and not each repetition.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Only First Time</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_frame_time">
-         <property name="text">
-          <string>Delay Laser [s]</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="1">
         <widget class="QDoubleSpinBox" name="spinBox_timeresolution">
          <property name="toolTip">
@@ -771,16 +1133,10 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QDoubleSpinBox" name="spinBox_waitForLaser">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser is turned on and before the scanning a &amp;quot;delay laser&amp;quot; is waited. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="keyboardTracking">
-          <bool>false</bool>
-         </property>
-         <property name="maximum">
-          <double>3600000.000000000000000</double>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_frame_time">
+         <property name="text">
+          <string>Delay Laser [s]</string>
          </property>
         </widget>
        </item>
@@ -788,33 +1144,6 @@
         <widget class="QLabel" name="label_29">
          <property name="text">
           <string>Turn OFF Laser bw. rep.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_frame_time_2">
-         <property name="text">
-          <string>Delay between rep. [s]</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_timeresolution">
-         <property name="text">
-          <string>Time Resolution [us]</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="3">
-        <widget class="QCheckBox" name="checkBox_laserOffAfterMeas">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If activated between two repetition the laser is switched off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -834,10 +1163,30 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_time_bin_per_px">
+         <property name="text">
+          <string>Time bins per pixel</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="2" rowspan="2">
         <widget class="QLabel" name="label_dwell_time_2">
          <property name="text">
           <string>Pixel dwell time [µs]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QDoubleSpinBox" name="spinBox_waitForLaser">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser is turned on and before the scanning a &amp;quot;delay laser&amp;quot; is waited. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="maximum">
+          <double>3600000.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -848,6 +1197,43 @@
          </property>
          <property name="text">
           <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
+        <widget class="QCheckBox" name="checkBox_laserOffAfterMeas">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If activated between two repetition the laser is switched off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QCheckBox" name="checkBox_waitOnlyFirstTime">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The delay laser is applied only the first acquisition and not each repetition.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Only First Time</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_timeresolution">
+         <property name="text">
+          <string>Time Resolution [us]</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_frame_time_2">
+         <property name="text">
+          <string>Delay between rep. [s]</string>
          </property>
         </widget>
        </item>
@@ -1044,8 +1430,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>366</width>
-          <height>142</height>
+          <width>349</width>
+          <height>106</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_68">
@@ -1478,10 +1864,171 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_9">
     <layout class="QGridLayout" name="gridLayout_17">
-     <item row="10" column="0">
-      <layout class="QHBoxLayout" name="horizontalLayout"/>
+     <item row="2" column="0" colspan="4">
+      <widget class="QScrollArea" name="scrollArea_7">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="widgetResizable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="scrollAreaWidgetContents_7">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>383</width>
+          <height>155</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_74">
+         <item row="0" column="0" rowspan="2">
+          <widget class="QGroupBox" name="groupBox">
+           <property name="title">
+            <string>Presets</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_69">
+            <item row="0" column="1">
+             <widget class="QPushButton" name="pushButton_loadPreset">
+              <property name="text">
+               <string>Load</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="pushButton_savePreset">
+              <property name="text">
+               <string>Save</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QComboBox" name="comboBox_preset">
+              <item>
+               <property name="text">
+                <string>0</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>2</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>3</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>4</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>5</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>6</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>7</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>8</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>9</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="pushButton_15">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Move the offset to the position on the row selected on the table below &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Move to selected row</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QPushButton" name="pushButton_Panorama">
+           <property name="text">
+            <string>Move to Default FOV</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QTableWidget" name="tableWidget_markers">
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Table of position selected on the image. To add a point double-click on the image.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="columnCount">
+            <number>4</number>
+           </property>
+           <attribute name="horizontalHeaderMinimumSectionSize">
+            <number>10</number>
+           </attribute>
+           <attribute name="verticalHeaderMinimumSectionSize">
+            <number>10</number>
+           </attribute>
+           <attribute name="verticalHeaderDefaultSectionSize">
+            <number>10</number>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>X</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Y</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Z</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Comments</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
      </item>
-     <item row="2" column="0" colspan="5">
+     <item row="1" column="0" colspan="4">
       <layout class="QGridLayout" name="gridLayout_18">
        <item row="1" column="0">
         <widget class="QLabel" name="label">
@@ -1745,171 +2292,6 @@
        </item>
       </layout>
      </item>
-     <item row="3" column="0" rowspan="2">
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>Presets</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_69">
-        <item row="0" column="1">
-         <widget class="QPushButton" name="pushButton_loadPreset">
-          <property name="text">
-           <string>Load</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="pushButton_savePreset">
-          <property name="text">
-           <string>Save</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QComboBox" name="comboBox_preset">
-          <item>
-           <property name="text">
-            <string>0</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>1</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>2</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>3</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>4</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>5</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>6</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>7</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>8</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>9</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="15" column="0">
-      <spacer name="verticalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Orientation::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="7" column="0" colspan="5">
-      <widget class="QTableWidget" name="tableWidget_markers">
-       <property name="font">
-        <font>
-         <family>MS Shell Dlg 2</family>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Table of position selected on the image. To add a point double-click on the image.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="columnCount">
-        <number>4</number>
-       </property>
-       <attribute name="horizontalHeaderMinimumSectionSize">
-        <number>10</number>
-       </attribute>
-       <attribute name="verticalHeaderMinimumSectionSize">
-        <number>10</number>
-       </attribute>
-       <attribute name="verticalHeaderDefaultSectionSize">
-        <number>10</number>
-       </attribute>
-       <column>
-        <property name="text">
-         <string>X</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Y</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Z</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Comments</string>
-        </property>
-       </column>
-      </widget>
-     </item>
-     <item row="11" column="1">
-      <spacer name="verticalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Orientation::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="4" column="1">
-      <widget class="QPushButton" name="pushButton_15">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Move the offset to the position on the row selected on the table below &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>Move to selected row</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QPushButton" name="pushButton_Panorama">
-       <property name="text">
-        <string>Move to Default FOV</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </widget>
   </widget>
@@ -2134,85 +2516,6 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_13">
     <layout class="QGridLayout" name="gridLayout_42">
-     <item row="0" column="1">
-      <widget class="QGroupBox" name="groupBox_7">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>DFD</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_7">
-        <item row="1" column="1">
-         <widget class="QSpinBox" name="spinBox_DFD_nbins">
-          <property name="maximum">
-           <number>1023</number>
-          </property>
-          <property name="value">
-           <number>81</number>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Laser Ref. in CH26 (for DFD)</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_35">
-          <property name="text">
-           <string>SPAD Channels</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_111">
-          <property name="text">
-           <string>DFD N. Bins</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QComboBox" name="comboBox_channels">
-          <item>
-           <property name="text">
-            <string>25</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>49</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <spacer name="horizontalSpacer_15">
-          <property name="orientation">
-           <enum>Qt::Orientation::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
-     </item>
      <item row="2" column="0" colspan="2">
       <widget class="QGroupBox" name="groupBox_6">
        <property name="sizePolicy">
@@ -2651,7 +2954,7 @@
        </layout>
       </widget>
      </item>
-     <item row="0" column="0">
+     <item row="0" column="0" colspan="2">
       <widget class="QGroupBox" name="groupBox_3">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -2663,10 +2966,17 @@
         <string>Activate</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_75">
-        <item row="1" column="0">
+        <item row="0" column="1">
          <widget class="QCheckBox" name="checkBox_laser1">
           <property name="text">
            <string>L2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QCheckBox" name="checkBox_laser2">
+          <property name="text">
+           <string>L3</string>
           </property>
          </widget>
         </item>
@@ -2680,14 +2990,7 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
-         <widget class="QCheckBox" name="checkBox_laser2">
-          <property name="text">
-           <string>L3</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
+        <item row="0" column="3">
          <widget class="QCheckBox" name="checkBox_laser3">
           <property name="text">
            <string>L4</string>
@@ -2730,7 +3033,7 @@
          <item row="0" column="0">
           <widget class="QTabWidget" name="tabWidget_2">
            <property name="currentIndex">
-            <number>0</number>
+            <number>7</number>
            </property>
            <widget class="QWidget" name="tab_2">
             <attribute name="title">
@@ -3768,101 +4071,7 @@
             <attribute name="title">
              <string>TTM</string>
             </attribute>
-            <layout class="QGridLayout" name="gridLayout_30">
-             <item row="0" column="0">
-              <layout class="QGridLayout" name="gridLayout_29">
-               <item row="1" column="1">
-                <widget class="QLabel" name="label_ttm_IP">
-                 <property name="text">
-                  <string>127.0.0.1</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_ttm_IP_5">
-                 <property name="text">
-                  <string>TTM-File Folder</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="3">
-                <widget class="QToolButton" name="toolButton_ttm_filename">
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="3">
-                <widget class="QToolButton" name="toolButton_ttm_executable_path">
-                 <property name="text">
-                  <string>...</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QLineEdit" name="lineEdit_ttm_executable_path">
-                 <property name="text">
-                  <string>C:/Users/Developer/BrightEyes-TTM/DataReceiverGUI/Debug/BrightEyesTTMrecv.exe</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_ttm_IP_4">
-                 <property name="text">
-                  <string>IP Port (server):</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_ttm_IP_3">
-                 <property name="text">
-                  <string>TTM reader:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="3">
-                <widget class="QLineEdit" name="lineEdit_ttmPort">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>56000</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QLineEdit" name="lineEdit_ttm_filename">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QRadioButton" name="radioButton_ttm_local">
-                 <property name="text">
-                  <string>Local</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="3">
-                <widget class="QRadioButton" name="radioButton_ttm_remote">
-                 <property name="text">
-                  <string>Remote</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
+            <layout class="QGridLayout" name="gridLayout_30"/>
            </widget>
            <widget class="QWidget" name="tab_5">
             <attribute name="title">
@@ -4071,8 +4280,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>366</width>
-          <height>309</height>
+          <width>349</width>
+          <height>278</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_67">
@@ -4344,6 +4553,19 @@
        </property>
       </spacer>
      </item>
+     <item row="0" column="0" colspan="4">
+      <widget class="QListWidget" name="listWidget">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The list of the saved files&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::SelectionMode::MultiSelection</enum>
+       </property>
+       <property name="selectionRectVisible">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="2">
       <widget class="QPushButton" name="pushButton_copyListFile">
        <property name="toolTip">
@@ -4365,19 +4587,6 @@
       <widget class="QPushButton" name="pushButton_openInExplorer">
        <property name="text">
         <string>Open in explorer</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0" colspan="4">
-      <widget class="QListWidget" name="listWidget">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The list of the saved files&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="selectionMode">
-        <enum>QAbstractItemView::SelectionMode::MultiSelection</enum>
-       </property>
-       <property name="selectionRectVisible">
-        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -4406,7 +4615,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>387</width>
+          <width>383</width>
           <height>184</height>
          </rect>
         </property>
@@ -4758,8 +4967,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>366</width>
-          <height>234</height>
+          <width>349</width>
+          <height>121</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -4830,7 +5039,7 @@
           <x>0</x>
           <y>0</y>
           <width>366</width>
-          <height>107</height>
+          <height>70</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_65">
@@ -5074,6 +5283,98 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="dockWidget_dfd">
+   <property name="windowTitle">
+    <string>DFD</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_16">
+    <layout class="QGridLayout" name="gridLayout_79">
+     <item row="3" column="0">
+      <spacer name="horizontalSpacer_15">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Policy::MinimumExpanding</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="comboBox_channels">
+       <item>
+        <property name="text">
+         <string>25</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>49</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QSpinBox" name="spinBox_DFD_nbins">
+       <property name="maximum">
+        <number>1023</number>
+       </property>
+       <property name="value">
+        <number>81</number>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_111">
+       <property name="text">
+        <string>DFD N. Bins</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Laser Ref. in CH26 (for DFD)</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_35">
+       <property name="text">
+        <string>SPAD Channels</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <spacer name="verticalSpacer_19">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
@@ -5149,8 +5450,8 @@
    <slot>test1()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1381</x>
-     <y>810</y>
+     <x>1432</x>
+     <y>690</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -5165,8 +5466,8 @@
    <slot>test2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1499</x>
-     <y>810</y>
+     <x>1543</x>
+     <y>690</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -5181,8 +5482,8 @@
    <slot>test3()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1616</x>
-     <y>810</y>
+     <x>1654</x>
+     <y>690</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -5197,8 +5498,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>133</x>
-     <y>1109</y>
+     <x>118</x>
+     <y>1001</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -5214,7 +5515,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>129</x>
-     <y>1121</y>
+     <y>1013</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5229,8 +5530,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>133</x>
-     <y>1165</y>
+     <x>129</x>
+     <y>1013</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5245,8 +5546,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1217</y>
+     <x>123</x>
+     <y>1021</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5261,8 +5562,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1245</y>
+     <x>123</x>
+     <y>1021</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5277,8 +5578,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1273</y>
+     <x>123</x>
+     <y>1021</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -5341,8 +5642,8 @@
    <slot>test4()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1381</x>
-     <y>840</y>
+     <x>1432</x>
+     <y>720</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -5357,8 +5658,8 @@
    <slot>test5()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1499</x>
-     <y>840</y>
+     <x>1543</x>
+     <y>720</y>
     </hint>
     <hint type="destinationlabel">
      <x>689</x>
@@ -5373,8 +5674,8 @@
    <slot>test6()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1616</x>
-     <y>840</y>
+     <x>1654</x>
+     <y>720</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -5389,8 +5690,8 @@
    <slot>test7()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1381</x>
-     <y>870</y>
+     <x>1432</x>
+     <y>750</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -5405,8 +5706,8 @@
    <slot>test8()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1499</x>
-     <y>870</y>
+     <x>1543</x>
+     <y>750</y>
     </hint>
     <hint type="destinationlabel">
      <x>690</x>
@@ -5421,8 +5722,8 @@
    <slot>test9()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1616</x>
-     <y>870</y>
+     <x>1654</x>
+     <y>750</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -5437,7 +5738,7 @@
    <slot>checkBoxLockRatioChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>417</x>
+     <x>409</x>
      <y>552</y>
     </hint>
     <hint type="destinationlabel">
@@ -5453,8 +5754,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1109</y>
+     <x>112</x>
+     <y>1001</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -5469,8 +5770,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1137</y>
+     <x>123</x>
+     <y>1013</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -5485,8 +5786,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>121</x>
-     <y>1165</y>
+     <x>123</x>
+     <y>1013</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -5501,7 +5802,7 @@
    <slot>rangeValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>296</x>
+     <x>292</x>
      <y>539</y>
     </hint>
     <hint type="destinationlabel">
@@ -5517,7 +5818,7 @@
    <slot>rangeValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>296</x>
+     <x>292</x>
      <y>567</y>
     </hint>
     <hint type="destinationlabel">
@@ -5533,7 +5834,7 @@
    <slot>rangeValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>296</x>
+     <x>292</x>
      <y>595</y>
     </hint>
     <hint type="destinationlabel">
@@ -5581,8 +5882,8 @@
    <slot>stopButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>139</x>
-     <y>83</y>
+     <x>138</x>
+     <y>119</y>
     </hint>
     <hint type="destinationlabel">
      <x>328</x>
@@ -5597,8 +5898,8 @@
    <slot>plotSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>705</x>
-     <y>1791</y>
+     <x>513</x>
+     <y>65</y>
     </hint>
     <hint type="destinationlabel">
      <x>468</x>
@@ -5613,8 +5914,8 @@
    <slot>selectedAutoscaleImg()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>520</x>
-     <y>1790</y>
+     <x>544</x>
+     <y>73</y>
     </hint>
     <hint type="destinationlabel">
      <x>215</x>
@@ -5629,8 +5930,8 @@
    <slot>projChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>705</x>
-     <y>1763</y>
+     <x>544</x>
+     <y>73</y>
     </hint>
     <hint type="destinationlabel">
      <x>469</x>
@@ -5645,8 +5946,8 @@
    <slot>startBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1222</x>
-     <y>1032</y>
+     <x>544</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>747</x>
@@ -5661,8 +5962,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>884</x>
-     <y>193</y>
+     <x>544</x>
+     <y>73</y>
     </hint>
     <hint type="destinationlabel">
      <x>555</x>
@@ -5677,8 +5978,8 @@
    <slot>stopBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1222</x>
-     <y>1148</y>
+     <x>544</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>870</x>
@@ -5693,8 +5994,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1352</x>
-     <y>619</y>
+     <x>1407</x>
+     <y>477</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -5709,8 +6010,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1440</x>
-     <y>619</y>
+     <x>1495</x>
+     <y>477</y>
     </hint>
     <hint type="destinationlabel">
      <x>871</x>
@@ -5725,8 +6026,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1529</x>
-     <y>619</y>
+     <x>1584</x>
+     <y>477</y>
     </hint>
     <hint type="destinationlabel">
      <x>874</x>
@@ -5741,8 +6042,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1617</x>
-     <y>619</y>
+     <x>1672</x>
+     <y>477</y>
     </hint>
     <hint type="destinationlabel">
      <x>862</x>
@@ -5757,8 +6058,8 @@
    <slot>cmd_moveToSelectedColumnFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1222</x>
-     <y>270</y>
+     <x>544</x>
+     <y>73</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -5789,8 +6090,8 @@
    <slot>addToBatch()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>274</x>
-     <y>85</y>
+     <x>273</x>
+     <y>88</y>
     </hint>
     <hint type="destinationlabel">
      <x>315</x>
@@ -5805,8 +6106,8 @@
    <slot>cmd_path_destinationfolder()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>410</x>
-     <y>1303</y>
+     <x>409</x>
+     <y>1063</y>
     </hint>
     <hint type="destinationlabel">
      <x>790</x>
@@ -5821,8 +6122,8 @@
    <slot>bit_file_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>386</x>
-     <y>1199</y>
+     <x>129</x>
+     <y>1009</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -5837,8 +6138,8 @@
    <slot>grabPanorama()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1627</x>
-     <y>1163</y>
+     <x>1682</x>
+     <y>855</y>
     </hint>
     <hint type="destinationlabel">
      <x>688</x>
@@ -5853,7 +6154,7 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>210</x>
+     <x>206</x>
      <y>442</y>
     </hint>
     <hint type="destinationlabel">
@@ -5869,7 +6170,7 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>210</x>
+     <x>206</x>
      <y>413</y>
     </hint>
     <hint type="destinationlabel">
@@ -5885,7 +6186,7 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>210</x>
+     <x>206</x>
      <y>357</y>
     </hint>
     <hint type="destinationlabel">
@@ -5917,7 +6218,7 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>210</x>
+     <x>206</x>
      <y>385</y>
     </hint>
     <hint type="destinationlabel">
@@ -5933,8 +6234,8 @@
    <slot>FCSReset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1087</x>
-     <y>1265</y>
+     <x>544</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>840</x>
@@ -5949,8 +6250,8 @@
    <slot>cmd_filename()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>410</x>
-     <y>1329</y>
+     <x>409</x>
+     <y>1091</y>
     </hint>
     <hint type="destinationlabel">
      <x>348</x>
@@ -5965,8 +6266,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>275</x>
-     <y>1285</y>
+     <x>555</x>
+     <y>159</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -5981,8 +6282,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>275</x>
-     <y>1228</y>
+     <x>555</x>
+     <y>159</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -5997,8 +6298,8 @@
    <slot>ttm_activate_change_state()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>409</x>
-     <y>95</y>
+     <x>408</x>
+     <y>106</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -6013,8 +6314,8 @@
    <slot>radio_ttm_local()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>220</x>
-     <y>1114</y>
+     <x>550</x>
+     <y>89</y>
     </hint>
     <hint type="destinationlabel">
      <x>1195</x>
@@ -6029,8 +6330,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>355</x>
-     <y>1114</y>
+     <x>620</x>
+     <y>89</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -6045,8 +6346,8 @@
    <slot>cmd_load_plugin()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1344</x>
-     <y>1243</y>
+     <x>1399</x>
+     <y>935</y>
     </hint>
     <hint type="destinationlabel">
      <x>1468</x>
@@ -6061,8 +6362,8 @@
    <slot>cmd_close_plugin()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1425</x>
-     <y>1243</y>
+     <x>1480</x>
+     <y>935</y>
     </hint>
     <hint type="destinationlabel">
      <x>1595</x>
@@ -6077,8 +6378,8 @@
    <slot>cmd_update_plugin_list()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1617</x>
-     <y>1243</y>
+     <x>1655</x>
+     <y>935</y>
     </hint>
     <hint type="destinationlabel">
      <x>1576</x>
@@ -6093,8 +6394,8 @@
    <slot>cmd_load_plugin()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1603</x>
-     <y>1431</y>
+     <x>1655</x>
+     <y>1014</y>
     </hint>
     <hint type="destinationlabel">
      <x>1397</x>
@@ -6125,8 +6426,8 @@
    <slot>copy_list_file()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>1621</y>
+     <x>308</x>
+     <y>1318</y>
     </hint>
     <hint type="destinationlabel">
      <x>354</x>
@@ -6141,8 +6442,8 @@
    <slot>delete_list_file()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>205</x>
-     <y>1621</y>
+     <x>197</x>
+     <y>1318</y>
     </hint>
     <hint type="destinationlabel">
      <x>355</x>
@@ -6157,8 +6458,8 @@
    <slot>analogOutChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1520</x>
-     <y>1565</y>
+     <x>1575</x>
+     <y>1113</y>
     </hint>
     <hint type="destinationlabel">
      <x>1622</x>
@@ -6173,8 +6474,8 @@
    <slot>analogOutChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1417</x>
-     <y>1565</y>
+     <x>1472</x>
+     <y>1113</y>
     </hint>
     <hint type="destinationlabel">
      <x>1485</x>
@@ -6189,8 +6490,8 @@
    <slot>bit_file_clicked2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>386</x>
-     <y>1286</y>
+     <x>129</x>
+     <y>1009</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -6253,7 +6554,7 @@
    <slot>updatePixelValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>415</x>
+     <x>409</x>
      <y>443</y>
     </hint>
     <hint type="destinationlabel">
@@ -6269,8 +6570,8 @@
    <slot>DFD_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>409</x>
-     <y>118</y>
+     <x>408</x>
+     <y>132</y>
     </hint>
     <hint type="destinationlabel">
      <x>400</x>
@@ -6317,8 +6618,8 @@
    <slot>traceReset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1337</x>
-     <y>1700</y>
+     <x>1392</x>
+     <y>1200</y>
     </hint>
     <hint type="destinationlabel">
      <x>1215</x>
@@ -6333,8 +6634,8 @@
    <slot>trace_parameters_changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1418</x>
-     <y>1712</y>
+     <x>1475</x>
+     <y>1228</y>
     </hint>
     <hint type="destinationlabel">
      <x>1210</x>
@@ -6349,8 +6650,8 @@
    <slot>trace_parameters_changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1612</x>
-     <y>1712</y>
+     <x>1681</x>
+     <y>1228</y>
     </hint>
     <hint type="destinationlabel">
      <x>1208</x>
@@ -6365,8 +6666,8 @@
    <slot>trace_parameters_changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1612</x>
-     <y>1683</y>
+     <x>1681</x>
+     <y>1198</y>
     </hint>
     <hint type="destinationlabel">
      <x>1207</x>
@@ -6381,8 +6682,8 @@
    <slot>trace_parameters_changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1507</x>
-     <y>1683</y>
+     <x>1567</x>
+     <y>1198</y>
     </hint>
     <hint type="destinationlabel">
      <x>1208</x>
@@ -6397,8 +6698,8 @@
    <slot>about()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1381</x>
-     <y>780</y>
+     <x>1432</x>
+     <y>660</y>
     </hint>
     <hint type="destinationlabel">
      <x>1255</x>
@@ -6445,8 +6746,8 @@
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>408</x>
-     <y>880</y>
+     <x>400</x>
+     <y>768</y>
     </hint>
     <hint type="destinationlabel">
      <x>424</x>
@@ -6461,8 +6762,8 @@
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>362</x>
-     <y>908</y>
+     <x>346</x>
+     <y>799</y>
     </hint>
     <hint type="destinationlabel">
      <x>430</x>
@@ -6477,8 +6778,8 @@
    <slot>test_analog_digital()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1381</x>
-     <y>900</y>
+     <x>1432</x>
+     <y>780</y>
     </hint>
     <hint type="destinationlabel">
      <x>1255</x>
@@ -6493,8 +6794,8 @@
    <slot>httpServerCheckBoxChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>313</x>
-     <y>1085</y>
+     <x>129</x>
+     <y>1009</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6509,8 +6810,8 @@
    <slot>addcurrentconfmacro()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>701</x>
-     <y>193</y>
+     <x>544</x>
+     <y>73</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6525,8 +6826,8 @@
    <slot>addcurrentconfmacrofcs()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>701</x>
-     <y>348</y>
+     <x>544</x>
+     <y>73</y>
     </hint>
     <hint type="destinationlabel">
      <x>428</x>
@@ -6541,8 +6842,8 @@
    <slot>copyPositionsMarkersFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>884</x>
-     <y>348</y>
+     <x>544</x>
+     <y>73</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6557,8 +6858,8 @@
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>362</x>
-     <y>964</y>
+     <x>346</x>
+     <y>861</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6573,8 +6874,8 @@
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>362</x>
-     <y>936</y>
+     <x>346</x>
+     <y>830</y>
     </hint>
     <hint type="destinationlabel">
      <x>432</x>
@@ -6589,12 +6890,124 @@
    <slot>openInExplorer()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>372</x>
-     <y>1614</y>
+     <x>410</x>
+     <y>1318</y>
     </hint>
     <hint type="destinationlabel">
      <x>437</x>
      <y>1635</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>radioButton_ttm_type_ttm</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>radioButton_ttm_type_ttm_toggle()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>550</x>
+     <y>63</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>0</x>
+     <y>1241</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>radioButton_ttm_type_uttm</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>radioButton_ttm_type_uttm_toggle()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>620</x>
+     <y>63</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-7</x>
+     <y>1280</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_uttm_start</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>pushButton_uttm_start_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1090</x>
+     <y>175</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1331</x>
+     <y>182</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_uttm_stop</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>pushButton_uttm_stop_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1170</x>
+     <y>163</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1332</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_uttm_status</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>pushButton_uttm_status_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1236</x>
+     <y>170</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1329</x>
+     <y>286</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_uttm_loop</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>pushButton_uttm_test_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1167</x>
+     <y>215</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1332</x>
+     <y>327</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_uttm_watchdog</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>checkBox_uttm_watchdog_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1066</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1301</x>
+     <y>312</y>
     </hint>
    </hints>
   </connection>
@@ -6684,5 +7097,12 @@
   <slot>addcurrentconfmacrofcs()</slot>
   <slot>copyPositionMarkers()</slot>
   <slot>openInExplorer()</slot>
+  <slot>radioButton_ttm_type_ttm_toggle()</slot>
+  <slot>radioButton_ttm_type_uttm_toggle()</slot>
+  <slot>pushButton_uttm_start_clicked()</slot>
+  <slot>pushButton_uttm_stop_clicked()</slot>
+  <slot>pushButton_uttm_status_clicked()</slot>
+  <slot>pushButton_uttm_test_clicked()</slot>
+  <slot>checkBox_uttm_watchdog_clicked()</slot>
  </slots>
 </ui>
