@@ -46,7 +46,7 @@ class PluginsManager:
             if trigger_name in self.trigger_register:
                 for i in self.trigger_register[trigger_name]:
                     func = i
-                    print("try to call ", i, " func:", func)
+                    print("try to call ", i, " func:", func, " str_args:", str_args)
                     if str_args is not None:
                         func(str_args)
                     else:
@@ -126,8 +126,10 @@ class PluginsManager:
         # self.main_window.plugin_signals.signal_afterStop
         # self.main_window.plugin_signals.signal_afterFinalize
         if trigger_name in self.trigger_register:
+            for n,f in enumerate(self.trigger_register[trigger_name]):
+                if (f.__module__ + "."+ f.__name__) == (func.__module__ + "."+ func.__name__):
+                    self.trigger_register[trigger_name].pop(n)
             self.trigger_register[trigger_name].append(func)
         else:
             self.trigger_register[trigger_name] = [func]
-
-        print(self.trigger_register)
+        print_dec(self.trigger_register)
