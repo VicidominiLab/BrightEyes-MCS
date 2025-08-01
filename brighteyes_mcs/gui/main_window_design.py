@@ -1819,7 +1819,12 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_59.addWidget(self.lineEdit_spad_length, 0, 1, 1, 2)
 
 
-        self.gridLayout_61.addLayout(self.gridLayout_59, 0, 0, 1, 1)
+        self.gridLayout_61.addLayout(self.gridLayout_59, 1, 0, 1, 1)
+
+        self.label_119 = QLabel(self.tab)
+        self.label_119.setObjectName(u"label_119")
+
+        self.gridLayout_61.addWidget(self.label_119, 0, 0, 1, 1)
 
         self.tabWidget_2.addTab(self.tab, "")
         self.tab_6 = QWidget()
@@ -3663,6 +3668,7 @@ class Ui_MainWindowDesign(object):
         self.label_93.setText(QCoreApplication.translate("MainWindowDesign", u"Data length", None))
         self.checkBox_spad_invert.setText(QCoreApplication.translate("MainWindowDesign", u"Invert", None))
         self.lineEdit_spad_length.setText(QCoreApplication.translate("MainWindowDesign", u"25", None))
+        self.label_119.setText(QCoreApplication.translate("MainWindowDesign", u"(Legacy feature to program the old SPAD array prototype)", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab), QCoreApplication.translate("MainWindowDesign", u"SPAD", None))
         self.label_56.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
         self.label_49.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
@@ -3694,7 +3700,7 @@ class Ui_MainWindowDesign(object):
         self.label_37.setText(QCoreApplication.translate("MainWindowDesign", u"Set Voltages Range [V]", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_7), QCoreApplication.translate("MainWindowDesign", u"Limits", None))
         self.label_86.setText(QCoreApplication.translate("MainWindowDesign", u"External Call", None))
-        self.lineEdit_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"%python -m napari %lastfilename", None))
+        self.lineEdit_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"napari %lastfilename", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_13), QCoreApplication.translate("MainWindowDesign", u"Ext.", None))
         self.checkBox_httpServer.setText(QCoreApplication.translate("MainWindowDesign", u"http API Server", None))
         self.label_100.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
