@@ -1,6 +1,6 @@
 from win32com.client import Dispatch
 import winreg
-import os
+import os, sys
 
 user_profile = os.environ['USERPROFILE']
 desktop_registry_key = r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
@@ -28,6 +28,27 @@ shortcut.save()
 
 
 path = desktop_path+r"\BrightEyesMCS.lnk"  #This is where the shortcut will be created
+print("Creating link: ", path)
+shell = Dispatch('WScript.Shell')
+shortcut = shell.CreateShortCut(path)
+shortcut.IconLocation = icon
+shortcut.Targetpath = target
+shortcut.save()
+
+
+
+path = os.getcwd()+r"\Python (.venv BrightEyesMCS).lnk"  #This is where the shortcut will be created
+target = os.getcwd()+r"\enter_in_venv.bat" # directory to which the shortcut is created
+icon =  sys.executable+",0"
+print("Creating link: ", path)
+shell = Dispatch('WScript.Shell')
+shortcut = shell.CreateShortCut(path)
+shortcut.IconLocation = icon
+shortcut.Targetpath = target
+shortcut.save()
+
+
+path = desktop_path+r"\Python (.venv BrightEyesMCS).lnk"  #This is where the shortcut will be created
 print("Creating link: ", path)
 shell = Dispatch('WScript.Shell')
 shortcut = shell.CreateShortCut(path)

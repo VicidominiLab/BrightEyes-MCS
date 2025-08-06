@@ -64,11 +64,7 @@ call .venv\Scripts\activate
 echo:
 echo Installing the pip requirements
 echo:
-pip install -r requirements.txt
-echo:
-echo Build Cython code
-echo:
-python compile_cython.py
+python installer.py
 echo:
 python download_firmware.py
 echo:
