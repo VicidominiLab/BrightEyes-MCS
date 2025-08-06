@@ -784,18 +784,57 @@
               <string>uTTM</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_83">
-              <item row="4" column="1" colspan="3">
-               <spacer name="horizontalSpacer_18">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
+              <item row="1" column="0" rowspan="8">
+               <layout class="QGridLayout" name="gridLayout_84">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_121">
+                  <property name="text">
+                   <string>Status:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_114">
+                  <property name="text">
+                   <string>Log:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QTextEdit" name="textEdit_uttm_status"/>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QTextEdit" name="textEdit_uttm_log"/>
+                </item>
+               </layout>
+              </item>
+              <item row="0" column="1">
+               <widget class="QPushButton" name="pushButton_uttm_start">
+                <property name="text">
+                 <string>Start uTTM</string>
                 </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QPushButton" name="pushButton_uttm_check_laser">
+                <property name="text">
+                 <string>Check Laser</string>
                 </property>
-               </spacer>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QPushButton" name="pushButton_uttm_stop">
+                <property name="text">
+                 <string>Stop uTTM</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="pushButton_uttm_loop">
+                <property name="text">
+                 <string>Test_uttm_loop</string>
+                </property>
+               </widget>
               </item>
               <item row="0" column="0">
                <layout class="QGridLayout" name="gridLayout_82">
@@ -843,50 +882,25 @@
                 </item>
                </layout>
               </item>
-              <item row="0" column="1">
-               <widget class="QPushButton" name="pushButton_uttm_start">
+              <item row="2" column="1" colspan="3">
+               <widget class="QCheckBox" name="checkBox_uttm_watchdog">
                 <property name="text">
-                 <string>Start uTTM</string>
+                 <string>Activate watchdog</string>
                 </property>
                </widget>
               </item>
-              <item row="1" column="2">
-               <widget class="QPushButton" name="pushButton_uttm_loop">
-                <property name="text">
-                 <string>Test_uttm_loop</string>
+              <item row="6" column="1" colspan="3">
+               <spacer name="horizontalSpacer_18">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QPushButton" name="pushButton_uttm_stop">
-                <property name="text">
-                 <string>Stop uTTM</string>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
                 </property>
-               </widget>
-              </item>
-              <item row="1" column="0" rowspan="6">
-               <layout class="QGridLayout" name="gridLayout_84">
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_121">
-                  <property name="text">
-                   <string>Status:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_114">
-                  <property name="text">
-                   <string>Log:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QTextEdit" name="textEdit_uttm_status"/>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QTextEdit" name="textEdit_uttm_log"/>
-                </item>
-               </layout>
+               </spacer>
               </item>
               <item row="0" column="3">
                <widget class="QPushButton" name="pushButton_uttm_status">
@@ -895,10 +909,19 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="1" colspan="3">
-               <widget class="QCheckBox" name="checkBox_uttm_watchdog">
+              <item row="4" column="1" rowspan="2" colspan="3">
+               <layout class="QGridLayout" name="gridLayout_uttm_preview"/>
+              </item>
+              <item row="3" column="1" colspan="3">
+               <widget class="QLabel" name="label_uttm_laser_freq">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="text">
-                 <string>Activate watchdog</string>
+                 <string>Laser freq. found:</string>
                 </property>
                </widget>
               </item>
@@ -5499,8 +5522,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>118</x>
-     <y>1001</y>
+     <x>133</x>
+     <y>1024</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -5515,8 +5538,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1013</y>
+     <x>133</x>
+     <y>1052</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5531,8 +5554,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1013</y>
+     <x>133</x>
+     <y>1080</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5547,8 +5570,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1021</y>
+     <x>121</x>
+     <y>1132</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5563,8 +5586,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1021</y>
+     <x>121</x>
+     <y>1160</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5579,8 +5602,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1021</y>
+     <x>121</x>
+     <y>1188</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -5755,8 +5778,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>112</x>
-     <y>1001</y>
+     <x>121</x>
+     <y>1024</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -5771,8 +5794,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1013</y>
+     <x>121</x>
+     <y>1052</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -5787,8 +5810,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1013</y>
+     <x>121</x>
+     <y>1080</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -5899,8 +5922,8 @@
    <slot>plotSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>513</x>
-     <y>65</y>
+     <x>697</x>
+     <y>1437</y>
     </hint>
     <hint type="destinationlabel">
      <x>468</x>
@@ -5915,8 +5938,8 @@
    <slot>selectedAutoscaleImg()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>527</x>
+     <y>1436</y>
     </hint>
     <hint type="destinationlabel">
      <x>215</x>
@@ -5931,8 +5954,8 @@
    <slot>projChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>697</x>
+     <y>1409</y>
     </hint>
     <hint type="destinationlabel">
      <x>469</x>
@@ -5947,8 +5970,8 @@
    <slot>startBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>82</y>
+     <x>1277</x>
+     <y>833</y>
     </hint>
     <hint type="destinationlabel">
      <x>747</x>
@@ -5963,8 +5986,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>876</x>
+     <y>164</y>
     </hint>
     <hint type="destinationlabel">
      <x>555</x>
@@ -5979,8 +6002,8 @@
    <slot>stopBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>82</y>
+     <x>1277</x>
+     <y>927</y>
     </hint>
     <hint type="destinationlabel">
      <x>870</x>
@@ -6059,8 +6082,8 @@
    <slot>cmd_moveToSelectedColumnFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>1277</x>
+     <y>227</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -6123,8 +6146,8 @@
    <slot>bit_file_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1009</y>
+     <x>386</x>
+     <y>1114</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -6235,8 +6258,8 @@
    <slot>FCSReset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>82</y>
+     <x>1142</x>
+     <y>1022</y>
     </hint>
     <hint type="destinationlabel">
      <x>840</x>
@@ -6267,8 +6290,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>555</x>
-     <y>159</y>
+     <x>515</x>
+     <y>138</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -6283,8 +6306,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>555</x>
-     <y>159</y>
+     <x>515</x>
+     <y>133</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -6491,8 +6514,8 @@
    <slot>bit_file_clicked2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1009</y>
+     <x>386</x>
+     <y>1201</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -6795,8 +6818,8 @@
    <slot>httpServerCheckBoxChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1009</y>
+     <x>313</x>
+     <y>1000</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6811,8 +6834,8 @@
    <slot>addcurrentconfmacro()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>693</x>
+     <y>164</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6827,8 +6850,8 @@
    <slot>addcurrentconfmacrofcs()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>693</x>
+     <y>290</y>
     </hint>
     <hint type="destinationlabel">
      <x>428</x>
@@ -6843,8 +6866,8 @@
    <slot>copyPositionsMarkersFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>876</x>
+     <y>290</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -7012,6 +7035,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushButton_uttm_check_laser</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>pushButton_uttm_check_laser_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1029</x>
+     <y>214</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1301</x>
+     <y>246</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>temporalSettingsChanged()</slot>
@@ -7105,5 +7144,6 @@
   <slot>pushButton_uttm_status_clicked()</slot>
   <slot>pushButton_uttm_test_clicked()</slot>
   <slot>checkBox_uttm_watchdog_clicked()</slot>
+  <slot>pushButton_uttm_check_laser_clicked()</slot>
  </slots>
 </ui>

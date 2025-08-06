@@ -4744,6 +4744,41 @@ Have fun!
     def pushButton_uttm_test_clicked(self):
         print_dec("pushButton_uttm_test_clicked")
 
+    def pushButton_uttm_check_laser_clicked(self):
+        print_dec("pushButton_uttm_check_laser_clicked")
+
+        ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
+        self.ui.label_uttm_ip.setText(ip)
+        url = "http://" + self.ui.lineEdit_uttm_addr.text()
+
+        self.uttm_laser_widget = pg.PlotWidget(self)
+        #self.uttm_laser_widget.setToolTip("Double-click for reset the trace")
+        self.uttm_laser_widget.setLabel("left", "count", "")
+        self.uttm_laser_widget.setLabel("bottom", "Time", "s")
+        self.ui.gridLayout_uttm_preview.addWidget(self.uttm_laser_widget, 0, 0)
+        self.uttm_laser_widget.show()
+        self.uttm_laser_widget.setDownsampling(1, True, "mean")
+        self.uttm_laser_widget.setMinimumSize(100, 130)
+        try:
+            r = requests.get(url + "/show_preview", timeout=1.1)
+            j = r.json()
+            self.ui.textEdit_uttm_status.setText(json.dumps(j, indent=4))
+        except:
+            print_dec("Failed ", url + "/show_preview")
+
+        self.ui.label_uttm_laser_freq.setText("Laser freq. found: %s MHz" % j["laser_frequency"])
+
+        x=[]
+        y=[]
+        for i in j["histogram"]:
+            x_pos = i["end"]
+            if isinstance(x_pos, (int, float, complex)):
+                x.append(x_pos)
+            else:
+                x.append(2*x[-1]-x[-2])
+            y.append(i["count"])
+
+        self.uttm_laser_widget.plot(np.asarray(x)*1.0e-12, np.asarray(y), clear=True)
 
     @Slot()
     def checkBox_uttm_watchdog_clicked(self):

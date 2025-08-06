@@ -466,9 +466,50 @@ class Ui_MainWindowDesign(object):
         self.tab_16.setObjectName(u"tab_16")
         self.gridLayout_83 = QGridLayout(self.tab_16)
         self.gridLayout_83.setObjectName(u"gridLayout_83")
-        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.gridLayout_84 = QGridLayout()
+        self.gridLayout_84.setObjectName(u"gridLayout_84")
+        self.label_121 = QLabel(self.tab_16)
+        self.label_121.setObjectName(u"label_121")
 
-        self.gridLayout_83.addItem(self.horizontalSpacer_18, 4, 1, 1, 3)
+        self.gridLayout_84.addWidget(self.label_121, 0, 0, 1, 1)
+
+        self.label_114 = QLabel(self.tab_16)
+        self.label_114.setObjectName(u"label_114")
+
+        self.gridLayout_84.addWidget(self.label_114, 1, 0, 1, 1)
+
+        self.textEdit_uttm_status = QTextEdit(self.tab_16)
+        self.textEdit_uttm_status.setObjectName(u"textEdit_uttm_status")
+
+        self.gridLayout_84.addWidget(self.textEdit_uttm_status, 0, 1, 1, 1)
+
+        self.textEdit_uttm_log = QTextEdit(self.tab_16)
+        self.textEdit_uttm_log.setObjectName(u"textEdit_uttm_log")
+
+        self.gridLayout_84.addWidget(self.textEdit_uttm_log, 1, 1, 1, 1)
+
+
+        self.gridLayout_83.addLayout(self.gridLayout_84, 1, 0, 8, 1)
+
+        self.pushButton_uttm_start = QPushButton(self.tab_16)
+        self.pushButton_uttm_start.setObjectName(u"pushButton_uttm_start")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_start, 0, 1, 1, 1)
+
+        self.pushButton_uttm_check_laser = QPushButton(self.tab_16)
+        self.pushButton_uttm_check_laser.setObjectName(u"pushButton_uttm_check_laser")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_check_laser, 1, 1, 1, 1)
+
+        self.pushButton_uttm_stop = QPushButton(self.tab_16)
+        self.pushButton_uttm_stop.setObjectName(u"pushButton_uttm_stop")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_stop, 0, 2, 1, 1)
+
+        self.pushButton_uttm_loop = QPushButton(self.tab_16)
+        self.pushButton_uttm_loop.setObjectName(u"pushButton_uttm_loop")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_loop, 1, 2, 1, 1)
 
         self.gridLayout_82 = QGridLayout()
         self.gridLayout_82.setObjectName(u"gridLayout_82")
@@ -505,55 +546,34 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_83.addLayout(self.gridLayout_82, 0, 0, 1, 1)
 
-        self.pushButton_uttm_start = QPushButton(self.tab_16)
-        self.pushButton_uttm_start.setObjectName(u"pushButton_uttm_start")
+        self.checkBox_uttm_watchdog = QCheckBox(self.tab_16)
+        self.checkBox_uttm_watchdog.setObjectName(u"checkBox_uttm_watchdog")
 
-        self.gridLayout_83.addWidget(self.pushButton_uttm_start, 0, 1, 1, 1)
+        self.gridLayout_83.addWidget(self.checkBox_uttm_watchdog, 2, 1, 1, 3)
 
-        self.pushButton_uttm_loop = QPushButton(self.tab_16)
-        self.pushButton_uttm_loop.setObjectName(u"pushButton_uttm_loop")
+        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_83.addWidget(self.pushButton_uttm_loop, 1, 2, 1, 1)
-
-        self.pushButton_uttm_stop = QPushButton(self.tab_16)
-        self.pushButton_uttm_stop.setObjectName(u"pushButton_uttm_stop")
-
-        self.gridLayout_83.addWidget(self.pushButton_uttm_stop, 0, 2, 1, 1)
-
-        self.gridLayout_84 = QGridLayout()
-        self.gridLayout_84.setObjectName(u"gridLayout_84")
-        self.label_121 = QLabel(self.tab_16)
-        self.label_121.setObjectName(u"label_121")
-
-        self.gridLayout_84.addWidget(self.label_121, 0, 0, 1, 1)
-
-        self.label_114 = QLabel(self.tab_16)
-        self.label_114.setObjectName(u"label_114")
-
-        self.gridLayout_84.addWidget(self.label_114, 1, 0, 1, 1)
-
-        self.textEdit_uttm_status = QTextEdit(self.tab_16)
-        self.textEdit_uttm_status.setObjectName(u"textEdit_uttm_status")
-
-        self.gridLayout_84.addWidget(self.textEdit_uttm_status, 0, 1, 1, 1)
-
-        self.textEdit_uttm_log = QTextEdit(self.tab_16)
-        self.textEdit_uttm_log.setObjectName(u"textEdit_uttm_log")
-
-        self.gridLayout_84.addWidget(self.textEdit_uttm_log, 1, 1, 1, 1)
-
-
-        self.gridLayout_83.addLayout(self.gridLayout_84, 1, 0, 6, 1)
+        self.gridLayout_83.addItem(self.horizontalSpacer_18, 6, 1, 1, 3)
 
         self.pushButton_uttm_status = QPushButton(self.tab_16)
         self.pushButton_uttm_status.setObjectName(u"pushButton_uttm_status")
 
         self.gridLayout_83.addWidget(self.pushButton_uttm_status, 0, 3, 1, 1)
 
-        self.checkBox_uttm_watchdog = QCheckBox(self.tab_16)
-        self.checkBox_uttm_watchdog.setObjectName(u"checkBox_uttm_watchdog")
+        self.gridLayout_uttm_preview = QGridLayout()
+        self.gridLayout_uttm_preview.setObjectName(u"gridLayout_uttm_preview")
 
-        self.gridLayout_83.addWidget(self.checkBox_uttm_watchdog, 2, 1, 1, 3)
+        self.gridLayout_83.addLayout(self.gridLayout_uttm_preview, 4, 1, 2, 3)
+
+        self.label_uttm_laser_freq = QLabel(self.tab_16)
+        self.label_uttm_laser_freq.setObjectName(u"label_uttm_laser_freq")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.label_uttm_laser_freq.sizePolicy().hasHeightForWidth())
+        self.label_uttm_laser_freq.setSizePolicy(sizePolicy1)
+
+        self.gridLayout_83.addWidget(self.label_uttm_laser_freq, 3, 1, 1, 3)
 
         self.tabWidget_3.addTab(self.tab_16, "")
 
@@ -643,11 +663,11 @@ class Ui_MainWindowDesign(object):
         self.pushButton_stop = QPushButton(self.dockWidgetContents_8)
         self.pushButton_stop.setObjectName(u"pushButton_stop")
         self.pushButton_stop.setEnabled(False)
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
-        self.pushButton_stop.setSizePolicy(sizePolicy1)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
+        self.pushButton_stop.setSizePolicy(sizePolicy2)
 
         self.gridLayout_55.addWidget(self.pushButton_stop, 1, 0, 2, 1)
 
@@ -887,11 +907,11 @@ class Ui_MainWindowDesign(object):
         self.comboBox_fingerprint.addItem("")
         self.comboBox_fingerprint.addItem("")
         self.comboBox_fingerprint.setObjectName(u"comboBox_fingerprint")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.comboBox_fingerprint.sizePolicy().hasHeightForWidth())
-        self.comboBox_fingerprint.setSizePolicy(sizePolicy2)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.comboBox_fingerprint.sizePolicy().hasHeightForWidth())
+        self.comboBox_fingerprint.setSizePolicy(sizePolicy3)
         self.comboBox_fingerprint.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
 
         self.gridLayout_47.addWidget(self.comboBox_fingerprint, 0, 5, 1, 1)
@@ -949,11 +969,11 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_13.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         self.progressBar_repetition = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_repetition.setObjectName(u"progressBar_repetition")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.progressBar_repetition.sizePolicy().hasHeightForWidth())
-        self.progressBar_repetition.setSizePolicy(sizePolicy3)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.progressBar_repetition.sizePolicy().hasHeightForWidth())
+        self.progressBar_repetition.setSizePolicy(sizePolicy4)
         self.progressBar_repetition.setStyleSheet(u"height: 8px;")
         self.progressBar_repetition.setValue(24)
 
@@ -966,8 +986,8 @@ class Ui_MainWindowDesign(object):
 
         self.label_current_repetition_val = QLabel(self.dockWidgetContents_6)
         self.label_current_repetition_val.setObjectName(u"label_current_repetition_val")
-        sizePolicy1.setHeightForWidth(self.label_current_repetition_val.sizePolicy().hasHeightForWidth())
-        self.label_current_repetition_val.setSizePolicy(sizePolicy1)
+        sizePolicy2.setHeightForWidth(self.label_current_repetition_val.sizePolicy().hasHeightForWidth())
+        self.label_current_repetition_val.setSizePolicy(sizePolicy2)
         self.label_current_repetition_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_13.addWidget(self.label_current_repetition_val, 9, 1, 1, 1)
@@ -991,8 +1011,8 @@ class Ui_MainWindowDesign(object):
 
         self.progressBar_saving = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_saving.setObjectName(u"progressBar_saving")
-        sizePolicy3.setHeightForWidth(self.progressBar_saving.sizePolicy().hasHeightForWidth())
-        self.progressBar_saving.setSizePolicy(sizePolicy3)
+        sizePolicy4.setHeightForWidth(self.progressBar_saving.sizePolicy().hasHeightForWidth())
+        self.progressBar_saving.setSizePolicy(sizePolicy4)
         self.progressBar_saving.setStyleSheet(u"height: 8px;")
         self.progressBar_saving.setValue(0)
 
@@ -1000,8 +1020,8 @@ class Ui_MainWindowDesign(object):
 
         self.progressBar_fifo_digital = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_fifo_digital.setObjectName(u"progressBar_fifo_digital")
-        sizePolicy3.setHeightForWidth(self.progressBar_fifo_digital.sizePolicy().hasHeightForWidth())
-        self.progressBar_fifo_digital.setSizePolicy(sizePolicy3)
+        sizePolicy4.setHeightForWidth(self.progressBar_fifo_digital.sizePolicy().hasHeightForWidth())
+        self.progressBar_fifo_digital.setSizePolicy(sizePolicy4)
         self.progressBar_fifo_digital.setStyleSheet(u"height: 8px;")
         self.progressBar_fifo_digital.setValue(24)
         self.progressBar_fifo_digital.setTextVisible(True)
@@ -1010,16 +1030,16 @@ class Ui_MainWindowDesign(object):
 
         self.label_current_frame_val = QLabel(self.dockWidgetContents_6)
         self.label_current_frame_val.setObjectName(u"label_current_frame_val")
-        sizePolicy1.setHeightForWidth(self.label_current_frame_val.sizePolicy().hasHeightForWidth())
-        self.label_current_frame_val.setSizePolicy(sizePolicy1)
+        sizePolicy2.setHeightForWidth(self.label_current_frame_val.sizePolicy().hasHeightForWidth())
+        self.label_current_frame_val.setSizePolicy(sizePolicy2)
         self.label_current_frame_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_13.addWidget(self.label_current_frame_val, 8, 1, 1, 1)
 
         self.progressBar_frame = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_frame.setObjectName(u"progressBar_frame")
-        sizePolicy3.setHeightForWidth(self.progressBar_frame.sizePolicy().hasHeightForWidth())
-        self.progressBar_frame.setSizePolicy(sizePolicy3)
+        sizePolicy4.setHeightForWidth(self.progressBar_frame.sizePolicy().hasHeightForWidth())
+        self.progressBar_frame.setSizePolicy(sizePolicy4)
         self.progressBar_frame.setStyleSheet(u"height: 8px;")
         self.progressBar_frame.setValue(24)
 
@@ -1044,8 +1064,8 @@ class Ui_MainWindowDesign(object):
 
         self.progressBar_fifo_analog = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_fifo_analog.setObjectName(u"progressBar_fifo_analog")
-        sizePolicy3.setHeightForWidth(self.progressBar_fifo_analog.sizePolicy().hasHeightForWidth())
-        self.progressBar_fifo_analog.setSizePolicy(sizePolicy3)
+        sizePolicy4.setHeightForWidth(self.progressBar_fifo_analog.sizePolicy().hasHeightForWidth())
+        self.progressBar_fifo_analog.setSizePolicy(sizePolicy4)
         self.progressBar_fifo_analog.setStyleSheet(u"height: 8px;")
         self.progressBar_fifo_analog.setValue(24)
 
@@ -1069,11 +1089,11 @@ class Ui_MainWindowDesign(object):
 
         self.label_tot_num_dat_point = QLabel(self.dockWidgetContents_6)
         self.label_tot_num_dat_point.setObjectName(u"label_tot_num_dat_point")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.label_tot_num_dat_point.sizePolicy().hasHeightForWidth())
-        self.label_tot_num_dat_point.setSizePolicy(sizePolicy4)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.label_tot_num_dat_point.sizePolicy().hasHeightForWidth())
+        self.label_tot_num_dat_point.setSizePolicy(sizePolicy5)
         self.label_tot_num_dat_point.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_13.addWidget(self.label_tot_num_dat_point, 2, 0, 1, 1)
@@ -1125,11 +1145,11 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_17.setObjectName(u"gridLayout_17")
         self.scrollArea_7 = QScrollArea(self.dockWidgetContents_9)
         self.scrollArea_7.setObjectName(u"scrollArea_7")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.scrollArea_7.sizePolicy().hasHeightForWidth())
-        self.scrollArea_7.setSizePolicy(sizePolicy5)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.scrollArea_7.sizePolicy().hasHeightForWidth())
+        self.scrollArea_7.setSizePolicy(sizePolicy6)
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollAreaWidgetContents_7 = QWidget()
         self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
@@ -1462,16 +1482,16 @@ class Ui_MainWindowDesign(object):
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_activatefifo)
         self.dockWidget_laser = QDockWidget(MainWindowDesign)
         self.dockWidget_laser.setObjectName(u"dockWidget_laser")
-        sizePolicy4.setHeightForWidth(self.dockWidget_laser.sizePolicy().hasHeightForWidth())
-        self.dockWidget_laser.setSizePolicy(sizePolicy4)
+        sizePolicy5.setHeightForWidth(self.dockWidget_laser.sizePolicy().hasHeightForWidth())
+        self.dockWidget_laser.setSizePolicy(sizePolicy5)
         self.dockWidgetContents_13 = QWidget()
         self.dockWidgetContents_13.setObjectName(u"dockWidgetContents_13")
         self.gridLayout_42 = QGridLayout(self.dockWidgetContents_13)
         self.gridLayout_42.setObjectName(u"gridLayout_42")
         self.groupBox_6 = QGroupBox(self.dockWidgetContents_13)
         self.groupBox_6.setObjectName(u"groupBox_6")
-        sizePolicy4.setHeightForWidth(self.groupBox_6.sizePolicy().hasHeightForWidth())
-        self.groupBox_6.setSizePolicy(sizePolicy4)
+        sizePolicy5.setHeightForWidth(self.groupBox_6.sizePolicy().hasHeightForWidth())
+        self.groupBox_6.setSizePolicy(sizePolicy5)
         self.gridLayout_41 = QGridLayout(self.groupBox_6)
         self.gridLayout_41.setObjectName(u"gridLayout_41")
         self.comboLaserSeq_4 = QComboBox(self.groupBox_6)
@@ -1481,8 +1501,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_4.addItem("")
         self.comboLaserSeq_4.addItem("")
         self.comboLaserSeq_4.setObjectName(u"comboLaserSeq_4")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_4.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_4.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_4.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_4.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_4, 0, 4, 1, 1)
 
@@ -1493,8 +1513,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_6.addItem("")
         self.comboLaserSeq_6.addItem("")
         self.comboLaserSeq_6.setObjectName(u"comboLaserSeq_6")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_6.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_6.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_6, 0, 6, 1, 1)
 
@@ -1505,8 +1525,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_2.addItem("")
         self.comboLaserSeq_2.addItem("")
         self.comboLaserSeq_2.setObjectName(u"comboLaserSeq_2")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_2.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_2.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_2.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_2.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_2, 0, 1, 1, 1)
 
@@ -1517,8 +1537,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_3.addItem("")
         self.comboLaserSeq_3.addItem("")
         self.comboLaserSeq_3.setObjectName(u"comboLaserSeq_3")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_3.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_3.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_3.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_3.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_3, 0, 3, 1, 1)
 
@@ -1529,8 +1549,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_12.addItem("")
         self.comboLaserSeq_12.addItem("")
         self.comboLaserSeq_12.setObjectName(u"comboLaserSeq_12")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_12.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_12.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_12.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_12.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_12, 1, 6, 1, 1)
 
@@ -1541,8 +1561,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_11.addItem("")
         self.comboLaserSeq_11.addItem("")
         self.comboLaserSeq_11.setObjectName(u"comboLaserSeq_11")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_11.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_11.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_11.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_11.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_11, 1, 5, 1, 1)
 
@@ -1553,8 +1573,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_1.addItem("")
         self.comboLaserSeq_1.addItem("")
         self.comboLaserSeq_1.setObjectName(u"comboLaserSeq_1")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_1.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_1.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_1, 0, 0, 1, 1)
 
@@ -1565,8 +1585,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_7.addItem("")
         self.comboLaserSeq_7.addItem("")
         self.comboLaserSeq_7.setObjectName(u"comboLaserSeq_7")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_7.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_7.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_7.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_7.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_7, 1, 0, 1, 1)
 
@@ -1577,8 +1597,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_8.addItem("")
         self.comboLaserSeq_8.addItem("")
         self.comboLaserSeq_8.setObjectName(u"comboLaserSeq_8")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_8.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_8.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_8.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_8.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_8, 1, 1, 1, 1)
 
@@ -1589,8 +1609,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_5.addItem("")
         self.comboLaserSeq_5.addItem("")
         self.comboLaserSeq_5.setObjectName(u"comboLaserSeq_5")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_5.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_5.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_5, 0, 5, 1, 1)
 
@@ -1601,8 +1621,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_10.addItem("")
         self.comboLaserSeq_10.addItem("")
         self.comboLaserSeq_10.setObjectName(u"comboLaserSeq_10")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_10.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_10.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_10.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_10.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_10, 1, 4, 1, 1)
 
@@ -1613,8 +1633,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_9.addItem("")
         self.comboLaserSeq_9.addItem("")
         self.comboLaserSeq_9.setObjectName(u"comboLaserSeq_9")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_9.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_9.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.comboLaserSeq_9.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_9.setSizePolicy(sizePolicy3)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_9, 1, 3, 1, 1)
 
@@ -1693,8 +1713,8 @@ class Ui_MainWindowDesign(object):
 
         self.pushButton_FPGA_file_selection = QPushButton(self.tab_2)
         self.pushButton_FPGA_file_selection.setObjectName(u"pushButton_FPGA_file_selection")
-        sizePolicy2.setHeightForWidth(self.pushButton_FPGA_file_selection.sizePolicy().hasHeightForWidth())
-        self.pushButton_FPGA_file_selection.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.pushButton_FPGA_file_selection.sizePolicy().hasHeightForWidth())
+        self.pushButton_FPGA_file_selection.setSizePolicy(sizePolicy3)
 
         self.gridLayout_24.addWidget(self.pushButton_FPGA_file_selection, 5, 2, 1, 1)
 
@@ -1745,8 +1765,8 @@ class Ui_MainWindowDesign(object):
 
         self.pushButton_FPGA2_file_selection = QPushButton(self.tab_2)
         self.pushButton_FPGA2_file_selection.setObjectName(u"pushButton_FPGA2_file_selection")
-        sizePolicy2.setHeightForWidth(self.pushButton_FPGA2_file_selection.sizePolicy().hasHeightForWidth())
-        self.pushButton_FPGA2_file_selection.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.pushButton_FPGA2_file_selection.sizePolicy().hasHeightForWidth())
+        self.pushButton_FPGA2_file_selection.setSizePolicy(sizePolicy3)
 
         self.gridLayout_24.addWidget(self.pushButton_FPGA2_file_selection, 9, 2, 1, 1)
 
@@ -2159,15 +2179,15 @@ class Ui_MainWindowDesign(object):
 
         self.lineEdit_httpPort = QLineEdit(self.tab_12)
         self.lineEdit_httpPort.setObjectName(u"lineEdit_httpPort")
-        sizePolicy2.setHeightForWidth(self.lineEdit_httpPort.sizePolicy().hasHeightForWidth())
-        self.lineEdit_httpPort.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.lineEdit_httpPort.sizePolicy().hasHeightForWidth())
+        self.lineEdit_httpPort.setSizePolicy(sizePolicy3)
 
         self.gridLayout_72.addWidget(self.lineEdit_httpPort, 3, 1, 1, 1)
 
         self.lineEdit_httpAddr = QLineEdit(self.tab_12)
         self.lineEdit_httpAddr.setObjectName(u"lineEdit_httpAddr")
-        sizePolicy2.setHeightForWidth(self.lineEdit_httpAddr.sizePolicy().hasHeightForWidth())
-        self.lineEdit_httpAddr.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.lineEdit_httpAddr.sizePolicy().hasHeightForWidth())
+        self.lineEdit_httpAddr.setSizePolicy(sizePolicy3)
 
         self.gridLayout_72.addWidget(self.lineEdit_httpAddr, 2, 1, 1, 1)
 
@@ -3229,6 +3249,7 @@ class Ui_MainWindowDesign(object):
         self.pushButton_uttm_status.clicked.connect(MainWindowDesign.pushButton_uttm_status_clicked)
         self.pushButton_uttm_loop.clicked.connect(MainWindowDesign.pushButton_uttm_test_clicked)
         self.checkBox_uttm_watchdog.clicked.connect(MainWindowDesign.checkBox_uttm_watchdog_clicked)
+        self.pushButton_uttm_check_laser.clicked.connect(MainWindowDesign.pushButton_uttm_check_laser_clicked)
 
         self.tabWidget.setCurrentIndex(4)
         self.tabWidget_circular.setCurrentIndex(0)
@@ -3329,19 +3350,21 @@ class Ui_MainWindowDesign(object):
         self.lineEdit_ttmPort.setText(QCoreApplication.translate("MainWindowDesign", u"56000", None))
         self.label_117.setText("")
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_15), QCoreApplication.translate("MainWindowDesign", u"TTM", None))
+        self.label_121.setText(QCoreApplication.translate("MainWindowDesign", u"Status:", None))
+        self.label_114.setText(QCoreApplication.translate("MainWindowDesign", u"Log:", None))
+        self.pushButton_uttm_start.setText(QCoreApplication.translate("MainWindowDesign", u"Start uTTM", None))
+        self.pushButton_uttm_check_laser.setText(QCoreApplication.translate("MainWindowDesign", u"Check Laser", None))
+        self.pushButton_uttm_stop.setText(QCoreApplication.translate("MainWindowDesign", u"Stop uTTM", None))
+        self.pushButton_uttm_loop.setText(QCoreApplication.translate("MainWindowDesign", u"Test_uttm_loop", None))
         self.label_113.setText(QCoreApplication.translate("MainWindowDesign", u"Address uTTM Client [addr:port]", None))
         self.label_uttm_port.setText(QCoreApplication.translate("MainWindowDesign", u"1234", None))
         self.label_118.setText(QCoreApplication.translate("MainWindowDesign", u"Address uTTM Client actual IP", None))
         self.label_115.setText(QCoreApplication.translate("MainWindowDesign", u"Port", None))
         self.lineEdit_uttm_addr.setText(QCoreApplication.translate("MainWindowDesign", u"mmskria2:1234", None))
         self.label_uttm_ip.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
-        self.pushButton_uttm_start.setText(QCoreApplication.translate("MainWindowDesign", u"Start uTTM", None))
-        self.pushButton_uttm_loop.setText(QCoreApplication.translate("MainWindowDesign", u"Test_uttm_loop", None))
-        self.pushButton_uttm_stop.setText(QCoreApplication.translate("MainWindowDesign", u"Stop uTTM", None))
-        self.label_121.setText(QCoreApplication.translate("MainWindowDesign", u"Status:", None))
-        self.label_114.setText(QCoreApplication.translate("MainWindowDesign", u"Log:", None))
-        self.pushButton_uttm_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status", None))
         self.checkBox_uttm_watchdog.setText(QCoreApplication.translate("MainWindowDesign", u"Activate watchdog", None))
+        self.pushButton_uttm_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status", None))
+        self.label_uttm_laser_freq.setText(QCoreApplication.translate("MainWindowDesign", u"Laser freq. found:", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_16), QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"(u)TTM", None))
         self.dockWidget_preview.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Commands", None))
