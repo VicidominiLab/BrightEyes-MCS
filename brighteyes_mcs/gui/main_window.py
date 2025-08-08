@@ -4160,6 +4160,7 @@ Have fun!
                            laser_seq_gui[9],
                            laser_seq_gui[10],
                            laser_seq_gui[11],
+                           0,0,0,0,0,0,0,0,0,0,0,0,
                            ]
 
         slave_mode = self.ui.checkBox_slavemode_enable.isChecked()
@@ -4703,9 +4704,14 @@ Have fun!
         self.ui.label_uttm_ip.setText(ip)
         url =  "http://"+self.ui.lineEdit_uttm_addr.text()
         data = {}
-        r = requests.post(url+"/start", data=data)
-        self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
-
+        try:
+            r = requests.post(url+"/start", data=data)
+            self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
+            if not self.ui.checkBox_uttm_watchdog.isChecked():
+                self.ui.checkBox_uttm_watchdog.setChecked(True)
+                self.checkBox_uttm_watchdog_clicked()
+        except:
+            print_dec("Impossible to connect: " + url+"/start")
 
     @Slot()
     def pushButton_uttm_stop_clicked(self):
@@ -4714,8 +4720,12 @@ Have fun!
         self.ui.label_uttm_ip.setText(ip)
         url =  "http://"+self.ui.lineEdit_uttm_addr.text()
         data = {}
-        r = requests.post(url+"/stop", data=data)
-        self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
+        try:
+            r = requests.post(url+"/stop", data=data)
+            self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
+        except:
+            print_dec("Impossible to connect: " + url+"/stop")
+
 
     @Slot()
     def pushButton_uttm_status_clicked(self):
@@ -4726,7 +4736,8 @@ Have fun!
         url =  "http://"+self.ui.lineEdit_uttm_addr.text()
 
         try:
-            r = requests.get(url+"/status", timeout=0.1)
+            r = requests.get(url+"/status", timeout=0.5)
+            print(r.text)
             self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
         except:
             self.timerUttmWatchDog = None
@@ -4734,7 +4745,8 @@ Have fun!
             self.ui.checkBox_uttm_watchdog.setChecked(False)
 
         try:
-            r = requests.get(url+"/log_last", timeout=0.1)
+            r = requests.get(url+"/log_last", timeout=0.5)
+            print(r.text)
             self.ui.textEdit_uttm_log.setText(r.text)
         except:
             self.timerUttmWatchDog = None
