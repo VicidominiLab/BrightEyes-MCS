@@ -490,7 +490,8 @@ class MainWindow(QMainWindow):
 
         self.DFD_Activate = False
         self.DFD_nbins = 81
-        self.snake_walk_Activate = False
+        self.snake_walk_Activate_XY = False
+        self.snake_walk_Activate_Z = False
 
         self.setupAnalogOutputGUI()
         # Replace the terminal with ScriptLauncher
@@ -4304,10 +4305,14 @@ Have fun!
 
         # self.pmtThresholdChanged()
 
-        self.snake_walk_Activate = self.ui.checkBox_snake.isChecked()
-        self.spadfcsmanager_inst.set_activate_snake_walk(self.snake_walk_Activate)
+        self.snake_walk_Activate_XY = self.ui.checkBox_snake.isChecked()
+        self.spadfcsmanager_inst.set_activate_snake_walk_xy(self.snake_walk_Activate_XY)
 
-        self.setRegistersDict({"snake": self.snake_walk_Activate})
+        self.snake_walk_Activate_Z = self.ui.checkBox_snake_z.isChecked()
+        self.spadfcsmanager_inst.set_activate_snake_walk_z(self.snake_walk_Activate_Z)
+
+        self.setRegistersDict({"snake": self.snake_walk_Activate_XY})
+        self.setRegistersDict({"snake_z": self.snake_walk_Activate_Z})
 
         laser_debug = self.ui.checkBox_DFD_LaserDebug.isChecked()
         self.setRegistersDict({"DFD_LaserSyncDebug": laser_debug})

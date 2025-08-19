@@ -2487,7 +2487,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 349, 278))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, -128, 349, 304))
         self.gridLayout_67 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_67.setObjectName(u"gridLayout_67")
         self.checkBox_correlationMatrix = QCheckBox(self.scrollAreaWidgetContents_6)
@@ -2576,6 +2576,11 @@ class Ui_MainWindowDesign(object):
         self.progressBar_2.setValue(24)
 
         self.gridLayout_67.addWidget(self.progressBar_2, 2, 0, 1, 1)
+
+        self.checkBox_snake_z = QCheckBox(self.scrollAreaWidgetContents_6)
+        self.checkBox_snake_z.setObjectName(u"checkBox_snake_z")
+
+        self.gridLayout_67.addWidget(self.checkBox_snake_z, 4, 0, 1, 1)
 
         self.scrollArea_5.setWidget(self.scrollAreaWidgetContents_6)
 
@@ -3238,7 +3243,7 @@ class Ui_MainWindowDesign(object):
         self.toolButton_ttm_filename.clicked.connect(MainWindowDesign.cmd_filename_ttm)
         self.checkBox_uttm_watchdog.clicked.connect(MainWindowDesign.checkBox_uttm_watchdog_clicked)
 
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(2)
         self.tabWidget_3.setCurrentIndex(1)
         self.comboBox_slavemode_type.setCurrentIndex(2)
@@ -3771,6 +3776,7 @@ class Ui_MainWindowDesign(object):
         self.pushButton_7.setText(QCoreApplication.translate("MainWindowDesign", u"Test5", None))
         self.pushButton_about.setText(QCoreApplication.translate("MainWindowDesign", u"LICENSE", None))
         self.pushButton_19.setText(QCoreApplication.translate("MainWindowDesign", u"Set Analog+Digital", None))
+        self.checkBox_snake_z.setText(QCoreApplication.translate("MainWindowDesign", u"Snake on Z", None))
         self.dockWidget_panorama.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Panorama", None))
         self.pushButton_grabPanorama.setText(QCoreApplication.translate("MainWindowDesign", u"Use current image as panorama", None))
         self.dockWidget_filename.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"File", None))

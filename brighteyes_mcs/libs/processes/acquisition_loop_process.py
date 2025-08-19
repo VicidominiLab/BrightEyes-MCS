@@ -100,7 +100,8 @@ class AcquisitionLoopProcess(mp.Process):
         self.DFD_Activate = shared_dict["DFD_Activate"]
         self.DFD_nbins = shared_dict["DFD_nbins"]
 
-        self.snake_walk = shared_dict["snake_walk"]
+        self.snake_walk_xy = shared_dict["snake_walk_xy"]
+        self.snake_walk_z = shared_dict["snake_walk_z"]
 
         self.filenameh5 = shared_dict["filenameh5"]
 
@@ -442,7 +443,7 @@ class AcquisitionLoopProcess(mp.Process):
                         print_dec("MISTERY!!!")
                         print_dec("New GAP", self.gap)
 
-                    if self.snake_walk == True:
+                    if self.snake_walk_xy == True:
                         list_pointer = np.arange(
                             self.current_pointer, self.current_pointer + self.gap
                         )
@@ -897,7 +898,7 @@ class AcquisitionLoopProcess(mp.Process):
                         print_dec("MISTERY")
                         print_dec("New GAP", self.gap_analog)
                     #
-                    # if self.snake_walk == True:
+                    # if self.snake_walk_xy == True:
                     #     list_pointer = np.arange(self.current_pointer, self.current_pointer + self.gap)
                     #     list_pixel = list_pointer // self.timebinsPerPixel
                     #     list_b = list_pointer % self.timebinsPerPixel
@@ -913,7 +914,7 @@ class AcquisitionLoopProcess(mp.Process):
                     #     list_y = (list_pixel // self.shape[0]) % self.shape[1]
                     #     list_z = list_pixel // (self.shape[0] * self.shape[1]) % self.shape[2]
 
-                    if self.snake_walk == True:
+                    if self.snake_walk_xy == True:
                         list_pointer_analog = np.arange(
                             self.current_pointer_analog,
                             self.current_pointer_analog + self.gap_analog,

@@ -57,7 +57,8 @@ class SpadFcsManager():
         len_fifo_prebuffer (int): Length of the FIFO prebuffer.
         activated_fifos_list (list): List of activated FIFOs.
         DFD_Activate (bool): Flag for DFD activation.
-        snake_walk (bool): Flag for snake walk mode.
+        snake_walk_xy (bool): Flag for snake walk mode on xy.
+        snake_walk_z (bool): Flag for snake walk mode on z.
         use_rust_fifo (bool): Flag for using Rust FIFO.
         debug (bool): Debug flag.
     """
@@ -180,7 +181,8 @@ class SpadFcsManager():
 
         self.DFD_Activate = False
         self.DFD_nbins = 0
-        self.snake_walk = False
+        self.snake_walk_xy = False
+        self.snake_walk_z = False
 
         self.use_rust_fifo = True
 
@@ -280,12 +282,19 @@ class SpadFcsManager():
         print_dec("set_activate_DFD() set to ", activate)
         self.DFD_Activate = activate
 
-    def set_activate_snake_walk(self, activate=True):
+    def set_activate_snake_walk_xy(self, activate=True):
         """
         Set the snake walk (bidirectional scanning)
         """
-        print_dec("set_activate_snake_walk() set to ", activate)
-        self.snake_walk = activate
+        print_dec("set_activate_snake_walk_xy() set to ", activate)
+        self.snake_walk_xy = activate
+
+    def set_activate_snake_walk_z(self, activate=True):
+        """
+        Set the snake walk (bidirectional scanning)
+        """
+        print_dec("set_activate_snake_walk_z() set to ", activate)
+        self.snake_walk_z = activate
 
     # def set_default_destination_folder(self, folder=""):
     #     self.default_destination_folder = folder
@@ -540,7 +549,8 @@ class SpadFcsManager():
                 "last_packet_size": 0,
                 "DFD_Activate": self.DFD_Activate,
                 "DFD_nBins": self.DFD_nbins,
-                "snake_walk": self.snake_walk,
+                "snake_walk_xy": self.snake_walk_xy,
+                "snake_walk_z": self.snake_walk_z,
             }
         )
 
