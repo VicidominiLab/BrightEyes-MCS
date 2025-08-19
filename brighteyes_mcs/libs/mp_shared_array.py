@@ -1,11 +1,17 @@
 from ..libs.print_dec import  print_dec
 
-import numpy as np
-from multiprocessing import shared_memory, Lock
+from functools import reduce
+import multiprocessing as mp
+import ctypes
 import uuid
 
 
-class MemorySharedNumpyArray:
+import numpy as np
+from multiprocessing import shared_memory, Lock, Array
+import uuid
+
+
+class MemorySharedNumpyArray_ShmMem:
     """
     A shared memory-backed NumPy array with optional multiprocessing lock.
     Compatible with the original multiprocessing.Array-based design.
@@ -73,28 +79,68 @@ class MemorySharedNumpyArray:
         """Return the shared memory block name."""
         return self.shm.name
 
-    # def close(self):
-    #     """Close the shared memory block (without unlinking)."""
-    #
-    #
-    # def unlink(self):
-    #     """Unlink the shared memory block (only once, usually by the creator)."""
-    #     tmp = "{self.shm.name} bytes {self._nbytes} bytes for dtype={self.np_dtype}, shape={self.np_shape}"
-    #     self.shm.unlink()
-    #     print_dec("SharedMemory Unlinked:", tmp)
+class MemorySharedNumpyArray_CTypes:
+    """
+    A shared array based on multiprocessing.Array. You can get a Numpy handle
+    to the shared array with get_numpy_handle().
 
-    # def __del__(self):
-    #     tmp = "name = %s bytes = %s dtype=%s shape=%s" % (self.shm.name, self._nbytes, self.np_dtype, self.np_shape)
-    #
-    #     try:
-    #         self.shm.close()
-    #         print_dec("shared array Closed:", tmp)
-    #
-    #     except Exception:
-    #         print_dec("shared array NOT Closed:", tmp)
-    #
-    #     try:
-    #         self.shm.unlink()
-    #         print_dec("shared array Unlinked:", tmp)
-    #     except Exception:
-    #         print_dec("shared array NOT Unlinked:", tmp)
+    Attributes:
+        data (mp.Array): the shared array
+        sampling: info about the spacing between elements (e.g., pixel size)
+        id (str): a unique identifier for the array instance
+        np_shape (tuple): shape of the array
+        size (int): size of the flattened array
+        np_dtype (str): the Numpy dtype string
+    """
+
+    def __init__(self, dtype, shape, sampling=0, lock=True):
+        """
+        Args:
+            dtype (str or np.dtype): Numpy data type (e.g., 'uint32' or np.uint32)
+            shape (tuple): shape of the array
+            sampling: optional spacing info
+            lock (bool): whether to use a process lock
+        """
+        self.shape = shape
+        self.size = reduce(lambda x, y: x * y, shape)
+        self.np_dtype = np.dtype(dtype)
+
+        # Get the corresponding ctypes type
+        ctype = self._get_typecodes()[self.np_dtype.str]
+
+        # Create multiprocessing.Array with or without lock
+        if lock:
+            self.lock = mp.Lock()
+            self.data = mp.Array(ctype, self.size, lock=self.lock)
+        else:
+            self.data = mp.Array(ctype, self.size, lock=False)
+            self.lock = None  # No lock used
+
+        self.sampling = sampling
+        self.id = str(uuid.uuid1())
+        self.np_shape = shape
+
+    @staticmethod
+    def _get_typecodes():
+        """Map Numpy dtypes to ctypes types."""
+        ct = ctypes
+        simple_types = [
+            ct.c_byte, ct.c_short, ct.c_int, ct.c_long, ct.c_longlong,
+            ct.c_ubyte, ct.c_ushort, ct.c_uint, ct.c_ulong, ct.c_ulonglong,
+            ct.c_float, ct.c_double
+        ]
+        return {np.dtype(t).str: t for t in simple_types}
+
+    def get_numpy_handle(self, reshape=True):
+        """Return a NumPy array view of the shared memory."""
+        arr = np.frombuffer(self.data.get_obj(), dtype=self.np_dtype)
+        if reshape:
+            arr = arr.reshape(self.np_shape)
+        return arr
+
+    def get_lock(self):
+        """Return the lock if present, else None."""
+        return self.lock
+
+
+MemorySharedNumpyArray = MemorySharedNumpyArray_CTypes

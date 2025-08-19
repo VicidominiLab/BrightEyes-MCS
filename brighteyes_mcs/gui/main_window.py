@@ -4375,6 +4375,11 @@ Have fun!
         if self.ttm_remote_is_up() and not activate_preview:
             self.ttm_remote_manager.start_ttm_recv()
 
+        if self.ui.checkBox_uttmActivate.isChecked() and \
+           self.ui.checkBox_uttm_auto.isChecked() and \
+           not activate_preview :
+               self.pushButton_uttm_start_clicked()
+
         self.spadfcsmanager_inst.run()
 
         self.plugin_signals.signal.emit("beforeRun")
@@ -4657,6 +4662,7 @@ Have fun!
         """
         activate or deactivate the TTM
         """
+
         if self.ui.checkBox_ttmActivate.isChecked():
             if self.ttm_remote_manager is None:
                 ip = self.ui.label_ttm_IP.text()
@@ -4726,6 +4732,56 @@ Have fun!
         except:
             print_dec("Impossible to connect: " + url+"/stop")
 
+    def sizeof_fmt(self, num, suffix="B"):
+        #num = float(num)
+        for unit in ["", "K", "M", "G", "T"]:
+            if abs(num) < 1024.0:
+                return f"{num:3.1f} {unit}{suffix}"
+            num /= 1024.0
+        return f"{num:.1f} P{suffix}"
+
+    def pretty_html(self, data) -> str:
+        uploader = data["uploader"]
+
+        # Disk usage percentages
+        total = data["disk_usage"][0]
+        used = data["disk_usage"][1]
+        free = data["disk_usage"][2]
+        free_percent = free / total * 100 if total > 0 else 0
+        used_percent = used / total * 100 if total > 0 else 0
+
+        html = f"""
+        <h2 style="color:#00aaff">📡 Acquisition Status</h2>
+        <p><b>Acquisition running:</b> {data['acquisition_running']}</p>
+        <p><b>Upload running:</b> {data['upload_running']}</p>
+        <p><b>PID:</b> {data['pid']}</p>
+        <p><b>Remote file:</b> {data['remote_filename']}</p>
+        <p><b>Local file:</b> {data['local_filename']}</p>
+        <p><b>Free RAM:</b> {self.sizeof_fmt(data['free_ram'])}</p>
+        <p><b>File size:</b> {self.sizeof_fmt(data['file_size'])}</p>
+
+        <h3 style="color:#ffaa00">💾 Disk usage</h3>
+        <p><b>Total:</b> {self.sizeof_fmt(total)} | <b>Used:</b> {self.sizeof_fmt(used)} | <b>Free:</b> {self.sizeof_fmt(free)}</p>
+        {self.progress_bar_html(used_percent, "#ff5555")}
+        <p style="font-size:11px; color:#666;">Free space: {free_percent:.1f}%</p>
+
+        <h3 style="color:#00cc66">🚀 Uploader</h3>
+        <p><b>Bytes sent:</b> {self.sizeof_fmt(uploader['bytes_sent'])} / {self.sizeof_fmt(uploader['total_bytes'])}</p>
+        {self.progress_bar_html(uploader['percent'], "#00cc66")}
+        <p><b>Elapsed:</b> {uploader['elapsed']} s | <b>ETA:</b> {uploader['eta']} s</p>
+        <p><b>Speed:</b> {self.sizeof_fmt(int(uploader['speed']))}/s</p>
+        <p><b>Completed:</b> {"✅ Yes" if uploader['completed'] else "❌ No"}</p>
+        """
+        return html
+
+    def progress_bar_html(self, percent: float, color="#00cc66") -> str:
+        """Return a simple HTML progress bar"""
+        return f"""
+        <div style="border:1px solid #ccc; width:100%; height:18px; border-radius:4px; background:#f0f0f0;">
+          <div style="width:{percent:.1f}%; height:100%; background:{color}; border-radius:4px;"></div>
+        </div>
+        <p style="font-size:11px; color:#555;">{percent:.1f}%</p>
+        """
 
     @Slot()
     def pushButton_uttm_status_clicked(self):
@@ -4737,8 +4793,12 @@ Have fun!
 
         try:
             r = requests.get(url+"/status", timeout=0.5)
-            print(r.text)
-            self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
+
+            data = r.json()
+            try:
+                self.ui.textEdit_uttm_status.setHtml(self.pretty_html(data))
+            except:
+                self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
         except:
             self.timerUttmWatchDog = None
             print_dec("Failed ", url+"/status")
@@ -4746,7 +4806,7 @@ Have fun!
 
         try:
             r = requests.get(url+"/log_last", timeout=0.5)
-            print(r.text)
+            #print(r.text)
             self.ui.textEdit_uttm_log.setText(r.text)
         except:
             self.timerUttmWatchDog = None
@@ -4774,7 +4834,7 @@ Have fun!
         try:
             r = requests.get(url + "/show_preview", timeout=1.1)
             j = r.json()
-            self.ui.textEdit_uttm_status.setText(json.dumps(j, indent=4))
+            #self.ui.textEdit_uttm_status.setText(json.dumps(j, indent=4))
         except:
             print_dec("Failed ", url + "/show_preview")
 
@@ -4802,6 +4862,8 @@ Have fun!
             self.timerUttmWatchDog.setInterval(1500)
             self.timerUttmWatchDog.start()
         else:
+            if self.timerUttmWatchDog is not None:
+                self.timerUttmWatchDog.stop()
             self.timerUttmWatchDog = None
 
     def uttm_watchdog_trigger(self):
@@ -4969,6 +5031,11 @@ Have fun!
         print_dec("finalizeAcquisition")
 
         if self.started_normal:
+
+            if self.ui.checkBox_uttmActivate.isChecked() and \
+            self.ui.checkBox_uttm_auto.isChecked():
+                    self.pushButton_uttm_stop_clicked()
+
             print_dec(self.spadfcsmanager_inst.shared_dict)
             self.last_saved_filename = self.spadfcsmanager_inst.shared_dict[
                 "filenameh5"

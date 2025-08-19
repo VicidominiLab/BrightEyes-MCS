@@ -345,51 +345,6 @@ class Ui_MainWindowDesign(object):
         self.tab_14.setObjectName(u"tab_14")
         self.gridLayout_76 = QGridLayout(self.tab_14)
         self.gridLayout_76.setObjectName(u"gridLayout_76")
-        self.label_ttm_IP_7 = QLabel(self.tab_14)
-        self.label_ttm_IP_7.setObjectName(u"label_ttm_IP_7")
-
-        self.gridLayout_76.addWidget(self.label_ttm_IP_7, 0, 0, 1, 1)
-
-        self.radioButton_ttm_type_uttm = QRadioButton(self.tab_14)
-        self.radioButton_ttm_type_uttm.setObjectName(u"radioButton_ttm_type_uttm")
-        self.radioButton_ttm_type_uttm.setChecked(False)
-        self.radioButton_ttm_type_uttm.setAutoExclusive(False)
-
-        self.gridLayout_76.addWidget(self.radioButton_ttm_type_uttm, 0, 2, 1, 1)
-
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_76.addItem(self.verticalSpacer_2, 6, 0, 1, 1)
-
-        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_76.addItem(self.horizontalSpacer_17, 0, 3, 2, 1)
-
-        self.label_ttm_IP_6 = QLabel(self.tab_14)
-        self.label_ttm_IP_6.setObjectName(u"label_ttm_IP_6")
-
-        self.gridLayout_76.addWidget(self.label_ttm_IP_6, 1, 0, 1, 1)
-
-        self.radioButton_ttm_type_ttm = QRadioButton(self.tab_14)
-        self.radioButton_ttm_type_ttm.setObjectName(u"radioButton_ttm_type_ttm")
-        self.radioButton_ttm_type_ttm.setChecked(True)
-        self.radioButton_ttm_type_ttm.setAutoExclusive(False)
-
-        self.gridLayout_76.addWidget(self.radioButton_ttm_type_ttm, 0, 1, 1, 1)
-
-        self.radioButton_ttm_remote = QRadioButton(self.tab_14)
-        self.radioButton_ttm_remote.setObjectName(u"radioButton_ttm_remote")
-        self.radioButton_ttm_remote.setAutoExclusive(False)
-
-        self.gridLayout_76.addWidget(self.radioButton_ttm_remote, 1, 2, 1, 1)
-
-        self.radioButton_ttm_local = QRadioButton(self.tab_14)
-        self.radioButton_ttm_local.setObjectName(u"radioButton_ttm_local")
-        self.radioButton_ttm_local.setChecked(True)
-        self.radioButton_ttm_local.setAutoExclusive(False)
-
-        self.gridLayout_76.addWidget(self.radioButton_ttm_local, 1, 1, 1, 1)
-
         self.tabWidget_3 = QTabWidget(self.tab_14)
         self.tabWidget_3.setObjectName(u"tabWidget_3")
         self.tab_15 = QWidget()
@@ -402,61 +357,83 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_29 = QGridLayout()
         self.gridLayout_29.setObjectName(u"gridLayout_29")
-        self.label_ttm_IP_5 = QLabel(self.tab_15)
-        self.label_ttm_IP_5.setObjectName(u"label_ttm_IP_5")
-
-        self.gridLayout_29.addWidget(self.label_ttm_IP_5, 6, 0, 1, 1)
-
         self.toolButton_ttm_executable_path = QToolButton(self.tab_15)
         self.toolButton_ttm_executable_path.setObjectName(u"toolButton_ttm_executable_path")
 
-        self.gridLayout_29.addWidget(self.toolButton_ttm_executable_path, 7, 2, 1, 1)
+        self.gridLayout_29.addWidget(self.toolButton_ttm_executable_path, 7, 5, 1, 1)
+
+        self.horizontalSpacer_16 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_29.addItem(self.horizontalSpacer_16, 4, 3, 1, 1)
+
+        self.lineEdit_ttmPort = QLineEdit(self.tab_15)
+        self.lineEdit_ttmPort.setObjectName(u"lineEdit_ttmPort")
+
+        self.gridLayout_29.addWidget(self.lineEdit_ttmPort, 2, 6, 1, 1)
+
+        self.lineEdit_ttm_filename = QLineEdit(self.tab_15)
+        self.lineEdit_ttm_filename.setObjectName(u"lineEdit_ttm_filename")
+
+        self.gridLayout_29.addWidget(self.lineEdit_ttm_filename, 6, 1, 1, 4)
+
+        self.label_ttm_IP_6 = QLabel(self.tab_15)
+        self.label_ttm_IP_6.setObjectName(u"label_ttm_IP_6")
+
+        self.gridLayout_29.addWidget(self.label_ttm_IP_6, 4, 0, 1, 1)
+
+        self.label_116 = QLabel(self.tab_15)
+        self.label_116.setObjectName(u"label_116")
+
+        self.gridLayout_29.addWidget(self.label_116, 2, 5, 1, 1)
+
+        self.label_117 = QLabel(self.tab_15)
+        self.label_117.setObjectName(u"label_117")
+
+        self.gridLayout_29.addWidget(self.label_117, 3, 4, 1, 1)
+
+        self.lineEdit_ttm_executable_path = QLineEdit(self.tab_15)
+        self.lineEdit_ttm_executable_path.setObjectName(u"lineEdit_ttm_executable_path")
+
+        self.gridLayout_29.addWidget(self.lineEdit_ttm_executable_path, 7, 1, 1, 4)
+
+        self.label_ttm_IP = QLabel(self.tab_15)
+        self.label_ttm_IP.setObjectName(u"label_ttm_IP")
+        self.label_ttm_IP.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_29.addWidget(self.label_ttm_IP, 2, 4, 1, 1)
+
+        self.toolButton_ttm_filename = QToolButton(self.tab_15)
+        self.toolButton_ttm_filename.setObjectName(u"toolButton_ttm_filename")
+
+        self.gridLayout_29.addWidget(self.toolButton_ttm_filename, 6, 5, 1, 1)
 
         self.label_ttm_IP_4 = QLabel(self.tab_15)
         self.label_ttm_IP_4.setObjectName(u"label_ttm_IP_4")
 
         self.gridLayout_29.addWidget(self.label_ttm_IP_4, 2, 0, 1, 1)
 
-        self.lineEdit_ttm_executable_path = QLineEdit(self.tab_15)
-        self.lineEdit_ttm_executable_path.setObjectName(u"lineEdit_ttm_executable_path")
+        self.radioButton_ttm_local = QRadioButton(self.tab_15)
+        self.radioButton_ttm_local.setObjectName(u"radioButton_ttm_local")
+        self.radioButton_ttm_local.setChecked(True)
+        self.radioButton_ttm_local.setAutoExclusive(False)
 
-        self.gridLayout_29.addWidget(self.lineEdit_ttm_executable_path, 7, 1, 1, 1)
-
-        self.lineEdit_ttm_filename = QLineEdit(self.tab_15)
-        self.lineEdit_ttm_filename.setObjectName(u"lineEdit_ttm_filename")
-
-        self.gridLayout_29.addWidget(self.lineEdit_ttm_filename, 6, 1, 1, 1)
-
-        self.label_ttm_IP = QLabel(self.tab_15)
-        self.label_ttm_IP.setObjectName(u"label_ttm_IP")
-        self.label_ttm_IP.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_29.addWidget(self.label_ttm_IP, 2, 1, 1, 1)
+        self.gridLayout_29.addWidget(self.radioButton_ttm_local, 4, 1, 1, 1)
 
         self.label_ttm_IP_3 = QLabel(self.tab_15)
         self.label_ttm_IP_3.setObjectName(u"label_ttm_IP_3")
 
         self.gridLayout_29.addWidget(self.label_ttm_IP_3, 7, 0, 1, 1)
 
-        self.toolButton_ttm_filename = QToolButton(self.tab_15)
-        self.toolButton_ttm_filename.setObjectName(u"toolButton_ttm_filename")
+        self.label_ttm_IP_5 = QLabel(self.tab_15)
+        self.label_ttm_IP_5.setObjectName(u"label_ttm_IP_5")
 
-        self.gridLayout_29.addWidget(self.toolButton_ttm_filename, 6, 2, 1, 1)
+        self.gridLayout_29.addWidget(self.label_ttm_IP_5, 6, 0, 1, 1)
 
-        self.label_116 = QLabel(self.tab_15)
-        self.label_116.setObjectName(u"label_116")
+        self.radioButton_ttm_remote = QRadioButton(self.tab_15)
+        self.radioButton_ttm_remote.setObjectName(u"radioButton_ttm_remote")
+        self.radioButton_ttm_remote.setAutoExclusive(False)
 
-        self.gridLayout_29.addWidget(self.label_116, 2, 2, 1, 1)
-
-        self.lineEdit_ttmPort = QLineEdit(self.tab_15)
-        self.lineEdit_ttmPort.setObjectName(u"lineEdit_ttmPort")
-
-        self.gridLayout_29.addWidget(self.lineEdit_ttmPort, 2, 3, 1, 1)
-
-        self.label_117 = QLabel(self.tab_15)
-        self.label_117.setObjectName(u"label_117")
-
-        self.gridLayout_29.addWidget(self.label_117, 3, 1, 1, 1)
+        self.gridLayout_29.addWidget(self.radioButton_ttm_remote, 4, 2, 1, 1)
 
 
         self.gridLayout_77.addLayout(self.gridLayout_29, 0, 2, 1, 1)
@@ -466,51 +443,6 @@ class Ui_MainWindowDesign(object):
         self.tab_16.setObjectName(u"tab_16")
         self.gridLayout_83 = QGridLayout(self.tab_16)
         self.gridLayout_83.setObjectName(u"gridLayout_83")
-        self.gridLayout_84 = QGridLayout()
-        self.gridLayout_84.setObjectName(u"gridLayout_84")
-        self.label_121 = QLabel(self.tab_16)
-        self.label_121.setObjectName(u"label_121")
-
-        self.gridLayout_84.addWidget(self.label_121, 0, 0, 1, 1)
-
-        self.label_114 = QLabel(self.tab_16)
-        self.label_114.setObjectName(u"label_114")
-
-        self.gridLayout_84.addWidget(self.label_114, 1, 0, 1, 1)
-
-        self.textEdit_uttm_status = QTextEdit(self.tab_16)
-        self.textEdit_uttm_status.setObjectName(u"textEdit_uttm_status")
-
-        self.gridLayout_84.addWidget(self.textEdit_uttm_status, 0, 1, 1, 1)
-
-        self.textEdit_uttm_log = QTextEdit(self.tab_16)
-        self.textEdit_uttm_log.setObjectName(u"textEdit_uttm_log")
-
-        self.gridLayout_84.addWidget(self.textEdit_uttm_log, 1, 1, 1, 1)
-
-
-        self.gridLayout_83.addLayout(self.gridLayout_84, 1, 0, 8, 1)
-
-        self.pushButton_uttm_start = QPushButton(self.tab_16)
-        self.pushButton_uttm_start.setObjectName(u"pushButton_uttm_start")
-
-        self.gridLayout_83.addWidget(self.pushButton_uttm_start, 0, 1, 1, 1)
-
-        self.pushButton_uttm_check_laser = QPushButton(self.tab_16)
-        self.pushButton_uttm_check_laser.setObjectName(u"pushButton_uttm_check_laser")
-
-        self.gridLayout_83.addWidget(self.pushButton_uttm_check_laser, 1, 1, 1, 1)
-
-        self.pushButton_uttm_stop = QPushButton(self.tab_16)
-        self.pushButton_uttm_stop.setObjectName(u"pushButton_uttm_stop")
-
-        self.gridLayout_83.addWidget(self.pushButton_uttm_stop, 0, 2, 1, 1)
-
-        self.pushButton_uttm_loop = QPushButton(self.tab_16)
-        self.pushButton_uttm_loop.setObjectName(u"pushButton_uttm_loop")
-
-        self.gridLayout_83.addWidget(self.pushButton_uttm_loop, 1, 2, 1, 1)
-
         self.gridLayout_82 = QGridLayout()
         self.gridLayout_82.setObjectName(u"gridLayout_82")
         self.label_113 = QLabel(self.tab_16)
@@ -544,26 +476,36 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_82.addWidget(self.label_uttm_ip, 1, 1, 1, 1)
 
 
-        self.gridLayout_83.addLayout(self.gridLayout_82, 0, 0, 1, 1)
+        self.gridLayout_83.addLayout(self.gridLayout_82, 0, 0, 3, 1)
 
-        self.checkBox_uttm_watchdog = QCheckBox(self.tab_16)
-        self.checkBox_uttm_watchdog.setObjectName(u"checkBox_uttm_watchdog")
+        self.checkBox_uttm_auto = QCheckBox(self.tab_16)
+        self.checkBox_uttm_auto.setObjectName(u"checkBox_uttm_auto")
+        self.checkBox_uttm_auto.setEnabled(True)
+        self.checkBox_uttm_auto.setChecked(True)
 
-        self.gridLayout_83.addWidget(self.checkBox_uttm_watchdog, 2, 1, 1, 3)
+        self.gridLayout_83.addWidget(self.checkBox_uttm_auto, 1, 1, 1, 2)
 
-        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.gridLayout_84 = QGridLayout()
+        self.gridLayout_84.setObjectName(u"gridLayout_84")
+        self.label_121 = QLabel(self.tab_16)
+        self.label_121.setObjectName(u"label_121")
 
-        self.gridLayout_83.addItem(self.horizontalSpacer_18, 6, 1, 1, 3)
+        self.gridLayout_84.addWidget(self.label_121, 0, 1, 1, 1)
 
-        self.pushButton_uttm_status = QPushButton(self.tab_16)
-        self.pushButton_uttm_status.setObjectName(u"pushButton_uttm_status")
+        self.textEdit_uttm_log = QTextEdit(self.tab_16)
+        self.textEdit_uttm_log.setObjectName(u"textEdit_uttm_log")
 
-        self.gridLayout_83.addWidget(self.pushButton_uttm_status, 0, 3, 1, 1)
+        self.gridLayout_84.addWidget(self.textEdit_uttm_log, 1, 3, 1, 1)
 
         self.gridLayout_uttm_preview = QGridLayout()
         self.gridLayout_uttm_preview.setObjectName(u"gridLayout_uttm_preview")
 
-        self.gridLayout_83.addLayout(self.gridLayout_uttm_preview, 4, 1, 2, 3)
+        self.gridLayout_84.addLayout(self.gridLayout_uttm_preview, 3, 3, 1, 1)
+
+        self.label_114 = QLabel(self.tab_16)
+        self.label_114.setObjectName(u"label_114")
+
+        self.gridLayout_84.addWidget(self.label_114, 0, 3, 1, 1)
 
         self.label_uttm_laser_freq = QLabel(self.tab_16)
         self.label_uttm_laser_freq.setObjectName(u"label_uttm_laser_freq")
@@ -573,11 +515,49 @@ class Ui_MainWindowDesign(object):
         sizePolicy1.setHeightForWidth(self.label_uttm_laser_freq.sizePolicy().hasHeightForWidth())
         self.label_uttm_laser_freq.setSizePolicy(sizePolicy1)
 
-        self.gridLayout_83.addWidget(self.label_uttm_laser_freq, 3, 1, 1, 3)
+        self.gridLayout_84.addWidget(self.label_uttm_laser_freq, 4, 3, 1, 1)
+
+        self.textEdit_uttm_status = QTextEdit(self.tab_16)
+        self.textEdit_uttm_status.setObjectName(u"textEdit_uttm_status")
+
+        self.gridLayout_84.addWidget(self.textEdit_uttm_status, 1, 1, 4, 1)
+
+
+        self.gridLayout_83.addLayout(self.gridLayout_84, 5, 0, 9, 3)
+
+        self.pushButton_uttm_start = QPushButton(self.tab_16)
+        self.pushButton_uttm_start.setObjectName(u"pushButton_uttm_start")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_start, 0, 1, 1, 1)
+
+        self.checkBox_uttm_watchdog = QCheckBox(self.tab_16)
+        self.checkBox_uttm_watchdog.setObjectName(u"checkBox_uttm_watchdog")
+
+        self.gridLayout_83.addWidget(self.checkBox_uttm_watchdog, 2, 1, 1, 1)
+
+        self.pushButton_uttm_stop = QPushButton(self.tab_16)
+        self.pushButton_uttm_stop.setObjectName(u"pushButton_uttm_stop")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_stop, 0, 2, 1, 1)
+
+        self.pushButton_uttm_status = QPushButton(self.tab_16)
+        self.pushButton_uttm_status.setObjectName(u"pushButton_uttm_status")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_status, 4, 1, 1, 1)
+
+        self.pushButton_uttm_loop = QPushButton(self.tab_16)
+        self.pushButton_uttm_loop.setObjectName(u"pushButton_uttm_loop")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_loop, 3, 2, 1, 1)
+
+        self.pushButton_uttm_check_laser = QPushButton(self.tab_16)
+        self.pushButton_uttm_check_laser.setObjectName(u"pushButton_uttm_check_laser")
+
+        self.gridLayout_83.addWidget(self.pushButton_uttm_check_laser, 3, 1, 1, 1)
 
         self.tabWidget_3.addTab(self.tab_16, "")
 
-        self.gridLayout_76.addWidget(self.tabWidget_3, 4, 0, 1, 4)
+        self.gridLayout_76.addWidget(self.tabWidget_3, 2, 0, 1, 2)
 
         self.tabWidget.addTab(self.tab_14, "")
 
@@ -594,71 +574,22 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_8.setObjectName(u"dockWidgetContents_8")
         self.gridLayout_15 = QGridLayout(self.dockWidgetContents_8)
         self.gridLayout_15.setObjectName(u"gridLayout_15")
+        self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_15.addItem(self.verticalSpacer_17, 1, 1, 1, 1)
+
         self.gridLayout_55 = QGridLayout()
         self.gridLayout_55.setObjectName(u"gridLayout_55")
-        self.pushButton_previewStart = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
-
-        self.gridLayout_55.addWidget(self.pushButton_previewStart, 0, 0, 1, 1)
-
-        self.pushButton_acquisitionStart = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_acquisitionStart.setObjectName(u"pushButton_acquisitionStart")
-
-        self.gridLayout_55.addWidget(self.pushButton_acquisitionStart, 0, 1, 1, 1)
-
-        self.verticalLayout_2 = QVBoxLayout()
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.radioButton_digital = QRadioButton(self.dockWidgetContents_8)
-        self.radioButton_digital.setObjectName(u"radioButton_digital")
-        sizePolicy.setHeightForWidth(self.radioButton_digital.sizePolicy().hasHeightForWidth())
-        self.radioButton_digital.setSizePolicy(sizePolicy)
-        self.radioButton_digital.setChecked(True)
-
-        self.verticalLayout_2.addWidget(self.radioButton_digital)
-
-        self.radioButton_analog = QRadioButton(self.dockWidgetContents_8)
-        self.radioButton_analog.setObjectName(u"radioButton_analog")
-        sizePolicy.setHeightForWidth(self.radioButton_analog.sizePolicy().hasHeightForWidth())
-        self.radioButton_analog.setSizePolicy(sizePolicy)
-
-        self.verticalLayout_2.addWidget(self.radioButton_analog)
-
-        self.checkBox_ttmActivate = QCheckBox(self.dockWidgetContents_8)
-        self.checkBox_ttmActivate.setObjectName(u"checkBox_ttmActivate")
-        sizePolicy.setHeightForWidth(self.checkBox_ttmActivate.sizePolicy().hasHeightForWidth())
-        self.checkBox_ttmActivate.setSizePolicy(sizePolicy)
-
-        self.verticalLayout_2.addWidget(self.checkBox_ttmActivate)
-
-        self.checkBox_DFD = QCheckBox(self.dockWidgetContents_8)
-        self.checkBox_DFD.setObjectName(u"checkBox_DFD")
-        sizePolicy.setHeightForWidth(self.checkBox_DFD.sizePolicy().hasHeightForWidth())
-        self.checkBox_DFD.setSizePolicy(sizePolicy)
-
-        self.verticalLayout_2.addWidget(self.checkBox_DFD)
-
-        self.verticalSpacer_18 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.verticalLayout_2.addItem(self.verticalSpacer_18)
-
-
-        self.gridLayout_55.addLayout(self.verticalLayout_2, 0, 2, 4, 1)
-
-        self.gridLayout_78 = QGridLayout()
-        self.gridLayout_78.setObjectName(u"gridLayout_78")
-        self.pushButton_14 = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_14.setObjectName(u"pushButton_14")
-
-        self.gridLayout_78.addWidget(self.pushButton_14, 0, 0, 1, 1)
-
-
-        self.gridLayout_55.addLayout(self.gridLayout_78, 1, 1, 1, 1)
-
         self.pushButton_externalProgram = QPushButton(self.dockWidgetContents_8)
         self.pushButton_externalProgram.setObjectName(u"pushButton_externalProgram")
         self.pushButton_externalProgram.setEnabled(False)
 
         self.gridLayout_55.addWidget(self.pushButton_externalProgram, 2, 1, 1, 1)
+
+        self.pushButton_acquisitionStart = QPushButton(self.dockWidgetContents_8)
+        self.pushButton_acquisitionStart.setObjectName(u"pushButton_acquisitionStart")
+
+        self.gridLayout_55.addWidget(self.pushButton_acquisitionStart, 0, 1, 1, 1)
 
         self.pushButton_stop = QPushButton(self.dockWidgetContents_8)
         self.pushButton_stop.setObjectName(u"pushButton_stop")
@@ -671,12 +602,69 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_55.addWidget(self.pushButton_stop, 1, 0, 2, 1)
 
+        self.pushButton_previewStart = QPushButton(self.dockWidgetContents_8)
+        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
+
+        self.gridLayout_55.addWidget(self.pushButton_previewStart, 0, 0, 1, 1)
+
+        self.gridLayout_78 = QGridLayout()
+        self.gridLayout_78.setObjectName(u"gridLayout_78")
+        self.pushButton_14 = QPushButton(self.dockWidgetContents_8)
+        self.pushButton_14.setObjectName(u"pushButton_14")
+
+        self.gridLayout_78.addWidget(self.pushButton_14, 0, 0, 1, 1)
+
+
+        self.gridLayout_55.addLayout(self.gridLayout_78, 1, 1, 1, 1)
+
+        self.verticalLayout_2 = QVBoxLayout()
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.gridLayout_86 = QGridLayout()
+        self.gridLayout_86.setObjectName(u"gridLayout_86")
+        self.checkBox_uttmActivate = QCheckBox(self.dockWidgetContents_8)
+        self.checkBox_uttmActivate.setObjectName(u"checkBox_uttmActivate")
+        sizePolicy.setHeightForWidth(self.checkBox_uttmActivate.sizePolicy().hasHeightForWidth())
+        self.checkBox_uttmActivate.setSizePolicy(sizePolicy)
+
+        self.gridLayout_86.addWidget(self.checkBox_uttmActivate, 1, 1, 1, 1)
+
+        self.radioButton_digital = QRadioButton(self.dockWidgetContents_8)
+        self.radioButton_digital.setObjectName(u"radioButton_digital")
+        sizePolicy.setHeightForWidth(self.radioButton_digital.sizePolicy().hasHeightForWidth())
+        self.radioButton_digital.setSizePolicy(sizePolicy)
+        self.radioButton_digital.setChecked(True)
+
+        self.gridLayout_86.addWidget(self.radioButton_digital, 0, 1, 1, 1)
+
+        self.radioButton_analog = QRadioButton(self.dockWidgetContents_8)
+        self.radioButton_analog.setObjectName(u"radioButton_analog")
+        sizePolicy.setHeightForWidth(self.radioButton_analog.sizePolicy().hasHeightForWidth())
+        self.radioButton_analog.setSizePolicy(sizePolicy)
+
+        self.gridLayout_86.addWidget(self.radioButton_analog, 0, 0, 1, 1)
+
+        self.checkBox_ttmActivate = QCheckBox(self.dockWidgetContents_8)
+        self.checkBox_ttmActivate.setObjectName(u"checkBox_ttmActivate")
+        sizePolicy.setHeightForWidth(self.checkBox_ttmActivate.sizePolicy().hasHeightForWidth())
+        self.checkBox_ttmActivate.setSizePolicy(sizePolicy)
+
+        self.gridLayout_86.addWidget(self.checkBox_ttmActivate, 1, 0, 1, 1)
+
+        self.checkBox_DFD = QCheckBox(self.dockWidgetContents_8)
+        self.checkBox_DFD.setObjectName(u"checkBox_DFD")
+        sizePolicy.setHeightForWidth(self.checkBox_DFD.sizePolicy().hasHeightForWidth())
+        self.checkBox_DFD.setSizePolicy(sizePolicy)
+
+        self.gridLayout_86.addWidget(self.checkBox_DFD, 2, 0, 1, 2)
+
+
+        self.verticalLayout_2.addLayout(self.gridLayout_86)
+
+
+        self.gridLayout_55.addLayout(self.verticalLayout_2, 0, 2, 4, 1)
+
 
         self.gridLayout_15.addLayout(self.gridLayout_55, 0, 1, 1, 1)
-
-        self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_15.addItem(self.verticalSpacer_17, 1, 1, 1, 1)
 
         self.dockWidget_preview.setWidget(self.dockWidgetContents_8)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_preview)
@@ -3202,11 +3190,7 @@ class Ui_MainWindowDesign(object):
         self.spinBox_ny.valueChanged.connect(MainWindowDesign.spatialSettingsChanged)
         self.pushButton_FCS_reset.clicked.connect(MainWindowDesign.FCSReset)
         self.toolButton_filename.clicked.connect(MainWindowDesign.cmd_filename)
-        self.toolButton_ttm_executable_path.clicked.connect(MainWindowDesign.cmd_path_ttm)
-        self.toolButton_ttm_filename.clicked.connect(MainWindowDesign.cmd_filename_ttm)
         self.checkBox_ttmActivate.stateChanged.connect(MainWindowDesign.ttm_activate_change_state)
-        self.radioButton_ttm_local.toggled.connect(MainWindowDesign.radio_ttm_local)
-        self.radioButton_ttm_remote.toggled.connect(MainWindowDesign.radio_ttm_remote)
         self.pushButton_loadPlugin.clicked.connect(MainWindowDesign.cmd_load_plugin)
         self.pushButton_closePlugin.clicked.connect(MainWindowDesign.cmd_close_plugin)
         self.pushButton_5.clicked.connect(MainWindowDesign.cmd_update_plugin_list)
@@ -3242,14 +3226,17 @@ class Ui_MainWindowDesign(object):
         self.spinBox_circular_radius_nm.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
         self.spinBox_circular_repetition.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
         self.pushButton_openInExplorer.clicked.connect(MainWindowDesign.openInExplorer)
-        self.radioButton_ttm_type_ttm.toggled.connect(MainWindowDesign.radioButton_ttm_type_ttm_toggle)
-        self.radioButton_ttm_type_uttm.toggled.connect(MainWindowDesign.radioButton_ttm_type_uttm_toggle)
         self.pushButton_uttm_start.clicked.connect(MainWindowDesign.pushButton_uttm_start_clicked)
         self.pushButton_uttm_stop.clicked.connect(MainWindowDesign.pushButton_uttm_stop_clicked)
         self.pushButton_uttm_status.clicked.connect(MainWindowDesign.pushButton_uttm_status_clicked)
         self.pushButton_uttm_loop.clicked.connect(MainWindowDesign.pushButton_uttm_test_clicked)
-        self.checkBox_uttm_watchdog.clicked.connect(MainWindowDesign.checkBox_uttm_watchdog_clicked)
+        self.checkBox_uttm_auto.clicked.connect(MainWindowDesign.checkBox_uttm_watchdog_clicked)
         self.pushButton_uttm_check_laser.clicked.connect(MainWindowDesign.pushButton_uttm_check_laser_clicked)
+        self.toolButton_ttm_executable_path.clicked.connect(MainWindowDesign.cmd_path_ttm)
+        self.radioButton_ttm_remote.toggled.connect(MainWindowDesign.radio_ttm_remote)
+        self.radioButton_ttm_local.toggled.connect(MainWindowDesign.radio_ttm_local)
+        self.toolButton_ttm_filename.clicked.connect(MainWindowDesign.cmd_filename_ttm)
+        self.checkBox_uttm_watchdog.clicked.connect(MainWindowDesign.checkBox_uttm_watchdog_clicked)
 
         self.tabWidget.setCurrentIndex(4)
         self.tabWidget_circular.setCurrentIndex(0)
@@ -3332,50 +3319,64 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_circular.setTabText(self.tabWidget_circular.indexOf(self.tab_4), QCoreApplication.translate("MainWindowDesign", u"Circular", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_statusmonitor), QCoreApplication.translate("MainWindowDesign", u"Status", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_terminal), QCoreApplication.translate("MainWindowDesign", u"Terminal", None))
-        self.label_ttm_IP_7.setText(QCoreApplication.translate("MainWindowDesign", u"Type:", None))
-        self.radioButton_ttm_type_uttm.setText(QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
-        self.label_ttm_IP_6.setText(QCoreApplication.translate("MainWindowDesign", u"Location:", None))
-        self.radioButton_ttm_type_ttm.setText(QCoreApplication.translate("MainWindowDesign", u"TTM", None))
-        self.radioButton_ttm_remote.setText(QCoreApplication.translate("MainWindowDesign", u"Remote", None))
-        self.radioButton_ttm_local.setText(QCoreApplication.translate("MainWindowDesign", u"Local", None))
-        self.label_ttm_IP_5.setText(QCoreApplication.translate("MainWindowDesign", u"TTM-File Folder", None))
         self.toolButton_ttm_executable_path.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.label_ttm_IP_4.setText(QCoreApplication.translate("MainWindowDesign", u"Server IP (this machine):", None))
-        self.lineEdit_ttm_executable_path.setText(QCoreApplication.translate("MainWindowDesign", u"C:/Users/Developer/BrightEyes-TTM/DataReceiverGUI/Debug/BrightEyesTTMrecv.exe", None))
-        self.lineEdit_ttm_filename.setText("")
-        self.label_ttm_IP.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
-        self.label_ttm_IP_3.setText(QCoreApplication.translate("MainWindowDesign", u"TTM reader:", None))
-        self.toolButton_ttm_filename.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.label_116.setText(QCoreApplication.translate("MainWindowDesign", u"Port:", None))
         self.lineEdit_ttmPort.setText(QCoreApplication.translate("MainWindowDesign", u"56000", None))
+        self.lineEdit_ttm_filename.setText("")
+        self.label_ttm_IP_6.setText(QCoreApplication.translate("MainWindowDesign", u"Data Receiver Location:", None))
+        self.label_116.setText(QCoreApplication.translate("MainWindowDesign", u"Port:", None))
         self.label_117.setText("")
+        self.lineEdit_ttm_executable_path.setText(QCoreApplication.translate("MainWindowDesign", u"C:/Users/Developer/BrightEyes-TTM/DataReceiverGUI/Debug/BrightEyesTTMrecv.exe", None))
+        self.label_ttm_IP.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
+        self.toolButton_ttm_filename.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
+        self.label_ttm_IP_4.setText(QCoreApplication.translate("MainWindowDesign", u"Server IP (this machine):", None))
+        self.radioButton_ttm_local.setText(QCoreApplication.translate("MainWindowDesign", u"Local", None))
+        self.label_ttm_IP_3.setText(QCoreApplication.translate("MainWindowDesign", u"TTM reader:", None))
+        self.label_ttm_IP_5.setText(QCoreApplication.translate("MainWindowDesign", u"TTM-File Folder", None))
+        self.radioButton_ttm_remote.setText(QCoreApplication.translate("MainWindowDesign", u"Remote", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_15), QCoreApplication.translate("MainWindowDesign", u"TTM", None))
-        self.label_121.setText(QCoreApplication.translate("MainWindowDesign", u"Status:", None))
-        self.label_114.setText(QCoreApplication.translate("MainWindowDesign", u"Log:", None))
-        self.pushButton_uttm_start.setText(QCoreApplication.translate("MainWindowDesign", u"Start uTTM", None))
-        self.pushButton_uttm_check_laser.setText(QCoreApplication.translate("MainWindowDesign", u"Check Laser", None))
-        self.pushButton_uttm_stop.setText(QCoreApplication.translate("MainWindowDesign", u"Stop uTTM", None))
-        self.pushButton_uttm_loop.setText(QCoreApplication.translate("MainWindowDesign", u"Test_uttm_loop", None))
         self.label_113.setText(QCoreApplication.translate("MainWindowDesign", u"Address uTTM Client [addr:port]", None))
         self.label_uttm_port.setText(QCoreApplication.translate("MainWindowDesign", u"1234", None))
         self.label_118.setText(QCoreApplication.translate("MainWindowDesign", u"Address uTTM Client actual IP", None))
         self.label_115.setText(QCoreApplication.translate("MainWindowDesign", u"Port", None))
         self.lineEdit_uttm_addr.setText(QCoreApplication.translate("MainWindowDesign", u"mmskria2:1234", None))
         self.label_uttm_ip.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
-        self.checkBox_uttm_watchdog.setText(QCoreApplication.translate("MainWindowDesign", u"Activate watchdog", None))
-        self.pushButton_uttm_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status", None))
+        self.checkBox_uttm_auto.setText(QCoreApplication.translate("MainWindowDesign", u"Start/Stop automatic", None))
+        self.label_121.setText(QCoreApplication.translate("MainWindowDesign", u"Status:", None))
+        self.label_114.setText(QCoreApplication.translate("MainWindowDesign", u"Log:", None))
         self.label_uttm_laser_freq.setText(QCoreApplication.translate("MainWindowDesign", u"Laser freq. found:", None))
+        self.pushButton_uttm_start.setText(QCoreApplication.translate("MainWindowDesign", u"Start uTTM", None))
+        self.checkBox_uttm_watchdog.setText(QCoreApplication.translate("MainWindowDesign", u"Activate watchdog", None))
+        self.pushButton_uttm_stop.setText(QCoreApplication.translate("MainWindowDesign", u"Stop uTTM", None))
+        self.pushButton_uttm_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status", None))
+        self.pushButton_uttm_loop.setText(QCoreApplication.translate("MainWindowDesign", u"Test_uttm_loop", None))
+        self.pushButton_uttm_check_laser.setText(QCoreApplication.translate("MainWindowDesign", u"Check Laser", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_16), QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"(u)TTM", None))
         self.dockWidget_preview.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Commands", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_externalProgram.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Open the last saved file with Napari or another viewer as selected in the configuration</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"Ext. Viewer/Analysis", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_acquisitionStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning saving data</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_acquisitionStart.setText(QCoreApplication.translate("MainWindowDesign", u"Acquisition", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_stop.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Stop the scan</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_stop.setText(QCoreApplication.translate("MainWindowDesign", u"STOP!", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_previewStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning without storing data</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_previewStart.setText(QCoreApplication.translate("MainWindowDesign", u"Preview", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_acquisitionStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning saving data</p></body></html>", None))
+        self.pushButton_14.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Add the current configuration to the Batch acquisition table</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_acquisitionStart.setText(QCoreApplication.translate("MainWindowDesign", u"Acquisition", None))
+        self.pushButton_14.setText(QCoreApplication.translate("MainWindowDesign", u"Add to Batch", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_uttmActivate.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the TTM data receiver (external software) when start the acquisition</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_uttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
         self.radioButton_digital.setText(QCoreApplication.translate("MainWindowDesign", u"Digital", None))
         self.radioButton_analog.setText(QCoreApplication.translate("MainWindowDesign", u"Analog", None))
 #if QT_CONFIG(tooltip)
@@ -3386,18 +3387,6 @@ class Ui_MainWindowDesign(object):
         self.checkBox_DFD.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the Digital Frequency Domain data acquisition</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_DFD.setText(QCoreApplication.translate("MainWindowDesign", u"DFD", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_14.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Add the current configuration to the Batch acquisition table</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_14.setText(QCoreApplication.translate("MainWindowDesign", u"Add to Batch", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_externalProgram.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Open the last saved file with Napari or another viewer as selected in the configuration</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"Ext. Viewer/Analysis", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_stop.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Stop the scan</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_stop.setText(QCoreApplication.translate("MainWindowDesign", u"STOP!", None))
         self.dockWidget_temporal.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Temporal settings", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_waitAfterFrame.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Delay betweent two repetition in second.</p></body></html>", None))
