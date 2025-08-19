@@ -4075,6 +4075,8 @@ Have fun!
         """
         self.activate_preview = activate_preview
 
+        self.circularMotionActivateChanged()
+
         self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
         self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
 

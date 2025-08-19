@@ -20,7 +20,7 @@
       <item row="0" column="0">
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>4</number>
+         <number>2</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -520,11 +520,11 @@
           <item row="1" column="0" colspan="2">
            <widget class="QTabWidget" name="tabWidget_circular">
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="tab_10">
              <attribute name="title">
-              <string>Tree1</string>
+              <string>Read Conf. FPGA</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_10">
               <item row="0" column="0">
@@ -534,7 +534,7 @@
             </widget>
             <widget class="QWidget" name="tab_11">
              <attribute name="title">
-              <string>Tree2</string>
+              <string>Conf. FPGA dict.</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_31">
               <item row="0" column="0">
@@ -544,7 +544,7 @@
             </widget>
             <widget class="QWidget" name="tab_3">
              <attribute name="title">
-              <string>Tree3</string>
+              <string>Conf. GUI dict.</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_34">
               <item row="0" column="0">
