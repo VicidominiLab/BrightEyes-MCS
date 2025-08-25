@@ -33,6 +33,54 @@ except Exception as e:
 from ..print_dec import print_dec, set_debug
 from numpy import sqrt
 
+
+import numpy as np
+
+def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_xy=False, snake_walk_z=False):
+    """
+    Decode pointer indices into list_b, list_x, list_y, list_z, list_rep.
+
+    Parameters
+    ----------
+    pointer_start : int
+        Starting pointer index.
+    gap : int
+        Number of elements to decode.
+    timebinsPerPixel : int
+        Number of time bins per pixel.
+    shape : tuple
+        (X, Y, Z) dimensions.
+    snake_walk_xy : bool
+        Whether to apply XY snake walk.
+    snake_walk_z : bool
+        Whether to apply Z snake walk.
+
+    Returns
+    -------
+    tuple of np.ndarray
+        (list_b, list_x, list_y, list_z, list_rep)
+    """
+    list_pointer = np.arange(pointer_start, pointer_start + gap)
+    list_pixel = list_pointer // timebinsPerPixel
+    list_b = list_pointer % timebinsPerPixel
+
+    list_x = list_pixel % shape[0]
+    list_y = (list_pixel // shape[0]) % shape[1]
+
+    if snake_walk_xy:
+        list_x = list_x + (list_y % 2) * (-2 * list_x + shape[0] - 1)
+
+    list_z = list_pixel // (shape[0] * shape[1])
+    list_rep = list_z // shape[2]
+
+    if snake_walk_z:
+        list_z = (list_z + (list_rep % 2) * (-2 * list_z + shape[2] - 1)) % shape[2]
+    else:
+        list_z = list_z % shape[2]
+
+    return list_b, list_x, list_y, list_z, list_rep
+
+
 class AcquisitionLoopProcess(mp.Process):
     def __init__(
         self,
@@ -443,35 +491,18 @@ class AcquisitionLoopProcess(mp.Process):
                         print_dec("MISTERY!!!")
                         print_dec("New GAP", self.gap)
 
-                    if self.snake_walk_xy == True:
-                        list_pointer = np.arange(
-                            self.current_pointer, self.current_pointer + self.gap
-                        )
-                        list_pixel = list_pointer // self.timebinsPerPixel
-                        list_b = list_pointer % self.timebinsPerPixel
-                        list_x = list_pixel % self.shape[0]
-                        list_y = (list_pixel // self.shape[0]) % self.shape[1]
-                        list_x = list_x + (list_y % 2) * (
-                            -2 * list_x + self.shape[0] - 1
-                        )
-                        list_z = (
-                            list_pixel
-                            // (self.shape[0] * self.shape[1])
-                            % self.shape[2]
-                        )
-                    else:
-                        list_pointer = np.arange(
-                            self.current_pointer, self.current_pointer + self.gap
-                        )
-                        list_pixel = list_pointer // self.timebinsPerPixel
-                        list_b = list_pointer % self.timebinsPerPixel
-                        list_x = list_pixel % self.shape[0]
-                        list_y = (list_pixel // self.shape[0]) % self.shape[1]
-                        list_z = (
-                            list_pixel
-                            // (self.shape[0] * self.shape[1])
-                            % self.shape[2]
-                        )
+                    #
+                    # Generation of list_pixel, list_b, list_x, list_y, list_z
+                    #
+
+                    list_b, list_x, list_y, list_z, list_rep = decode_pointer_list(
+                        self.current_pointer,
+                        self.gap,
+                        self.timebinsPerPixel,
+                        self.shape,
+                        snake_walk_xy=self.snake_walk_xy,
+                        snake_walk_z=self.snake_walk_z
+                    )
 
                     if self.gap > self.buffer_size:
                         print_dec(
@@ -897,58 +928,15 @@ class AcquisitionLoopProcess(mp.Process):
                         )
                         print_dec("MISTERY")
                         print_dec("New GAP", self.gap_analog)
-                    #
-                    # if self.snake_walk_xy == True:
-                    #     list_pointer = np.arange(self.current_pointer, self.current_pointer + self.gap)
-                    #     list_pixel = list_pointer // self.timebinsPerPixel
-                    #     list_b = list_pointer % self.timebinsPerPixel
-                    #     list_x = list_pixel % self.shape[0]
-                    #     list_y = (list_pixel // self.shape[0]) % self.shape[1]
-                    #     list_x = list_x + (list_y % 2) * (-2 * list_x + self.shape[0] - 1)
-                    #     list_z = list_pixel // (self.shape[0] * self.shape[1]) % self.shape[2]
-                    # else:
-                    #     list_pointer = np.arange(self.current_pointer, self.current_pointer + self.gap)
-                    #     list_pixel = list_pointer // self.timebinsPerPixel
-                    #     list_b = list_pointer % self.timebinsPerPixel
-                    #     list_x = list_pixel % self.shape[0]
-                    #     list_y = (list_pixel // self.shape[0]) % self.shape[1]
-                    #     list_z = list_pixel // (self.shape[0] * self.shape[1]) % self.shape[2]
 
-                    if self.snake_walk_xy == True:
-                        list_pointer_analog = np.arange(
-                            self.current_pointer_analog,
-                            self.current_pointer_analog + self.gap_analog,
-                        )
-                        list_pixel_analog = list_pointer_analog // (self.timebinsPerPixel*2)
-                        list_b_analog = list_pointer_analog % (self.timebinsPerPixel *2)
-                        list_x_analog = list_pixel_analog % self.shape[0]
-                        list_y_analog = (
-                            list_pixel_analog // self.shape[0]
-                        ) % self.shape[1]
-                        list_x_analog = list_x_analog + (list_y_analog % 2) * (
-                            -2 * list_x_analog + self.shape[0] - 1
-                        )
-                        list_z_analog = (
-                            list_pixel_analog
-                            // (self.shape[0] * self.shape[1])
-                            % self.shape[2]
-                        )
-                    else:
-                        list_pointer_analog = np.arange(
-                            self.current_pointer_analog,
-                            self.current_pointer_analog + self.gap_analog,
-                        )
-                        list_pixel_analog = list_pointer_analog // self.timebinsPerPixel
-                        list_b_analog = list_pointer_analog % self.timebinsPerPixel
-                        list_x_analog = list_pixel_analog % self.shape[0]
-                        list_y_analog = (
-                            list_pixel_analog // self.shape[0]
-                        ) % self.shape[1]
-                        list_z_analog = (
-                            list_pixel_analog
-                            // (self.shape[0] * self.shape[1])
-                            % self.shape[2]
-                        )
+                    list_b_analog, list_x_analog, list_y_analog, list_z_analog, list_rep_analog = decode_pointer_list(
+                        self.current_pointer_analog,
+                        self.gap_analog,
+                        self.timebinsPerPixel,
+                        self.shape,
+                        snake_walk_xy=self.snake_walk_xy,
+                        snake_walk_z=self.snake_walk_z
+                    )
 
                     self.shared_dict_proxy["last_packet_size"] = self.gap_analog
                     if self.gap_analog > self.buffer_size_analog:
