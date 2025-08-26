@@ -258,8 +258,8 @@ class AcquisitionLoopProcess(mp.Process):
         )
 
         # in h5file the first dimension as "free size" is the fastest way to write on disk
-        if self.DFD_Activate:
-            self.timebinsPerPixel = self.DFD_nbins
+        # if self.DFD_Activate:
+        #     self.timebinsPerPixel = self.DFD_nbins
 
         if not self.activate_preview:
             self.h5mgr = H5Manager(
