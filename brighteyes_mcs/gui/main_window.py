@@ -3088,6 +3088,7 @@ class MainWindow(QMainWindow):
         self.ui.label_current_frame_val.setText("%d" % current_frame)
         self.ui.label_current_repetition_val.setText("%d" % current_rep)
 
+
         if self.get_expected_fifo_elements != 0:
             self.ui.progressBar_repetition.setValue(
                 100.0 * self.get_fifo_elements / self.get_expected_fifo_elements
@@ -3113,7 +3114,34 @@ class MainWindow(QMainWindow):
             symbol="o",
         )
 
+        clk_multiplier = self.ui.spinBox_clk_base_multiplier.value()
+
         trace, trace_pos = self.spadfcsmanager_inst.getTrace()
+
+        trace_x = trace[0, :trace_pos]
+        trace_y = trace[1, :trace_pos]
+
+        if clk_multiplier > 1:
+            size = trace_x.shape[0]
+            idx = np.arange(size)
+            trace_x_n = trace_x[:size//clk_multiplier]
+            trace_y_n = np.zeros(size//clk_multiplier)
+
+            #trace_x_n =
+            # np.add.at(
+            #     trace_x_n,
+            #     idx % clk_multiplier,
+            #     trace_x,
+            # )
+
+            np.add.at(
+                trace_y_n,
+                idx % (size//clk_multiplier),
+                trace_y,
+            )
+
+            trace_x = trace_x_n
+            trace_y = trace_y_n
 
         if (
                 "Analog" in self.ui.comboBox_plot_channel.currentText()
@@ -3129,12 +3157,13 @@ class MainWindow(QMainWindow):
         else:
             self.trace_widget.setLabel("left", "Freq.", "Hz")
             coeff = 1
+
         if self.ui.checkBox_trace_autorange.isChecked():
             self.trace_widget.plot(
-                trace[0, :trace_pos], trace[1, :trace_pos] * coeff, clear=True
+                trace_x, trace_y * coeff, clear=True
             )
         else:
-            self.trace_widget.plot(trace[0, :], trace[1, :], clear=True)
+            self.trace_widget.plot(trace_x, trace_y, clear=True)
 
         # numpy random.rand also much faster than list comprehension
         # img = np.random.rand(512, 512)
@@ -4349,6 +4378,7 @@ Have fun!
             self.spadfcsmanager_inst.set_trace_sample_per_bins(
                 trace_sample_per_bins=trace_sample_per_bins
             )
+            self.spadfcsmanager_inst.set_clk_multiplier(self.ui.spinBox_clk_base_multiplier.value())
         else:
             trace_bins = int(
                 self.ui.doubleSpinBox_binsize.value()
@@ -4377,6 +4407,7 @@ Have fun!
             self.ui.label_actual_buffer_size.setText(
                 "%d" % self.spadfcsmanager_inst.fpga_handle.get_actual_depth()
             )
+            self.spadfcsmanager_inst.set_clk_multiplier(1)
 
         # self.spadfcsmanager_inst.acquistion_run()
         if self.ttm_remote_is_up() and not activate_preview:

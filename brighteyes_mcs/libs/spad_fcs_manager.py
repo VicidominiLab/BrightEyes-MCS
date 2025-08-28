@@ -59,6 +59,8 @@ class SpadFcsManager():
         DFD_Activate (bool): Flag for DFD activation.
         snake_walk_xy (bool): Flag for snake walk mode on xy.
         snake_walk_z (bool): Flag for snake walk mode on z.
+        clk_multiplier (int): DFD Laser Clk multiplier = decimation on the time dimension
+        dfd_shift (int): DFD bin to shift
         use_rust_fifo (bool): Flag for using Rust FIFO.
         debug (bool): Debug flag.
     """
@@ -160,6 +162,7 @@ class SpadFcsManager():
         self.shared_fingerprint = None
         self.shared_fingerprint_mask = None
 
+
         self.is_connected = False
 
         self.fifo_chuck_size = 10
@@ -181,8 +184,12 @@ class SpadFcsManager():
 
         self.DFD_Activate = False
         self.DFD_nbins = 0
+
         self.snake_walk_xy = False
         self.snake_walk_z = False
+
+        self.clk_multiplier = 1
+        self.dfd_shift = 0
 
         self.use_rust_fifo = True
 
@@ -416,8 +423,6 @@ class SpadFcsManager():
         print_dec("spadfcsmanager.registers_configuration")
         print_dec("spadfcsmanager.expected_raw_data", self.expected_raw_data)
 
-        ### ADD HERE
-
         self.fpga_handle.set_list_fifos_to_read_continously(self.activated_fifos_list)
 
         self.shared_autocorrelation = MemorySharedNumpyArray(
@@ -551,6 +556,8 @@ class SpadFcsManager():
                 "DFD_nBins": self.DFD_nbins,
                 "snake_walk_xy": self.snake_walk_xy,
                 "snake_walk_z": self.snake_walk_z,
+                "clk_multiplier": self.clk_multiplier,
+                "dfd_shift": self.dfd_shift
             }
         )
 
@@ -857,6 +864,13 @@ class SpadFcsManager():
         """
         print("set_autocorrelation_maxx", value)
         self.autocorrelation_maxx = value
+
+    def set_clk_multiplier(self, multiplier=1):
+        print_dec("set_clk_multiplier", multiplier)
+        self.clk_multiplier = multiplier
+
+    def set_dfd_shift(self, shift=0):
+        self.dfd_shift = shift
 
     def set_trace_bins(self, trace_bins=30000):
         """

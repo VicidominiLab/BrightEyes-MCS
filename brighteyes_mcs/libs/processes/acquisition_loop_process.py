@@ -36,7 +36,7 @@ from numpy import sqrt
 
 import numpy as np
 
-def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_xy=False, snake_walk_z=False):
+def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_xy=False, snake_walk_z=False, clk_multiplier=1):
     """
     Decode pointer indices into list_b, list_x, list_y, list_z, list_rep.
 
@@ -60,10 +60,13 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
     tuple of np.ndarray
         (list_b, list_x, list_y, list_z, list_rep)
     """
+
     list_pointer = np.arange(pointer_start, pointer_start + gap)
     list_pixel = list_pointer // timebinsPerPixel
     list_b = list_pointer % timebinsPerPixel
-
+    print_dec("clk_multiplier",clk_multiplier)
+    if clk_multiplier != 1:
+        list_b = list_b % (timebinsPerPixel // clk_multiplier)
     list_x = list_pixel % shape[0]
     list_y = (list_pixel // shape[0]) % shape[1]
 
@@ -150,6 +153,9 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.snake_walk_xy = shared_dict["snake_walk_xy"]
         self.snake_walk_z = shared_dict["snake_walk_z"]
+
+        self.clk_multiplier = shared_dict["clk_multiplier"]
+        self.dfd_shift = shared_dict["dfd_shift"]
 
         self.filenameh5 = shared_dict["filenameh5"]
 
@@ -270,12 +276,12 @@ class AcquisitionLoopProcess(mp.Process):
 
             if "FIFO" in self.shm_activated_fifos_list:
                 self.h5mgr.init_dataset(
-                    "data", self.shape, self.timebinsPerPixel, self.channels, np.uint16
+                    "data", self.shape, self.timebinsPerPixel//self.clk_multiplier, self.channels, np.uint16
                 )
                 self.h5mgr.init_dataset(
                     "data_channels_extra",
                     self.shape,
-                    self.timebinsPerPixel,
+                    self.timebinsPerPixel//self.clk_multiplier,
                     self.channels_extra,
                     np.uint8,
                 )
@@ -292,7 +298,7 @@ class AcquisitionLoopProcess(mp.Process):
                 (
                     self.shape[1],
                     self.shape[0],
-                    self.timebinsPerPixel,
+                    self.timebinsPerPixel // self.clk_multiplier,
                     self.channels,
                 ),
                 dtype="uint16",
@@ -303,7 +309,7 @@ class AcquisitionLoopProcess(mp.Process):
                 (
                     self.shape[1],
                     self.shape[0],
-                    self.timebinsPerPixel,
+                    self.timebinsPerPixel  // self.clk_multiplier,
                     self.channels_extra,
                 ),
                 dtype="uint8",
@@ -381,6 +387,8 @@ class AcquisitionLoopProcess(mp.Process):
             converter = convertRawDataToCountsDirect
         if channels == 49:
             converter = convertRawDataToCountsDirect49
+
+        clk_multiplier = self.clk_multiplier
         # print_dec("=================================================================")
         # print_dec("timebinsPerPixel", self.timebinsPerPixel)
         # print_dec("time_resolution", self.time_resolution)
@@ -501,7 +509,8 @@ class AcquisitionLoopProcess(mp.Process):
                         self.timebinsPerPixel,
                         self.shape,
                         snake_walk_xy=self.snake_walk_xy,
-                        snake_walk_z=self.snake_walk_z
+                        snake_walk_z=self.snake_walk_z,
+                        clk_multiplier = clk_multiplier
                     )
 
                     if self.gap > self.buffer_size:
@@ -764,17 +773,30 @@ class AcquisitionLoopProcess(mp.Process):
 
                     if not self.activate_preview:
                         # This is for debug purpose
+
                         # np.add.at(self.buffer_for_save, (list_y, list_x, list_b),
                         #           buffer_up_to_gap[:,:channels])
                         # np.add.at(self.buffer_for_save_channels_extra, (list_y, list_x, list_b),
                         #           buffer_up_to_gap[:,channels:])
 
-                        self.buffer_for_save[
-                            list_y, list_x, list_b, :
-                        ] = buffer_up_to_gap[:, :channels]
-                        self.buffer_for_save_channels_extra[
-                            list_y, list_x, list_b, :
-                        ] = buffer_up_to_gap[:, channels:]
+                        # self.buffer_for_save[
+                        #     list_y, list_x, list_b, :
+                        # ] = buffer_up_to_gap[:, :channels]
+                        # self.buffer_for_save_channels_extra[
+                        #     list_y, list_x, list_b, :
+                        # ] = buffer_up_to_gap[:, channels:]
+
+                        np.add.at(
+                            self.buffer_for_save,
+                            (list_y, list_x, list_b),
+                            buffer_up_to_gap[:, :channels],
+                        )
+
+                        np.add.at(
+                            self.buffer_for_save_channels_extra,
+                            (list_y, list_x, list_b),
+                            buffer_up_to_gap[:, channels:],
+                        )
 
                         # print_dec(
                         #     self.current_pointer,

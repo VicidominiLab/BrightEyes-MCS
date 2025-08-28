@@ -1657,7 +1657,30 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_75.addWidget(self.checkBox_laser3, 0, 3, 1, 1)
 
 
-        self.gridLayout_42.addWidget(self.groupBox_3, 0, 0, 1, 2)
+        self.gridLayout_42.addWidget(self.groupBox_3, 0, 0, 1, 1)
+
+        self.groupBox_7 = QGroupBox(self.dockWidgetContents_13)
+        self.groupBox_7.setObjectName(u"groupBox_7")
+        self.gridLayout_7 = QGridLayout(self.groupBox_7)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.spinBox_clk_base_multiplier = QSpinBox(self.groupBox_7)
+        self.spinBox_clk_base_multiplier.setObjectName(u"spinBox_clk_base_multiplier")
+        sizePolicy3.setHeightForWidth(self.spinBox_clk_base_multiplier.sizePolicy().hasHeightForWidth())
+        self.spinBox_clk_base_multiplier.setSizePolicy(sizePolicy3)
+        self.spinBox_clk_base_multiplier.setMinimum(1)
+        self.spinBox_clk_base_multiplier.setMaximum(6)
+
+        self.gridLayout_7.addWidget(self.spinBox_clk_base_multiplier, 0, 1, 1, 1)
+
+        self.label_120 = QLabel(self.groupBox_7)
+        self.label_120.setObjectName(u"label_120")
+        sizePolicy2.setHeightForWidth(self.label_120.sizePolicy().hasHeightForWidth())
+        self.label_120.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_7.addWidget(self.label_120, 0, 0, 1, 1)
+
+
+        self.gridLayout_42.addWidget(self.groupBox_7, 0, 1, 1, 1)
 
         self.dockWidget_laser.setWidget(self.dockWidgetContents_13)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_laser)
@@ -2487,7 +2510,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, -128, 349, 304))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 349, 304))
         self.gridLayout_67 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_67.setObjectName(u"gridLayout_67")
         self.checkBox_correlationMatrix = QCheckBox(self.scrollAreaWidgetContents_6)
@@ -3659,6 +3682,8 @@ class Ui_MainWindowDesign(object):
         self.checkBox_laser2.setText(QCoreApplication.translate("MainWindowDesign", u"L3", None))
         self.checkBox_laser0.setText(QCoreApplication.translate("MainWindowDesign", u"L1", None))
         self.checkBox_laser3.setText(QCoreApplication.translate("MainWindowDesign", u"L4", None))
+        self.groupBox_7.setTitle(QCoreApplication.translate("MainWindowDesign", u"Laser Frequency", None))
+        self.label_120.setText(QCoreApplication.translate("MainWindowDesign", u"Clock Base \u00d7", None))
         self.dockWidget_adv.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Adv.", None))
         self.lineEdit_fpga2bitfile.setText("")
         self.label_98.setText("")
