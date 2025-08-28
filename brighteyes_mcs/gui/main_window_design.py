@@ -1453,7 +1453,7 @@ class Ui_MainWindowDesign(object):
         self.spinBox_circular_repetition = QSpinBox(self.groupBox_2)
         self.spinBox_circular_repetition.setObjectName(u"spinBox_circular_repetition")
         self.spinBox_circular_repetition.setMinimum(1)
-        self.spinBox_circular_repetition.setMaximum(32)
+        self.spinBox_circular_repetition.setMaximum(999999)
         self.spinBox_circular_repetition.setValue(1)
 
         self.gridLayout_20.addWidget(self.spinBox_circular_repetition, 3, 1, 1, 1)
