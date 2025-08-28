@@ -64,7 +64,6 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
     list_pointer = np.arange(pointer_start, pointer_start + gap)
     list_pixel = list_pointer // timebinsPerPixel
     list_b = list_pointer % timebinsPerPixel
-    print_dec("clk_multiplier",clk_multiplier)
     if clk_multiplier != 1:
         list_b = list_b % (timebinsPerPixel // clk_multiplier)
     list_x = list_pixel % shape[0]
@@ -276,12 +275,12 @@ class AcquisitionLoopProcess(mp.Process):
 
             if "FIFO" in self.shm_activated_fifos_list:
                 self.h5mgr.init_dataset(
-                    "data", self.shape, self.timebinsPerPixel//self.clk_multiplier, self.channels, np.uint16
+                    "data", self.shape, self.timebinsPerPixel // self.clk_multiplier, self.channels, np.uint16
                 )
                 self.h5mgr.init_dataset(
                     "data_channels_extra",
                     self.shape,
-                    self.timebinsPerPixel//self.clk_multiplier,
+                    self.timebinsPerPixel // self.clk_multiplier,
                     self.channels_extra,
                     np.uint8,
                 )
@@ -309,7 +308,7 @@ class AcquisitionLoopProcess(mp.Process):
                 (
                     self.shape[1],
                     self.shape[0],
-                    self.timebinsPerPixel  // self.clk_multiplier,
+                    self.timebinsPerPixel // self.clk_multiplier,
                     self.channels_extra,
                 ),
                 dtype="uint8",
