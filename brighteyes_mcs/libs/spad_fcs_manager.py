@@ -49,7 +49,7 @@ class SpadFcsManager():
         acquisition_almost_done_event (multiprocessing.Event): Event for acquisition almost done.
         acquisition_run_event (multiprocessing.Event): Event for acquisition run.
         acquisition_stop_event (multiprocessing.Event): Event for acquisition stop.
-        activate_preview_event (multiprocessing.Event): Event for activating preview.
+        do_not_save_event (multiprocessing.Event): Event for activating preview.
         autocorrelation_maxx (int): Maximum value for autocorrelation.
         trace_bins (int): Number of trace bins.
         trace_sample_per_bins (int): Number of samples per trace bin.
@@ -171,7 +171,7 @@ class SpadFcsManager():
         self.acquisition_almost_done_event = mp.Event()
         self.acquisition_run_event = mp.Event()
         self.acquisition_stop_event = mp.Event()
-        self.activate_preview_event = mp.Event()
+        self.do_not_save_event = mp.Event()
 
         self.autocorrelation_maxx = 20
 
@@ -271,16 +271,16 @@ class SpadFcsManager():
         return self.acquisition_almost_done_event.is_set()
 
 
-    def set_activate_preview(self, active=True):
+    def set_do_not_save(self, active=True):
         """
         Activate the preview
         """
         if active:
-            self.activate_preview_event.set()
-            print_dec("self.activate_preview_event.set()")
+            self.do_not_save_event.set()
+            print_dec("self.do_not_save_event.set()")
         else:
-            self.activate_preview_event.clear()
-            print_dec("self.activate_preview_event.clear()")
+            self.do_not_save_event.clear()
+            print_dec("self.do_not_save_event.clear()")
 
     def set_activate_DFD(self, activate=True):
         """
@@ -413,11 +413,11 @@ class SpadFcsManager():
         """
         Run the FPGA, start the data process, the preview process and run the FPGA handle class
         """
-        activate_preview = self.activate_preview_event.is_set()
+        do_not_save = self.do_not_save_event.is_set()
 
         print_dec("spadfcsmanager.run()")
 
-        print_dec("activate_preview", activate_preview)
+        print_dec("do_not_save", do_not_save)
         print_dec("fpga_process.runed from run")
         self.readRegistersDict()
         print_dec("spadfcsmanager.registers_configuration")
@@ -566,7 +566,7 @@ class SpadFcsManager():
         self.previewProcess = AcquisitionLoopProcess(
             self.channels,
             shared_objects,
-            activate_preview,
+            do_not_save,
             self.data_queue,
             self.acquisition_done_event,
             self.acquisition_almost_done_event,
