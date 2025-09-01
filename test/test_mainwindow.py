@@ -188,7 +188,7 @@ class TestMyClass(unittest.TestCase):
 
         instance.previewLoop()
 
-        instance.startAcquisition.assert_called_with(activate_preview=True)
+        instance.startAcquisition.assert_called_with(do_not_save=True)
 
     def projChanged_updates_labels(self):
         instance = MyClass()

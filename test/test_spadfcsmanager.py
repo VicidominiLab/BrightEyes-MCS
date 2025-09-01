@@ -45,16 +45,16 @@ class TestSpadFcsManager(unittest.TestCase):
 
         self.assertTrue(result)
 
-    def set_activate_preview_sets_event(self):
+    def set_do_not_save_sets_event(self):
         instance = SpadFcsManager()
-        instance.activate_preview_event.set = MagicMock()
-        instance.activate_preview_event.clear = MagicMock()
+        instance.do_not_save_event.set = MagicMock()
+        instance.do_not_save_event.clear = MagicMock()
 
-        instance.set_activate_preview(True)
-        instance.activate_preview_event.set.assert_called()
+        instance.set_do_not_save(True)
+        instance.do_not_save_event.set.assert_called()
 
-        instance.set_activate_preview(False)
-        instance.activate_preview_event.clear.assert_called()
+        instance.set_do_not_save(False)
+        instance.do_not_save_event.clear.assert_called()
 
     def set_activate_DFD_sets_DFD_Activate(self):
         instance = SpadFcsManager()
@@ -102,7 +102,7 @@ class TestSpadFcsManager(unittest.TestCase):
         instance.readRegistersDict = MagicMock()
         instance.dataProcess = MagicMock()
         instance.previewProcess = MagicMock()
-        instance.activate_preview_event.is_set = MagicMock(return_value=True)
+        instance.do_not_save_event.is_set = MagicMock(return_value=True)
 
         instance.run()
 
