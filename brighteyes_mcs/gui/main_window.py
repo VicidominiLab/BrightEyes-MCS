@@ -492,6 +492,7 @@ class MainWindow(QMainWindow):
         self.DFD_nbins = 81
         self.snake_walk_Activate_XY = False
         self.snake_walk_Activate_Z = False
+        self.Redirect_intensity_to_FIFOAnalog = False
 
         self.setupAnalogOutputGUI()
         # Replace the terminal with ScriptLauncher
@@ -3084,10 +3085,9 @@ class MainWindow(QMainWindow):
         current_frame = self.spadfcsmanager_inst.get_current_z()
         current_rep = self.spadfcsmanager_inst.get_current_rep()
 
-        self.ui.label_current_time_val.setText("%0.2f" % current_time)
-        self.ui.label_current_frame_val.setText("%d" % current_frame)
-        self.ui.label_current_repetition_val.setText("%d" % current_rep)
-
+        self.ui.label_current_time_val.setText("%0.2f" % current_time )
+        self.ui.label_current_frame_val.setText(" - ".join("%d" % (current_frame[i]) for i in current_frame))
+        self.ui.label_current_repetition_val.setText(" - ".join("%d" % (current_rep[i]) for i in current_rep))
 
         if self.get_expected_fifo_elements != 0:
             self.ui.progressBar_repetition.setValue(
@@ -4110,6 +4110,8 @@ Have fun!
         self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
         self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
 
+        Redirect_intensity_to_FIFOAnalog = self.Redirect_intensity_to_FIFOAnalog
+
         self.numberChannelsChanged()
         self.spadfcsmanager_inst.set_channels(int(self.ui.comboBox_channels.currentText()))
 
@@ -4212,7 +4214,8 @@ Have fun!
                 "DummyData": dummy_data,
                 "excitation sequence": laser_sequence,
                 "ext_px_selector": slave_type,
-                "SlaveMode": slave_mode
+                "SlaveMode": slave_mode,
+                "Redirect_intensity_to_FIFOAnalog": Redirect_intensity_to_FIFOAnalog
                 # "AD5764_MaxBit": 1,
             }
         )

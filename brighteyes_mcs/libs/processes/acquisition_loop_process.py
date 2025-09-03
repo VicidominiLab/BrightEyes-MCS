@@ -113,15 +113,13 @@ class AcquisitionLoopProcess(mp.Process):
             self.DATA_WORDS_DIGITAL = 2
 
         self.shm_activated_fifos_list = shared_objects["activated_fifos_list"]
+        self.activated_fifos_list = list(self.shm_activated_fifos_list) #To avoid extra shm call
+
         self.shm_autocorrelation = shared_objects["shared_autocorrelation"]
         self.shm_loc_acquired = shared_objects["loc_acquired"]
         self.shm_loc_previewed = shared_objects["loc_previewed"]
-        self.current_x = 0
-        self.current_y = 0
-        self.current_f = 0
-        self.current_pixel = 0
-        self.current_frame = 0
-        self.current_frame_analog = 0
+
+        self.current_frame = {"FIFO": 0, "FIFOAnalog": 0}
 
         self.shm_image_xy_rgb = shared_objects["shared_image_xy_rgb"]
         self.shm_image_xy = shared_objects["shared_image_xy"]
@@ -150,6 +148,9 @@ class AcquisitionLoopProcess(mp.Process):
         self.DFD_Activate = shared_dict["DFD_Activate"]
         self.DFD_nbins = shared_dict["DFD_nbins"]
 
+        self.redirect_intensity_to_fifoanalog = bool(shared_dict["Redirect_intensity_to_FIFOAnalog"])
+        print_dec("Redirect_intensity_to_FIFOAnalog", type(self.redirect_intensity_to_fifoanalog))
+
         self.snake_walk_xy = shared_dict["snake_walk_xy"]
         self.snake_walk_z = shared_dict["snake_walk_z"]
 
@@ -170,47 +171,104 @@ class AcquisitionLoopProcess(mp.Process):
         self.channels = shared_dict["channels"]
         self.channels_extra = 2
 
-        self.current_pointer = 0
-        self.current_pointer_analog = 0
-        self.stop_event = mp.Event()
+        self.current_pointer = {"FIFO": 0, "FIFOAnalog": 0}
+        
+        self.stop_events_init(self.activated_fifos_list)
+
+        # self.stop_event = {"FIFO": mp.Event(),
+        #                    "FIFOAnalog": mp.Event()
+        #                    }
+        # self.stop_event = mp.Event()
+
         self.trace_reset_event = mp.Event()
         self.FCS_reset_event = mp.Event()
 
         self.buffer_size_in_words = shared_dict["preview_buffer_size_in_words"]  # 15000
         self.buffer_size_in_words_analog = self.buffer_size_in_words
 
-        self.buffer_size = self.timebinsPerPixel * self.buffer_size_in_words * self.DATA_WORDS_DIGITAL
-        self.buffer_size_analog = self.timebinsPerPixel * self.buffer_size_in_words_analog * self.DATA_WORDS_ANALOG
+        self.buffer_data = {}
+        self.buffer_data_sum = {}
+        self.saturation = {}
 
+        self.buffer_data_size = {"FIFO": self.timebinsPerPixel * self.buffer_size_in_words * self.DATA_WORDS_DIGITAL,
+                                 "FIFOAnalog": self.timebinsPerPixel * self.buffer_size_in_words_analog * self.DATA_WORDS_ANALOG}
 
         if self.channels == 25:
-            self.buffer = np.zeros((self.buffer_size, 25 + 2), dtype=np.uint64)
-            self.saturation = np.zeros(25 + 2, dtype=np.uint64)
-            self.buffer_sum_SPAD_ch = np.zeros(self.buffer_size, dtype=np.uint64)
+            self.buffer_data["FIFO"] = np.zeros((self.buffer_data_size["FIFO"], 25 + 2), dtype=np.uint64)
+            self.saturation["FIFO"] = np.zeros(25 + 2, dtype=np.uint64)
+            self.buffer_data_sum["FIFO"] = np.zeros(self.buffer_data_size["FIFO"], dtype=np.uint64)
 
         if self.channels == 49:
-            self.buffer = np.zeros((self.buffer_size, 49 + 2), dtype=np.uint64)
-            self.saturation = np.zeros(49 + 2, dtype=np.uint64)
-            self.buffer_sum_SPAD_ch = np.zeros(self.buffer_size, dtype=np.uint64)
+            self.buffer_data["FIFO"] = np.zeros((self.buffer_data_size["FIFO"], 49 + 2), dtype=np.uint64)
+            self.saturation["FIFO"] = np.zeros(49 + 2, dtype=np.uint64)
+            self.buffer_data_sum["FIFO"] = np.zeros(self.buffer_data_size["FIFO"], dtype=np.uint64)
 
-        self.buffer_analog = np.zeros((self.buffer_size_analog, 2), dtype=np.int32)
+        self.buffer_data["FIFOAnalog"] = np.zeros((self.buffer_data_size["FIFOAnalog"], 2), dtype=np.int32)
 
-        self.last_packet_size = shared_dict["last_packet_size"]
-
-        self.total_photon = 0
+        self.total_photon = {"channels": 0}
 
         self.data_queue = data_queue
 
         self.do_not_save = do_not_save
 
-        self.buffer_for_save = None
-        self.buffer_for_save_channels_extra = None
-        self.buffer_analog_for_save = None
+        self.buffer_for_save = {"channels": None, "channels_extra": None, "channels_analog": None}
 
         self.channels_analog = 2
 
         super().__init__()
         print_dec("AcquisitionLoopProcess INIT DONE")
+
+    def stop_events_init(self, list_fifos=None):
+        self.stop_event = {}
+
+        if list_fifos is None:
+            list_fifos = ["FIFO", "FIFOAnalog"]
+
+        for s in list_fifos:
+            self.stop_event[s] = mp.Event()
+        print_dec("stop_event initialized", str(self.stop_event))
+
+    def stop_events_clear(self, list_fifos="all"):
+        if list_fifos == "all":
+            list_fifos = self.stop_event.keys()
+        for s in list_fifos:
+            self.stop_event[s].clear()
+
+    def stop_events_set(self, list_fifos="all"):
+        if list_fifos == "all":
+            list_fifos = self.stop_event.keys()
+        for s in list_fifos:
+            self.stop_event[s].set()
+
+    def stop_events_is_set_and(self, list_fifos="all"):
+        if list_fifos == "all":
+            list_fifos = self.stop_event.keys()
+
+        ret = True
+
+        for s in list_fifos:
+            ret = ret and self.stop_event[s].is_set()
+        return ret
+
+    def stop_events_is_set_or(self, list_fifos="all"):
+        if list_fifos == "all":
+            list_fifos = self.stop_event.keys()
+
+        ret = False
+
+        for s in list_fifos:
+            ret = ret or self.stop_event[s].is_set()
+        return ret
+
+    def stop_events_status(self, list_fifos="all"):
+        if list_fifos == "all":
+            list_fifos = self.stop_event.keys()
+
+        ret ={}
+
+        for s in list_fifos:
+            ret[s] = self.stop_event[s].is_set()
+        return ret
 
     def run(self):
         # self.profiler = pprofile.StatisticalProfile()
@@ -221,15 +279,18 @@ class AcquisitionLoopProcess(mp.Process):
             "    <======================================================",
         )
 
+        self.activated_fifos_list = list(self.shm_activated_fifos_list) #To avoid extra shm call
 
-        self.stop_event.clear()
-        self.current_pointer = 0  # self.timebinsPerPixel * self.DATA_WORDS_DIGITAL
-        self.current_pointer_analog = 0  # self.timebinsPerPixel * self.DATA_WORDS_ANALOG
+        self.stop_events_clear()
 
-        self.current_frame = 0
-        self.current_frame_analog = 0
+        self.current_pointer["FIFO"] = 0  # self.timebinsPerPixel * self.DATA_WORDS_DIGITAL
+        self.current_pointer["FIFOAnalog"] = 0  # self.timebinsPerPixel * self.DATA_WORDS_ANALOG
 
-        print_dec(self.stop_event.is_set())
+        self.current_frame["FIFO"] = 0
+        self.current_frame["FIFOAnalog"] = 0
+
+        print_dec(str(self.stop_events_status()))
+
         self.image_xy_rgb = self.shm_image_xy_rgb.get_numpy_handle()
         self.image_xy = self.shm_image_xy.get_numpy_handle()
         self.image_xz = self.shm_image_xz.get_numpy_handle()
@@ -265,12 +326,12 @@ class AcquisitionLoopProcess(mp.Process):
         if not self.do_not_save:
             self.init_h5_and_buffer_for_save_data()
 
-        self.total_photon = 0
+        self.total_photon["channels"] = 0
 
         self.shared_dict.update(
             {
-                "current_z": 0,
-                "current_rep": 0,
+                "current_z": {},
+                "current_rep": {},
                 "total_photon": 0,
             }
         )
@@ -288,11 +349,10 @@ class AcquisitionLoopProcess(mp.Process):
         self.trace[0, :] = temporalBinner.get_x()
         self.trace[1, :] = 0
 
-        self.gap = 0
-        self.gap_analog = 0
+        self.gap = {"FIFO": 0, "FIFOAnalog": 0}
 
         # create a dictionary for the frameComplete={"FIFO": False, "FIFOAnalog": False})
-        frameComplete = dict((name, False) for name in self.shm_activated_fifos_list)
+        frameComplete = dict((name, False) for name in self.activated_fifos_list)
 
         internal_buffer = (
             None  # This buffer is used only when the data cross two frames
@@ -302,13 +362,16 @@ class AcquisitionLoopProcess(mp.Process):
         )
 
         print_dec(self.expected_raw_data_per_frame, self.expected_raw_data)
-        print_dec("shm_activated_fifos_list", self.shm_activated_fifos_list)
+        print_dec("activated_fifos_list", self.activated_fifos_list)
         print_dec("self.activate_show_preview", self.activate_show_preview)
 
         # self.data_queue["FIFO"] = self.data_queue["FIFO"]
         # self.shm_loc_acquired["FIFO"] = self.shm_loc_acquired["FIFO"]
 
         self.shared_dict_proxy = {}
+
+        self.shared_dict_proxy["current_z"] = {}
+        self.shared_dict_proxy["current_rep"] = {}
 
         self.update_dictionary_slowly(0.1)
 
@@ -338,16 +401,16 @@ class AcquisitionLoopProcess(mp.Process):
         # print_dec("shape", self.shape)
         # print_dec("channels", self.channels)
         # print_dec("channels_extra", self.channels_extra)
-        # print_dec("current_pointer", self.current_pointer)
-        # print_dec("current_pointer_analog", self.current_pointer_analog)
+        # print_dec("current_pointer", self.current_pointer["FIFO"])
+        # print_dec("current_pointer_analog", self.current_pointer["FIFOAnalog"])
         # print_dec("buffer_size_in_words", self.buffer_size_in_words)
         # print_dec("buffer_size_in_words_analog", self.buffer_size_in_words_analog)
-        # print_dec("buffer_size", self.buffer_size)
-        # print_dec("buffer_size_analog", self.buffer_size_analog)
+        # print_dec("buffer_size", self.buffer_data_size["FIFO"])
+        # print_dec("buffer_size_analog", self.buffer_data_size["FIFOAnalog"])
         # print_dec("=================================================================")
 
         print_dec("SHAPE before while", self.shape )
-        while not self.stop_event.is_set():
+        while not self.stop_events_is_set_and(self.activated_fifos_list):
             selected_channel = self.shared_dict["channel"]
 
             if self.do_not_save:
@@ -356,13 +419,17 @@ class AcquisitionLoopProcess(mp.Process):
             self.shared_dict_proxy["FIFO_status"] = self.data_queue["FIFO"].qsize()
             self.shared_dict_proxy["FIFOAnalog_status"] = self.data_queue["FIFOAnalog"].qsize()
 
-            if "FIFO" in self.shm_activated_fifos_list:
+            if "FIFO" in self.activated_fifos_list:
                 self.process_FIFO_Digital(channels, channels_x, channels_y, clk_multiplier, converter, correlator,
                                           frameComplete, internal_buffer, selected_channel, temporalBinner)
 
-            if "FIFOAnalog" in self.shm_activated_fifos_list:
-                self.process_FIFO_Analog(correlator, frameComplete, internal_buffer_analog, selected_channel,
-                                         temporalBinner)
+            if self.redirect_intensity_to_fifoanalog:
+                self.process_FIFO_Digital(channels, channels_x, channels_y, clk_multiplier, converter, correlator,
+                                          frameComplete, internal_buffer, selected_channel, temporalBinner)
+            else:
+                if "FIFOAnalog" in self.activated_fifos_list:
+                    self.process_FIFO_Analog(correlator, frameComplete, internal_buffer_analog, selected_channel,
+                                             temporalBinner)
 
             if self.trace_reset_event.is_set():
                 print_dec("trace_reset_event.is_set()")
@@ -380,13 +447,13 @@ class AcquisitionLoopProcess(mp.Process):
             self.h5mgr.close()
         self.acquisition_done.set()
         print_dec("Acquisition done")
-        self.stop_event.clear()
+        self.stop_events_clear()
 
         print_dec("run() acquisition_loop_process stopped")
 
     def process_FIFO_Analog(self, correlator, frameComplete, internal_buffer_analog, selected_channel, temporalBinner):
         max_gap_frame_analog = self.expected_raw_data_per_frame * (
-                self.current_frame_analog + 1
+                self.current_frame["FIFOAnalog"] + 1
 
         )
         if not self.data_queue["FIFOAnalog"].empty():
@@ -395,38 +462,38 @@ class AcquisitionLoopProcess(mp.Process):
             ):  # if the previous queue data was between two frames
 
                 data_from_queue_analog = internal_buffer_analog[
-                                         : max_gap_frame_analog - self.current_pointer_analog
+                                         : max_gap_frame_analog - self.current_pointer["FIFOAnalog"]
                                          ]
-                self.gap_analog = data_from_queue_analog.shape[0] // 2
+                self.gap["FIFOAnalog"] = data_from_queue_analog.shape[0] // 2
                 internal_buffer_analog = internal_buffer_analog[
-                                         max_gap_frame_analog - self.current_pointer_analog:
+                                         max_gap_frame_analog - self.current_pointer["FIFOAnalog"]:
                                          ]
 
             else:  # standard case (no previous split data)
                 data_from_queue_analog = self.data_queue["FIFOAnalog"].get()
-                self.gap_analog = data_from_queue_analog.shape[0]
+                self.gap["FIFOAnalog"] = data_from_queue_analog.shape[0]
                 # in the case the current queue data overflow in the next frame the data are split
 
                 if (
-                        self.current_pointer_analog + self.gap_analog
+                        self.current_pointer["FIFOAnalog"] + self.gap["FIFOAnalog"]
                 ) * 2 >= max_gap_frame_analog:
                     print_dec(
                         " c ",
-                        (self.current_pointer_analog + self.gap_analog),
+                        (self.current_pointer["FIFOAnalog"] + self.gap["FIFOAnalog"]),
                         max_gap_frame_analog,
                     )
 
                     internal_buffer_analog = data_from_queue_analog[
-                                             max_gap_frame_analog - self.current_pointer_analog:
+                                             max_gap_frame_analog - self.current_pointer["FIFOAnalog"]:
                                              ]
-                    self.gap_analog = data_from_queue_analog.shape[0]
+                    self.gap["FIFOAnalog"] = data_from_queue_analog.shape[0]
                     data_from_queue_analog = data_from_queue_analog[
-                                             : max_gap_frame_analog - self.current_pointer_analog
+                                             : max_gap_frame_analog - self.current_pointer["FIFOAnalog"]
                                              ]
 
                     frameComplete["FIFOAnalog"] = True
 
-                    self.current_frame_analog += 1
+                    self.current_frame["FIFOAnalog"] += 1
 
             if internal_buffer_analog is not None:
                 if internal_buffer_analog.size == 0:
@@ -435,38 +502,38 @@ class AcquisitionLoopProcess(mp.Process):
 
             if (
                     self.expected_raw_data
-                    - (self.current_pointer_analog + self.gap_analog)
+                    - (self.current_pointer["FIFOAnalog"] + self.gap["FIFOAnalog"])
                     < 0
             ):
-                self.gap_analog = (
-                        self.expected_raw_data // 2 - self.current_pointer_analog
+                self.gap["FIFOAnalog"] = (
+                        self.expected_raw_data // 2 - self.current_pointer["FIFOAnalog"]
                 )
                 print_dec("MISTERY")
-                print_dec("New GAP", self.gap_analog)
+                print_dec("New GAP", self.gap["FIFOAnalog"])
 
             list_b_analog, list_x_analog, list_y_analog, list_z_analog, list_rep_analog = decode_pointer_list(
-                self.current_pointer_analog,
-                self.gap_analog,
+                self.current_pointer["FIFOAnalog"],
+                self.gap["FIFOAnalog"],
                 self.timebinsPerPixel,
                 self.shape,
                 snake_walk_xy=self.snake_walk_xy,
                 snake_walk_z=self.snake_walk_z
             )
 
-            self.shared_dict_proxy["last_packet_size"] = self.gap_analog
-            if self.gap_analog > self.buffer_size_analog:
+            self.shared_dict_proxy["last_packet_size"] = self.gap["FIFOAnalog"]
+            if self.gap["FIFOAnalog"] > self.buffer_data_size["FIFOAnalog"]:
                 print_dec(
                     "Too many data larger than the buffer. GAP",
-                    self.gap_analog,
+                    self.gap["FIFOAnalog"],
                     "buffer_size_analog",
-                    self.buffer_size_analog,
+                    self.buffer_data_size["FIFOAnalog"],
                 )
             if (
                     convertDataFromAnalogFIFO(
                         data_from_queue_analog,
                         0,
-                        self.gap_analog,
-                        self.buffer_analog,
+                        self.gap["FIFOAnalog"],
+                        self.buffer_data["FIFOAnalog"],
                         force_positive=0,
                     )
                     == -1
@@ -475,7 +542,7 @@ class AcquisitionLoopProcess(mp.Process):
                     "==============DISASTER IN THE PREVIEW====================="
                 )
 
-            buffer_up_to_gap = self.buffer_analog[: self.gap_analog]
+            buffer_up_to_gap = self.buffer_data["FIFOAnalog"][: self.gap["FIFOAnalog"]]
 
             self.generate_preview(
                 buffer_up_to_gap,
@@ -489,16 +556,16 @@ class AcquisitionLoopProcess(mp.Process):
             )
 
             if not self.do_not_save:
-                self.buffer_analog_for_save[
+                self.buffer_for_save["channels_analog"][
                 list_y_analog, list_x_analog, list_b_analog, :
                 ] = buffer_up_to_gap
 
-            self.current_pointer_analog += self.gap_analog
+            self.current_pointer["FIFOAnalog"] += self.gap["FIFOAnalog"]
             self.shm_loc_previewed[
                 "FIFOAnalog"
-            ].value = self.current_pointer_analog
+            ].value = self.current_pointer["FIFOAnalog"]
 
-            self.shared_dict_proxy.update({"total_photon": self.total_photon})
+            self.shared_dict_proxy.update({"total_photon": self.total_photon["channels"]})
             # print_dec("frameComplete", frameComplete)
             if frameComplete["FIFOAnalog"]:
                 print_dec("frameComplete[FIFOAnalog]")
@@ -509,120 +576,123 @@ class AcquisitionLoopProcess(mp.Process):
                 self.fingerprint[2, :, :] = 0
                 self.fingerprint[4, :, :] = 0
 
-                current_z = (self.current_frame_analog - 1) % self.shape[2]
-                current_rep = (self.current_frame_analog - 1) // self.shape[2]
+                current_z = self.shared_dict_proxy["current_z"]
+                current_rep = self.shared_dict_proxy["current_rep"]
+
+                current_z["FIFOAnalog"] = (self.current_frame["FIFOAnalog"] - 1) % self.shape[2]
+                current_rep["FIFOAnalog"] = (self.current_frame["FIFOAnalog"] - 1) // self.shape[2]
                 print_dec("FRAME [FIFOAnalog] ", current_z, current_rep, " DONE")
 
                 self.shared_dict_proxy.update(
                     {
                         "current_z": current_z,
                         "current_rep": current_rep,
-                        "total_photon": self.total_photon,
-                        "last_packet_size": self.gap_analog
+                        "total_photon": self.total_photon["channels"],
+                        "last_packet_size": self.gap["FIFOAnalog"]
                     }
                 )
                 if not self.do_not_save:
                     self.h5mgr.add_to_dataset(
                         "data_analog",
-                        np.copy(self.buffer_analog_for_save),
-                        current_rep,
-                        current_z,
+                        np.copy(self.buffer_for_save["channels_analog"]),
+                        current_rep["FIFOAnalog"],
+                        current_z["FIFOAnalog"],
                     )
-                    self.buffer_analog_for_save[:] = 0
+                    self.buffer_for_save["channels_analog"][:] = 0
                     print_dec("done analog add_to_dataset")
                     print_dec(
-                        self.current_pointer_analog * self.DATA_WORDS_ANALOG, self.expected_raw_data
+                        self.current_pointer["FIFOAnalog"] * self.DATA_WORDS_ANALOG, self.expected_raw_data
                     )
 
-            if self.current_pointer_analog * self.DATA_WORDS_ANALOG >= self.expected_raw_data:
-                self.stop_event.set()
+            if self.current_pointer["FIFOAnalog"] * self.DATA_WORDS_ANALOG >= self.expected_raw_data:
+                self.stop_event["FIFOAnalog"].set()
 
     def process_FIFO_Digital(self, channels, channels_x, channels_y, clk_multiplier, converter, correlator,
-                             frameComplete, internal_buffer, selected_channel, temporalBinner):
+                             frameComplete, internal_buffer, selected_channel, temporalBinner, FIFO="FIFO"):
         max_gap_frame = self.expected_raw_data_per_frame * (
-                self.current_frame + 1
+                self.current_frame["FIFO"] + 1
         )
         # if (internal_buffer is not None): print_dec(len(internal_buffer))
         #
-        # print(max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL),
+        # print(max_gap_frame - (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL),
         #     max_gap_frame,
-        #     (self.current_pointer * self.DATA_WORDS_DIGITAL),
+        #     (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL),
         # )
         data_from_queue = None
-        if not self.data_queue["FIFO"].empty():
+        if not self.data_queue[FIFO].empty():
             if (
                     internal_buffer is not None
             ):  # if the previous queue data was between two frames
                 print_dec(
                     len(internal_buffer),
-                    max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL),
+                    max_gap_frame - (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL),
                     max_gap_frame,
-                    (self.current_pointer * self.DATA_WORDS_DIGITAL),
+                    (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL),
                 )
-                if max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL) == 0:
-                    self.gap = 0
+                if max_gap_frame - (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL) == 0:
+                    self.gap["FIFO"] = 0
                     internal_buffer = None
                 else:
                     data_from_queue = internal_buffer[
-                                      : max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL)
+                                      : max_gap_frame - (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL)
                                       ]
-                    self.gap = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
+                    self.gap["FIFO"] = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
                     internal_buffer = internal_buffer[
-                                      max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL):
+                                      max_gap_frame - (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL):
                                       ]
 
             if (
                     internal_buffer is None
             ):  # standard case (no previous split data)
-                data_from_queue = self.data_queue["FIFO"].get()
-                self.gap = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
+                data_from_queue = self.data_queue[FIFO].get()
+                self.gap["FIFO"] = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
                 #
                 # print_dec(
                 #     None,
                 #     len(data_from_queue),
-                #     (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL - max_gap_frame,
+                #     (self.current_pointer["FIFO"] + self.gap["FIFO"]) * self.DATA_WORDS_DIGITAL - max_gap_frame,
                 # )
-                if (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL >= max_gap_frame:
+                if (self.current_pointer["FIFO"] + self.gap["FIFO"]) * self.DATA_WORDS_DIGITAL >= max_gap_frame:
                     print_dec(
                         " c ",
-                        (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL,
-                        self.gap,
+                        (self.current_pointer["FIFO"] + self.gap["FIFO"]) * self.DATA_WORDS_DIGITAL,
+                        self.gap["FIFO"],
                         max_gap_frame,
                     )
                     print_dec(
                         data_from_queue.shape,
-                        max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL),
+                        max_gap_frame - (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL),
                     )
 
                     internal_buffer = data_from_queue[
-                                      max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL):
+                                      max_gap_frame - (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL):
                                       ]
                     data_from_queue = data_from_queue[
-                                      : max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL)
+                                      : max_gap_frame - (self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL)
                                       ]
-                    self.gap = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
+                    self.gap["FIFO"] = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
 
-                    frameComplete["FIFO"] = True
+                    frameComplete[FIFO] = True
 
-                    self.current_frame += 1
+                    self.current_frame["FIFO"] += 1
 
             if internal_buffer is not None:
                 if internal_buffer.size == 0:
                     print_dec("internal_buffer.size == 0")
                     internal_buffer = None
 
-            if self.expected_raw_data < (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL:
-                self.gap = max_gap_frame // self.DATA_WORDS_DIGITAL - self.current_pointer
+            if self.expected_raw_data < (self.current_pointer["FIFO"] + self.gap["FIFO"]) * self.DATA_WORDS_DIGITAL:
+                self.gap["FIFO"] = max_gap_frame // self.DATA_WORDS_DIGITAL - self.current_pointer["FIFO"]
                 print_dec("MISTERY!!!")
-                print_dec("New GAP", self.gap)
+                print_dec("New GAP", self.gap["FIFO"])
 
             #
             # Generation of list_pixel, list_b, list_x, list_y, list_z
             #
 
             list_b, list_x, list_y, list_z, list_rep = decode_pointer_list(
-                self.current_pointer,
-                self.gap,
+                self.current_pointer["FIFO"],
+                self.gap["FIFO"],
                 self.timebinsPerPixel,
                 self.shape,
                 snake_walk_xy=self.snake_walk_xy,
@@ -630,26 +700,26 @@ class AcquisitionLoopProcess(mp.Process):
                 clk_multiplier=clk_multiplier
             )
 
-            if self.gap > self.buffer_size:
+            if self.gap["FIFO"] > self.buffer_data_size["FIFO"]:
                 print_dec(
                     "ERROR: Too many data larger than the buffer. GAP",
-                    self.gap,
+                    self.gap["FIFO"],
                     "buffer_size",
-                    self.buffer_size,
+                    self.buffer_data_size["FIFO"],
                 )
 
-            self.saturation[:] = 0
+            self.saturation["FIFO"][:] = 0
 
-            # print_dec("self.gap", self.gap )
+            # print_dec("self.gap["FIFO"]", self.gap["FIFO"] )
             if data_from_queue is not None:
                 if (
                         converter(
                             data_from_queue,
                             0,
-                            self.gap * self.DATA_WORDS_DIGITAL,
-                            self.buffer,
-                            self.buffer_sum_SPAD_ch,
-                            self.saturation,
+                            self.gap["FIFO"] * self.DATA_WORDS_DIGITAL,
+                            self.buffer_data["FIFO"],
+                            self.buffer_data_sum["FIFO"],
+                            self.saturation["FIFO"],
                             self.fingerprint_mask,
                         )
                         == -1
@@ -659,7 +729,7 @@ class AcquisitionLoopProcess(mp.Process):
                     )
 
 
-            buffer_up_to_gap = self.buffer[: self.gap]
+            buffer_up_to_gap = self.buffer_data["FIFO"][: self.gap["FIFO"]]
 
             self.generate_preview(
                 buffer_up_to_gap,
@@ -678,20 +748,20 @@ class AcquisitionLoopProcess(mp.Process):
                 # This is for debug purpose
 
                 np.add.at(
-                    self.buffer_for_save,
+                    self.buffer_for_save["channels"],
                     (list_y, list_x, list_b),
                     buffer_up_to_gap[:, :channels],
                 )
 
                 np.add.at(
-                    self.buffer_for_save_channels_extra,
+                    self.buffer_for_save["channels_extra"],
                     (list_y, list_x, list_b),
                     buffer_up_to_gap[:, channels:],
                 )
 
             sum_tmp = buffer_up_to_gap[:, :channels].sum(axis=0).reshape(channels_x, channels_y)
 
-            self.total_photon = np.sum(sum_tmp)
+            self.total_photon["channels"] = np.sum(sum_tmp)
 
             self.fingerprint[0, :, :] += sum_tmp
             try:
@@ -702,15 +772,15 @@ class AcquisitionLoopProcess(mp.Process):
                 print_dec("buffer_up_to_gap", buffer_up_to_gap)
                 self.fingerprint[1, :, :] = 0
 
-            if self.gap > 10000:
+            if self.gap["FIFO"] > 10000:
                 self.fingerprint[2, :, :] = (
-                    self.buffer[:10000, :channels].sum(axis=0).reshape(channels_x, channels_y)
+                    self.buffer_data["FIFO"][:10000, :channels].sum(axis=0).reshape(channels_x, channels_y)
                 )
 
-            self.fingerprint[4, :, :] += self.saturation[:channels].reshape(channels_x, channels_y)
-            self.current_pointer += self.gap
-            self.shm_loc_previewed["FIFO"].value = self.current_pointer
-            # print_dec(self.current_pointer*2, self.gap*2, (self.current_pointer + self.gap)*2)
+            self.fingerprint[4, :, :] += self.saturation["FIFO"][:channels].reshape(channels_x, channels_y)
+            self.current_pointer["FIFO"] += self.gap["FIFO"]
+            self.shm_loc_previewed["FIFO"].value = self.current_pointer["FIFO"]
+            # print_dec(self.current_pointer["FIFO"]*2, self.gap["FIFO"]*2, (self.current_pointer["FIFO"] + self.gap["FIFO"])*2)
 
             if frameComplete["FIFO"]:
                 print_dec("frameComplete[FIFO]")
@@ -721,39 +791,43 @@ class AcquisitionLoopProcess(mp.Process):
                 self.fingerprint[2, :, :] = 0
                 self.fingerprint[4, :, :] = 0
 
-                current_z = (self.current_frame - 1) % self.shape[2]
-                current_rep = (self.current_frame - 1) // self.shape[2]
+                current_z = self.shared_dict_proxy["current_z"]
+                current_rep = self.shared_dict_proxy["current_rep"]
+
+                current_z["FIFO"] = (self.current_frame["FIFO"] - 1) % self.shape[2]
+                current_rep["FIFO"] = (self.current_frame["FIFO"] - 1) // self.shape[2]
+
                 print_dec("FRAME [FIFO] ", current_z, current_rep, " DONE")
 
                 self.shared_dict_proxy.update(
                     {
                         "current_z": current_z,
                         "current_rep": current_rep,
-                        "total_photon": self.total_photon,
-                        "last_packet_size": self.gap,
+                        "total_photon": self.total_photon["channels"],
+                        "last_packet_size": self.gap["FIFO"],
                     }
                 )
 
                 if not self.do_not_save:
                     self.h5mgr.add_to_dataset(
                         "data",
-                        np.copy(self.buffer_for_save),
-                        current_rep,
-                        current_z,
+                        np.copy(self.buffer_for_save["channels"]),
+                        current_rep["FIFO"],
+                        current_z["FIFO"],
                     )
                     self.h5mgr.add_to_dataset(
                         "data_channels_extra",
-                        np.copy(self.buffer_for_save_channels_extra),
-                        current_rep,
-                        current_z,
+                        np.copy(self.buffer_for_save["channels_extra"]),
+                        current_rep["FIFO"],
+                        current_z["FIFO"],
                     )
-                    self.buffer_for_save[:] = 0
-                    self.buffer_for_save_channels_extra[:] = 0
+                    self.buffer_for_save["channels"][:] = 0
+                    self.buffer_for_save["channels_extra"][:] = 0
                     print_dec("done digital add_to_dataset")
-                    print_dec(self.current_pointer * self.DATA_WORDS_DIGITAL)
+                    print_dec(self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL)
 
-            if self.current_pointer * self.DATA_WORDS_DIGITAL >= self.expected_raw_data:
-                self.stop_event.set()
+            if self.current_pointer["FIFO"] * self.DATA_WORDS_DIGITAL >= self.expected_raw_data:
+                self.stop_event["FIFO"].set()
 
     def update_views(self, data, list_x, list_y, list_z):
         """Helper to update XY, ZY, XZ projections given data and coords."""
@@ -837,7 +911,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         # ------------------- SUM -------------------
         elif isinstance(selected_channel, str) and selected_channel.startswith("Sum") and data_fmt == "Digital":
-            data = self.buffer_sum_SPAD_ch[: self.gap]
+            data = self.buffer_data_sum["FIFO"][: self.gap["FIFO"]]
 
             if self.activate_show_preview:
                 self.update_views(data, list_x, list_y, list_z)
@@ -862,36 +936,36 @@ class AcquisitionLoopProcess(mp.Process):
                 np.add.at(self.image_xy_rgb[:, :, 2], (list_y, list_x), buffer_up_to_gap[:, chC])
 
             elif selected_channel.startswith("RGB2") or selected_channel.startswith("RGB3"):
-                if self.buffer_sum_SPAD_ch.shape[0] > 2:
+                if self.buffer_data_sum["FIFO"].shape[0] > 2:
                     np.add.at(self.image_xy_rgb[:, :, 0], (list_y[::3], list_x[::3]),
-                              self.buffer_sum_SPAD_ch[: self.gap:3])
+                              self.buffer_data_sum["FIFO"][: self.gap["FIFO"]:3])
                     np.add.at(self.image_xy_rgb[:, :, 1], (list_y[1::3], list_x[1::3]),
-                              self.buffer_sum_SPAD_ch[1:self.gap:3])
+                              self.buffer_data_sum["FIFO"][1:self.gap["FIFO"]:3])
                     np.add.at(self.image_xy_rgb[:, :, 2], (list_y[2::3], list_x[2::3]),
-                              self.buffer_sum_SPAD_ch[2:self.gap:3])
+                              self.buffer_data_sum["FIFO"][2:self.gap["FIFO"]:3])
 
             elif selected_channel.startswith("RGBDFD") and list_b is not None:
                 tparts = 3
                 tbins = self.timebinsPerPixel
                 gbins = tbins // tparts
-                if self.buffer_sum_SPAD_ch.shape[0] > 2:
+                if self.buffer_data_sum["FIFO"].shape[0] > 2:
                     cond0 = list_b < gbins
                     np.add.at(self.image_xy_rgb[:, :, 0], (list_y[cond0], list_x[cond0]),
-                              self.buffer_sum_SPAD_ch[: self.gap][cond0])
+                              self.buffer_data_sum["FIFO"][: self.gap["FIFO"]][cond0])
                     cond0 = (list_b >= gbins) & (list_b < 2 * gbins)
                     np.add.at(self.image_xy_rgb[:, :, 1], (list_y[cond0], list_x[cond0]),
-                              self.buffer_sum_SPAD_ch[: self.gap][cond0])
+                              self.buffer_data_sum["FIFO"][: self.gap["FIFO"]][cond0])
                     cond0 = list_b >= 2 * gbins
                     np.add.at(self.image_xy_rgb[:, :, 2], (list_y[cond0], list_x[cond0]),
-                              self.buffer_sum_SPAD_ch[: self.gap][cond0])
+                              self.buffer_data_sum["FIFO"][: self.gap["FIFO"]][cond0])
 
             self.image_xy_rgb_lock.release()
 
             if self.active_autocorrelation:
-                correlator.add(self.buffer_sum_SPAD_ch[: self.gap])
+                correlator.add(self.buffer_data_sum["FIFO"][: self.gap["FIFO"]])
                 self.autocorrelation[1, :] = correlator.get_correlation_normalized()
             if self.activate_trace:
-                temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap])
+                temporalBinner.add(self.buffer_data_sum["FIFO"][: self.gap["FIFO"]])
                 self.trace_pos.value = temporalBinner.get_current_position_bins()
                 self.trace[1, :] = temporalBinner.get_bins()
 
@@ -901,64 +975,81 @@ class AcquisitionLoopProcess(mp.Process):
         )
         # self.h5file = h5py.File(self.filenameh5, "w")
         print_dec("Filename:", self.filenameh5)
-        if "FIFO" in self.shm_activated_fifos_list:
-            self.h5mgr.init_dataset(
-                "data", self.shape, self.timebinsPerPixel // self.clk_multiplier, self.channels, np.uint16
-            )
-            self.h5mgr.init_dataset(
-                "data_channels_extra",
-                self.shape,
-                self.timebinsPerPixel // self.clk_multiplier,
-                self.channels_extra,
-                np.uint8,
-            )
-        if "FIFOAnalog" in self.shm_activated_fifos_list:
-            self.h5mgr.init_dataset(
-                "data_analog",
-                self.shape,
-                self.timebinsPerPixel,
-                self.channels_analog,
-                np.int32,
-            )
-        self.buffer_for_save = np.zeros(
-            (
-                self.shape[1],
-                self.shape[0],
-                self.timebinsPerPixel // self.clk_multiplier,
-                self.channels,
-            ),
-            dtype="uint16",
-        )
-        self.buffer_for_save_channels_extra = np.zeros(
-            (
-                self.shape[1],
-                self.shape[0],
-                self.timebinsPerPixel // self.clk_multiplier,
-                self.channels_extra,
-            ),
-            dtype="uint8",
-        )
-        self.buffer_analog_for_save = np.zeros(
-            (
-                self.shape[1],
-                self.shape[0],
-                self.timebinsPerPixel,
-                self.channels_analog,
-            ),
-            dtype="int32",
-        )
-        print_dec("BUFFER SIZE")
-        print_dec("buffer_for_save size = %.3f GB" % (
-                    self.buffer_for_save.size * self.buffer_for_save.itemsize / 1024 / 1024 / 1024))
-        print_dec("buffer_for_save_channels_extra size = %.3f GB" % (
-                    self.buffer_for_save_channels_extra.size * self.buffer_for_save_channels_extra.itemsize / 1024 / 1024 / 1024))
-        print_dec("buffer_analog_for_save size = %.3f GB" % (
-                    self.buffer_analog_for_save.size * self.buffer_analog_for_save.itemsize / 1024 / 1024 / 1024))
+        if not self.redirect_intensity_to_fifoanalog:
+            if "FIFO" in self.activated_fifos_list:
+
+                self.h5mgr.init_dataset(
+                    "data",
+                    self.shape,
+                    self.timebinsPerPixel // self.clk_multiplier,
+                    self.channels,
+                    np.uint16
+                )
+
+                self.h5mgr.init_dataset(
+                    "data_channels_extra",
+                    self.shape,
+                    self.timebinsPerPixel // self.clk_multiplier,
+                    self.channels_extra,
+                    np.uint8,
+                )
+
+                self.buffer_for_save["channels"] = np.zeros(
+                    (
+                        self.shape[1],
+                        self.shape[0],
+                        self.timebinsPerPixel // self.clk_multiplier,
+                        self.channels,
+                    ),
+                    dtype="uint16",
+                )
+
+                self.buffer_for_save["channels_extra"] = np.zeros(
+                    (
+                        self.shape[1],
+                        self.shape[0],
+                        self.timebinsPerPixel // self.clk_multiplier,
+                        self.channels_extra,
+                    ),
+                    dtype="uint8",
+                )
+
+            if "FIFOAnalog" in self.activated_fifos_list:
+
+                self.h5mgr.init_dataset(
+                    "data_analog",
+                    self.shape,
+                    self.timebinsPerPixel,
+                    self.channels_analog,
+                    np.int32,
+                )
+
+                self.buffer_for_save["channels_analog"] = np.zeros(
+                    (
+                        self.shape[1],
+                        self.shape[0],
+                        self.timebinsPerPixel,
+                        self.channels_analog,
+                    ),
+                    dtype="int32",
+                )
+
+            print_dec("BUFFERS FOR SAVING - Initialized")
+            for b in self.buffer_for_save:
+                if self.buffer_for_save[b] is not None:
+                    print_dec(" - buffer_for_save[%s] = %.3f GB" %(b, self.buffer_for_save[b].size  * self.buffer_for_save[b].itemsize / 1024 / 1024 / 1024 ))
+            # print_dec("BUFFER SIZE")
+            # print_dec("buffer_for_save size = %.3f GB" % (
+            #             self.buffer_for_save["channels"].size * self.buffer_for_save["channels"].itemsize / 1024 / 1024 / 1024))
+            # print_dec("buffer_for_save_channels_extra size = %.3f GB" % (
+            #             self.buffer_for_save["channels_extra"].size * self.buffer_for_save["channels_extra"].itemsize / 1024 / 1024 / 1024))
+            # print_dec("buffer_analog_for_save size = %.3f GB" % (
+            #             self.buffer_for_save["channels_analog"].size * self.buffer_for_save["channels_analog"].itemsize / 1024 / 1024 / 1024))
 
 
     def stop(self):
         print_dec("AcquisitionLoopProcess STOP")
-        self.stop_event.set()
+        self.stop_events_set()
 
     def trace_reset(self):
         print_dec("Trace Reset")
@@ -980,7 +1071,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.thread_for_dict.start()
 
     def update_dictionary_slowly_thread(self, timeout):
-        while not (self.stop_event.is_set() or self.thread_for_dict_stop.is_set()):
+        while not (self.stop_events_is_set_and(self.activated_fifos_list) or self.thread_for_dict_stop.is_set()):
             # print(self.shared_dict_proxy)
             self.shared_dict.update(self.shared_dict_proxy)
             time.sleep(timeout)

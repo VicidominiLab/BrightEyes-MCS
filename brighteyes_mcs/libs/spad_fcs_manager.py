@@ -185,6 +185,8 @@ class SpadFcsManager():
         self.DFD_Activate = False
         self.DFD_nbins = 0
 
+        self.Redirect_intensity_to_FIFOAnalog = False
+
         self.snake_walk_xy = False
         self.snake_walk_z = False
 
@@ -231,6 +233,9 @@ class SpadFcsManager():
         """
         print_dec("self.activated_fifos_list", fifos_list)
         self.activated_fifos_list = fifos_list
+
+    def setRedirect_intensity_to_FIFOAnalog(self, value):
+        self.Redirect_intensity_to_FIFOAnalog = value
 
     def acquisition_stop(self):
         """
@@ -545,8 +550,8 @@ class SpadFcsManager():
         self.shared_dict.update(
             {
                 "activate_show_preview": self.activate_show_preview,
-                "current_z": 0,
-                "current_rep": 0,
+                "current_z": {},
+                "current_rep": {},
                 "total_photon": 0,
                 "FIFO_status": 0,
                 "FIFOAnalog_status": 0,
@@ -557,7 +562,8 @@ class SpadFcsManager():
                 "snake_walk_xy": self.snake_walk_xy,
                 "snake_walk_z": self.snake_walk_z,
                 "clk_multiplier": self.clk_multiplier,
-                "dfd_shift": self.dfd_shift
+                "dfd_shift": self.dfd_shift,
+                "Redirect_intensity_to_FIFOAnalog": self.Redirect_intensity_to_FIFOAnalog
             }
         )
 
