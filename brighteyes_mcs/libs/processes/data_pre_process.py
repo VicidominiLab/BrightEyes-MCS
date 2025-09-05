@@ -19,6 +19,8 @@ class DataPreProcess(mp.Process):
         debug=False,
         use_rust_fifo=True,
     ):
+        super().__init__()
+
         """
         :param queue_in: this is the queue from the fpgahandleprocess each elements contains ["FIFONAME", data]
         :param dict_of_shared_loc: {'FIFONAME':shared_loc_fifo,...}
@@ -48,7 +50,6 @@ class DataPreProcess(mp.Process):
         self.timeout = 0.2
 
         self.use_rust_fifo = False  # use_rust_fifo
-        super().__init__()
 
     def run(self):
         print_dec("DataPreProcess RUN - PID:", os.getpid(), self.use_rust_fifo)

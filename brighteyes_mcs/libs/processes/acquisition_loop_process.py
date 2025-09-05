@@ -88,13 +88,15 @@ class AcquisitionLoopProcess(mp.Process):
         self,
         channels,
         shared_objects,
-        activate_preview,
+        do_not_save,
         data_queue,
         acquisition_done,
         acquisition_almost_done,
         shared_dict,
         debug=False,
     ):
+        super().__init__()
+
         set_debug(debug)
         print_dec("AcquisitionLoopProcess INIT")
 
@@ -201,7 +203,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.data_queue = data_queue
 
-        self.activate_preview = activate_preview
+        self.do_not_save = do_not_save
 
         self.buffer_for_save = None
         self.buffer_for_save_channels_extra = None
@@ -209,7 +211,6 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.channels_analog = 2
 
-        super().__init__()
         print_dec("AcquisitionLoopProcess INIT DONE")
 
     def run(self):
@@ -266,7 +267,7 @@ class AcquisitionLoopProcess(mp.Process):
         # if self.DFD_Activate:
         #     self.timebinsPerPixel = self.DFD_nbins
 
-        if not self.activate_preview:
+        if not self.do_not_save:
             self.h5mgr = H5Manager(
                 self.filenameh5, shm_number_of_threads_h5=self.shm_number_of_threads_h5
             )
@@ -411,7 +412,7 @@ class AcquisitionLoopProcess(mp.Process):
         while not self.stop_event.is_set():
             selected_channel = self.shared_dict["channel"]
 
-            if self.activate_preview:
+            if self.do_not_save:
                 self.shm_number_of_threads_h5.value = -1
 
             self.shared_dict_proxy["FIFO_status"] = self.data_queue["FIFO"].qsize()
@@ -770,7 +771,7 @@ class AcquisitionLoopProcess(mp.Process):
                             )
                             self.trace[1, :] = temporalBinner.get_bins()
 
-                    if not self.activate_preview:
+                    if not self.do_not_save:
                         # This is for debug purpose
 
                         # np.add.at(self.buffer_for_save, (list_y, list_x, list_b),
@@ -857,7 +858,7 @@ class AcquisitionLoopProcess(mp.Process):
                             }
                         )
 
-                        if not self.activate_preview:
+                        if not self.do_not_save:
                             self.h5mgr.add_to_dataset(
                                 "data",
                                 np.copy(self.buffer_for_save),
@@ -1031,7 +1032,7 @@ class AcquisitionLoopProcess(mp.Process):
                             )
                             self.trace[1, :] = temporalBinner.get_bins()
 
-                    if not self.activate_preview:
+                    if not self.do_not_save:
                         self.buffer_analog_for_save[
                             list_y_analog, list_x_analog, list_b_analog, :
                         ] = buffer_up_to_gap
@@ -1064,7 +1065,7 @@ class AcquisitionLoopProcess(mp.Process):
                                 "last_packet_size": self.gap_analog
                             }
                         )
-                        if not self.activate_preview:
+                        if not self.do_not_save:
                             self.h5mgr.add_to_dataset(
                                 "data_analog",
                                 np.copy(self.buffer_analog_for_save),
@@ -1097,7 +1098,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.acquisition_almost_done.set()
 
-        if not self.activate_preview:
+        if not self.do_not_save:
             # self.h5file.close()
             self.h5mgr.close()
         self.acquisition_done.set()

@@ -2665,7 +2665,7 @@ class MainWindow(QMainWindow):
         self.configurationGUI_dict_beforeStart = self.getGUI_data()
         # self.configurationGUI_dict_beforeStart = self.configurationGUI_dict.copy()
 
-        self.startAcquisition(activate_preview=True, do_run=False)
+        self.startAcquisition(do_not_save=True, do_run=False)
 
     @Slot()
     def test8(self):
@@ -2839,7 +2839,7 @@ class MainWindow(QMainWindow):
         # self.ui.progressBar_repetition.setValue(0)
         # self.ui.progressBar_frame.setMaximum(0)
         #
-        # self.startAcquisition(activate_preview=True)
+        # self.startAcquisition(do_not_save=True)
     @Slot()
     def addcurrentconfmacro(self):
         """
@@ -4099,11 +4099,11 @@ Have fun!
     # def afterFpgaRun(self):
     #     pass
 
-    def startAcquisition(self, activate_preview=False, do_run=True):
+    def startAcquisition(self, do_not_save=False, do_run=True):
         """
         the actual start acquisition function
         """
-        self.activate_preview = activate_preview
+        self.do_not_save = do_not_save
 
         self.circularMotionActivateChanged()
 
@@ -4346,10 +4346,10 @@ Have fun!
         laser_debug = self.ui.checkBox_DFD_LaserDebug.isChecked()
         self.setRegistersDict({"DFD_LaserSyncDebug": laser_debug})
 
-        self.spadfcsmanager_inst.set_activate_preview(activate_preview)
+        self.spadfcsmanager_inst.set_do_not_save(do_not_save)
 
         filename_for_ttm = self.defineFilename(with_folder=False)
-        if self.ttm_remote_is_up() and not activate_preview:
+        if self.ttm_remote_is_up() and not do_not_save:
             self.ttm_remote_manager.set_folder_name_remote(
                 self.ui.lineEdit_ttm_filename.text()
             )
@@ -4410,12 +4410,12 @@ Have fun!
             self.spadfcsmanager_inst.set_clk_multiplier(1)
 
         # self.spadfcsmanager_inst.acquistion_run()
-        if self.ttm_remote_is_up() and not activate_preview:
+        if self.ttm_remote_is_up() and not do_not_save:
             self.ttm_remote_manager.start_ttm_recv()
 
         if self.ui.checkBox_uttmActivate.isChecked() and \
            self.ui.checkBox_uttm_auto.isChecked() and \
-           not activate_preview :
+           not do_not_save :
                self.pushButton_uttm_start_clicked()
 
         self.spadfcsmanager_inst.run()
@@ -4990,10 +4990,7 @@ Have fun!
             self.ui.comboBox_plot_channel.setStyleSheet("border: 1px solid red;")
             self.ui.radioButton_digital.setStyleSheet("border: 1px solid red;")
 
-        if self.ui.radioButton_digital.isChecked():
-            self.ui.checkBox_DFD.setEnabled(True)
-        else:
-            self.ui.checkBox_DFD.setEnabled(False)
+
 
     def previewLoop(self):
         """
@@ -5029,6 +5026,12 @@ Have fun!
         self.ui.pushButton_acquisitionStart.setEnabled(False)
         self.ui.pushButton_externalProgram.setEnabled(False)
 
+        self.ui.radioButton_digital.setEnabled(False)
+        self.ui.radioButton_analog.setEnabled(False)
+        self.ui.checkBox_DFD.setEnabled(False)
+        self.ui.checkBox_uttmActivate.setEnabled(False)
+        self.ui.checkBox_ttmActivate.setEnabled(False)
+
         self.started_normal = False
         self.started_preview = True
 
@@ -5039,7 +5042,7 @@ Have fun!
 
         self.old_status_lockmovecheckbox = self.ui.checkBox_lockMove.isChecked()
 
-        self.startAcquisition(activate_preview=True)
+        self.startAcquisition(do_not_save=True)
 
         self.ui.pushButton_stop.setEnabled(True)
 
@@ -5177,7 +5180,7 @@ Have fun!
         self.analog_before_stop()
         print_dec("GUI.Stop")
 
-        if self.ttm_remote_is_up() and not self.activate_preview:
+        if self.ttm_remote_is_up() and not self.do_not_save:
             self.ttm_remote_manager.stop_ttm_recv()
 
         if self.started_preview:
@@ -5197,6 +5200,13 @@ Have fun!
         self.ui.pushButton_previewStart.setEnabled(True)
         self.ui.pushButton_acquisitionStart.setEnabled(True)
         self.ui.pushButton_stop.setEnabled(False)
+
+        self.ui.radioButton_digital.setEnabled(True)
+        self.ui.radioButton_analog.setEnabled(True)
+        self.ui.checkBox_DFD.setEnabled(True)
+        self.ui.checkBox_uttmActivate.setEnabled(True)
+        self.ui.checkBox_ttmActivate.setEnabled(True)
+
         self.ui.checkBox_lockMove.setChecked(self.old_status_lockmovecheckbox)
         self.stopAcquisition()
 
