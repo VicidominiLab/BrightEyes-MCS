@@ -1,50 +1,46 @@
 import sys
 import os
-import logging
-import inspect
-from datetime import datetime
-# Determine root path once
+from time import time, strftime, localtime
+
+# Base project folder (strip from filenames)
 project_folder = os.sep.join(os.getcwd().split(os.sep)[:-1])
+project_prefix = project_folder + os.sep
+prefix_len = len(project_prefix)
+
 internal_debug = False
-
-# Setup logging (you can add a FileHandler here too)
-logger = logging.getLogger("debug_logger")
-logger.setLevel(logging.DEBUG)
-
-if not logger.handlers:
-    handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
 
 def set_debug(debug=False):
     global internal_debug
     internal_debug = debug
 
+def _shorten_path(path):
+    abs_path = os.path.abspath(path)
+    if abs_path.startswith(project_prefix):
+        return abs_path[prefix_len:]
+    return abs_path
+
+def _now_str():
+    t = time()
+    return strftime("%H:%M:%S", localtime(t)) + f".{int((t % 1)*1e6):06d}"
+
 def print_dec(*objects, sep=" ", end="\n"):
     if internal_debug:
         return
 
-    # Use currentframe to avoid full stack inspection
-    frame = inspect.currentframe()
-    try:
-        caller = frame.f_back
-        filename = caller.f_globals.get("__file__", "<stdin>")
-        filename = os.path.abspath(filename).replace(project_folder+os.sep, "")
-        lineno = caller.f_lineno
-    finally:
-        del frame  # Prevent memory leak
+    frame = sys._getframe(1)  # faster than inspect.currentframe()
+    filename = _shorten_path(frame.f_code.co_filename)
+    lineno = frame.f_lineno
 
     # Format location
     location = f"{filename}:{lineno}"
     location_padded = f"{location:65}"
 
     # Timestamp
-    timestamp = datetime.now().strftime("%H:%M:%S.%f")
+    timestamp = _now_str()
 
-    # Construct the message
+    # Build message
     msg = sep.join(str(obj) for obj in objects)
-    full_message = f"{location_padded}\t{timestamp:15}\t{msg}"
 
-    # Use logger (non-blocking compared to print)
-    logger.debug(full_message)
+    # Direct write (faster than logging.debug)
+    sys.stdout.write(f"{location_padded}\t{timestamp:15}\t{msg}{end}")
+    sys.stdout.flush()
