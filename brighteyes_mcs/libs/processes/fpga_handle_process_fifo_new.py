@@ -13,12 +13,13 @@ def emptyQueue(queue):
 
 class FpgaHandleProcess(mp.Process):
     def __init__(self, configuration, debug=True, use_rust_fifo=True):
+        super().__init__()
+
         print_dec("FpgaHandleProcess INIT")
         # print_dec("=> configuration", configuration)
         # for i in configuration:
         #     print("==", i, "==")
         #     print(configuration[i])
-        super().__init__()
         self.configuration = configuration
         self.timeout_fifos = self.configuration["timeout_fifos"]
         self.bitfile = self.configuration["bitfile"]
