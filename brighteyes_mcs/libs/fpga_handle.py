@@ -176,7 +176,7 @@ class FpgaHandle(object):
 
         return ret
 
-    def register_read_all(self, timeout=1000):
+    def register_read_all(self, timeout=5000):
         mydict = {}
         mydict = self.register_read(list(self.configuration["list_registers"]), timeout)
         return mydict

@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QWidget,
     QTextBrowser,
+    QHeaderView
 )
 from PySide6.QtGui import QScreen  # Replaces QDesktopWidget
 
@@ -2552,20 +2553,42 @@ class MainWindow(QMainWindow):
             "B:%s X:%s Y:%s Z:%s R:%s" % (t[0], t[1], t[2], t[3], t[4])
         )
 
-        model = TreeModel(["Parameter", "Data"], fff)
-        self.ui.treeView.setModel(model)
+
+
+        if self.ui.treeView.model() is None:  # first time only
+            model = TreeModel(["Parameter", "Data"], fff, sort_first_column=True, view=self.ui.treeView)
+            self.ui.treeView.setModel(model)
+            self.ui.treeView.expandAll()
+            self.ui.treeView.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+            self.ui.treeView.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+
+        else:
+            self.ui.treeView.model().updateData(fff)
+
 
         fff = self.configurationFPGA_dict
-        model = TreeModel(["Parameter", "Data"], fff)
-        self.ui.treeView_2.setModel(model)
+
+        if self.ui.treeView_2.model() is None:  # first time only
+            model = TreeModel(["Parameter", "Data"], fff, sort_first_column=True, view=self.ui.treeView_2)
+            self.ui.treeView_2.setModel(model)
+            self.ui.treeView_2.expandAll()
+            self.ui.treeView_2.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+            self.ui.treeView_2.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        else:
+            self.ui.treeView_2.model().updateData(fff)
+
 
         fff = self.configurationGUI_dict
-        model = TreeModel(["Parameter", "Data"], fff)
-        self.ui.treeView_3.setModel(model)
 
-        # fff = self.markers_dict
-        # model = TreeModel(["Parameter", "Data", "Second", "Third"], fff)
-        # self.ui.treeView_FCS.setModel(model)
+        if self.ui.treeView_3.model() is None:  # first time only
+            model = TreeModel(["Parameter", "Data"], fff, sort_first_column=True, view=self.ui.treeView_3)
+            self.ui.treeView_3.setModel(model)
+            self.ui.treeView_3.expandAll()
+            self.ui.treeView_3.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+            self.ui.treeView_3.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        else:
+            self.ui.treeView_3.model().updateData(fff)
+
 
     @Slot()
     def test1(self):
@@ -3406,6 +3429,8 @@ In the current namespace to the following objects:
 'np' for numpy
 'h5py' for h5py
 'pg' for pyqtgraph
+'plt' includes matplotlib.pyplot (i.e. plt.plot(x,y), plt.imshow(img) etc etc... )\n
+
 'main_window' for the current QT window instantiation
 'spadfcsmanager' for the current spadfcsmanager instantiation\n\n
 'filename' contains the last h5 file saved or the last file selected

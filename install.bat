@@ -65,6 +65,8 @@ echo:
 echo Installing the pip requirements
 echo:
 python installer.py
+echo: Creating links on Desktop
+python create_links.py
 echo:
 python download_firmware.py
 echo:
