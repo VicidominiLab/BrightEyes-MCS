@@ -1,6 +1,5 @@
 import numpy as np
 import multiprocessing as mp
-#from UltraDict import UltraDict
 
 # from PySide6.QtCore import QObject
 
@@ -24,7 +23,7 @@ class SpadFcsManager():
         fpga_handle (FpgaHandle): Handle for the FPGA.
         shared_arrays_ready (bool): Flag indicating if shared arrays are ready.
         mp_manager (multiprocessing.Manager): Manager for multiprocessing.
-        ultra_dict_inst (dict): Dictionary for ultra configuration.
+        initial_registers_dict (dict): Dictionary for ultra configuration.
         shared_dict (dict): Shared dictionary for multiprocessing.
         default_configuration (dict): Default configuration for the registers.
         requested_depth (int): Requested depth for acquisition.
@@ -87,12 +86,12 @@ class SpadFcsManager():
 
         self.mp_manager = mp.Manager()
 
-        # self.ultra_dict_inst = UltraDict({}, shared_lock=True, full_dump_size=10000)
+        # self.initial_registers_dict = UltraDict({}, shared_lock=True, full_dump_size=10000)
         # self.shared_dict = UltraDict(
         #     {}, shared_lock=True, full_dump_size=10000
         # )  # self.mp_manager.dict()
 
-        self.ultra_dict_inst = self.mp_manager.dict()
+        self.initial_registers_dict = self.mp_manager.dict()
         self.shared_dict = self.mp_manager.dict()
 
         self.default_configuration = {
@@ -372,7 +371,7 @@ class SpadFcsManager():
                 mp_manager=self.mp_manager,
                 requested_depth=self.requested_depth,
                 list_fifos=["FIFO"],
-                ultra_dict_inst=self.ultra_dict_inst,
+                initial_registers_dict=self.initial_registers_dict,
                 debug=self.debug,
                 use_rust_fifo=self.use_rust_fifo,
                 timeout_fifos=self.timeout_fifos,

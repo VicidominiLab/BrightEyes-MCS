@@ -4142,10 +4142,10 @@
              <item row="0" column="1">
               <widget class="QSpinBox" name="spinBox_fifo_buffer_size">
                <property name="maximum">
-                <number>10000000</number>
+                <number>20000000</number>
                </property>
                <property name="value">
-                <number>100000</number>
+                <number>200000</number>
                </property>
               </widget>
              </item>
@@ -4248,7 +4248,7 @@
                 <number>10000000</number>
                </property>
                <property name="value">
-                <number>12000</number>
+                <number>24000</number>
                </property>
               </widget>
              </item>

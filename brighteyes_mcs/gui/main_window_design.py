@@ -2401,8 +2401,8 @@ class Ui_MainWindowDesign(object):
 
         self.spinBox_fifo_buffer_size = QSpinBox(self.tab_5)
         self.spinBox_fifo_buffer_size.setObjectName(u"spinBox_fifo_buffer_size")
-        self.spinBox_fifo_buffer_size.setMaximum(10000000)
-        self.spinBox_fifo_buffer_size.setValue(100000)
+        self.spinBox_fifo_buffer_size.setMaximum(20000000)
+        self.spinBox_fifo_buffer_size.setValue(200000)
 
         self.gridLayout_52.addWidget(self.spinBox_fifo_buffer_size, 0, 1, 1, 1)
 
@@ -2470,7 +2470,7 @@ class Ui_MainWindowDesign(object):
         self.spinBox_fifo_prebuffer = QSpinBox(self.tab_5)
         self.spinBox_fifo_prebuffer.setObjectName(u"spinBox_fifo_prebuffer")
         self.spinBox_fifo_prebuffer.setMaximum(10000000)
-        self.spinBox_fifo_prebuffer.setValue(12000)
+        self.spinBox_fifo_prebuffer.setValue(24000)
 
         self.gridLayout_52.addWidget(self.spinBox_fifo_prebuffer, 3, 1, 1, 1)
 

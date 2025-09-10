@@ -51,25 +51,26 @@ def build_cython_with_vs():
         print(f"Error during Cython build with Visual Studio: {e}")
         sys.exit(1)
         
-def build_cython_with_msys2(msys2_path):
+def build_cython_with_msys2(msys2_path, do_not_upgrade_msys2):
     """Builds the Cython part of the code using MSYS2 (mingw32)."""
-    try:
+    if not do_not_upgrade_msys2:
+        try:
 
-        bash_path = msys2_path + os.path.sep + "usr" + os.path.sep + "bin"  + os.path.sep + "bash.exe"
-        bash_cmd =  'pacman --noconfirm -Syu'
-        print("Updating MSYS2...")        
-        subprocess.run([bash_path, '-lc', bash_cmd], check=True, shell=True, env=os.environ)
-        print("Now MSYS2 is updated.")        
+            bash_path = msys2_path + os.path.sep + "usr" + os.path.sep + "bin"  + os.path.sep + "bash.exe"
+            bash_cmd =  'pacman --noconfirm -Syu'
+            print("Updating MSYS2...")
+            subprocess.run([bash_path, '-lc', bash_cmd], check=True, shell=True, env=os.environ)
+            print("Now MSYS2 is updated.")
 
 
-        bash_path = msys2_path + os.path.sep + "usr" + os.path.sep + "bin"  + os.path.sep + "bash.exe"
-        bash_cmd =  'pacman --noconfirm -Sy --needed mingw-w64-ucrt-x86_64-gcc'
-        print("Installing GCC with MSYS2.")        
-        subprocess.run([bash_path, '-lc', bash_cmd], check=True, shell=True, env=os.environ)
-        print("GCC installation done.")        
-    except subprocess.CalledProcessError as e:
-        print(f"Error during installing GCC with MSYS2: {e}")
-        
+            bash_path = msys2_path + os.path.sep + "usr" + os.path.sep + "bin"  + os.path.sep + "bash.exe"
+            bash_cmd =  'pacman --noconfirm -Sy --needed mingw-w64-ucrt-x86_64-gcc'
+            print("Installing GCC with MSYS2.")
+            subprocess.run([bash_path, '-lc', bash_cmd], check=True, shell=True, env=os.environ)
+            print("GCC installation done.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error during installing GCC with MSYS2: {e}")
+
     try:
         env = os.environ
         path = env["PATH"]        
@@ -129,7 +130,8 @@ if __name__ == "__main__":
               "--force_msys2  = Force compilation with MSYS2\r\n"
               "--force-vs     = Force compilation with Visual Studio C++\r\n"
               "--no--install-requirements\r\n"
-              "--no--compile\r\n")
+              "--no--compile\r\n"
+              "--do-not-upgrade-msys2\r\n")
         exit()
     
     vs_installed = check_vs_build_tools()
@@ -139,6 +141,7 @@ if __name__ == "__main__":
     force_vs = '--force-vs' in sys.argv
     no_install_requirements = '--no--install-requirements' in sys.argv
     no_compile = '--no--compile' in sys.argv
+    do_not_upgrade_msys2 = '--do-not-upgrade-msys2' in sys.argv
 
     if force_msys2:
         print("Force compilation with MSYS2")
@@ -167,7 +170,7 @@ if __name__ == "__main__":
             install_requirements_with_msys2_path(msys2_path)
         if not no_compile:
             print("Compile Cython parts - MSYS2 configuration")
-            build_cython_with_msys2(msys2_path)
+            build_cython_with_msys2(msys2_path, do_not_upgrade_msys2)
             
     else:
         print("No compiler found!")

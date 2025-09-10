@@ -17,7 +17,7 @@ class FpgaHandle(object):
         timeout_fifos=10e6,
         requested_depth=10000,
         list_fifos=[],
-        ultra_dict_inst={},
+        initial_registers_dict={},
         debug=True,
         use_rust_fifo=True,
         bitfile2="",
@@ -58,7 +58,7 @@ class FpgaHandle(object):
             "fpgarunning": self.mp_manager.Event(),
             "fifo_chuck_size": self.mp_manager.Value("I", 0),
             "expected_raw_data": self.mp_manager.Value("I", 0),
-            "initial_registers": ultra_dict_inst,  # self.mp_manager.dict()
+            "initial_registers": initial_registers_dict,  # self.mp_manager.dict()
         }
 
         self.use_rust_fifo = use_rust_fifo
