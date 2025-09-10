@@ -2,6 +2,7 @@ import multiprocessing as mp
 import os
 import threading
 import time
+import multiprocessing.queues
 
 import psutil
 import numpy as np
@@ -374,7 +375,6 @@ class AcquisitionLoopProcess(mp.Process):
         # self.shm_loc_acquired["FIFO"] = self.shm_loc_acquired["FIFO"]
 
         self.shared_dict_proxy = {}
-
         self.update_dictionary_slowly(0.1)
 
         #This seams redundant but it is for optimize the performances
@@ -409,8 +409,12 @@ class AcquisitionLoopProcess(mp.Process):
         # print_dec("=================================================================")
 
         print_dec("SHAPE before while", self.shape )
+
+        self.selected_channel = self.shared_dict["channel"]
+
         while not self.stop_event.is_set():
-            selected_channel = self.shared_dict["channel"]
+            selected_channel = self.selected_channel
+
 
             if self.do_not_save:
                 self.shm_number_of_threads_h5.value = -1
@@ -1133,6 +1137,7 @@ class AcquisitionLoopProcess(mp.Process):
     def update_dictionary_slowly_thread(self, timeout):
         while not (self.stop_event.is_set() or self.thread_for_dict_stop.is_set()):
             # print(self.shared_dict_proxy)
+            self.selected_channel = self.shared_dict["channel"]
             self.shared_dict.update(self.shared_dict_proxy)
             time.sleep(timeout)
             # print("updated")
