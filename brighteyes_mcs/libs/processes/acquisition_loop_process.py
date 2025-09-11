@@ -4,6 +4,9 @@ import threading
 import time
 import multiprocessing.queues
 
+VIZTRACER_ON = False
+if VIZTRACER_ON : from viztracer import VizTracer
+
 import psutil
 import numpy as np
 
@@ -214,7 +217,34 @@ class AcquisitionLoopProcess(mp.Process):
 
         print_dec("AcquisitionLoopProcess INIT DONE")
 
+
+
     def run(self):
+
+        stop_event_proxy = threading.Event()
+        trace_reset_event_proxy = threading.Event()
+        FCS_reset_event_proxy = threading.Event()
+
+        def thread_update_event_proxy(mp_event, threading_event):
+            threading_event.clear()
+            while True:
+                mp_event.wait()
+                threading_event.set()
+                mp_event.clear()
+
+        def thread_update_stop_event_proxy(mp_event, threading_event):
+            threading_event.clear()
+            mp_event.wait()
+            threading_event.set()
+
+        threading.Thread(target=thread_update_stop_event_proxy,args=(self.stop_event, stop_event_proxy), daemon=True).start()
+        threading.Thread(target=thread_update_event_proxy, args=(self.trace_reset_event, trace_reset_event_proxy), daemon=True).start()
+        threading.Thread(target=thread_update_event_proxy, args=(self.FCS_reset_event, FCS_reset_event_proxy), daemon=True).start()
+
+        if VIZTRACER_ON : self.tracer = VizTracer(log_func_with_objprint=True)
+
+        if VIZTRACER_ON : self.tracer.start()
+
         # self.profiler = pprofile.StatisticalProfile()
         # with self.profiler():
         print_dec(
@@ -224,14 +254,14 @@ class AcquisitionLoopProcess(mp.Process):
         )
 
 
-        self.stop_event.clear()
+        stop_event_proxy.clear()
         self.current_pointer = 0  # self.timebinsPerPixel * self.DATA_WORDS_DIGITAL
         self.current_pointer_analog = 0  # self.timebinsPerPixel * self.DATA_WORDS_ANALOG
 
         self.current_frame = 0
         self.current_frame_analog = 0
 
-        print_dec(self.stop_event.is_set())
+        print_dec(stop_event_proxy.is_set())
         self.image_xy_rgb = self.shm_image_xy_rgb.get_numpy_handle()
         self.image_xy = self.shm_image_xy.get_numpy_handle()
         self.image_xz = self.shm_image_xz.get_numpy_handle()
@@ -412,9 +442,8 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.selected_channel = self.shared_dict["channel"]
 
-        while not self.stop_event.is_set():
+        while not stop_event_proxy.is_set():
             selected_channel = self.selected_channel
-
 
             if self.do_not_save:
                 self.shm_number_of_threads_h5.value = -1
@@ -790,17 +819,20 @@ class AcquisitionLoopProcess(mp.Process):
                         #     list_y, list_x, list_b, :
                         # ] = buffer_up_to_gap[:, channels:]
 
-                        np.add.at(
-                            self.buffer_for_save,
-                            (list_y, list_x, list_b),
-                            buffer_up_to_gap[:, :channels],
-                        )
-
-                        np.add.at(
-                            self.buffer_for_save_channels_extra,
-                            (list_y, list_x, list_b),
-                            buffer_up_to_gap[:, channels:],
-                        )
+                        self.buffer_for_save[list_y, list_x, list_b] = buffer_up_to_gap[:, :channels]
+                        self.buffer_for_save_channels_extra[list_y, list_x, list_b] = buffer_up_to_gap[:, channels:]
+                        #
+                        # np.add.at(
+                        #     self.buffer_for_save,
+                        #     (list_y, list_x, list_b),
+                        #     buffer_up_to_gap[:, :channels],
+                        # )
+                        #
+                        # np.add.at(
+                        #     self.buffer_for_save_channels_extra,
+                        #     (list_y, list_x, list_b),
+                        #     buffer_up_to_gap[:, channels:],
+                        # )
 
                         # print_dec(
                         #     self.current_pointer,
@@ -882,6 +914,7 @@ class AcquisitionLoopProcess(mp.Process):
 
                     if self.current_pointer * self.DATA_WORDS_DIGITAL >= self.expected_raw_data:
                         self.stop_event.set()
+                        stop_event_proxy.set()
 
             if "FIFOAnalog" in self.shm_activated_fifos_list:
                 max_gap_frame_analog = self.expected_raw_data_per_frame * (
@@ -1084,15 +1117,17 @@ class AcquisitionLoopProcess(mp.Process):
 
                     if self.current_pointer_analog * self.DATA_WORDS_ANALOG >= self.expected_raw_data:
                         self.stop_event.set()
+                        stop_event_proxy.set()
 
-            if self.trace_reset_event.is_set():
+            if trace_reset_event_proxy.is_set():
                 print_dec("trace_reset_event.is_set()")
                 temporalBinner.reset()
-                self.trace_reset_event.clear()
-            if self.FCS_reset_event.is_set():
+                trace_reset_event_proxy.clear()
+            if FCS_reset_event_proxy.is_set():
                 correlator.reset()
-                self.FCS_reset_event.clear()
+                FCS_reset_event_proxy.clear()
 
+            time.sleep(0.0001)
         # self.profiler.disable()
         # self.profiler.print_stats()
         # self.profiler.dump_stats("dumpspeed.txt")
@@ -1107,9 +1142,12 @@ class AcquisitionLoopProcess(mp.Process):
             self.h5mgr.close()
         self.acquisition_done.set()
         print_dec("Acquisition done")
-        self.stop_event.clear()
+        stop_event_proxy.clear()
 
         print_dec("run() acquisition_loop_process stopped")
+
+        if VIZTRACER_ON : self.tracer.stop()
+        if VIZTRACER_ON : self.tracer.save()
 
     def stop(self):
         print_dec("AcquisitionLoopProcess STOP")

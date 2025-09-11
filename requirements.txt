@@ -11,7 +11,7 @@ h5py
 scipy
 imageio
 qtconsole
-napari
+#napari
 uvicorn
 importlib-metadata
 nifpga-fast-fifo-recv>=0.101.4
@@ -22,5 +22,4 @@ matplotlib
 fastapi
 #brighteyes-flim #facultative activate in case of FLIM analysis/preview
 markdown
-
-
+#viztracer

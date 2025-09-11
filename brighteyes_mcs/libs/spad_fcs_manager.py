@@ -9,6 +9,7 @@ from ..libs.fpga_handle import FpgaHandle
 from ..libs.print_dec import print_dec
 from ..libs.mp_shared_array import MemorySharedNumpyArray
 
+from ..libs.mp_circular_shm import CircularSharedBuffer
 
 class SpadFcsManager():
     """
@@ -471,7 +472,14 @@ class SpadFcsManager():
         # self.shared_index = mp.Value("i",0)
         # , self.dim_z
 
-        self.data_queue = {"FIFO": mp.Queue(), "FIFOAnalog": mp.Queue()}
+        # self.data_queue = {"FIFO":       CircularSharedBuffer(size=1024*1024*128, dtype=np.uint64), # mp.Queue(),
+        #                    "FIFOAnalog": CircularSharedBuffer(size=1024*1024*128, dtype=np.uint64), # mp.Queue()}
+        #                   }
+
+        self.data_queue = {"FIFO":  mp.Queue(),
+                           "FIFOAnalog": mp.Queue()
+                           }
+
 
         self.loc_acquired = {"FIFO": mp.Value("i", 0), "FIFOAnalog": mp.Value("i", 0)}
 

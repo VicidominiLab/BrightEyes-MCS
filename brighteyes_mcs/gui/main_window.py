@@ -73,13 +73,6 @@ except:
         + "This function is optional so the software will run but some functions  not work.\n"
     )
 
-try:
-    import napari
-except:
-    print(
-        "Warning: 'import napari' failed. \n"
-        + "This function is optional so the software will run but some functions  not work.\n"
-    )
 
 # ================== end of imports ====================================
 
