@@ -502,14 +502,18 @@ class AcquisitionLoopProcess(mp.Process):
                         # )
                         if (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL >= max_gap_frame:
                             print_dec(
-                                " c ",
+                                " (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL, self.gap, max_gap_frame: ")
+                            print_dec(
                                 (self.current_pointer + self.gap) * self.DATA_WORDS_DIGITAL,
                                 self.gap,
                                 max_gap_frame,
                             )
                             print_dec(
+                                "data_from_queue.shape, max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL), (self.current_pointer * self.DATA_WORDS_DIGITAL),")
+                            print_dec(
                                 data_from_queue.shape,
                                 max_gap_frame - (self.current_pointer * self.DATA_WORDS_DIGITAL),
+                                (self.current_pointer * self.DATA_WORDS_DIGITAL),
                             )
 
                             internal_buffer = data_from_queue[

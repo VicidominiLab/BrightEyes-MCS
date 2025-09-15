@@ -31,7 +31,12 @@ class CircularSharedBuffer:
 
 
     def qsize(self):
-        return self.available_data
+        with self.lock:
+            return self.available_data
+
+    def qspace(self):
+        with self.lock:
+            return self.available_data
 
     @property
     def available_space(self):
@@ -44,72 +49,54 @@ class CircularSharedBuffer:
         n = arr.shape[0]
 
         with self.lock:
+            #print(n, self.available_data , self.size, self.head, self.tail)
 
             if n > self.available_space:
                 raise BufferError(f"Not enough space in buffer (needed {n}, available {self.available_space})")
 
-            idx = self.tail.value
-            end = idx + n
+            start = self.tail.value
+            stop = start + n
 
-            if end <= self.size:
+            if stop <= self.size:
                 # fits without wraparound
-                self.buffer[idx:end] = arr
-                self.head.value = idx
-                self.tail.value = end
+                self.buffer[start:stop] = arr
+                self.tail.value = stop
             else:
                 # wraparound
-                first = self.size - idx
-                self.buffer[idx:] = arr[:first]
-                self.buffer[:end % self.size] = arr[first:]
-                self.head.value = idx
-                self.tail.value = end % self.size
-
-        # print_dec("CircularShardBuffer - get()")
-        #print_dec("available_data",self.available_data, self.size, self.available_data/self.size )
-        #
-        # print("CircularShardBuffer - put()")
-        # print_dec("self.size",  self.size)
-        # print_dec("self.head.value", self.head.value)
-        # print_dec("self.tail.value", self.tail.value)
-        # print_dec("self.available_space()", self.available_space)
+                first = self.size - start
+                self.buffer[start:] = arr[:first]
+                self.buffer[:stop % self.size] = arr[first:]
+                self.tail.value = stop % self.size
 
     def get(self, n=-1):
         """Return a copy of all valid elements in insertion order (non-destructive)."""
         ret = None
         # print_dec("CircularShardBuffer - get()")
-        qsize = self.qsize()
-        if n > qsize:
-            print("Too large")
-            return np.array([], dtype=self.dtype)
-
         with self.lock:
+            available_data = self.available_data
+            if n > available_data:
+                raise BufferError(f"Too large")
+                return np.array([], dtype=self.dtype)
+
+
             if n == -1:
-                n = qsize
+                n = available_data
 
             start = self.head.value
 
             if n == 0:
                 ret = np.array([], dtype=self.dtype)
-            elif start + n <= self.size:
-                ret = self.buffer[start:start + n].copy()
-                self.head.value = start + n
-                self.tail.value = start + n
-            else:
+            elif start + n <= self.size:      # no wrap
+                ret = self.buffer[start:(start + n) % self.size].copy()
+                self.head.value = (start + n) % self.size
+            else:                             # wrap
                 first = self.size - start
                 ret = np.concatenate((
                     self.buffer[start:].copy(),
                     self.buffer[:n - first].copy()
                 ))
                 self.head.value = n - first
-                self.tail.value = n - first
 
-
-        #
-        # print_dec("self.size",  self.size)
-        # print_dec("n", n)
-        # print_dec("self.head.value", self.head.value)
-        # print_dec("self.tail.value", self.tail.value)
-        # print_dec("self.available_space()", self.available_space)
         return ret
 
     def empty(self):

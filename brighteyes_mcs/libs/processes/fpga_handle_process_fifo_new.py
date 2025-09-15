@@ -229,7 +229,6 @@ class FpgaHandleProcess(mp.Process):
 
                         if length > 0:
                             # out_dict[current_fifo] = [read_data, length]
-                            print(read_data)
                             self.queueFifoReadCircularBuffer[current_fifo].put(read_data)
 
         print_dec("self.stop_event.is_set()")

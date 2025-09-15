@@ -982,6 +982,10 @@ class MainWindow(QMainWindow):
         self.ui.checkBox_AnalogOut = {}
         for ch in range(0, 8):
             self.ui.checkBox_AnalogOut[ch] = QCheckBox(self.ui.dockWidgetContents_18)
+
+            if ch>2:
+                self.ui.checkBox_AnalogOut[ch].setChecked(True)
+
             self.ui.gridLayout_AO.addWidget(
                 self.ui.checkBox_AnalogOut[ch], 1 + ch, 3, 1, 1
             )
