@@ -18,6 +18,7 @@ class DataPreProcess(mp.Process):
         len_buffer=0,
         debug=False,
         use_rust_fifo=True,
+        circular_buffer=None
     ):
         super().__init__()
 
@@ -67,51 +68,98 @@ class DataPreProcess(mp.Process):
         counter_total_len = {}
 
         # fifo_lists = []
-        if self.use_rust_fifo == False:
-            while not self.stop_event.is_set():
-                # databuffer = self.shm_data.get_numpy_handle()
-                if not self.queue_in.empty():
-                    dict_from_queue = self.queue_in.get()
-                    # print_dec(dict_from_queue.keys())
-                    #fifo_name = list(dict_from_queue.keys())[0]
-                    for fifo_name in dict_from_queue.keys():
-                        data, len_values = dict_from_queue[fifo_name]
-                        if not (fifo_name in pre_buffer_list):
-                            pre_buffer_list[fifo_name] = []
-                            pre_buffer_len[fifo_name] = 0
-                            counter_total_len[fifo_name] = 0
-                            time_start[fifo_name] = time.time()
-                            # fifo_lists.append(fifo_name)
-                        pre_buffer_list[fifo_name] += data
-                        pre_buffer_len[fifo_name] += len_values
-                        counter_total_len[fifo_name] += len_values
+        while not self.stop_event.is_set():
+            time.sleep(1)
 
-                # print_dec("fifo_lists", fifo_lists)
-                # print_dec("pre_buffer_list", pre_buffer_list.keys())
-                for fifo_name in pre_buffer_list.keys():
-                    time_stop[fifo_name] = time.time()
-                    delta_time[fifo_name] = time_stop[fifo_name] - time_start[fifo_name]
-                    # print(delta_time[fifo_name])
-                    if (
-                        pre_buffer_len[fifo_name] > len_buffer
-                        or delta_time[fifo_name] > timeout
-                    ) and (pre_buffer_len[fifo_name] > 0):
-                        time_start[fifo_name] = time.time()
-                        data_as_array = np.fromiter(
-                            pre_buffer_list[fifo_name],
-                            dtype=np.uint64,
-                            count=pre_buffer_len[fifo_name],
-                        ).astype(self.dict_of_dtype_queue_array_out[fifo_name])
-
-                        self.dict_of_queue_array_out[fifo_name].put(data_as_array)
-                        self.dict_of_shared_loc[fifo_name].value = (
-                            self.dict_of_shared_loc[fifo_name].value
-                            + pre_buffer_len[fifo_name]
-                        )
-                        self.last_preprocessed_len[fifo_name].value = pre_buffer_len[fifo_name]
-                        # print("-> ", self.dict_of_shared_loc[fifo_name].value)
+            # databuffer = self.shm_data.get_numpy_handle()
+            if not self.queue_in.empty():
+                dict_from_queue = self.queue_in.get()
+                # print_dec(dict_from_queue.keys())
+                #fifo_name = list(dict_from_queue.keys())[0]
+                for fifo_name in dict_from_queue.keys():
+                    data, len_values = dict_from_queue[fifo_name]
+                    if not (fifo_name in pre_buffer_list):
                         pre_buffer_list[fifo_name] = []
                         pre_buffer_len[fifo_name] = 0
+                        counter_total_len[fifo_name] = 0
+                        time_start[fifo_name] = time.time()
+                        # fifo_lists.append(fifo_name)
+                    pre_buffer_list[fifo_name] += data
+                    pre_buffer_len[fifo_name] += len_values
+                    counter_total_len[fifo_name] += len_values
+
+            # print_dec("fifo_lists", fifo_lists)
+            # print_dec("pre_buffer_list", pre_buffer_list.keys())
+            for fifo_name in pre_buffer_list.keys():
+                time_stop[fifo_name] = time.time()
+                delta_time[fifo_name] = time_stop[fifo_name] - time_start[fifo_name]
+                # print(delta_time[fifo_name])
+                if (
+                    pre_buffer_len[fifo_name] > len_buffer
+                    or delta_time[fifo_name] > timeout
+                ) and (pre_buffer_len[fifo_name] > 0):
+                    time_start[fifo_name] = time.time()
+                    data_as_array = np.fromiter(
+                        pre_buffer_list[fifo_name],
+                        dtype=np.uint64,
+                        count=pre_buffer_len[fifo_name],
+                    ).astype(self.dict_of_dtype_queue_array_out[fifo_name])
+
+                    self.dict_of_queue_array_out[fifo_name].put(data_as_array)
+                    self.dict_of_shared_loc[fifo_name].value = (
+                        self.dict_of_shared_loc[fifo_name].value
+                        + pre_buffer_len[fifo_name]
+                    )
+                    self.last_preprocessed_len[fifo_name].value = pre_buffer_len[fifo_name]
+                    # print("-> ", self.dict_of_shared_loc[fifo_name].value)
+                    pre_buffer_list[fifo_name] = []
+                    pre_buffer_len[fifo_name] = 0
+
+        # if self.use_rust_fifo == False:
+        #     while not self.stop_event.is_set():
+        #         # databuffer = self.shm_data.get_numpy_handle()
+        #         if not self.queue_in.empty():
+        #             dict_from_queue = self.queue_in.get()
+        #             # print_dec(dict_from_queue.keys())
+        #             #fifo_name = list(dict_from_queue.keys())[0]
+        #             for fifo_name in dict_from_queue.keys():
+        #                 data, len_values = dict_from_queue[fifo_name]
+        #                 if not (fifo_name in pre_buffer_list):
+        #                     pre_buffer_list[fifo_name] = []
+        #                     pre_buffer_len[fifo_name] = 0
+        #                     counter_total_len[fifo_name] = 0
+        #                     time_start[fifo_name] = time.time()
+        #                     # fifo_lists.append(fifo_name)
+        #                 pre_buffer_list[fifo_name] += data
+        #                 pre_buffer_len[fifo_name] += len_values
+        #                 counter_total_len[fifo_name] += len_values
+        #
+        #         # print_dec("fifo_lists", fifo_lists)
+        #         # print_dec("pre_buffer_list", pre_buffer_list.keys())
+        #         for fifo_name in pre_buffer_list.keys():
+        #             time_stop[fifo_name] = time.time()
+        #             delta_time[fifo_name] = time_stop[fifo_name] - time_start[fifo_name]
+        #             # print(delta_time[fifo_name])
+        #             if (
+        #                 pre_buffer_len[fifo_name] > len_buffer
+        #                 or delta_time[fifo_name] > timeout
+        #             ) and (pre_buffer_len[fifo_name] > 0):
+        #                 time_start[fifo_name] = time.time()
+        #                 data_as_array = np.fromiter(
+        #                     pre_buffer_list[fifo_name],
+        #                     dtype=np.uint64,
+        #                     count=pre_buffer_len[fifo_name],
+        #                 ).astype(self.dict_of_dtype_queue_array_out[fifo_name])
+        #
+        #                 self.dict_of_queue_array_out[fifo_name].put(data_as_array)
+        #                 self.dict_of_shared_loc[fifo_name].value = (
+        #                     self.dict_of_shared_loc[fifo_name].value
+        #                     + pre_buffer_len[fifo_name]
+        #                 )
+        #                 self.last_preprocessed_len[fifo_name].value = pre_buffer_len[fifo_name]
+        #                 # print("-> ", self.dict_of_shared_loc[fifo_name].value)
+        #                 pre_buffer_list[fifo_name] = []
+        #                 pre_buffer_len[fifo_name] = 0
 
         print_dec("counter_total_len ", counter_total_len)
         self.stop_event.clear()

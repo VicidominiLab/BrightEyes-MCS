@@ -3,7 +3,7 @@ import numpy as np
 from multiprocessing import shared_memory, Lock, Value
 
 class CircularSharedBuffer:
-    def __init__(self, size, dtype=np.float64, name=None, create=True, head=None, tail=None, count=None, lock=None):
+    def __init__(self, size, dtype=np.float64, name=None, create=True, head=None, tail=None, lock=None):
         self.size = size
         self.dtype = np.dtype(dtype)
         self.itemsize = self.dtype.itemsize

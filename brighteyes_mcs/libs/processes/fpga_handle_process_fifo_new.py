@@ -34,6 +34,7 @@ class FpgaHandleProcess(mp.Process):
         self.queueFifoWrite = self.configuration["queueFifoWrite"]
         self.queueFifoReadReq = self.configuration["queueFifoReadReq"]
         self.queueFifoRead = self.configuration["queueFifoRead"]
+        self.queueFifoReadCircularBuffer = self.configuration["queueFifoReadCircularBuffer"]
         self.is_connected = self.configuration["is_connected"]
         self.is_readytorun = self.configuration["is_readytorun"]
         self.list_registers = self.configuration["list_registers"]
@@ -45,6 +46,9 @@ class FpgaHandleProcess(mp.Process):
         self.fifo_chuck_size = self.configuration["fifo_chuck_size"]
         self.expected_raw_data = self.configuration["expected_raw_data"]
         self.initial_registers = self.configuration["initial_registers"]
+
+
+
         print(self.configuration)
 
         # mp_mng = mp.Manager()
@@ -203,7 +207,8 @@ class FpgaHandleProcess(mp.Process):
 
                         if length > 0:
                             out_dict[current_fifo] = [read_data.data, length]
-                            self.queueFifoRead.put(out_dict)
+                            self.queueFifoReadCircularBuffer.put(read_data.data)
+                            #self.queueFifoRead.put(out_dict)
 
                     except nifpga.FifoTimeoutError:
                         pass
@@ -223,8 +228,9 @@ class FpgaHandleProcess(mp.Process):
                         # print(delta_time, length)
 
                         if length > 0:
-                            out_dict[current_fifo] = [read_data, length]
-                            self.queueFifoRead.put(out_dict)
+                            # out_dict[current_fifo] = [read_data, length]
+                            print(read_data)
+                            self.queueFifoReadCircularBuffer[current_fifo].put(read_data)
 
         print_dec("self.stop_event.is_set()")
 

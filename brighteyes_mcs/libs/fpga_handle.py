@@ -1,5 +1,8 @@
 import multiprocessing as mp
 import time
+import numpy as np
+
+from ..libs.mp_circular_shm import CircularSharedBuffer
 
 import psutil
 import nifpga
@@ -37,6 +40,8 @@ class FpgaHandle(object):
         self.nifpga_obj = None
         self.nifpga_obj2 = None
 
+
+
         self.configuration = {
             "timeout_fifos": timeout_fifos,
             "bitfile": bitfile,
@@ -51,6 +56,10 @@ class FpgaHandle(object):
             "queueFifoWrite": self.mp_manager.Queue(),
             "queueFifoReadReq": self.mp_manager.Queue(),
             "queueFifoRead": self.mp_manager.Queue(),
+            "queueFifoReadCircularBuffer": {
+                                "FIFO" : CircularSharedBuffer(1024*1024*128, dtype=np.uint64),
+                                "FIFOAnalog": CircularSharedBuffer(1024*1024*128, dtype=np.uint64)
+                             },
             "is_connected": self.mp_manager.Event(),
             "is_readytorun": self.mp_manager.Event(),
             "list_registers": self.mp_manager.list(),

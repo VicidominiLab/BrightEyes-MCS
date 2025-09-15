@@ -9,8 +9,6 @@ from ..libs.fpga_handle import FpgaHandle
 from ..libs.print_dec import print_dec
 from ..libs.mp_shared_array import MemorySharedNumpyArray
 
-from ..libs.mp_circular_shm import CircularSharedBuffer
-
 class SpadFcsManager():
     """
     Manages the SPAD FCS (Single-Photon Avalanche Diode Fluorescence Correlation Spectroscopy) operations, including FPGA connections, data acquisition, and processing.
@@ -512,6 +510,7 @@ class SpadFcsManager():
             len_buffer=self.len_fifo_prebuffer,
             debug=self.debug,
             use_rust_fifo=self.use_rust_fifo,
+            circular_buffer=self.fpga_handle.configuration["queueFifoReadCircularBuffer"],
         )
 
         self.dataProcess.daemon = True
@@ -578,6 +577,7 @@ class SpadFcsManager():
             self.acquisition_done_event,
             self.acquisition_almost_done_event,
             self.shared_dict,
+            self.fpga_handle.configuration["queueFifoReadCircularBuffer"],
             debug=self.debug,
         )
         self.previewProcess.daemon = True

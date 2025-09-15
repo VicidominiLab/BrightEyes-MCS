@@ -97,6 +97,7 @@ class AcquisitionLoopProcess(mp.Process):
         acquisition_done,
         acquisition_almost_done,
         shared_dict,
+        circular_buffer,
         debug=False,
     ):
         super().__init__()
@@ -139,6 +140,8 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.shm_trace = shared_objects["shared_trace"]
         self.shm_number_of_threads_h5 = shared_objects["number_of_threads_h5"]
+
+        self.circular_buffer = circular_buffer
 
         self.autocorrelation_maxx = shared_objects["autocorrelation_maxx"]
         self.trace_bins = shared_objects["trace_bins"]
@@ -205,7 +208,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.total_photon = 0
 
-        self.data_queue = data_queue
+        self.data_queue = circular_buffer
 
         self.do_not_save = do_not_save
 
