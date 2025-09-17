@@ -101,7 +101,7 @@ class AcquisitionLoopProcess(mp.Process):
         debug=False,
     ):
         super().__init__()
-
+        self.daemon = True
         set_debug(debug)
         print_dec("AcquisitionLoopProcess INIT")
 
@@ -250,11 +250,10 @@ class AcquisitionLoopProcess(mp.Process):
 
         # self.profiler = pprofile.StatisticalProfile()
         # with self.profiler():
-        print_dec(
-            "AcquisitionLoopProcess RUN - PID:",
-            os.getpid(),
-            "    <======================================================",
-        )
+
+        p = psutil.Process(os.getpid())
+        p.nice(psutil.HIGH_PRIORITY_CLASS)
+        print_dec("AcquisitionLoopProcess RUN - PID:", os.getpid(), p.nice())
 
 
         stop_event_proxy.clear()
@@ -408,6 +407,11 @@ class AcquisitionLoopProcess(mp.Process):
         # self.shm_loc_acquired["FIFO"] = self.shm_loc_acquired["FIFO"]
 
         self.shared_dict_proxy = {}
+        self.shared_dict_proxy["FIFO_status"] = 0
+        self.shared_dict_proxy["FIFOAnalog_status"] = 0
+        self.shared_dict_proxy["FIFO_status_total"] = 0
+        self.shared_dict_proxy["FIFOAnalog_status_total"] = 0
+
         self.update_dictionary_slowly(0.1)
 
         #This seams redundant but it is for optimize the performances
@@ -453,6 +457,8 @@ class AcquisitionLoopProcess(mp.Process):
 
             self.shared_dict_proxy["FIFO_status"] = self.data_queue["FIFO"].qsize()
             self.shared_dict_proxy["FIFOAnalog_status"] = self.data_queue["FIFOAnalog"].qsize()
+            self.shared_dict_proxy["FIFO_status_total"] += self.data_queue["FIFO"].qsize()
+            self.shared_dict_proxy["FIFOAnalog_status_total"] += self.data_queue["FIFOAnalog"].qsize()
 
             if "FIFO" in self.shm_activated_fifos_list:
                 max_gap_frame = self.expected_raw_data_per_frame * (
@@ -492,7 +498,9 @@ class AcquisitionLoopProcess(mp.Process):
                     if (
                         internal_buffer is None
                     ):  # standard case (no previous split data)
-                        data_from_queue = self.data_queue["FIFO"].get()
+                        #data_from_queue = self.data_queue["FIFO"].get()
+                        data_from_queue = self.data_queue["FIFO"].get(min_chunk=self.DATA_WORDS_DIGITAL,
+                                                                      max_chunk=self.DATA_WORDS_DIGITAL*15000)
                         self.gap = data_from_queue.shape[0] // self.DATA_WORDS_DIGITAL
                         #
                         # print_dec(
@@ -582,17 +590,63 @@ class AcquisitionLoopProcess(mp.Process):
 
 
                     buffer_up_to_gap = self.buffer[: self.gap]
+                    if buffer_up_to_gap.size!=0:
+                        if isinstance(selected_channel, int):
+                            if (selected_channel < (channels+2)):
+                                if (self.activate_show_preview == True):
+                                    self.image_xy_lock.acquire()
+                                    self.image_xy[list_y, list_x] = 0
+                                    np.add.at(
+                                        self.image_xy,
+                                        (list_y, list_x),
+                                        buffer_up_to_gap[:, selected_channel],
+                                    )
+                                    self.image_xy_lock.release()
 
+                                    cond_x_central = list_x == (self.shape[0] // 2)
+                                    self.image_zy_lock.acquire()
+                                    self.image_zy[
+                                        list_y[cond_x_central], list_z[cond_x_central]
+                                    ] = 0
+                                    np.add.at(
+                                        self.image_zy,
+                                        (list_y[cond_x_central], list_z[cond_x_central]),
+                                        buffer_up_to_gap[cond_x_central, selected_channel],
+                                    )
+                                    self.image_zy_lock.release()
 
-                    if isinstance(selected_channel, int):
-                        if (selected_channel < (channels+2)):
-                            if (self.activate_show_preview == True):
+                                    cond_y_central = list_y == (self.shape[1] // 2)
+                                    self.image_xz_lock.acquire()
+                                    self.image_xz[
+                                        list_z[cond_y_central], list_x[cond_y_central]
+                                    ] = 0
+                                    np.add.at(
+                                        self.image_xz,
+                                        (list_z[cond_y_central], list_x[cond_y_central]),
+                                        buffer_up_to_gap[cond_y_central, selected_channel],
+                                    )
+                                    self.image_xz_lock.release()
+
+                                if self.active_autocorrelation:
+                                    correlator.add(buffer_up_to_gap[:, selected_channel])
+                                    self.autocorrelation[
+                                        1, :
+                                    ] = correlator.get_correlation_normalized()
+                                if self.activate_trace:
+                                    temporalBinner.add(buffer_up_to_gap[:, selected_channel])
+                                    self.trace_pos.value = (
+                                        temporalBinner.get_current_position_bins()
+                                    )
+                                    self.trace[1, :] = temporalBinner.get_bins()
+
+                        elif selected_channel.startswith("Sum"):
+                            if self.activate_show_preview == True:
                                 self.image_xy_lock.acquire()
                                 self.image_xy[list_y, list_x] = 0
                                 np.add.at(
                                     self.image_xy,
                                     (list_y, list_x),
-                                    buffer_up_to_gap[:, selected_channel],
+                                    self.buffer_sum_SPAD_ch[: self.gap],
                                 )
                                 self.image_xy_lock.release()
 
@@ -604,7 +658,7 @@ class AcquisitionLoopProcess(mp.Process):
                                 np.add.at(
                                     self.image_zy,
                                     (list_y[cond_x_central], list_z[cond_x_central]),
-                                    buffer_up_to_gap[cond_x_central, selected_channel],
+                                    self.buffer_sum_SPAD_ch[: self.gap][cond_x_central],
                                 )
                                 self.image_zy_lock.release()
 
@@ -616,106 +670,84 @@ class AcquisitionLoopProcess(mp.Process):
                                 np.add.at(
                                     self.image_xz,
                                     (list_z[cond_y_central], list_x[cond_y_central]),
-                                    buffer_up_to_gap[cond_y_central, selected_channel],
+                                    self.buffer_sum_SPAD_ch[: self.gap][cond_y_central],
                                 )
                                 self.image_xz_lock.release()
 
                             if self.active_autocorrelation:
-                                correlator.add(buffer_up_to_gap[:, selected_channel])
+                                correlator.add(self.buffer_sum_SPAD_ch[: self.gap])
                                 self.autocorrelation[
                                     1, :
                                 ] = correlator.get_correlation_normalized()
                             if self.activate_trace:
-                                temporalBinner.add(buffer_up_to_gap[:, selected_channel])
+                                temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap])
                                 self.trace_pos.value = (
                                     temporalBinner.get_current_position_bins()
                                 )
                                 self.trace[1, :] = temporalBinner.get_bins()
 
-                    elif selected_channel.startswith("Sum"):
-                        if self.activate_show_preview == True:
-                            self.image_xy_lock.acquire()
-                            self.image_xy[list_y, list_x] = 0
-                            np.add.at(
-                                self.image_xy,
-                                (list_y, list_x),
-                                self.buffer_sum_SPAD_ch[: self.gap],
-                            )
-                            self.image_xy_lock.release()
+                        elif selected_channel.startswith("RGB"):
+                            if selected_channel.startswith("RGB "):
+                                if self.activate_show_preview == True:
+                                    channelA = int(selected_channel.split(" ")[1])
+                                    channelB = int(selected_channel.split(" ")[2])
+                                    channelC = int(selected_channel.split(" ")[3])
 
-                            cond_x_central = list_x == (self.shape[0] // 2)
-                            self.image_zy_lock.acquire()
-                            self.image_zy[
-                                list_y[cond_x_central], list_z[cond_x_central]
-                            ] = 0
-                            np.add.at(
-                                self.image_zy,
-                                (list_y[cond_x_central], list_z[cond_x_central]),
-                                self.buffer_sum_SPAD_ch[: self.gap][cond_x_central],
-                            )
-                            self.image_zy_lock.release()
+                                    self.image_xy_rgb_lock.acquire()
+                                    self.image_xy_rgb[list_y, list_x, 0] = 0
+                                    self.image_xy_rgb[list_y, list_x, 1] = 0
+                                    self.image_xy_rgb[list_y, list_x, 2] = 0
 
-                            cond_y_central = list_y == (self.shape[1] // 2)
-                            self.image_xz_lock.acquire()
-                            self.image_xz[
-                                list_z[cond_y_central], list_x[cond_y_central]
-                            ] = 0
-                            np.add.at(
-                                self.image_xz,
-                                (list_z[cond_y_central], list_x[cond_y_central]),
-                                self.buffer_sum_SPAD_ch[: self.gap][cond_y_central],
-                            )
-                            self.image_xz_lock.release()
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 0],
+                                        (list_y, list_x),
+                                        buffer_up_to_gap[:, channelA],
+                                    )
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 1],
+                                        (list_y, list_x),
+                                        buffer_up_to_gap[:, channelB],
+                                    )
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 2],
+                                        (list_y, list_x),
+                                        buffer_up_to_gap[:, channelC],
+                                    )
+                                    self.image_xy_rgb_lock.release()
+                            if selected_channel.startswith("RGB2"):
+                                if self.activate_show_preview == True:
+                                    self.image_xy_rgb_lock.acquire()
+                                    self.image_xy_rgb[list_y, list_x, 0] = 0
+                                    self.image_xy_rgb[list_y, list_x, 1] = 0
+                                    self.image_xy_rgb[list_y, list_x, 2] = 0
 
-                        if self.active_autocorrelation:
-                            correlator.add(self.buffer_sum_SPAD_ch[: self.gap])
-                            self.autocorrelation[
-                                1, :
-                            ] = correlator.get_correlation_normalized()
-                        if self.activate_trace:
-                            temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap])
-                            self.trace_pos.value = (
-                                temporalBinner.get_current_position_bins()
-                            )
-                            self.trace[1, :] = temporalBinner.get_bins()
+                                    if self.buffer_sum_SPAD_ch.shape[0] > 2:
 
-                    elif selected_channel.startswith("RGB"):
-                        if selected_channel.startswith("RGB "):
-                            if self.activate_show_preview == True:
-                                channelA = int(selected_channel.split(" ")[1])
-                                channelB = int(selected_channel.split(" ")[2])
-                                channelC = int(selected_channel.split(" ")[3])
+                                        np.add.at(
+                                            self.image_xy_rgb[:, :, 0],
+                                            (list_y[::3], list_x[::3]),
+                                            self.buffer_sum_SPAD_ch[: self.gap:3],
+                                        )
 
+                                        np.add.at(
+                                            self.image_xy_rgb[:, :, 1],
+                                            (list_y[1::3], list_x[1::3]),
+                                            self.buffer_sum_SPAD_ch[1: self.gap:3],
+                                        )
+
+                                        np.add.at(
+                                            self.image_xy_rgb[:, :, 2],
+                                            (list_y[2::3], list_x[2::3]),
+                                            self.buffer_sum_SPAD_ch[2: self.gap:3],
+                                        )
+
+                                    self.image_xy_rgb_lock.release()
+                            if selected_channel.startswith("RGB3"):
                                 self.image_xy_rgb_lock.acquire()
                                 self.image_xy_rgb[list_y, list_x, 0] = 0
                                 self.image_xy_rgb[list_y, list_x, 1] = 0
                                 self.image_xy_rgb[list_y, list_x, 2] = 0
-
-                                np.add.at(
-                                    self.image_xy_rgb[:, :, 0],
-                                    (list_y, list_x),
-                                    buffer_up_to_gap[:, channelA],
-                                )
-                                np.add.at(
-                                    self.image_xy_rgb[:, :, 1],
-                                    (list_y, list_x),
-                                    buffer_up_to_gap[:, channelB],
-                                )
-                                np.add.at(
-                                    self.image_xy_rgb[:, :, 2],
-                                    (list_y, list_x),
-                                    buffer_up_to_gap[:, channelC],
-                                )
-                                self.image_xy_rgb_lock.release()
-                        if selected_channel.startswith("RGB2"):
-                            if self.activate_show_preview == True:
-                                self.image_xy_rgb_lock.acquire()
-                                self.image_xy_rgb[list_y, list_x, 0] = 0
-                                self.image_xy_rgb[list_y, list_x, 1] = 0
-                                self.image_xy_rgb[list_y, list_x, 2] = 0
-
-                                if self.buffer_sum_SPAD_ch.shape[0] > 2:
-
+                                if self.buffer_sum_SPAD_ch.shape[0]>2:
                                     np.add.at(
                                         self.image_xy_rgb[:, :, 0],
                                         (list_y[::3], list_x[::3]),
@@ -735,193 +767,168 @@ class AcquisitionLoopProcess(mp.Process):
                                     )
 
                                 self.image_xy_rgb_lock.release()
-                        if selected_channel.startswith("RGB3"):
-                            self.image_xy_rgb_lock.acquire()
-                            self.image_xy_rgb[list_y, list_x, 0] = 0
-                            self.image_xy_rgb[list_y, list_x, 1] = 0
-                            self.image_xy_rgb[list_y, list_x, 2] = 0
-                            if self.buffer_sum_SPAD_ch.shape[0]>2:
-                                np.add.at(
-                                    self.image_xy_rgb[:, :, 0],
-                                    (list_y[::3], list_x[::3]),
-                                    self.buffer_sum_SPAD_ch[: self.gap:3],
+
+                            if selected_channel.startswith("RGBDFD"):
+                                self.image_xy_rgb_lock.acquire()
+                                self.image_xy_rgb[list_y, list_x, 0] = 0
+                                self.image_xy_rgb[list_y, list_x, 1] = 0
+                                self.image_xy_rgb[list_y, list_x, 2] = 0
+
+                                tparts=3
+                                tbins=self.timebinsPerPixel
+                                gbins=tbins//tparts
+
+                                if self.buffer_sum_SPAD_ch.shape[0] > 2:
+
+                                    cond0 = list_b < gbins
+
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 0],
+                                        (list_y[::][cond0], list_x[::][cond0]),
+                                        self.buffer_sum_SPAD_ch[: self.gap:][cond0],
+                                    )
+
+                                    cond0 = (list_b >= gbins) & (list_b < 2*gbins)
+
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 1],
+                                        (list_y[::][cond0], list_x[::][cond0]),
+                                        self.buffer_sum_SPAD_ch[: self.gap:][cond0],
+                                    )
+
+                                    cond0 = list_b >= 2*gbins
+
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 2],
+                                        (list_y[::][cond0], list_x[::][cond0]),
+                                        self.buffer_sum_SPAD_ch[: self.gap:][cond0],
+                                    )
+
+                                self.image_xy_rgb_lock.release()
+
+                            if self.active_autocorrelation:
+                                correlator.add(self.buffer_sum_SPAD_ch[: self.gap])
+                                self.autocorrelation[
+                                    1, :
+                                ] = correlator.get_correlation_normalized()
+                            if self.activate_trace:
+                                temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap])
+                                self.trace_pos.value = (
+                                    temporalBinner.get_current_position_bins()
                                 )
-
-                                np.add.at(
-                                    self.image_xy_rgb[:, :, 1],
-                                    (list_y[1::3], list_x[1::3]),
-                                    self.buffer_sum_SPAD_ch[1: self.gap:3],
-                                )
-
-                                np.add.at(
-                                    self.image_xy_rgb[:, :, 2],
-                                    (list_y[2::3], list_x[2::3]),
-                                    self.buffer_sum_SPAD_ch[2: self.gap:3],
-                                )
-
-                            self.image_xy_rgb_lock.release()
-
-                        if selected_channel.startswith("RGBDFD"):
-                            self.image_xy_rgb_lock.acquire()
-                            self.image_xy_rgb[list_y, list_x, 0] = 0
-                            self.image_xy_rgb[list_y, list_x, 1] = 0
-                            self.image_xy_rgb[list_y, list_x, 2] = 0
-
-                            tparts=3
-                            tbins=self.timebinsPerPixel
-                            gbins=tbins//tparts
-
-                            if self.buffer_sum_SPAD_ch.shape[0] > 2:
-
-                                cond0 = list_b < gbins
-
-                                np.add.at(
-                                    self.image_xy_rgb[:, :, 0],
-                                    (list_y[::][cond0], list_x[::][cond0]),
-                                    self.buffer_sum_SPAD_ch[: self.gap:][cond0],
-                                )
-
-                                cond0 = (list_b >= gbins) & (list_b < 2*gbins)
-
-                                np.add.at(
-                                    self.image_xy_rgb[:, :, 1],
-                                    (list_y[::][cond0], list_x[::][cond0]),
-                                    self.buffer_sum_SPAD_ch[: self.gap:][cond0],
-                                )
-
-                                cond0 = list_b >= 2*gbins
-
-                                np.add.at(
-                                    self.image_xy_rgb[:, :, 2],
-                                    (list_y[::][cond0], list_x[::][cond0]),
-                                    self.buffer_sum_SPAD_ch[: self.gap:][cond0],
-                                )
-
-                            self.image_xy_rgb_lock.release()
-
-                        if self.active_autocorrelation:
-                            correlator.add(self.buffer_sum_SPAD_ch[: self.gap])
-                            self.autocorrelation[
-                                1, :
-                            ] = correlator.get_correlation_normalized()
-                        if self.activate_trace:
-                            temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap])
-                            self.trace_pos.value = (
-                                temporalBinner.get_current_position_bins()
-                            )
-                            self.trace[1, :] = temporalBinner.get_bins()
-
-                    if not self.do_not_save:
-                        # This is for debug purpose
-
-                        # np.add.at(self.buffer_for_save, (list_y, list_x, list_b),
-                        #           buffer_up_to_gap[:,:channels])
-                        # np.add.at(self.buffer_for_save_channels_extra, (list_y, list_x, list_b),
-                        #           buffer_up_to_gap[:,channels:])
-
-                        # self.buffer_for_save[
-                        #     list_y, list_x, list_b, :
-                        # ] = buffer_up_to_gap[:, :channels]
-                        # self.buffer_for_save_channels_extra[
-                        #     list_y, list_x, list_b, :
-                        # ] = buffer_up_to_gap[:, channels:]
-
-                        self.buffer_for_save[list_y, list_x, list_b] = buffer_up_to_gap[:, :channels]
-                        self.buffer_for_save_channels_extra[list_y, list_x, list_b] = buffer_up_to_gap[:, channels:]
-                        #
-                        # np.add.at(
-                        #     self.buffer_for_save,
-                        #     (list_y, list_x, list_b),
-                        #     buffer_up_to_gap[:, :channels],
-                        # )
-                        #
-                        # np.add.at(
-                        #     self.buffer_for_save_channels_extra,
-                        #     (list_y, list_x, list_b),
-                        #     buffer_up_to_gap[:, channels:],
-                        # )
-
-                        # print_dec(
-                        #     self.current_pointer,
-                        #     self.current_pointer + self.gap,
-                        #     self.buffer.shape,
-                        #     buffer_up_to_gap.shape,
-                        # )
-                        # print(self.buffer.shape , buffer_up_to_gap.shape, list_y.shape)
-                        # print_dec(
-                        #     self.current_frame,
-                        #     self.gap,
-                        #     list_y.max(),
-                        #     list_x.max(),
-                        #     list_b.max(),
-                        # )
-
-                    sum_tmp = buffer_up_to_gap[:, :channels].sum(axis=0).reshape(channels_x, channels_y)
-
-                    self.total_photon = np.sum(sum_tmp)
-
-                    self.fingerprint[0, :, :] += sum_tmp
-                    try:
-                        self.fingerprint[1, :, :] = buffer_up_to_gap[-1, :channels].reshape(
-                            channels_x, channels_y
-                        )
-                    except:
-                        print_dec("buffer_up_to_gap", buffer_up_to_gap)
-                        self.fingerprint[1, :, :] = 0
-
-                    if self.gap > 10000:
-                        self.fingerprint[2, :, :] = (
-                            self.buffer[:10000, :channels].sum(axis=0).reshape(channels_x, channels_y)
-                        )
-
-                    self.fingerprint[4, :, :] += self.saturation[:channels].reshape(channels_x, channels_y)
-                    self.current_pointer += self.gap
-                    self.shm_loc_previewed["FIFO"].value = self.current_pointer
-                    # print_dec(self.current_pointer*2, self.gap*2, (self.current_pointer + self.gap)*2)
-
-                    if frameComplete["FIFO"]:
-                        print_dec("frameComplete[FIFO]")
-                        frameComplete["FIFO"] = False
-                        self.fingerprint[3, :, :] = self.fingerprint[0, :, :]
-                        self.fingerprint[0, :, :] = 0
-                        self.fingerprint[1, :, :] = 0
-                        self.fingerprint[2, :, :] = 0
-                        self.fingerprint[4, :, :] = 0
-
-                        current_z = (self.current_frame - 1) % self.shape[2]
-                        current_rep = (self.current_frame - 1) // self.shape[2]
-                        print_dec("FRAME [FIFO] ", current_z, current_rep, " DONE")
-
-                        self.shared_dict_proxy.update(
-                            {
-                                "current_z": current_z,
-                                "current_rep": current_rep,
-                                "total_photon": self.total_photon,
-                                "last_packet_size": self.gap,
-                            }
-                        )
+                                self.trace[1, :] = temporalBinner.get_bins()
 
                         if not self.do_not_save:
-                            self.h5mgr.add_to_dataset(
-                                "data",
-                                np.copy(self.buffer_for_save),
-                                current_rep,
-                                current_z,
-                            )
-                            self.h5mgr.add_to_dataset(
-                                "data_channels_extra",
-                                np.copy(self.buffer_for_save_channels_extra),
-                                current_rep,
-                                current_z,
-                            )
-                            self.buffer_for_save[:] = 0
-                            self.buffer_for_save_channels_extra[:] = 0
-                            print_dec("done digital add_to_dataset")
-                            print_dec(self.current_pointer * self.DATA_WORDS_DIGITAL)
+                            # This is for debug purpose
 
-                    if self.current_pointer * self.DATA_WORDS_DIGITAL >= self.expected_raw_data:
-                        self.stop_event.set()
-                        stop_event_proxy.set()
+                            # np.add.at(self.buffer_for_save, (list_y, list_x, list_b),
+                            #           buffer_up_to_gap[:,:channels])
+                            # np.add.at(self.buffer_for_save_channels_extra, (list_y, list_x, list_b),
+                            #           buffer_up_to_gap[:,channels:])
+
+                            # self.buffer_for_save[
+                            #     list_y, list_x, list_b, :
+                            # ] = buffer_up_to_gap[:, :channels]
+                            # self.buffer_for_save_channels_extra[
+                            #     list_y, list_x, list_b, :
+                            # ] = buffer_up_to_gap[:, channels:]
+
+                            self.buffer_for_save[list_y, list_x, list_b] = buffer_up_to_gap[:, :channels]
+                            self.buffer_for_save_channels_extra[list_y, list_x, list_b] = buffer_up_to_gap[:, channels:]
+                            #
+                            # np.add.at(
+                            #     self.buffer_for_save,
+                            #     (list_y, list_x, list_b),
+                            #     buffer_up_to_gap[:, :channels],
+                            # )
+                            #
+                            # np.add.at(
+                            #     self.buffer_for_save_channels_extra,
+                            #     (list_y, list_x, list_b),
+                            #     buffer_up_to_gap[:, channels:],
+                            # )
+
+                            # print_dec(
+                            #     self.current_pointer,
+                            #     self.current_pointer + self.gap,
+                            #     self.buffer.shape,
+                            #     buffer_up_to_gap.shape,
+                            # )
+                            # print(self.buffer.shape , buffer_up_to_gap.shape, list_y.shape)
+                            # print_dec(
+                            #     self.current_frame,
+                            #     self.gap,
+                            #     list_y.max(),
+                            #     list_x.max(),
+                            #     list_b.max(),
+                            # )
+
+                        sum_tmp = buffer_up_to_gap[:, :channels].sum(axis=0).reshape(channels_x, channels_y)
+
+                        self.total_photon = np.sum(sum_tmp)
+
+                        self.fingerprint[0, :, :] += sum_tmp
+                        try:
+                            self.fingerprint[1, :, :] = buffer_up_to_gap[-1, :channels].reshape(
+                                channels_x, channels_y
+                            )
+                        except:
+                            print_dec("buffer_up_to_gap", buffer_up_to_gap)
+                            self.fingerprint[1, :, :] = 0
+
+                        if self.gap > 10000:
+                            self.fingerprint[2, :, :] = (
+                                self.buffer[:10000, :channels].sum(axis=0).reshape(channels_x, channels_y)
+                            )
+
+                        self.fingerprint[4, :, :] += self.saturation[:channels].reshape(channels_x, channels_y)
+                        self.current_pointer += self.gap
+                        self.shm_loc_previewed["FIFO"].value = self.current_pointer
+                        # print_dec(self.current_pointer*2, self.gap*2, (self.current_pointer + self.gap)*2)
+
+                        if frameComplete["FIFO"]:
+                            print_dec("frameComplete[FIFO]")
+                            frameComplete["FIFO"] = False
+                            self.fingerprint[3, :, :] = self.fingerprint[0, :, :]
+                            self.fingerprint[0, :, :] = 0
+                            self.fingerprint[1, :, :] = 0
+                            self.fingerprint[2, :, :] = 0
+                            self.fingerprint[4, :, :] = 0
+
+                            current_z = (self.current_frame - 1) % self.shape[2]
+                            current_rep = (self.current_frame - 1) // self.shape[2]
+                            print_dec("FRAME [FIFO] ", current_z, current_rep, " DONE")
+
+                            self.shared_dict_proxy.update(
+                                {
+                                    "current_z": current_z,
+                                    "current_rep": current_rep,
+                                    "total_photon": self.total_photon,
+                                    "last_packet_size": self.gap,
+                                }
+                            )
+
+                            if not self.do_not_save:
+                                self.h5mgr.add_to_dataset(
+                                    "data",
+                                    np.copy(self.buffer_for_save),
+                                    current_rep,
+                                    current_z,
+                                )
+                                self.h5mgr.add_to_dataset(
+                                    "data_channels_extra",
+                                    np.copy(self.buffer_for_save_channels_extra),
+                                    current_rep,
+                                    current_z,
+                                )
+                                self.buffer_for_save[:] = 0
+                                self.buffer_for_save_channels_extra[:] = 0
+                                print_dec("done digital add_to_dataset")
+                                print_dec(self.current_pointer * self.DATA_WORDS_DIGITAL)
+
+                        if self.current_pointer * self.DATA_WORDS_DIGITAL >= self.expected_raw_data:
+                            self.stop_event.set()
+                            stop_event_proxy.set()
 
             if "FIFOAnalog" in self.shm_activated_fifos_list:
                 max_gap_frame_analog = self.expected_raw_data_per_frame * (
@@ -1027,104 +1034,105 @@ class AcquisitionLoopProcess(mp.Process):
                         )
 
                     buffer_up_to_gap = self.buffer_analog[: self.gap_analog]
+                    if buffer_up_to_gap.size != 0:
 
-                    if "Analog" in selected_channel:
-                        if self.activate_show_preview == True:
-                            if selected_channel[-1:] == "A":
-                                analog_ch = 0
-                            else:
-                                analog_ch = 1
+                        if "Analog" in selected_channel:
+                            if self.activate_show_preview == True:
+                                if selected_channel[-1:] == "A":
+                                    analog_ch = 0
+                                else:
+                                    analog_ch = 1
 
-                            self.image_xy_lock.acquire()
-                            self.image_xy[list_y_analog, list_x_analog] = 0
-                            np.add.at(
-                                self.image_xy,
-                                (list_y_analog, list_x_analog),
-                                buffer_up_to_gap[:, analog_ch],
-                            )
-                            self.image_xy_lock.release()
+                                self.image_xy_lock.acquire()
+                                self.image_xy[list_y_analog, list_x_analog] = 0
+                                np.add.at(
+                                    self.image_xy,
+                                    (list_y_analog, list_x_analog),
+                                    buffer_up_to_gap[:, analog_ch],
+                                )
+                                self.image_xy_lock.release()
 
-                            cond_x_central = list_x_analog == (self.shape[0] // 2)
-                            self.image_zy_lock.acquire()
-                            self.image_zy[list_y_analog[cond_x_central], list_z_analog[cond_x_central]] = 0
-                            np.add.at(
-                                self.image_zy,
-                                (list_y_analog[cond_x_central], list_z_analog[cond_x_central]),
-                                buffer_up_to_gap[:, analog_ch][cond_x_central],
-                            )
-                            self.image_zy_lock.release()
+                                cond_x_central = list_x_analog == (self.shape[0] // 2)
+                                self.image_zy_lock.acquire()
+                                self.image_zy[list_y_analog[cond_x_central], list_z_analog[cond_x_central]] = 0
+                                np.add.at(
+                                    self.image_zy,
+                                    (list_y_analog[cond_x_central], list_z_analog[cond_x_central]),
+                                    buffer_up_to_gap[:, analog_ch][cond_x_central],
+                                )
+                                self.image_zy_lock.release()
 
-                            cond_y_central = list_y_analog == (self.shape[0] // 2)
-                            self.image_xz_lock.acquire()
-                            self.image_xz[list_z_analog[cond_y_central], list_x_analog[cond_y_central]] = 0
-                            np.add.at(
-                                self.image_xz,
-                                (list_z_analog[cond_y_central], list_x_analog[cond_y_central]),
-                                buffer_up_to_gap[:, analog_ch][cond_y_central],
-                            )
-                            self.image_xz_lock.release()
+                                cond_y_central = list_y_analog == (self.shape[0] // 2)
+                                self.image_xz_lock.acquire()
+                                self.image_xz[list_z_analog[cond_y_central], list_x_analog[cond_y_central]] = 0
+                                np.add.at(
+                                    self.image_xz,
+                                    (list_z_analog[cond_y_central], list_x_analog[cond_y_central]),
+                                    buffer_up_to_gap[:, analog_ch][cond_y_central],
+                                )
+                                self.image_xz_lock.release()
 
-                        if self.active_autocorrelation:
-                            correlator.add(buffer_up_to_gap[:, analog_ch])
-                            self.autocorrelation[
-                                1, :
-                            ] = correlator.get_correlation_normalized()
-                        if self.activate_trace:
-                            temporalBinner.add(buffer_up_to_gap[:, analog_ch])
-                            self.trace_pos.value = (
-                                temporalBinner.get_current_position_bins()
-                            )
-                            self.trace[1, :] = temporalBinner.get_bins()
+                            if self.active_autocorrelation:
+                                correlator.add(buffer_up_to_gap[:, analog_ch])
+                                self.autocorrelation[
+                                    1, :
+                                ] = correlator.get_correlation_normalized()
+                            if self.activate_trace:
+                                temporalBinner.add(buffer_up_to_gap[:, analog_ch])
+                                self.trace_pos.value = (
+                                    temporalBinner.get_current_position_bins()
+                                )
+                                self.trace[1, :] = temporalBinner.get_bins()
 
-                    if not self.do_not_save:
-                        self.buffer_analog_for_save[
-                            list_y_analog, list_x_analog, list_b_analog, :
-                        ] = buffer_up_to_gap
-
-                    self.current_pointer_analog += self.gap_analog
-                    self.shm_loc_previewed[
-                        "FIFOAnalog"
-                    ].value = self.current_pointer_analog
-
-                    self.shared_dict_proxy.update({"total_photon": self.total_photon})
-                    # print_dec("frameComplete", frameComplete)
-                    if frameComplete["FIFOAnalog"]:
-                        print_dec("frameComplete[FIFOAnalog]")
-                        frameComplete["FIFOAnalog"] = False
-                        self.fingerprint[3, :, :] = self.fingerprint[0, :, :]
-                        self.fingerprint[0, :, :] = 0
-                        self.fingerprint[1, :, :] = 0
-                        self.fingerprint[2, :, :] = 0
-                        self.fingerprint[4, :, :] = 0
-
-                        current_z = (self.current_frame_analog - 1) % self.shape[2]
-                        current_rep = (self.current_frame_analog - 1) // self.shape[2]
-                        print_dec("FRAME [FIFOAnalog] ", current_z, current_rep, " DONE")
-
-                        self.shared_dict_proxy.update(
-                            {
-                                "current_z": current_z,
-                                "current_rep": current_rep,
-                                "total_photon": self.total_photon,
-                                "last_packet_size": self.gap_analog
-                            }
-                        )
                         if not self.do_not_save:
-                            self.h5mgr.add_to_dataset(
-                                "data_analog",
-                                np.copy(self.buffer_analog_for_save),
-                                current_rep,
-                                current_z,
-                            )
-                            self.buffer_analog_for_save[:] = 0
-                            print_dec("done analog add_to_dataset")
-                            print_dec(
-                                self.current_pointer_analog * self.DATA_WORDS_ANALOG, self.expected_raw_data
-                            )
+                            self.buffer_analog_for_save[
+                                list_y_analog, list_x_analog, list_b_analog, :
+                            ] = buffer_up_to_gap
 
-                    if self.current_pointer_analog * self.DATA_WORDS_ANALOG >= self.expected_raw_data:
-                        self.stop_event.set()
-                        stop_event_proxy.set()
+                        self.current_pointer_analog += self.gap_analog
+                        self.shm_loc_previewed[
+                            "FIFOAnalog"
+                        ].value = self.current_pointer_analog
+
+                        self.shared_dict_proxy.update({"total_photon": self.total_photon})
+                        # print_dec("frameComplete", frameComplete)
+                        if frameComplete["FIFOAnalog"]:
+                            print_dec("frameComplete[FIFOAnalog]")
+                            frameComplete["FIFOAnalog"] = False
+                            self.fingerprint[3, :, :] = self.fingerprint[0, :, :]
+                            self.fingerprint[0, :, :] = 0
+                            self.fingerprint[1, :, :] = 0
+                            self.fingerprint[2, :, :] = 0
+                            self.fingerprint[4, :, :] = 0
+
+                            current_z = (self.current_frame_analog - 1) % self.shape[2]
+                            current_rep = (self.current_frame_analog - 1) // self.shape[2]
+                            print_dec("FRAME [FIFOAnalog] ", current_z, current_rep, " DONE")
+
+                            self.shared_dict_proxy.update(
+                                {
+                                    "current_z": current_z,
+                                    "current_rep": current_rep,
+                                    "total_photon": self.total_photon,
+                                    "last_packet_size": self.gap_analog
+                                }
+                            )
+                            if not self.do_not_save:
+                                self.h5mgr.add_to_dataset(
+                                    "data_analog",
+                                    np.copy(self.buffer_analog_for_save),
+                                    current_rep,
+                                    current_z,
+                                )
+                                self.buffer_analog_for_save[:] = 0
+                                print_dec("done analog add_to_dataset")
+                                print_dec(
+                                    self.current_pointer_analog * self.DATA_WORDS_ANALOG, self.expected_raw_data
+                                )
+
+                        if self.current_pointer_analog * self.DATA_WORDS_ANALOG >= self.expected_raw_data:
+                            self.stop_event.set()
+                            stop_event_proxy.set()
 
             if trace_reset_event_proxy.is_set():
                 print_dec("trace_reset_event.is_set()")
@@ -1134,7 +1142,7 @@ class AcquisitionLoopProcess(mp.Process):
                 correlator.reset()
                 FCS_reset_event_proxy.clear()
 
-            time.sleep(0.0001)
+            time.sleep(0.000001)
         # self.profiler.disable()
         # self.profiler.print_stats()
         # self.profiler.dump_stats("dumpspeed.txt")

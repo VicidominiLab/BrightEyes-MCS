@@ -500,20 +500,20 @@ class SpadFcsManager():
         # self.acquisitionThread = AcquireFIFOinBackground(self.queue,
         #                                                  self.fifo)
 
-        self.dataProcess = DataPreProcess(
-            self.fpga_handle.configuration["queueFifoRead"],
-            # self.shared_memory_buffer,
-            self.loc_acquired,
-            self.last_preprocessed_len,
-            self.data_queue,
-            self.dtype_data_queue,
-            len_buffer=self.len_fifo_prebuffer,
-            debug=self.debug,
-            use_rust_fifo=self.use_rust_fifo,
-            circular_buffer=self.fpga_handle.configuration["queueFifoReadCircularBuffer"],
-        )
+        # self.dataProcess = DataPreProcess(
+        #     self.fpga_handle.configuration["queueFifoRead"],
+        #     # self.shared_memory_buffer,
+        #     self.loc_acquired,
+        #     self.last_preprocessed_len,
+        #     self.data_queue,
+        #     self.dtype_data_queue,
+        #     len_buffer=self.len_fifo_prebuffer,
+        #     debug=self.debug,
+        #     use_rust_fifo=self.use_rust_fifo,
+        #     circular_buffer=self.fpga_handle.configuration["queueFifoReadCircularBuffer"],
+        # )
 
-        self.dataProcess.daemon = True
+        # self.dataProcess.daemon = True
 
         shared_objects = {
             "activated_fifos_list": self.activated_fifos_list,
@@ -580,11 +580,10 @@ class SpadFcsManager():
             self.fpga_handle.configuration["queueFifoReadCircularBuffer"],
             debug=self.debug,
         )
-        self.previewProcess.daemon = True
 
         self.shared_arrays_ready = True
-        print_dec("self.dataProcess.start()")
-        self.dataProcess.start()
+        # print_dec("self.dataProcess.start()")
+        # self.dataProcess.start()
         # self.acquisitionThread.start()
         # if self.previewEnabled:
         self.previewProcess.start()
@@ -755,7 +754,7 @@ class SpadFcsManager():
         Stop the acquisition
         """
         print_dec("stopAcquisition.stop()")
-        self.dataProcess.stop()
+        # self.dataProcess.stop()
         self.is_connected = False
 
     def stopPreview(self):

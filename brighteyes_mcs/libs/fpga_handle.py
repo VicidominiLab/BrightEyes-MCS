@@ -57,8 +57,8 @@ class FpgaHandle(object):
             "queueFifoReadReq": self.mp_manager.Queue(),
             "queueFifoRead": self.mp_manager.Queue(),
             "queueFifoReadCircularBuffer": {
-                                "FIFO" : CircularSharedBuffer(1024*1024*16, dtype=np.uint64),
-                                "FIFOAnalog": CircularSharedBuffer(1024*1024*16, dtype=np.uint64)
+                                "FIFO" : CircularSharedBuffer(1024*1024*64, dtype=np.uint64),
+                                "FIFOAnalog": CircularSharedBuffer(1024*1024*64, dtype=np.uint64)
                              },
             "is_connected": self.mp_manager.Event(),
             "is_readytorun": self.mp_manager.Event(),

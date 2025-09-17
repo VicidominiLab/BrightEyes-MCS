@@ -68,34 +68,49 @@ class CircularSharedBuffer:
                 self.buffer[:stop % self.size] = arr[first:]
                 self.tail.value = stop % self.size
 
-    def get(self, n=-1):
+    def get(self, n_chunk=-1, max_chunk=-1, min_chunk=1):
         """Return a copy of all valid elements in insertion order (non-destructive)."""
         ret = None
         # print_dec("CircularShardBuffer - get()")
         with self.lock:
             available_data = self.available_data
-            if n > available_data:
-                raise BufferError(f"Too large")
-                return np.array([], dtype=self.dtype)
 
+            if n_chunk > available_data:
+                raise BufferError(f"n_chunk > available_data")
+                # return np.array([], dtype=self.dtype)
 
-            if n == -1:
-                n = available_data
+            if n_chunk == -1:
+                n_chunk = available_data
+
+            if max_chunk != -1:
+                if max_chunk > available_data:
+                    max_chunk = available_data
+
+                if n_chunk > max_chunk:
+                    n_chunk = max_chunk
+
+            n_chunk = (n_chunk//min_chunk) * min_chunk
 
             start = self.head.value
+            #print(n_chunk, start)
 
-            if n == 0:
+            if n_chunk == 0:
                 ret = np.array([], dtype=self.dtype)
-            elif start + n <= self.size:      # no wrap
-                ret = self.buffer[start:(start + n) % self.size].copy()
-                self.head.value = (start + n) % self.size
+            elif start + n_chunk <= self.size:      # no wrap
+                ret = self.buffer[start:(start + n_chunk) % self.size]
+                self.head.value = (start + n_chunk) % self.size
             else:                             # wrap
+                # first = self.size - start
+                # ret = np.concatenate((
+                #     self.buffer[start:],
+                #     self.buffer[:n_chunk - first]
+                # ))
+                # self.head.value = n_chunk - first
                 first = self.size - start
-                ret = np.concatenate((
-                    self.buffer[start:].copy(),
-                    self.buffer[:n - first].copy()
-                ))
-                self.head.value = n - first
+                ret = np.empty(n_chunk, dtype=self.dtype)
+                ret[:first] = self.buffer[start:]
+                ret[first:] = self.buffer[:n_chunk - first]
+                self.head.value = n_chunk - first
 
         return ret
 

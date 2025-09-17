@@ -5,7 +5,7 @@ from ..print_dec import print_dec, set_debug
 # from ..is_parent_alive import CheckParentAlive
 import os
 import time
-
+import psutil
 
 class DataPreProcess(mp.Process):
     def __init__(
@@ -21,7 +21,7 @@ class DataPreProcess(mp.Process):
         circular_buffer=None
     ):
         super().__init__()
-
+        self.daemon = True
         """
         :param queue_in: this is the queue from the fpgahandleprocess each elements contains ["FIFONAME", data]
         :param dict_of_shared_loc: {'FIFONAME':shared_loc_fifo,...}
@@ -164,7 +164,10 @@ class DataPreProcess(mp.Process):
         print_dec("counter_total_len ", counter_total_len)
         self.stop_event.clear()
         self.stop_event_done.set()
-        print_dec("DataPreProcess self.stop_event.clear() PID: ", os.getpid())
+
+        p = psutil.Process(os.getpid())
+        p.nice(psutil.IDLE_PRIORITY_CLASS)
+        print_dec("DataPreProcess self.stop_event.clear() PID: ", os.getpid(), p.nice())
         return
 
     def stop(self):

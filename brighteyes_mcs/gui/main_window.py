@@ -3279,7 +3279,7 @@ class MainWindow(QMainWindow):
             "%0.3f"
             % (
                     fifo1
-                    * self.spadfcsmanager_inst.shared_dict["last_packet_size"]
+                    #* self.spadfcsmanager_inst.shared_dict["last_packet_size"]
                     * self.ui.spinBox_timeresolution.value()
                     / 2e6
             )

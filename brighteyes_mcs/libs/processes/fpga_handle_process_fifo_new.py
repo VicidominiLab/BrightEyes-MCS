@@ -14,7 +14,7 @@ def emptyQueue(queue):
 class FpgaHandleProcess(mp.Process):
     def __init__(self, configuration, debug=True, use_rust_fifo=True):
         super().__init__()
-
+        self.daemon = True
         print_dec("FpgaHandleProcess INIT")
         # print_dec("=> configuration", configuration)
         # for i in configuration:
