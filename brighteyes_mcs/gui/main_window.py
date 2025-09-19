@@ -27,7 +27,7 @@ from PySide6.QtCore import (
     QDir,
     QFile,
     QCoreApplication,
-    QTime,
+    QElapsedTimer,
     QIODevice,
     QBuffer
 )
@@ -985,6 +985,9 @@ class MainWindow(QMainWindow):
             self.ui.gridLayout_AO.addWidget(
                 self.ui.checkBox_AnalogOut[ch], 1 + ch, 3, 1, 1
             )
+
+            if ch > 2:
+                self.ui.checkBox_AnalogOut[ch].setChecked(True)
 
             self.ui.spinBox_AnalogOut[ch] = QDoubleSpinBox(
                 self.ui.dockWidgetContents_18
@@ -2943,7 +2946,7 @@ class MainWindow(QMainWindow):
                 if not self.runBatchFCS:
                     break
 
-            t = QTime()
+            t = QElapsedTimer()
             t.start()
             while t.elapsed() < delay_software * 1000:
                 QCoreApplication.processEvents()
