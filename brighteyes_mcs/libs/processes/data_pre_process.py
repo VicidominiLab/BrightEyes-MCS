@@ -5,7 +5,7 @@ from ..print_dec import print_dec, set_debug
 # from ..is_parent_alive import CheckParentAlive
 import os
 import time
-
+import psutil
 
 class DataPreProcess(mp.Process):
     def __init__(
@@ -20,7 +20,7 @@ class DataPreProcess(mp.Process):
         use_rust_fifo=True,
     ):
         super().__init__()
-
+        self.daemon = True
         """
         :param queue_in: this is the queue from the fpgahandleprocess each elements contains ["FIFONAME", data]
         :param dict_of_shared_loc: {'FIFONAME':shared_loc_fifo,...}

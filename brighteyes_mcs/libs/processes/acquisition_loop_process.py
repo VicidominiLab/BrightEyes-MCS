@@ -247,11 +247,10 @@ class AcquisitionLoopProcess(mp.Process):
 
         # self.profiler = pprofile.StatisticalProfile()
         # with self.profiler():
-        print_dec(
-            "AcquisitionLoopProcess RUN - PID:",
-            os.getpid(),
-            "    <======================================================",
-        )
+
+        p = psutil.Process(os.getpid())
+        p.nice(psutil.HIGH_PRIORITY_CLASS)
+        print_dec("AcquisitionLoopProcess RUN - PID:", os.getpid(), p.nice())
 
 
         stop_event_proxy.clear()
