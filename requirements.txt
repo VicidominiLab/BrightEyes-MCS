@@ -14,7 +14,7 @@ qtconsole
 #napari
 uvicorn
 importlib-metadata
-nifpga-fast-fifo-recv>=0.101.4
+nifpga-fast-fifo-recv>=0.101.7
 #ultradict
 #pprofile
 atomics

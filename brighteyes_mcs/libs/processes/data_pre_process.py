@@ -82,7 +82,8 @@ class DataPreProcess(mp.Process):
                             counter_total_len[fifo_name] = 0
                             time_start[fifo_name] = time.time()
                             # fifo_lists.append(fifo_name)
-                        pre_buffer_list[fifo_name] += data
+                        #pre_buffer_list[fifo_name] += data #not compatible with nifpga-fast-fifo-recv-0.101.6
+                        pre_buffer_list[fifo_name] += data.tolist()
                         pre_buffer_len[fifo_name] += len_values
                         counter_total_len[fifo_name] += len_values
 
