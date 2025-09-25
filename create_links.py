@@ -36,6 +36,8 @@ shortcut.Targetpath = target
 shortcut.save()
 
 
+working_path = os.getcwd()
+
 
 path = os.getcwd()+r"\Python (.venv BrightEyesMCS).lnk"  #This is where the shortcut will be created
 target = os.getcwd()+r"\enter_in_venv.bat" # directory to which the shortcut is created
@@ -45,6 +47,7 @@ shell = Dispatch('WScript.Shell')
 shortcut = shell.CreateShortCut(path)
 shortcut.IconLocation = icon
 shortcut.Targetpath = target
+shortcut.WorkingDirectory = working_path
 shortcut.save()
 
 
@@ -54,4 +57,5 @@ shell = Dispatch('WScript.Shell')
 shortcut = shell.CreateShortCut(path)
 shortcut.IconLocation = icon
 shortcut.Targetpath = target
+shortcut.WorkingDirectory = working_path
 shortcut.save()
