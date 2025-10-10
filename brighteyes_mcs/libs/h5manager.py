@@ -109,10 +109,11 @@ class H5Manager:
         else:
             group_conf = self.h5file[group_name]
 
+        meta_data_h5_debug=""
         for i in mydict.keys():
             value_i = mydict[i]
             if value_i is not None:
-                print_dec(i, value_i, type(value_i))
+                meta_data_h5_debug+="%s (%s): %s     "  %(i, type(value_i), value_i)
                 if isinstance(value_i, list):
                     fff = np.asarray(mydict[i], dtype=np.float64)
                     print_dec(fff, type(fff))
@@ -123,7 +124,7 @@ class H5Manager:
                     group_conf.attrs[i] = str(mydict[i])
                 else:
                     group_conf.attrs[i] = mydict[i]
-
+        print_dec("Metadata h5 added at %s: " % group_name, meta_data_h5_debug )
     def metadata_add_initial(self, comment):
         print_dec("metadata_add_initial")
         self.h5file.attrs["default"] = "data"

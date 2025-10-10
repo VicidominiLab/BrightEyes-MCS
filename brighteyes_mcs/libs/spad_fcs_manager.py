@@ -36,15 +36,15 @@ class SpadFcsManager():
         dim_z (int): Number of frames.
         dim_rep (int): Number of repetitions.
         previewProcess (AcquisitionLoopProcess): Process for previewing data.
-        expected_raw_data (int): Expected raw data.
-        expected_raw_data_per_frame (int): Expected raw data per frame.
+        expected_words_data_digital (int): Expected raw data.
+        expected_words_data_per_frame_digital (int): Expected raw data per frame.
         registers_configuration (dict): Configuration of the registers.
         shared_memory_buffer (MemorySharedNumpyArray): Shared memory buffer.
         shared_image_xy (MemorySharedNumpyArray): Shared image in xy plane.
         shared_fingerprint (MemorySharedNumpyArray): Shared fingerprint data.
         shared_fingerprint_mask (MemorySharedNumpyArray): Shared fingerprint mask.
         is_connected (bool): Flag indicating if connected to FPGA.
-        fifo_chuck_size (int): Size of the FIFO chuck.
+        fifo_chuck_size_digital (int): Size of the FIFO chuck.
         acquisition_done_event (multiprocessing.Event): Event for acquisition done.
         acquisition_almost_done_event (multiprocessing.Event): Event for acquisition almost done.
         acquisition_run_event (multiprocessing.Event): Event for acquisition run.
@@ -52,8 +52,8 @@ class SpadFcsManager():
         do_not_save_event (multiprocessing.Event): Event for activating preview.
         autocorrelation_maxx (int): Maximum value for autocorrelation.
         trace_bins (int): Number of trace bins.
-        trace_sample_per_bins (int): Number of samples per trace bin.
-        preview_buffer_size_in_words (int): Size of the preview buffer in words.
+        trace_sample_per_bins (int): Number of words per trace bin.
+        preview_buffer_size_in_sample (int): Size of the preview buffer in sample.
         len_fifo_prebuffer (int): Length of the FIFO prebuffer.
         activated_fifos_list (list): List of activated FIFOs.
         DFD_Activate (bool): Flag for DFD activation.
@@ -149,8 +149,10 @@ class SpadFcsManager():
         self.dim_rep = 0
         # self.acquisitionThread = Thread()
         self.previewProcess = None  # mp.Process()
-        self.expected_raw_data = 0
-        self.expected_raw_data_per_frame = 0
+        self.expected_words_data_digital = 0
+        self.expected_words_data_analog = 0
+        self.expected_words_data_per_frame_digital = 0
+        self.expected_words_data_per_frame_analog = 0
         # self.dataCounts = None
         self.registers_configuration = {}
         # self.raw_data_buffer = None
@@ -165,7 +167,8 @@ class SpadFcsManager():
 
         self.is_connected = False
 
-        self.fifo_chuck_size = 10
+        self.fifo_chuck_size_digital = 10
+        self.fifo_chuck_size_analog = 10
 
         self.acquisition_done_event = mp.Event()
         self.acquisition_almost_done_event = mp.Event()
@@ -178,7 +181,7 @@ class SpadFcsManager():
         self.trace_bins = 30000
         self.trace_sample_per_bins = 10000
 
-        self.preview_buffer_size_in_words = 15000
+        self.preview_buffer_size_in_sample = 15000
         self.len_fifo_prebuffer = 0
         self.activated_fifos_list = []
 
@@ -217,6 +220,23 @@ class SpadFcsManager():
         print_dec("Channels", ch)
         self.channels = ch
         self.dim_detector = int(np.sqrt(self.channels))
+
+        mydict = {}
+
+        if ch == 49:
+            mydict.update(
+                {
+                    "49_enable": True
+                }
+            )
+        else:
+            mydict.update(
+                {
+                    "49_enable": False
+                }
+            )
+
+        self.default_configuration.update(mydict)
 
     def activateShowPreview(self, enable):
         """
@@ -339,12 +359,12 @@ class SpadFcsManager():
         print_dec("requested_depth", requested_depth)
         self.requested_depth = requested_depth
 
-    def set_preview_buffer_size_in_words(self, preview_buffer_size_in_words):
+    def set_preview_buffer_size_in_sample(self, preview_buffer_size_in_sample):
         """
-        Set the preview buffer size in words
+        Set the preview buffer size in sample
         """
-        print_dec("preview_buffer_size_in_words", preview_buffer_size_in_words)
-        self.preview_buffer_size_in_words = preview_buffer_size_in_words
+        print_dec("preview_buffer_size_in_sample", preview_buffer_size_in_sample)
+        self.preview_buffer_size_in_sample = preview_buffer_size_in_sample
 
     def set_len_fifo_prebuffer(self, len_fifo_prebuffer):
         """
@@ -421,7 +441,7 @@ class SpadFcsManager():
         print_dec("fpga_process.runed from run")
         self.readRegistersDict()
         print_dec("spadfcsmanager.registers_configuration")
-        print_dec("spadfcsmanager.expected_raw_data", self.expected_raw_data)
+        print_dec("spadfcsmanager.expected_words_data_digital", self.expected_words_data_digital)
 
         self.fpga_handle.set_list_fifos_to_read_continously(self.activated_fifos_list)
 
@@ -541,10 +561,10 @@ class SpadFcsManager():
         self.shared_dict["circ_repetition"] = self.circ_repetition
         self.shared_dict["circ_points"] = self.circ_points
         self.shared_dict["time_resolution"] = self.time_resolution
-        self.shared_dict["expected_raw_data"] = self.expected_raw_data
-        self.shared_dict[
-            "expected_raw_data_per_frame"
-        ] = self.expected_raw_data_per_frame
+        self.shared_dict["expected_words_data_digital"] = self.expected_words_data_digital
+        self.shared_dict["expected_words_data_analog"] = self.expected_words_data_analog
+        self.shared_dict["expected_words_data_per_frame_digital"] = self.expected_words_data_per_frame_digital
+        self.shared_dict["expected_words_data_per_frame_analog"] = self.expected_words_data_per_frame_analog
         self.shared_dict["filenameh5"] = self.filenameh5
         self.shared_dict["DFD_nbins"] = self.DFD_nbins
 
@@ -552,12 +572,14 @@ class SpadFcsManager():
         self.shared_dict.update(
             {
                 "activate_show_preview": self.activate_show_preview,
-                "current_z": 0,
-                "current_rep": 0,
+                "current_z_analog": 0,
+                "current_rep_analog": 0,
+                "current_z_digital": 0,
+                "current_rep_digital": 0,
                 "total_photon": 0,
                 "FIFO_status": 0,
                 "FIFOAnalog_status": 0,
-                "preview_buffer_size_in_words": self.preview_buffer_size_in_words,
+                "preview_buffer_size_in_sample": self.preview_buffer_size_in_sample,
                 "last_packet_size": 0,
                 "DFD_Activate": self.DFD_Activate,
                 "DFD_nBins": self.DFD_nbins,
@@ -658,22 +680,31 @@ class SpadFcsManager():
         self.dim_z = self.registers_configuration["#frames"]
         self.dim_rep = self.registers_configuration["#repetition"] - 1
 
+        self.expected_words_data_per_frame_analog = (
+                self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
+        )
+        print_dec("self.expected_words_data_per_frame_analog calculated ", self.expected_words_data_per_frame_analog)
+
         if self.channels == 25:
-            self.expected_raw_data_per_frame = (
+            self.expected_words_data_per_frame_digital = (
                 2 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
-            print_dec("self.expected_raw_data_per_frame calculated for 25 channels ",self.expected_raw_data_per_frame)
+            print_dec("self.expected_words_data_per_frame_digital calculated for 25 channels ",self.expected_words_data_per_frame_digital)
         elif self.channels == 49:
-            self.expected_raw_data_per_frame = (
+            self.expected_words_data_per_frame_digital = (
                     8 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
-            print_dec("self.expected_raw_data_per_frame calculated for 49 channels", self.expected_raw_data_per_frame)
+            print_dec("self.expected_words_data_per_frame_digital calculated for 49 channels", self.expected_words_data_per_frame_digital)
 
         else:
-            print_dec("self.expected_raw_data_per_frame DISASTER")
+            print_dec("self.expected_words_data_per_frame_digital DISASTER")
 
-        self.expected_raw_data = (
-            self.expected_raw_data_per_frame * self.dim_z * self.dim_rep
+        self.expected_words_data_digital = (
+            self.expected_words_data_per_frame_digital * self.dim_z * self.dim_rep
+        )
+
+        self.expected_words_data_analog = (
+                self.expected_words_data_per_frame_analog * self.dim_z * self.dim_rep
         )
 
         self.update_chuck()
@@ -691,24 +722,35 @@ class SpadFcsManager():
             self.circ_repetition = self.default_configuration["#circular_rep"]
             self.circ_points = self.default_configuration["#circular_points"]
 
+
+        self.fifo_chuck_size_analog = self.timebins_per_pixel * self.circ_repetition * self.circ_points
         if self.channels==25:
-            self.fifo_chuck_size = 2 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
+            self.fifo_chuck_size_digital = 2 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
             print_dec("update_chuck self.channels == 25")
         elif self.channels == 49:
-            self.fifo_chuck_size = 8 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
+            self.fifo_chuck_size_digital = 8 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
             print_dec("update_chuck self.channels == 49")
 
-        # self.fifo_chuck_size = 2 * max(self.timebins_per_pixel, 100)
+        # self.fifo_chuck_size_digital = 2 * max(self.timebins_per_pixel, 100)
 
-        self.fpga_handle.set_fifo_chuck_size(self.fifo_chuck_size)
-        self.fpga_handle.set_expected_raw_data(self.expected_raw_data)
-        # self.fpga_handle.set_expected_raw_data(self.expected_raw_data_per_frame)
+        self.fpga_handle.set_fifo_chuck_size_digital(self.fifo_chuck_size_digital)
+        self.fpga_handle.set_fifo_chuck_size_analog(self.fifo_chuck_size_analog)
+        self.fpga_handle.set_expected_words_data(self.expected_words_data_digital)
+
+        # self.fpga_handle.set_expected_words_data(self.expected_words_data_per_frame_digital)
 
         print_dec(
-            "Updated expected_raw_data and fifo_chuck_size",
-            self.expected_raw_data,
-            self.fifo_chuck_size,
+            "Updated expected_words_data_digital and fifo_chuck_size_digital",
+            self.expected_words_data_digital,
+            self.fifo_chuck_size_digital,
         )
+
+        print_dec(
+            "Updated expected_words_data_analog and fifo_chuck_size_analog",
+            self.expected_words_data_analog,
+            self.fifo_chuck_size_analog,
+        )
+
 
     def getCurrentPreviewElement(self, fifo_name="FIFO"):
         """
@@ -728,20 +770,23 @@ class SpadFcsManager():
         """
         return self.last_preprocessed_len[fifo_name]
 
-    def getExpectedFifoElements(self):
+    def getExpectedFifoElements(self, fifo="FIFO"):
         """
         Get the expected FIFO elements
         """
-        return self.expected_raw_data
+        if fifo=="FIFO":
+            return self.expected_words_data_digital
+        if fifo=="FIFOAnalog":
+            return self.expected_words_data_analog
 
-    def getExpectedFifoElementsPerFrame(self):
+    def getExpectedFifoElementsPerFrame(self, fifo="FIFO"):
         """
         Get the expected FIFO elements per frame
         """
-        return self.expected_raw_data_per_frame
-
-    # def getCurrentData(self):
-    #     return self.acquisitionThread.data
+        if fifo=="FIFO":
+            return self.expected_words_data_per_frame_digital
+        if fifo=="FIFOAnalog":
+            return self.expected_words_data_per_frame_analog
 
     def stopFPGA(self):
         """
@@ -768,17 +813,24 @@ class SpadFcsManager():
         self.previewProcess.join()
         print_dec("self.previewThread.join() done")
 
-    def get_current_z(self):
+    def get_current_z(self, fifo="FIFO"):
         """
         Get the current z
         """
-        return self.shared_dict["current_z"]
+        if fifo=="FIFO":
+            return self.shared_dict["current_z_digital"]
+        if fifo=="FIFOAnalog":
+            return self.shared_dict["current_z_analog"]
 
-    def get_current_rep(self):
+    def get_current_rep(self, fifo="FIFO"):
         """
         Get the current repetition
         """
-        return self.shared_dict["current_rep"]
+        if fifo=="FIFO":
+            return self.shared_dict["current_rep_digital"]
+        if fifo=="FIFOAnalog":
+            return self.shared_dict["current_rep_analog"]
+
 
     def get_total_photon(self):
         """

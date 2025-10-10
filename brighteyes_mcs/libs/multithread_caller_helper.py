@@ -11,7 +11,7 @@ class Worker(QRunnable):
                      kwargs will be passed through to the runner.
     :type callback: function
     :param args: Arguments to pass to the callback function
-    :param kwargs: Keywords to pass to the callback function
+    :param kwargs: KeyTHEFUCKs to pass to the callback function
 
     """
 

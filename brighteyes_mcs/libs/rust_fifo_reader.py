@@ -4,7 +4,7 @@ from .print_dec import print_dec
 
 
 class RustFastFifoReader:
-    def __init__(self, bitfile, list_fifo, chunk=2, requested_depth=10000, nifpga_addr="RIO0", delay_us=1):
+    def __init__(self, bitfile, list_fifo, chunk_digital=2, chunk_analog=4, requested_depth=10000, nifpga_addr="RIO0", delay_us=1):
         self.fast_fifo_recv_inst = {}
         print_dec(list_fifo)
 
@@ -24,6 +24,13 @@ class RustFastFifoReader:
             fifo_buffer_size = (requested_depth // 8) * 8  # (10000//8)*8
             fifo_number = self.bitfile_fifo_number[fifo]
 
+            if fifo=="FIFOAnalog":
+                delay = delay_us * 20
+                chunk = chunk_digital
+            else:
+                delay = delay_us
+                chunk = chunk_analog
+
             configuration = {
                 "bitfile" : bitfile,
                 "signature" : bitfile_signature,
@@ -34,11 +41,11 @@ class RustFastFifoReader:
                 "dma_buffer_size" : dma_buffer_size,
                 "fifo_reading_buffer" : fifo_buffer_size,
                 "min_packet" : chunk,
-                "delay_us" : delay_us,
+                "delay_us" : delay,
                 "debug" : False
                 }
 
-            print_dec("rust NI FIFO reader", configuration)
+            print_dec("rust NI FIFO reader", fifo,  configuration)
 
             self.fast_fifo_recv_inst[fifo] = nifpga_fast_fifo_recv.NifpgaFastFifoRecv(
                 bitfile,
@@ -49,8 +56,8 @@ class RustFastFifoReader:
                 fifo=fifo_number,
                 dma_buffer_size=dma_buffer_size,
                 fifo_reading_buffer=fifo_buffer_size,
-                min_packet=chunk,
-                delay_us=delay_us,
+                min_packet=chunk_digital,
+                delay_us=delay,
                 debug=False
             )
             print("RUST: %s" % fifo, self.fast_fifo_recv_inst[fifo].get_conf())
@@ -60,6 +67,7 @@ class RustFastFifoReader:
 
     def read_data(self, fifo="FIFO"):
         read_data = self.fast_fifo_recv_inst[fifo].get_data_as_numpy()
+        # print_dec("read_data", fifo, read_data.shape)
         # read_data = self.fast_fifo_recv_inst[fifo].get_data() #not compatible with nifpga-fast-fifo-recv-0.101.6
         # print_dec("read_data len:", len(read_data))
         return read_data

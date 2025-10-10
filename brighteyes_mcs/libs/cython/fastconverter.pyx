@@ -3,6 +3,7 @@ import numpy as np
 cimport numpy as np
 from cython.parallel import parallel, prange
 from libcpp cimport bool
+from libc.stdint cimport *
 
 
 cpdef int convertRawDataToCounts(values, out) except? -1:
@@ -384,32 +385,38 @@ cpdef int convertRawDataToCountsDirect(data, start, stop, buffer_out, buffer_sum
 
     return 0
 
-cpdef int convertDataFromAnalogFIFO(data, start, stop, buffer_out, force_positive = 0) except? -1:
-    #.reshape(self.acquisitionThread.databuffer.shape[0] // 2, 2)
 
-    cdef np.uint64_t[:] values_view = data
-    cdef np.int32_t[:,:] out_view = buffer_out
-
+cpdef int convertDataFromAnalogFIFO(data, start, stop, buffer_out, force_positive=0) except? -1:
+    cdef uint64_t[:] values_view = data
+    cdef int32_t[:,:] out_view = buffer_out
     cdef int start_c = start
     cdef int stop_c = stop
-    cdef int length = (stop_c - start_c)
+    cdef int length = (stop_c - start_c)//2
+    cdef int i, j
+    cdef uint64_t val
+    cdef int32_t val_low, val_high
+    cdef uint64_t mask = 0xFFFFFFFF
 
-    cdef int i = 0
-    cdef int j = 0
+    if force_positive:
+        # Slower path with clamping (rarely used)
+        with nogil, cython.boundscheck(False), cython.wraparound(False), parallel():
+            for i in prange(length, schedule='static'):
+                j = i + start_c
+                val = values_view[j]
 
-    cdef np.uint64_t values_view_0 = 0
-    cdef int force_positive_c = force_positive
+                val_low =(<uint32_t>(val & mask))
+                val_high =  (<uint32_t>(val >> 32))
 
-    with nogil, cython.boundscheck(False), cython.wraparound(False), parallel():     # For speeding up
-        for i in prange(length):
-            j = i + start_c
+                out_view[i, 0] = val_low if val_low >= 0 else 0
+                out_view[i, 1] = val_high if val_high >= 0 else 0
+    else:
+        # Fast path without clamping (common case)
+        with nogil, cython.boundscheck(False), cython.wraparound(False), parallel():
+            for i in prange(length, schedule='static'):
+                j = i + start_c
+                val = values_view[j]
 
-            values_view_0 = values_view[j]
-            out_view[i, 0] =   values_view_0
-            out_view[i, 1] =  (values_view_0 >> 32)
-            if force_positive_c != 0 :
-                if out_view[i, 0] < 0:
-                    out_view[i, 0] = 0
-                if out_view[i, 1] < 0:
-                    out_view[i, 1] = 0
+                out_view[i, 0] = (<uint32_t>(val & mask))
+                out_view[i, 1] = (<uint32_t>(val >> 32))
+
     return 0

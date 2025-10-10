@@ -42,8 +42,11 @@ class FpgaHandleProcess(mp.Process):
         self.list_fifos_to_read_continously = self.configuration[
             "list_fifos_to_read_continously"
         ]
-        self.fifo_chuck_size = self.configuration["fifo_chuck_size"]
-        self.expected_raw_data = self.configuration["expected_raw_data"]
+
+        self.fifo_chuck_size_digital = self.configuration["fifo_chuck_size_digital"]
+        self.fifo_chuck_size_analog = self.configuration["fifo_chuck_size_analog"]
+        self.expected_words_data_digital = self.configuration["expected_words_data_digital"]
+        self.expected_words_data_analog = self.configuration["expected_words_data_analog"]
         self.initial_registers = self.configuration["initial_registers"]
         print(self.configuration)
 
@@ -68,7 +71,8 @@ class FpgaHandleProcess(mp.Process):
             self.rust_fifo_reader = RustFastFifoReader(
                 self.bitfile,
                 self.list_fifos,
-                self.fifo_chuck_size.value,
+                self.fifo_chuck_size_digital.value,
+                self.fifo_chuck_size_analog.value,
                 self.requested_depth,
                 self.ni_address
             )
@@ -154,10 +158,10 @@ class FpgaHandleProcess(mp.Process):
                 command = self.queueFifoReadReq.get()
                 print_dec(command)
                 for current_fifo in command:
-                    chuck = self.fifo_chuck_size.value
+                    chunk_digital = self.fifo_chuck_size_digital.value
                     elements_to_be_read = (
-                        self.fifo_element_remaining[current_fifo] // chuck
-                    ) * chuck
+                        self.fifo_element_remaining[current_fifo] // chunk_digital
+                    ) * chunk_digital
                     # if elements_to_be_read > 0:
                     try:
                         read_data = self.nifpga_session.fifos[current_fifo].read(
@@ -187,10 +191,10 @@ class FpgaHandleProcess(mp.Process):
                     #         read_data = self.nifpga_session.fifos[current_fifo].read(0, 0)
                     #         if read_data.elements_remaining > 0:
                     # print("E ", read_data.elements_remaining)
-                    chuck = self.fifo_chuck_size.value
+                    chunk_digital = self.fifo_chuck_size_digital.value
                     elements_to_be_read = (
-                        self.fifo_element_remaining[current_fifo] // chuck
-                    ) * chuck
+                        self.fifo_element_remaining[current_fifo] // chunk_digital
+                    ) * chunk_digital
                     # if elements_to_be_read > 0:
                     try:
                         read_data = self.nifpga_session.fifos[current_fifo].read(
@@ -204,6 +208,7 @@ class FpgaHandleProcess(mp.Process):
                         if length > 0:
                             out_dict[current_fifo] = [read_data.data, length]
                             self.queueFifoRead.put(out_dict)
+
 
                     except nifpga.FifoTimeoutError:
                         pass

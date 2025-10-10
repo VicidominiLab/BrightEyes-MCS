@@ -24,19 +24,19 @@ setup(
             Extension(
                 "brighteyes_mcs.libs.cython.fastconverter",
                 ["brighteyes_mcs/libs/cython/fastconverter.pyx"],
-                extra_compile_args=["-w"],
+                extra_compile_args=["-w",'-O3', '-march=native', '-ffast-math'],
                 define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')],
             ),
             Extension(
                 "brighteyes_mcs.libs.cython.autocorrelator",
                 ["brighteyes_mcs/libs/cython/autocorrelator.pyx"],
-                extra_compile_args=["-w"],
+                extra_compile_args=["-w",'-O3', '-march=native', '-ffast-math'],
                 define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')],
             ),
             Extension(
                 "brighteyes_mcs.libs.cython.timeBinner",
                 ["brighteyes_mcs/libs/cython/timeBinner.pyx"],
-                extra_compile_args=["-w"],
+                extra_compile_args=["-w",'-O3', '-march=native', '-ffast-math'],
                 define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')],
             ),
         ],

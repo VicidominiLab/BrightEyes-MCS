@@ -2395,7 +2395,7 @@ class Ui_MainWindowDesign(object):
         self.spinBox_preview_buffer_size = QSpinBox(self.tab_5)
         self.spinBox_preview_buffer_size.setObjectName(u"spinBox_preview_buffer_size")
         self.spinBox_preview_buffer_size.setMaximum(1000000)
-        self.spinBox_preview_buffer_size.setValue(15000)
+        self.spinBox_preview_buffer_size.setValue(30000)
 
         self.gridLayout_52.addWidget(self.spinBox_preview_buffer_size, 5, 1, 1, 1)
 
@@ -3265,6 +3265,7 @@ class Ui_MainWindowDesign(object):
         self.radioButton_ttm_local.toggled.connect(MainWindowDesign.radio_ttm_local)
         self.toolButton_ttm_filename.clicked.connect(MainWindowDesign.cmd_filename_ttm)
         self.checkBox_uttm_watchdog.clicked.connect(MainWindowDesign.checkBox_uttm_watchdog_clicked)
+        self.comboBox_channels.textActivated.connect(MainWindowDesign.numberChannelsChanged)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(2)

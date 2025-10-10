@@ -4135,7 +4135,7 @@
                 <number>1000000</number>
                </property>
                <property name="value">
-                <number>15000</number>
+                <number>30000</number>
                </property>
               </widget>
              </item>
@@ -5928,8 +5928,8 @@
    <slot>plotSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>513</x>
-     <y>65</y>
+     <x>697</x>
+     <y>1437</y>
     </hint>
     <hint type="destinationlabel">
      <x>468</x>
@@ -5944,8 +5944,8 @@
    <slot>selectedAutoscaleImg()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>527</x>
+     <y>1436</y>
     </hint>
     <hint type="destinationlabel">
      <x>215</x>
@@ -5960,8 +5960,8 @@
    <slot>projChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>697</x>
+     <y>1409</y>
     </hint>
     <hint type="destinationlabel">
      <x>469</x>
@@ -6024,8 +6024,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1407</x>
-     <y>477</y>
+     <x>1360</x>
+     <y>478</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -6040,8 +6040,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1495</x>
-     <y>477</y>
+     <x>1402</x>
+     <y>478</y>
     </hint>
     <hint type="destinationlabel">
      <x>871</x>
@@ -6056,8 +6056,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1584</x>
-     <y>477</y>
+     <x>1443</x>
+     <y>478</y>
     </hint>
     <hint type="destinationlabel">
      <x>874</x>
@@ -6072,8 +6072,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1672</x>
-     <y>477</y>
+     <x>1485</x>
+     <y>478</y>
     </hint>
     <hint type="destinationlabel">
      <x>862</x>
@@ -6872,8 +6872,8 @@
    <slot>pushButton_uttm_start_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1171</x>
-     <y>101</y>
+     <x>506</x>
+     <y>52</y>
     </hint>
     <hint type="destinationlabel">
      <x>1331</x>
@@ -6888,8 +6888,8 @@
    <slot>pushButton_uttm_stop_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1265</x>
-     <y>101</y>
+     <x>535</x>
+     <y>52</y>
     </hint>
     <hint type="destinationlabel">
      <x>1332</x>
@@ -6904,8 +6904,8 @@
    <slot>pushButton_uttm_status_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1171</x>
-     <y>213</y>
+     <x>506</x>
+     <y>72</y>
     </hint>
     <hint type="destinationlabel">
      <x>1329</x>
@@ -6920,8 +6920,8 @@
    <slot>pushButton_uttm_test_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1265</x>
-     <y>183</y>
+     <x>535</x>
+     <y>67</y>
     </hint>
     <hint type="destinationlabel">
      <x>1332</x>
@@ -6936,8 +6936,8 @@
    <slot>checkBox_uttm_watchdog_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1265</x>
-     <y>127</y>
+     <x>535</x>
+     <y>57</y>
     </hint>
     <hint type="destinationlabel">
      <x>1301</x>
@@ -6952,8 +6952,8 @@
    <slot>pushButton_uttm_check_laser_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1171</x>
-     <y>183</y>
+     <x>506</x>
+     <y>67</y>
     </hint>
     <hint type="destinationlabel">
      <x>1301</x>
@@ -6968,8 +6968,8 @@
    <slot>cmd_path_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>555</x>
-     <y>107</y>
+     <x>553</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -6984,8 +6984,8 @@
    <slot>radio_ttm_remote()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>555</x>
-     <y>107</y>
+     <x>553</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>1192</x>
@@ -7000,8 +7000,8 @@
    <slot>radio_ttm_local()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>550</x>
-     <y>89</y>
+     <x>553</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>1195</x>
@@ -7016,8 +7016,8 @@
    <slot>cmd_filename_ttm()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>555</x>
-     <y>107</y>
+     <x>553</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>1193</x>
@@ -7032,12 +7032,28 @@
    <slot>checkBox_uttm_watchdog_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1129</x>
-     <y>145</y>
+     <x>506</x>
+     <y>62</y>
     </hint>
     <hint type="destinationlabel">
      <x>1301</x>
      <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBox_channels</sender>
+   <signal>textActivated(QString)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>numberChannelsChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1663</x>
+     <y>1384</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1301</x>
+     <y>1418</y>
     </hint>
    </hints>
   </connection>

@@ -56,8 +56,10 @@ class FpgaHandle(object):
             "list_registers": self.mp_manager.list(),
             "actual_depth": self.mp_manager.Value("I", 0),
             "fpgarunning": self.mp_manager.Event(),
-            "fifo_chuck_size": self.mp_manager.Value("I", 0),
-            "expected_raw_data": self.mp_manager.Value("I", 0),
+            "fifo_chuck_size_digital": self.mp_manager.Value("I", 0),
+            "fifo_chuck_size_analog": self.mp_manager.Value("I", 0),
+            "expected_words_data_digital": self.mp_manager.Value("I", 0),
+            "expected_words_data_analog": self.mp_manager.Value("I", 0),
             "initial_registers": initial_registers_dict,  # self.mp_manager.dict()
         }
 
@@ -199,11 +201,17 @@ class FpgaHandle(object):
     # def read_fifo(self, fifo, timeout):
     #     return self.configuration["queueFifoRead"].get(timeout)
 
-    def set_fifo_chuck_size(self, fifo_chuck_size):
-        self.configuration["fifo_chuck_size"].value = fifo_chuck_size
+    def set_fifo_chuck_size_digital(self, fifo_chuck_size_digital):
+        self.configuration["fifo_chuck_size_digital"].value = fifo_chuck_size_digital
 
-    def set_expected_raw_data(self, expected_raw_data):
-        self.configuration["expected_raw_data"].value = expected_raw_data
+    def set_fifo_chuck_size_analog(self, fifo_chuck_size_analog):
+        self.configuration["fifo_chuck_size_analog"].value = fifo_chuck_size_analog
+
+    def set_expected_words_data(self, expected_words_data_digital):
+        self.configuration["expected_words_data_digital"].value = expected_words_data_digital
+
+    def set_expected_words_data_analog(self, expected_words_data_analog):
+        self.configuration["expected_words_data_analog"].value = expected_words_data_analog
 
     def set_list_fifos_to_read_continously(
         self, list_fifos_to_read_continously=["FIFO"]

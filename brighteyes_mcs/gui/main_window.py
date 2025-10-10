@@ -361,9 +361,6 @@ class MainWindow(QMainWindow):
         self.current_number_px_y = 10
         self.current_number_px_z = 0
 
-        self.get_fifo_elements = 0
-        self.get_expected_fifo_elements = 0
-        self.get_expected_fifo_elements_per_frame = 0
 
         self.configurationGUI_dict_beforeStart = {}
 
@@ -1179,6 +1176,7 @@ class MainWindow(QMainWindow):
         self.CHANNELS_x = int(np.sqrt(ch))
         self.CHANNELS_y = self.CHANNELS_x
         self.fingerprint_mask = np.ones((self.CHANNELS_x, self.CHANNELS_y), dtype=np.uint8)
+        self.spadfcsmanager_inst.set_channels(int(self.ui.comboBox_channels.currentText()))
 
     @Slot()
     def cmd_filename(self):
@@ -1951,7 +1949,7 @@ class MainWindow(QMainWindow):
                 )
 
             # self.spadfcsmanager_inst.set(self.ui.spinBox_fifo_buffer_size.value())
-            self.spadfcsmanager_inst.set_preview_buffer_size_in_words(
+            self.spadfcsmanager_inst.set_preview_buffer_size_in_sample(
                 self.ui.spinBox_preview_buffer_size.value()
             )
             self.ui.label_actual_preview_buffer_size.setText(
@@ -3062,67 +3060,72 @@ class MainWindow(QMainWindow):
         frames = self.ui.spinBox_nframe.value()
         repetition = self.ui.spinBox_nrepetition.value()
 
+        fifo_activated = []
         if self.ui.radioButton_analog.isChecked():
             fifo_name = "FIFOAnalog"
+            fifo_activated.append(fifo_name)
         if self.ui.radioButton_digital.isChecked():
             fifo_name = "FIFO"
+            fifo_activated.append(fifo_name)
 
-        self.get_fifo_elements = self.spadfcsmanager_inst.getCurrentAcquistionElement(
-            fifo_name
-        )
-        self.get_expected_fifo_elements = (
-            self.spadfcsmanager_inst.getExpectedFifoElements()
-        )
-        self.get_expected_fifo_elements_per_frame = (
-            self.spadfcsmanager_inst.getExpectedFifoElementsPerFrame()
-        )
-        self.get_number_of_threads_h5 = (
-            self.spadfcsmanager_inst.get_number_of_threads_h5()
-        )
+        #fifo_name is the "priority" fifo when two are activated
+        
+        fifo_elements = { fifo : self.spadfcsmanager_inst.getCurrentAcquistionElement(fifo) for fifo in fifo_activated}
+        expected_fifo_elements = { fifo : self.spadfcsmanager_inst.getExpectedFifoElements(fifo) for fifo in fifo_activated}
+        expected_fifo_elements_per_frame = { fifo : self.spadfcsmanager_inst.getExpectedFifoElementsPerFrame(fifo) for fifo in fifo_activated}
+        current_preview_element = { fifo : self.spadfcsmanager_inst.getCurrentPreviewElement(fifo) for fifo in fifo_activated}
+        number_of_threads_h5 = self.spadfcsmanager_inst.get_number_of_threads_h5()
 
-        self.ui.label_tot_num_dat_point_val.setText(
-            "%d %% (%d / %d)"
-            % (
-                100 * self.get_fifo_elements / self.get_expected_fifo_elements,
-                self.get_fifo_elements,
-                self.get_expected_fifo_elements,
+        data_point_str = ""
+
+        for fifo in fifo_activated:
+            data_point_str = data_point_str + fifo + " %d %% (%d / %d)\n" % (
+                100 * fifo_elements[fifo] / expected_fifo_elements[fifo],
+                fifo_elements[fifo],
+                expected_fifo_elements[fifo],
             )
-        )
-        # self.ui.label_exp_num_data_val.setText("%d" % self.get_expected_fifo_elements)
+
+        self.ui.label_tot_num_dat_point_val.setText(data_point_str)
 
         self.ui.progressBar_repetition.setMaximum(100.0)
 
-        get_current_preview_element = self.spadfcsmanager_inst.getCurrentPreviewElement(
-            fifo_name
-        )
-        get_expected_fifo_elements = self.spadfcsmanager_inst.getExpectedFifoElements()
+        current_time = {}
+        current_frame = {}
+        current_rep = {}
 
-        current_time = (
-                get_current_preview_element * (time_res * time_bin * 1e-6) / self.CHANNELS
-        )
-        current_frame = self.spadfcsmanager_inst.get_current_z()
-        current_rep = self.spadfcsmanager_inst.get_current_rep()
+        label_time = ""
+        label_frame = ""
+        label_repetition = ""
 
-        self.ui.label_current_time_val.setText("%0.2f" % current_time)
-        self.ui.label_current_frame_val.setText("%d" % current_frame)
-        self.ui.label_current_repetition_val.setText("%d" % current_rep)
+        for fifo in fifo_activated:
+            current_time[fifo] = current_preview_element[fifo] * (time_res * time_bin * 1e-6) / self.CHANNELS
+            current_frame[fifo] = self.spadfcsmanager_inst.get_current_z(fifo)
+            current_rep[fifo] = self.spadfcsmanager_inst.get_current_rep(fifo)
+            label_time += "%0.2f " % current_time[fifo]
+            label_frame += "%d " % current_frame[fifo]
+            label_repetition += "%d " % current_rep[fifo]
 
 
-        if self.get_expected_fifo_elements != 0:
+        self.ui.label_current_time_val.setText(label_time)
+        self.ui.label_current_frame_val.setText(label_frame)
+        self.ui.label_current_repetition_val.setText(label_repetition)
+
+
+        if expected_fifo_elements[fifo_name] != 0:
             self.ui.progressBar_repetition.setValue(
-                100.0 * self.get_fifo_elements / self.get_expected_fifo_elements
+                100.0 * fifo_elements[fifo_name] / expected_fifo_elements[fifo_name]
             )
         else:
             self.ui.progressBar_repetition.setValue(0)
 
-        if self.get_fifo_elements != 0:
+        if fifo_elements[fifo_name] != 0:
             self.ui.progressBar_frame.setMaximum(100.0)
         else:
             self.ui.progressBar_frame.setMaximum(0)
         self.ui.progressBar_frame.setValue(
             100.0
-            * (self.get_fifo_elements % self.get_expected_fifo_elements_per_frame)
-            / self.get_expected_fifo_elements_per_frame
+            * (fifo_elements[fifo_name] % expected_fifo_elements_per_frame[fifo_name])
+            / expected_fifo_elements_per_frame[fifo_name]
         )
 
         corralation = self.spadfcsmanager_inst.getAutocorrelation()
@@ -3162,10 +3165,7 @@ class MainWindow(QMainWindow):
             trace_x = trace_x_n
             trace_y = trace_y_n
 
-        if (
-                "Analog" in self.ui.comboBox_plot_channel.currentText()
-                and not self.DFD_Activate
-        ):
+        if ( "Analog" in self.ui.comboBox_plot_channel.currentText() and not self.DFD_Activate):
             self.trace_widget.setLabel("left", "Mean", "V")
             trace_bin = int(
                 self.ui.doubleSpinBox_binsize.value()
@@ -3200,16 +3200,14 @@ class MainWindow(QMainWindow):
         # elif num == 1:  # 10000 bins
         # elif num == 2:  # fingerprint
         if self.fingerprint_visualization == 0:
-            if (
-                    self.get_fifo_elements % self.get_expected_fifo_elements_per_frame
-            ) != 0:
+            if ( fifo_elements[fifo_name] % expected_fifo_elements_per_frame[fifo_name] ) != 0:
                 data_finger_print = (
                         self.spadfcsmanager_inst.getFingerprintCumulative()
                         / (
                                 (
                                         (
-                                                self.get_fifo_elements
-                                                % self.get_expected_fifo_elements_per_frame
+                                                fifo_elements[fifo_name]
+                                                % expected_fifo_elements_per_frame[fifo_name]
                                         )
                                         / 2
                                 )
@@ -3226,7 +3224,7 @@ class MainWindow(QMainWindow):
         elif self.fingerprint_visualization == 2:
             data_finger_print = (
                     self.spadfcsmanager_inst.getFingerprintCumulativeLastFrame()
-                    / (self.get_expected_fifo_elements_per_frame / 2 * time_res * 1e-6)
+                    / (expected_fifo_elements_per_frame[fifo_name] / 2 * time_res * 1e-6)
             )
 
         saturation_data = self.spadfcsmanager_inst.getFingerprintSaturation()
@@ -3242,7 +3240,7 @@ class MainWindow(QMainWindow):
         if self.spadfcsmanager_inst.acquisition_is_almost_done():
             print_dec(
                 "self.spadfcsmanager_inst.acquisition_is_almost_done()",
-                self.get_number_of_threads_h5,
+                number_of_threads_h5,
             )
             self.ui.pushButton_stop.setEnabled(False)
             self.ui.pushButton_acquisitionStart.setEnabled(False)
@@ -3254,14 +3252,16 @@ class MainWindow(QMainWindow):
             )
             self.my_tick_counter += self.timerPreviewImg.interval()
 
-            if (self.my_tick_counter > 5000) or (
-                    get_current_preview_element >= get_expected_fifo_elements
-            ):
-                print_dec(
-                    "get_fifo_elements >= get_expected_fifo_elements and 1s passed"
-                )
-                self.spadfcsmanager_inst.acquisition_done_reset()
-                self.finalizeAcquisition()
+
+            for fifo in fifo_activated:
+                if (self.my_tick_counter > 5000) or (
+                        current_preview_element[fifo] >= expected_fifo_elements[fifo]
+                ):
+                    print_dec(
+                        "get_fifo_elements >= get_expected_fifo_elements and 1s passed"
+                    )
+                    self.spadfcsmanager_inst.acquisition_done_reset()
+                    self.finalizeAcquisition()
 
         fifo1, fifo2 = self.spadfcsmanager_inst.get_FIFO_status()
 
@@ -3284,9 +3284,9 @@ class MainWindow(QMainWindow):
             )
         )
 
-        if self.get_number_of_threads_h5 > 0.9 * self.ui.progressBar_saving.maximum():
-            self.ui.progressBar_saving.setMaximum(self.get_number_of_threads_h5 * 1.2)
-        self.ui.progressBar_saving.setValue(self.get_number_of_threads_h5)
+        if number_of_threads_h5 > 0.9 * self.ui.progressBar_saving.maximum():
+            self.ui.progressBar_saving.setMaximum(number_of_threads_h5 * 1.2)
+        self.ui.progressBar_saving.setValue(number_of_threads_h5)
 
         # print("Digital: %d\nAnalog: %d" % (fifo1, fifo2))
         # self.ui.label_FIFOqueue.setText("Digital: %d\nAnalog: %d" % (, ))
@@ -5438,7 +5438,15 @@ Have fun!
                 pos=pos,
                 scale=scale,
             )
-
+        elif ch.startswith("Analog"):
+            self.im_widget.setImage(
+                preview_img,
+                autoLevels=autoLevels,
+                levelMode="mono",
+                autoRange=autoRange,
+                pos=pos,
+                scale=scale,
+            )
         else:
             self.im_widget.setImage(
                 preview_img,
