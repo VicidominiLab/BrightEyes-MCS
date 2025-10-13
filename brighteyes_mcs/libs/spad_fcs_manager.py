@@ -520,8 +520,11 @@ class SpadFcsManager():
         self.number_of_threads_h5 = mp.Value("i", 0)
 
         self.trace_pos = mp.Value("i", 0)
+
         # self.acquisitionThread = AcquireFIFOinBackground(self.queue,
         #                                                  self.fifo)
+
+        self.imposed_data_shift = mp.Value("i", 0)
 
         self.dataProcess = DataPreProcess(
             self.fpga_handle.configuration["queueFifoRead"],
@@ -537,7 +540,7 @@ class SpadFcsManager():
 
         self.dataProcess.daemon = True
 
-        shared_objects = {
+        self.shared_objects = {
             "activated_fifos_list": self.activated_fifos_list,
             "loc_acquired": self.loc_acquired,
             "loc_previewed": self.loc_previewed,
@@ -554,6 +557,7 @@ class SpadFcsManager():
             "trace_bins": self.trace_bins,
             "trace_sample_per_bins": self.trace_sample_per_bins,
             "trace_pos": self.trace_pos,
+            "imposed_data_shift": self.imposed_data_shift,
         }
 
         self.shared_dict["shape"] = [self.dim_x, self.dim_y, self.dim_z]
@@ -595,7 +599,7 @@ class SpadFcsManager():
         print_dec("self.previewProcess()")
         self.previewProcess = AcquisitionLoopProcess(
             self.channels,
-            shared_objects,
+            self.shared_objects,
             do_not_save,
             self.data_queue,
             self.acquisition_done_event,

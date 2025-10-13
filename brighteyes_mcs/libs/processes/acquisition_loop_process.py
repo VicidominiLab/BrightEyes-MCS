@@ -42,7 +42,7 @@ import numpy as np
 
 
 def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_xy=False, snake_walk_z=False,
-                        clk_multiplier=1):
+                        clk_multiplier=1, delay=0):
     """
     Decode pointer indices into list_b_digital, list_x_digital, list_y_digital, list_z_digital, list_rep_digital.
 
@@ -68,8 +68,9 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
     """
 
     list_pointer = np.arange(pointer_start, pointer_start + gap)
-    list_pixel = list_pointer // timebinsPerPixel
-    list_b_digital = list_pointer % timebinsPerPixel
+    list_pointer_shifted = list_pointer + delay
+    list_pixel = list_pointer_shifted // timebinsPerPixel
+    list_b_digital = list_pointer_shifted % timebinsPerPixel
     if clk_multiplier != 1:
         list_b_digital = list_b_digital % (timebinsPerPixel // clk_multiplier)
     list_x_digital = list_pixel % shape[0]
@@ -146,6 +147,8 @@ class AcquisitionLoopProcess(mp.Process):
         self.trace_bins = shared_objects["trace_bins"]
         self.trace_sample_per_bins = shared_objects["trace_sample_per_bins"]
         self.trace_pos = shared_objects["trace_pos"]
+        self.imposed_data_shift = shared_objects["imposed_data_shift"]
+
 
         self.timebinsPerPixel = shared_dict["timebins_per_pixel"] * \
                                 shared_dict["circ_repetition"] * \
@@ -167,6 +170,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.dfd_shift = shared_dict["dfd_shift"]
 
         self.filenameh5 = shared_dict["filenameh5"]
+
 
         self.acquisition_done = acquisition_done
         self.acquisition_done.clear()
@@ -622,7 +626,8 @@ class AcquisitionLoopProcess(mp.Process):
                             self.shape,
                             snake_walk_xy=self.snake_walk_xy,
                             snake_walk_z=self.snake_walk_z,
-                            clk_multiplier=clk_multiplier
+                            clk_multiplier=clk_multiplier,
+                            delay=self.imposed_data_shift.value
                         )
 
                         self.shared_dict_proxy["last_packet_size"] = self.gap_digital_in_sample
@@ -1044,7 +1049,8 @@ class AcquisitionLoopProcess(mp.Process):
                             self.timebinsPerPixel,
                             self.shape,
                             snake_walk_xy=self.snake_walk_xy,
-                            snake_walk_z=self.snake_walk_z
+                            snake_walk_z=self.snake_walk_z,
+                            delay=self.imposed_data_shift.value
                         )
 
                         self.shared_dict_proxy["last_packet_size"] = self.gap_analog_in_sample
