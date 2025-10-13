@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QProgressBar, QPushButton, QRadioButton, QScrollArea,
     QSizePolicy, QSpacerItem, QSpinBox, QStatusBar,
     QTabWidget, QTableWidget, QTableWidgetItem, QTextEdit,
-    QToolButton, QTreeView, QVBoxLayout, QWidget)
+    QToolButton, QTreeView, QWidget)
 
 from .scispinbox import sciSpinBox
 
@@ -30,7 +30,7 @@ class Ui_MainWindowDesign(object):
     def setupUi(self, MainWindowDesign):
         if not MainWindowDesign.objectName():
             MainWindowDesign.setObjectName(u"MainWindowDesign")
-        MainWindowDesign.resize(1692, 1484)
+        MainWindowDesign.resize(1692, 1596)
         self.centralwidget = QWidget(MainWindowDesign)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_2 = QGridLayout(self.centralwidget)
@@ -574,97 +574,146 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_8.setObjectName(u"dockWidgetContents_8")
         self.gridLayout_15 = QGridLayout(self.dockWidgetContents_8)
         self.gridLayout_15.setObjectName(u"gridLayout_15")
-        self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_15.addItem(self.verticalSpacer_17, 1, 1, 1, 1)
-
-        self.gridLayout_55 = QGridLayout()
-        self.gridLayout_55.setObjectName(u"gridLayout_55")
-        self.pushButton_externalProgram = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_externalProgram.setObjectName(u"pushButton_externalProgram")
-        self.pushButton_externalProgram.setEnabled(False)
-
-        self.gridLayout_55.addWidget(self.pushButton_externalProgram, 2, 1, 1, 1)
-
-        self.pushButton_acquisitionStart = QPushButton(self.dockWidgetContents_8)
+        self.groupBox_11 = QGroupBox(self.dockWidgetContents_8)
+        self.groupBox_11.setObjectName(u"groupBox_11")
+        sizePolicy1.setHeightForWidth(self.groupBox_11.sizePolicy().hasHeightForWidth())
+        self.groupBox_11.setSizePolicy(sizePolicy1)
+        self.gridLayout_81 = QGridLayout(self.groupBox_11)
+        self.gridLayout_81.setObjectName(u"gridLayout_81")
+        self.pushButton_acquisitionStart = QPushButton(self.groupBox_11)
         self.pushButton_acquisitionStart.setObjectName(u"pushButton_acquisitionStart")
+        font1 = QFont()
+        font1.setPointSize(20)
+        self.pushButton_acquisitionStart.setFont(font1)
+        self.pushButton_acquisitionStart.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaRecord))
+        self.pushButton_acquisitionStart.setIcon(icon)
+        self.pushButton_acquisitionStart.setIconSize(QSize(32, 32))
+        self.pushButton_acquisitionStart.setFlat(True)
 
-        self.gridLayout_55.addWidget(self.pushButton_acquisitionStart, 0, 1, 1, 1)
+        self.gridLayout_81.addWidget(self.pushButton_acquisitionStart, 0, 2, 1, 1)
 
-        self.pushButton_stop = QPushButton(self.dockWidgetContents_8)
+        self.pushButton_previewStart = QPushButton(self.groupBox_11)
+        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
+        self.pushButton_previewStart.setFont(font1)
+        self.pushButton_previewStart.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
+        self.pushButton_previewStart.setIcon(icon1)
+        self.pushButton_previewStart.setIconSize(QSize(32, 32))
+        self.pushButton_previewStart.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_previewStart, 0, 1, 1, 1)
+
+        self.pushButton_stop = QPushButton(self.groupBox_11)
         self.pushButton_stop.setObjectName(u"pushButton_stop")
         self.pushButton_stop.setEnabled(False)
-        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
         self.pushButton_stop.setSizePolicy(sizePolicy2)
+        self.pushButton_stop.setFont(font1)
+        self.pushButton_stop.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStop))
+        self.pushButton_stop.setIcon(icon2)
+        self.pushButton_stop.setIconSize(QSize(32, 32))
+        self.pushButton_stop.setFlat(True)
 
-        self.gridLayout_55.addWidget(self.pushButton_stop, 1, 0, 2, 1)
+        self.gridLayout_81.addWidget(self.pushButton_stop, 0, 4, 1, 1)
 
-        self.pushButton_previewStart = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
 
-        self.gridLayout_55.addWidget(self.pushButton_previewStart, 0, 0, 1, 1)
+        self.gridLayout_15.addWidget(self.groupBox_11, 1, 0, 1, 1)
 
-        self.gridLayout_78 = QGridLayout()
-        self.gridLayout_78.setObjectName(u"gridLayout_78")
         self.pushButton_14 = QPushButton(self.dockWidgetContents_8)
         self.pushButton_14.setObjectName(u"pushButton_14")
 
-        self.gridLayout_78.addWidget(self.pushButton_14, 0, 0, 1, 1)
+        self.gridLayout_15.addWidget(self.pushButton_14, 3, 0, 1, 1)
 
-
-        self.gridLayout_55.addLayout(self.gridLayout_78, 1, 1, 1, 1)
-
-        self.verticalLayout_2 = QVBoxLayout()
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.gridLayout_86 = QGridLayout()
-        self.gridLayout_86.setObjectName(u"gridLayout_86")
-        self.checkBox_uttmActivate = QCheckBox(self.dockWidgetContents_8)
-        self.checkBox_uttmActivate.setObjectName(u"checkBox_uttmActivate")
-        sizePolicy.setHeightForWidth(self.checkBox_uttmActivate.sizePolicy().hasHeightForWidth())
-        self.checkBox_uttmActivate.setSizePolicy(sizePolicy)
-
-        self.gridLayout_86.addWidget(self.checkBox_uttmActivate, 1, 1, 1, 1)
-
-        self.radioButton_digital = QRadioButton(self.dockWidgetContents_8)
-        self.radioButton_digital.setObjectName(u"radioButton_digital")
-        sizePolicy.setHeightForWidth(self.radioButton_digital.sizePolicy().hasHeightForWidth())
-        self.radioButton_digital.setSizePolicy(sizePolicy)
-        self.radioButton_digital.setChecked(True)
-
-        self.gridLayout_86.addWidget(self.radioButton_digital, 0, 1, 1, 1)
-
-        self.radioButton_analog = QRadioButton(self.dockWidgetContents_8)
-        self.radioButton_analog.setObjectName(u"radioButton_analog")
-        sizePolicy.setHeightForWidth(self.radioButton_analog.sizePolicy().hasHeightForWidth())
-        self.radioButton_analog.setSizePolicy(sizePolicy)
-
-        self.gridLayout_86.addWidget(self.radioButton_analog, 0, 0, 1, 1)
-
-        self.checkBox_ttmActivate = QCheckBox(self.dockWidgetContents_8)
-        self.checkBox_ttmActivate.setObjectName(u"checkBox_ttmActivate")
-        sizePolicy.setHeightForWidth(self.checkBox_ttmActivate.sizePolicy().hasHeightForWidth())
-        self.checkBox_ttmActivate.setSizePolicy(sizePolicy)
-
-        self.gridLayout_86.addWidget(self.checkBox_ttmActivate, 1, 0, 1, 1)
-
-        self.checkBox_DFD = QCheckBox(self.dockWidgetContents_8)
+        self.groupBox_9 = QGroupBox(self.dockWidgetContents_8)
+        self.groupBox_9.setObjectName(u"groupBox_9")
+        self.gridLayout_30 = QGridLayout(self.groupBox_9)
+        self.gridLayout_30.setObjectName(u"gridLayout_30")
+        self.groupBox_12 = QGroupBox(self.groupBox_9)
+        self.groupBox_12.setObjectName(u"groupBox_12")
+        self.gridLayout_85 = QGridLayout(self.groupBox_12)
+        self.gridLayout_85.setObjectName(u"gridLayout_85")
+        self.checkBox_DFD = QCheckBox(self.groupBox_12)
         self.checkBox_DFD.setObjectName(u"checkBox_DFD")
         sizePolicy.setHeightForWidth(self.checkBox_DFD.sizePolicy().hasHeightForWidth())
         self.checkBox_DFD.setSizePolicy(sizePolicy)
 
-        self.gridLayout_86.addWidget(self.checkBox_DFD, 2, 0, 1, 2)
+        self.gridLayout_85.addWidget(self.checkBox_DFD, 0, 0, 1, 1)
 
 
-        self.verticalLayout_2.addLayout(self.gridLayout_86)
+        self.gridLayout_30.addWidget(self.groupBox_12, 3, 1, 1, 1)
+
+        self.groupBox_10 = QGroupBox(self.groupBox_9)
+        self.groupBox_10.setObjectName(u"groupBox_10")
+        self.gridLayout_80 = QGridLayout(self.groupBox_10)
+        self.gridLayout_80.setObjectName(u"gridLayout_80")
+        self.checkBox_ttmActivate = QCheckBox(self.groupBox_10)
+        self.checkBox_ttmActivate.setObjectName(u"checkBox_ttmActivate")
+        sizePolicy.setHeightForWidth(self.checkBox_ttmActivate.sizePolicy().hasHeightForWidth())
+        self.checkBox_ttmActivate.setSizePolicy(sizePolicy)
+
+        self.gridLayout_80.addWidget(self.checkBox_ttmActivate, 0, 0, 1, 1)
+
+        self.checkBox_uttmActivate = QCheckBox(self.groupBox_10)
+        self.checkBox_uttmActivate.setObjectName(u"checkBox_uttmActivate")
+        sizePolicy.setHeightForWidth(self.checkBox_uttmActivate.sizePolicy().hasHeightForWidth())
+        self.checkBox_uttmActivate.setSizePolicy(sizePolicy)
+
+        self.gridLayout_80.addWidget(self.checkBox_uttmActivate, 0, 1, 1, 1)
 
 
-        self.gridLayout_55.addLayout(self.verticalLayout_2, 0, 2, 4, 1)
+        self.gridLayout_30.addWidget(self.groupBox_10, 3, 0, 1, 1)
+
+        self.checkBox_fifo_analog = QCheckBox(self.groupBox_9)
+        self.checkBox_fifo_analog.setObjectName(u"checkBox_fifo_analog")
+
+        self.gridLayout_30.addWidget(self.checkBox_fifo_analog, 2, 0, 1, 1)
+
+        self.groupBox_13 = QGroupBox(self.groupBox_9)
+        self.groupBox_13.setObjectName(u"groupBox_13")
+        self.gridLayout_86 = QGridLayout(self.groupBox_13)
+        self.gridLayout_86.setObjectName(u"gridLayout_86")
+        self.comboBox_channels = QComboBox(self.groupBox_13)
+        self.comboBox_channels.addItem("")
+        self.comboBox_channels.addItem("")
+        self.comboBox_channels.setObjectName(u"comboBox_channels")
+
+        self.gridLayout_86.addWidget(self.comboBox_channels, 0, 0, 1, 1)
 
 
-        self.gridLayout_15.addLayout(self.gridLayout_55, 0, 1, 1, 1)
+        self.gridLayout_30.addWidget(self.groupBox_13, 1, 1, 2, 1)
+
+        self.checkBox_fifo_digital = QCheckBox(self.groupBox_9)
+        self.checkBox_fifo_digital.setObjectName(u"checkBox_fifo_digital")
+        self.checkBox_fifo_digital.setChecked(True)
+
+        self.gridLayout_30.addWidget(self.checkBox_fifo_digital, 1, 0, 1, 1)
+
+
+        self.gridLayout_15.addWidget(self.groupBox_9, 1, 1, 5, 1)
+
+        self.pushButton_externalProgram = QPushButton(self.dockWidgetContents_8)
+        self.pushButton_externalProgram.setObjectName(u"pushButton_externalProgram")
+        self.pushButton_externalProgram.setEnabled(False)
+
+        self.gridLayout_15.addWidget(self.pushButton_externalProgram, 4, 0, 1, 1)
+
+        self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_15.addItem(self.verticalSpacer_17, 2, 0, 1, 1)
 
         self.dockWidget_preview.setWidget(self.dockWidgetContents_8)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_preview)
@@ -754,7 +803,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_8.addWidget(self.label_frame_time_2, 4, 0, 1, 1)
 
 
-        self.gridLayout_9.addLayout(self.gridLayout_8, 0, 0, 1, 1)
+        self.gridLayout_9.addLayout(self.gridLayout_8, 1, 0, 1, 1)
 
         self.dockWidget_temporal.setWidget(self.dockWidgetContents_3)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_temporal)
@@ -895,11 +944,8 @@ class Ui_MainWindowDesign(object):
         self.comboBox_fingerprint.addItem("")
         self.comboBox_fingerprint.addItem("")
         self.comboBox_fingerprint.setObjectName(u"comboBox_fingerprint")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.comboBox_fingerprint.sizePolicy().hasHeightForWidth())
-        self.comboBox_fingerprint.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboBox_fingerprint.sizePolicy().hasHeightForWidth())
+        self.comboBox_fingerprint.setSizePolicy(sizePolicy2)
         self.comboBox_fingerprint.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
 
         self.gridLayout_47.addWidget(self.comboBox_fingerprint, 0, 5, 1, 1)
@@ -957,11 +1003,11 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_13.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         self.progressBar_repetition = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_repetition.setObjectName(u"progressBar_repetition")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.progressBar_repetition.sizePolicy().hasHeightForWidth())
-        self.progressBar_repetition.setSizePolicy(sizePolicy4)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.progressBar_repetition.sizePolicy().hasHeightForWidth())
+        self.progressBar_repetition.setSizePolicy(sizePolicy3)
         self.progressBar_repetition.setStyleSheet(u"height: 8px;")
         self.progressBar_repetition.setValue(24)
 
@@ -974,8 +1020,11 @@ class Ui_MainWindowDesign(object):
 
         self.label_current_repetition_val = QLabel(self.dockWidgetContents_6)
         self.label_current_repetition_val.setObjectName(u"label_current_repetition_val")
-        sizePolicy2.setHeightForWidth(self.label_current_repetition_val.sizePolicy().hasHeightForWidth())
-        self.label_current_repetition_val.setSizePolicy(sizePolicy2)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.label_current_repetition_val.sizePolicy().hasHeightForWidth())
+        self.label_current_repetition_val.setSizePolicy(sizePolicy4)
         self.label_current_repetition_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_13.addWidget(self.label_current_repetition_val, 9, 1, 1, 1)
@@ -999,8 +1048,8 @@ class Ui_MainWindowDesign(object):
 
         self.progressBar_saving = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_saving.setObjectName(u"progressBar_saving")
-        sizePolicy4.setHeightForWidth(self.progressBar_saving.sizePolicy().hasHeightForWidth())
-        self.progressBar_saving.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.progressBar_saving.sizePolicy().hasHeightForWidth())
+        self.progressBar_saving.setSizePolicy(sizePolicy3)
         self.progressBar_saving.setStyleSheet(u"height: 8px;")
         self.progressBar_saving.setValue(0)
 
@@ -1008,8 +1057,8 @@ class Ui_MainWindowDesign(object):
 
         self.progressBar_fifo_digital = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_fifo_digital.setObjectName(u"progressBar_fifo_digital")
-        sizePolicy4.setHeightForWidth(self.progressBar_fifo_digital.sizePolicy().hasHeightForWidth())
-        self.progressBar_fifo_digital.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.progressBar_fifo_digital.sizePolicy().hasHeightForWidth())
+        self.progressBar_fifo_digital.setSizePolicy(sizePolicy3)
         self.progressBar_fifo_digital.setStyleSheet(u"height: 8px;")
         self.progressBar_fifo_digital.setValue(24)
         self.progressBar_fifo_digital.setTextVisible(True)
@@ -1018,16 +1067,16 @@ class Ui_MainWindowDesign(object):
 
         self.label_current_frame_val = QLabel(self.dockWidgetContents_6)
         self.label_current_frame_val.setObjectName(u"label_current_frame_val")
-        sizePolicy2.setHeightForWidth(self.label_current_frame_val.sizePolicy().hasHeightForWidth())
-        self.label_current_frame_val.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.label_current_frame_val.sizePolicy().hasHeightForWidth())
+        self.label_current_frame_val.setSizePolicy(sizePolicy4)
         self.label_current_frame_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_13.addWidget(self.label_current_frame_val, 8, 1, 1, 1)
 
         self.progressBar_frame = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_frame.setObjectName(u"progressBar_frame")
-        sizePolicy4.setHeightForWidth(self.progressBar_frame.sizePolicy().hasHeightForWidth())
-        self.progressBar_frame.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.progressBar_frame.sizePolicy().hasHeightForWidth())
+        self.progressBar_frame.setSizePolicy(sizePolicy3)
         self.progressBar_frame.setStyleSheet(u"height: 8px;")
         self.progressBar_frame.setValue(24)
 
@@ -1052,8 +1101,8 @@ class Ui_MainWindowDesign(object):
 
         self.progressBar_fifo_analog = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_fifo_analog.setObjectName(u"progressBar_fifo_analog")
-        sizePolicy4.setHeightForWidth(self.progressBar_fifo_analog.sizePolicy().hasHeightForWidth())
-        self.progressBar_fifo_analog.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.progressBar_fifo_analog.sizePolicy().hasHeightForWidth())
+        self.progressBar_fifo_analog.setSizePolicy(sizePolicy3)
         self.progressBar_fifo_analog.setStyleSheet(u"height: 8px;")
         self.progressBar_fifo_analog.setValue(24)
 
@@ -1489,8 +1538,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_4.addItem("")
         self.comboLaserSeq_4.addItem("")
         self.comboLaserSeq_4.setObjectName(u"comboLaserSeq_4")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_4.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_4.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_4.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_4.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_4, 0, 4, 1, 1)
 
@@ -1501,8 +1550,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_6.addItem("")
         self.comboLaserSeq_6.addItem("")
         self.comboLaserSeq_6.setObjectName(u"comboLaserSeq_6")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_6.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_6.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_6, 0, 6, 1, 1)
 
@@ -1513,8 +1562,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_2.addItem("")
         self.comboLaserSeq_2.addItem("")
         self.comboLaserSeq_2.setObjectName(u"comboLaserSeq_2")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_2.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_2.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_2.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_2.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_2, 0, 1, 1, 1)
 
@@ -1525,8 +1574,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_3.addItem("")
         self.comboLaserSeq_3.addItem("")
         self.comboLaserSeq_3.setObjectName(u"comboLaserSeq_3")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_3.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_3.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_3.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_3.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_3, 0, 3, 1, 1)
 
@@ -1537,8 +1586,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_12.addItem("")
         self.comboLaserSeq_12.addItem("")
         self.comboLaserSeq_12.setObjectName(u"comboLaserSeq_12")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_12.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_12.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_12.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_12.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_12, 1, 6, 1, 1)
 
@@ -1549,8 +1598,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_11.addItem("")
         self.comboLaserSeq_11.addItem("")
         self.comboLaserSeq_11.setObjectName(u"comboLaserSeq_11")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_11.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_11.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_11.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_11.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_11, 1, 5, 1, 1)
 
@@ -1561,8 +1610,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_1.addItem("")
         self.comboLaserSeq_1.addItem("")
         self.comboLaserSeq_1.setObjectName(u"comboLaserSeq_1")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_1.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_1.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_1, 0, 0, 1, 1)
 
@@ -1573,8 +1622,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_7.addItem("")
         self.comboLaserSeq_7.addItem("")
         self.comboLaserSeq_7.setObjectName(u"comboLaserSeq_7")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_7.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_7.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_7.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_7.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_7, 1, 0, 1, 1)
 
@@ -1585,8 +1634,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_8.addItem("")
         self.comboLaserSeq_8.addItem("")
         self.comboLaserSeq_8.setObjectName(u"comboLaserSeq_8")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_8.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_8.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_8.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_8.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_8, 1, 1, 1, 1)
 
@@ -1597,8 +1646,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_5.addItem("")
         self.comboLaserSeq_5.addItem("")
         self.comboLaserSeq_5.setObjectName(u"comboLaserSeq_5")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_5.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_5.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_5, 0, 5, 1, 1)
 
@@ -1609,8 +1658,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_10.addItem("")
         self.comboLaserSeq_10.addItem("")
         self.comboLaserSeq_10.setObjectName(u"comboLaserSeq_10")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_10.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_10.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_10.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_10.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_10, 1, 4, 1, 1)
 
@@ -1621,8 +1670,8 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_9.addItem("")
         self.comboLaserSeq_9.addItem("")
         self.comboLaserSeq_9.setObjectName(u"comboLaserSeq_9")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_9.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_9.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_9.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_9.setSizePolicy(sizePolicy2)
 
         self.gridLayout_41.addWidget(self.comboLaserSeq_9, 1, 3, 1, 1)
 
@@ -1665,8 +1714,8 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_7.setObjectName(u"gridLayout_7")
         self.spinBox_clk_base_multiplier = QSpinBox(self.groupBox_7)
         self.spinBox_clk_base_multiplier.setObjectName(u"spinBox_clk_base_multiplier")
-        sizePolicy3.setHeightForWidth(self.spinBox_clk_base_multiplier.sizePolicy().hasHeightForWidth())
-        self.spinBox_clk_base_multiplier.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.spinBox_clk_base_multiplier.sizePolicy().hasHeightForWidth())
+        self.spinBox_clk_base_multiplier.setSizePolicy(sizePolicy2)
         self.spinBox_clk_base_multiplier.setMinimum(1)
         self.spinBox_clk_base_multiplier.setMaximum(6)
 
@@ -1674,8 +1723,8 @@ class Ui_MainWindowDesign(object):
 
         self.label_120 = QLabel(self.groupBox_7)
         self.label_120.setObjectName(u"label_120")
-        sizePolicy2.setHeightForWidth(self.label_120.sizePolicy().hasHeightForWidth())
-        self.label_120.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.label_120.sizePolicy().hasHeightForWidth())
+        self.label_120.setSizePolicy(sizePolicy4)
 
         self.gridLayout_7.addWidget(self.label_120, 0, 0, 1, 1)
 
@@ -1724,8 +1773,8 @@ class Ui_MainWindowDesign(object):
 
         self.pushButton_FPGA_file_selection = QPushButton(self.tab_2)
         self.pushButton_FPGA_file_selection.setObjectName(u"pushButton_FPGA_file_selection")
-        sizePolicy3.setHeightForWidth(self.pushButton_FPGA_file_selection.sizePolicy().hasHeightForWidth())
-        self.pushButton_FPGA_file_selection.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.pushButton_FPGA_file_selection.sizePolicy().hasHeightForWidth())
+        self.pushButton_FPGA_file_selection.setSizePolicy(sizePolicy2)
 
         self.gridLayout_24.addWidget(self.pushButton_FPGA_file_selection, 5, 2, 1, 1)
 
@@ -1776,8 +1825,8 @@ class Ui_MainWindowDesign(object):
 
         self.pushButton_FPGA2_file_selection = QPushButton(self.tab_2)
         self.pushButton_FPGA2_file_selection.setObjectName(u"pushButton_FPGA2_file_selection")
-        sizePolicy3.setHeightForWidth(self.pushButton_FPGA2_file_selection.sizePolicy().hasHeightForWidth())
-        self.pushButton_FPGA2_file_selection.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.pushButton_FPGA2_file_selection.sizePolicy().hasHeightForWidth())
+        self.pushButton_FPGA2_file_selection.setSizePolicy(sizePolicy2)
 
         self.gridLayout_24.addWidget(self.pushButton_FPGA2_file_selection, 9, 2, 1, 1)
 
@@ -2190,15 +2239,15 @@ class Ui_MainWindowDesign(object):
 
         self.lineEdit_httpPort = QLineEdit(self.tab_12)
         self.lineEdit_httpPort.setObjectName(u"lineEdit_httpPort")
-        sizePolicy3.setHeightForWidth(self.lineEdit_httpPort.sizePolicy().hasHeightForWidth())
-        self.lineEdit_httpPort.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.lineEdit_httpPort.sizePolicy().hasHeightForWidth())
+        self.lineEdit_httpPort.setSizePolicy(sizePolicy2)
 
         self.gridLayout_72.addWidget(self.lineEdit_httpPort, 3, 1, 1, 1)
 
         self.lineEdit_httpAddr = QLineEdit(self.tab_12)
         self.lineEdit_httpAddr.setObjectName(u"lineEdit_httpAddr")
-        sizePolicy3.setHeightForWidth(self.lineEdit_httpAddr.sizePolicy().hasHeightForWidth())
-        self.lineEdit_httpAddr.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.lineEdit_httpAddr.sizePolicy().hasHeightForWidth())
+        self.lineEdit_httpAddr.setSizePolicy(sizePolicy2)
 
         self.gridLayout_72.addWidget(self.lineEdit_httpAddr, 2, 1, 1, 1)
 
@@ -2894,7 +2943,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 349, 121))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 366, 153))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -3104,13 +3153,6 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_79.addItem(self.horizontalSpacer_15, 3, 0, 1, 1)
 
-        self.comboBox_channels = QComboBox(self.dockWidgetContents_16)
-        self.comboBox_channels.addItem("")
-        self.comboBox_channels.addItem("")
-        self.comboBox_channels.setObjectName(u"comboBox_channels")
-
-        self.gridLayout_79.addWidget(self.comboBox_channels, 1, 1, 1, 1)
-
         self.spinBox_DFD_nbins = QSpinBox(self.dockWidgetContents_16)
         self.spinBox_DFD_nbins.setObjectName(u"spinBox_DFD_nbins")
         self.spinBox_DFD_nbins.setMaximum(1023)
@@ -3128,11 +3170,6 @@ class Ui_MainWindowDesign(object):
         self.checkBox_DFD_LaserDebug.setChecked(True)
 
         self.gridLayout_79.addWidget(self.checkBox_DFD_LaserDebug, 2, 0, 1, 1)
-
-        self.label_35 = QLabel(self.dockWidgetContents_16)
-        self.label_35.setObjectName(u"label_35")
-
-        self.gridLayout_79.addWidget(self.label_35, 1, 0, 1, 1)
 
         self.verticalSpacer_19 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
@@ -3242,8 +3279,6 @@ class Ui_MainWindowDesign(object):
         self.checkBox_trace_autorange.clicked.connect(MainWindowDesign.trace_parameters_changed)
         self.checkBox_trace_on.clicked.connect(MainWindowDesign.trace_parameters_changed)
         self.pushButton_about.clicked.connect(MainWindowDesign.about)
-        self.radioButton_digital.clicked.connect(MainWindowDesign.checkAlerts)
-        self.radioButton_analog.clicked.connect(MainWindowDesign.checkAlerts)
         self.checkBox_circular.clicked.connect(MainWindowDesign.circularMotionActivateChanged)
         self.spinBox_circular_points.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
         self.pushButton_19.clicked.connect(MainWindowDesign.test_analog_digital)
@@ -3266,6 +3301,8 @@ class Ui_MainWindowDesign(object):
         self.toolButton_ttm_filename.clicked.connect(MainWindowDesign.cmd_filename_ttm)
         self.checkBox_uttm_watchdog.clicked.connect(MainWindowDesign.checkBox_uttm_watchdog_clicked)
         self.comboBox_channels.textActivated.connect(MainWindowDesign.numberChannelsChanged)
+        self.groupBox_9.clicked.connect(MainWindowDesign.checkAlerts)
+        self.checkBox_fifo_analog.clicked.connect(MainWindowDesign.checkAlerts)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(2)
@@ -3382,40 +3419,48 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_16), QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"(u)TTM", None))
         self.dockWidget_preview.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Commands", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_externalProgram.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Open the last saved file with Napari or another viewer as selected in the configuration</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"Ext. Viewer/Analysis", None))
+        self.groupBox_11.setTitle("")
 #if QT_CONFIG(tooltip)
         self.pushButton_acquisitionStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning saving data</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_acquisitionStart.setText(QCoreApplication.translate("MainWindowDesign", u"Acquisition", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_stop.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Stop the scan</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_stop.setText(QCoreApplication.translate("MainWindowDesign", u"STOP!", None))
+        self.pushButton_acquisitionStart.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_previewStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning without storing data</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_previewStart.setText(QCoreApplication.translate("MainWindowDesign", u"Preview", None))
+        self.pushButton_previewStart.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_stop.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Stop the scan</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_stop.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_14.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Add the current configuration to the Batch acquisition table</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_14.setText(QCoreApplication.translate("MainWindowDesign", u"Add to Batch", None))
+        self.groupBox_9.setTitle("")
+        self.groupBox_12.setTitle(QCoreApplication.translate("MainWindowDesign", u"TCSPC", None))
 #if QT_CONFIG(tooltip)
-        self.checkBox_uttmActivate.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the TTM data receiver (external software) when start the acquisition</p></body></html>", None))
+        self.checkBox_DFD.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the Digital Frequency Domain data acquisition</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.checkBox_uttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
-        self.radioButton_digital.setText(QCoreApplication.translate("MainWindowDesign", u"Digital", None))
-        self.radioButton_analog.setText(QCoreApplication.translate("MainWindowDesign", u"Analog", None))
+        self.checkBox_DFD.setText(QCoreApplication.translate("MainWindowDesign", u"DFD", None))
+        self.groupBox_10.setTitle(QCoreApplication.translate("MainWindowDesign", u"Time Tagging", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_ttmActivate.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the TTM data receiver (external software) when start the acquisition</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_ttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"TTM", None))
 #if QT_CONFIG(tooltip)
-        self.checkBox_DFD.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the Digital Frequency Domain data acquisition</p></body></html>", None))
+        self.checkBox_uttmActivate.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the TTM data receiver (external software) when start the acquisition</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.checkBox_DFD.setText(QCoreApplication.translate("MainWindowDesign", u"DFD", None))
+        self.checkBox_uttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
+        self.checkBox_fifo_analog.setText(QCoreApplication.translate("MainWindowDesign", u"Analog", None))
+        self.groupBox_13.setTitle(QCoreApplication.translate("MainWindowDesign", u"Channels", None))
+        self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
+        self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
+
+        self.checkBox_fifo_digital.setText(QCoreApplication.translate("MainWindowDesign", u"Digital", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_externalProgram.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Open the last saved file with Napari or another viewer as selected in the configuration</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"Ext. Viewer/Analysis", None))
         self.dockWidget_temporal.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Temporal settings", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_waitAfterFrame.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Delay betweent two repetition in second.</p></body></html>", None))
@@ -3906,14 +3951,10 @@ class Ui_MainWindowDesign(object):
         self.label_plot_channel.setText(QCoreApplication.translate("MainWindowDesign", u"Selected Ch: X", None))
         self.dockWidget_pluginImage.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Image Script", None))
         self.dockWidget_dfd.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"DFD", None))
-        self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
-        self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
-
         self.label_111.setText(QCoreApplication.translate("MainWindowDesign", u"DFD N. Bins", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_DFD_LaserDebug.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_DFD_LaserDebug.setText(QCoreApplication.translate("MainWindowDesign", u"Laser Ref. in CH26 (for DFD)", None))
-        self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD Channels", None))
     # retranslateUi
 

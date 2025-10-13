@@ -1961,9 +1961,9 @@ class MainWindow(QMainWindow):
             )
 
             fifo = []
-            if self.ui.radioButton_analog.isChecked():
+            if self.ui.checkBox_fifo_analog.isChecked():
                 fifo.append("FIFOAnalog")
-            if self.ui.radioButton_digital.isChecked():
+            if self.ui.checkBox_fifo_digital.isChecked():
                 fifo.append("FIFO")
 
             self.spadfcsmanager_inst.set_len_fifo_prebuffer(
@@ -3061,13 +3061,16 @@ class MainWindow(QMainWindow):
         repetition = self.ui.spinBox_nrepetition.value()
 
         fifo_activated = []
-        if self.ui.radioButton_analog.isChecked():
+        if self.ui.checkBox_fifo_analog.isChecked():
             fifo_name = "FIFOAnalog"
             fifo_activated.append(fifo_name)
-        if self.ui.radioButton_digital.isChecked():
+        if self.ui.checkBox_fifo_digital.isChecked():
             fifo_name = "FIFO"
             fifo_activated.append(fifo_name)
+        if not (self.ui.checkBox_fifo_analog.isChecked() or self.ui.checkBox_fifo_digital.isChecked()):
+            print_dec("Bug: No FIFO Selected")
 
+        #print_dec("fifo_activated", fifo_activated)
         #fifo_name is the "priority" fifo when two are activated
         
         fifo_elements = { fifo : self.spadfcsmanager_inst.getCurrentAcquistionElement(fifo) for fifo in fifo_activated}
@@ -4452,8 +4455,8 @@ Have fun!
     def test_analog_digital(self):
         """experimental mixed analog and digital mode"""
         print_dec("test_analog_digital()")
-        self.ui.radioButton_analog.setAutoExclusive(False)
-        self.ui.radioButton_digital.setAutoExclusive(False)
+        self.ui.checkBox_fifo_analog.setAutoExclusive(False)
+        self.ui.checkBox_fifo_digital.setAutoExclusive(False)
         print_dec("now the ratioButton can be on at the same time")
 
     @Slot()
@@ -4530,9 +4533,9 @@ Have fun!
         print_dec("DFD", self.DFD_Activate)
 
         fifo = []
-        if self.ui.radioButton_digital.isChecked():
+        if self.ui.checkBox_fifo_digital.isChecked():
             fifo.append("FIFO")
-        if self.ui.radioButton_analog.isChecked():
+        if self.ui.checkBox_fifo_analog.isChecked():
             fifo.append("FIFOAnalog")
 
         self.spadfcsmanager_inst.setActivatedFifo(fifo)
@@ -4541,16 +4544,16 @@ Have fun!
             self.setRegistersDict(
                 {
                     "DFD_Activate": True,
-                    "activateFIFOAnalog": self.ui.radioButton_analog.isChecked(),
-                    "activateFIFODigital": self.ui.radioButton_digital.isChecked(),
+                    "activateFIFOAnalog": self.ui.checkBox_fifo_analog.isChecked(),
+                    "activateFIFODigital": self.ui.checkBox_fifo_digital.isChecked(),
                 }
             )
         else:
             self.setRegistersDict(
                 {
                     "DFD_Activate": False,
-                    "activateFIFOAnalog": self.ui.radioButton_analog.isChecked(),
-                    "activateFIFODigital": self.ui.radioButton_digital.isChecked(),
+                    "activateFIFOAnalog": self.ui.checkBox_fifo_analog.isChecked(),
+                    "activateFIFODigital": self.ui.checkBox_fifo_digital.isChecked(),
                 }
             )
 
@@ -4684,6 +4687,8 @@ Have fun!
             self.ttm_activate_change_state()
 
         # self.myfpgainst.acquisitionThread.reset_data()
+
+        self.ui.pushButton_previewStart.setEnabled(False)
         self.ui.pushButton_acquisitionStart.setEnabled(False)
         self.ui.pushButton_stop.setEnabled(True)
 
@@ -4958,8 +4963,8 @@ Have fun!
         self.ui.comboBox_view_projection.setStyleSheet("")
 
         self.ui.comboBox_plot_channel.setStyleSheet("")
-        self.ui.radioButton_analog.setStyleSheet("")
-        self.ui.radioButton_digital.setStyleSheet("")
+        self.ui.checkBox_fifo_analog.setStyleSheet("")
+        self.ui.checkBox_fifo_digital.setStyleSheet("")
 
         # x
         if ((current_plot_size_x_um == 0.0) and (current_number_px_x > 1)) or (
@@ -5000,16 +5005,16 @@ Have fun!
             self.ui.spinBox_nframe.setStyleSheet("border: 1px solid red;")
 
         if "analog" in (self.ui.comboBox_plot_channel.currentText().lower()) and (
-                not self.ui.radioButton_analog.isChecked()
+                not self.ui.checkBox_fifo_analog.isChecked()
         ):
             self.ui.comboBox_plot_channel.setStyleSheet("border: 1px solid red;")
-            self.ui.radioButton_analog.setStyleSheet("border: 1px solid red;")
+            self.ui.checkBox_fifo_analog.setStyleSheet("border: 1px solid red;")
 
         if not ("analog" in (self.ui.comboBox_plot_channel.currentText().lower())) and (
-                not self.ui.radioButton_digital.isChecked()
+                not self.ui.checkBox_fifo_digital.isChecked()
         ):
             self.ui.comboBox_plot_channel.setStyleSheet("border: 1px solid red;")
-            self.ui.radioButton_digital.setStyleSheet("border: 1px solid red;")
+            self.ui.checkBox_fifo_digital.setStyleSheet("border: 1px solid red;")
 
 
 
@@ -5047,8 +5052,8 @@ Have fun!
         self.ui.pushButton_acquisitionStart.setEnabled(False)
         self.ui.pushButton_externalProgram.setEnabled(False)
 
-        self.ui.radioButton_digital.setEnabled(False)
-        self.ui.radioButton_analog.setEnabled(False)
+        self.ui.checkBox_fifo_digital.setEnabled(False)
+        self.ui.checkBox_fifo_analog.setEnabled(False)
         self.ui.checkBox_DFD.setEnabled(False)
         self.ui.checkBox_uttmActivate.setEnabled(False)
         self.ui.checkBox_ttmActivate.setEnabled(False)
@@ -5222,8 +5227,8 @@ Have fun!
         self.ui.pushButton_acquisitionStart.setEnabled(True)
         self.ui.pushButton_stop.setEnabled(False)
 
-        self.ui.radioButton_digital.setEnabled(True)
-        self.ui.radioButton_analog.setEnabled(True)
+        self.ui.checkBox_fifo_digital.setEnabled(True)
+        self.ui.checkBox_fifo_analog.setEnabled(True)
         self.ui.checkBox_DFD.setEnabled(True)
         self.ui.checkBox_uttmActivate.setEnabled(True)
         self.ui.checkBox_ttmActivate.setEnabled(True)

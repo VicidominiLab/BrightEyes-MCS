@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1692</width>
-    <height>1484</height>
+    <height>1596</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -903,153 +903,152 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_8">
     <layout class="QGridLayout" name="gridLayout_15">
-     <item row="1" column="1">
-      <spacer name="verticalSpacer_17">
-       <property name="orientation">
-        <enum>Qt::Orientation::Vertical</enum>
+     <item row="1" column="0">
+      <widget class="QGroupBox" name="groupBox_11">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
+       <property name="title">
+        <string/>
        </property>
-      </spacer>
+       <layout class="QGridLayout" name="gridLayout_81">
+        <item row="0" column="2">
+         <widget class="QPushButton" name="pushButton_acquisitionStart">
+          <property name="font">
+           <font>
+            <pointsize>20</pointsize>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start the scanning saving data&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:disabled {
+    qproperty-iconOpacity: 0.05;
+}
+</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset theme="QIcon::ThemeIcon::MediaRecord"/>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>32</width>
+            <height>32</height>
+           </size>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="pushButton_previewStart">
+          <property name="font">
+           <font>
+            <pointsize>20</pointsize>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start the scanning without storing data&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:disabled {
+    qproperty-iconOpacity: 0.05;
+}
+</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset theme="QIcon::ThemeIcon::MediaPlaybackStart"/>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>32</width>
+            <height>32</height>
+           </size>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QPushButton" name="pushButton_stop">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>20</pointsize>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Stop the scan&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton:disabled {
+    qproperty-iconOpacity: 0.05;
+}
+</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset theme="QIcon::ThemeIcon::MediaPlaybackStop"/>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>32</width>
+            <height>32</height>
+           </size>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </item>
-     <item row="0" column="1">
-      <layout class="QGridLayout" name="gridLayout_55">
-       <item row="2" column="1">
-        <widget class="QPushButton" name="pushButton_externalProgram">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open the last saved file with Napari or another viewer as selected in the configuration&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Ext. Viewer/Analysis</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QPushButton" name="pushButton_acquisitionStart">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start the scanning saving data&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Acquisition</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" rowspan="2">
-        <widget class="QPushButton" name="pushButton_stop">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Stop the scan&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>STOP!</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QPushButton" name="pushButton_previewStart">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start the scanning without storing data&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Preview</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <layout class="QGridLayout" name="gridLayout_78">
-         <item row="0" column="0">
-          <widget class="QPushButton" name="pushButton_14">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add the current configuration to the Batch acquisition table&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Add to Batch</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="0" column="2" rowspan="4">
-        <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
-          <layout class="QGridLayout" name="gridLayout_86">
-           <item row="1" column="1">
-            <widget class="QCheckBox" name="checkBox_uttmActivate">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>uTTM</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QRadioButton" name="radioButton_digital">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Digital</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
+     <item row="3" column="0">
+      <widget class="QPushButton" name="pushButton_14">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add the current configuration to the Batch acquisition table&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Add to Batch</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" rowspan="5">
+      <widget class="QGroupBox" name="groupBox_9">
+       <property name="title">
+        <string/>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_30">
+        <item row="3" column="1">
+         <widget class="QGroupBox" name="groupBox_12">
+          <property name="title">
+           <string>TCSPC</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_85">
            <item row="0" column="0">
-            <widget class="QRadioButton" name="radioButton_analog">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Analog</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QCheckBox" name="checkBox_ttmActivate">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>TTM</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0" colspan="2">
             <widget class="QCheckBox" name="checkBox_DFD">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -1066,10 +1065,117 @@
             </widget>
            </item>
           </layout>
-         </item>
-        </layout>
-       </item>
-      </layout>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QGroupBox" name="groupBox_10">
+          <property name="title">
+           <string>Time Tagging</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_80">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="checkBox_ttmActivate">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>TTM</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="checkBox_uttmActivate">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>uTTM</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="checkBox_fifo_analog">
+          <property name="text">
+           <string>Analog</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" rowspan="2">
+         <widget class="QGroupBox" name="groupBox_13">
+          <property name="title">
+           <string>Channels</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_86">
+           <item row="0" column="0">
+            <widget class="QComboBox" name="comboBox_channels">
+             <item>
+              <property name="text">
+               <string>25</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>49</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="checkBox_fifo_digital">
+          <property name="text">
+           <string>Digital</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QPushButton" name="pushButton_externalProgram">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open the last saved file with Napari or another viewer as selected in the configuration&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Ext. Viewer/Analysis</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <spacer name="verticalSpacer_17">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </widget>
@@ -1086,7 +1192,7 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QGridLayout" name="gridLayout_9">
-     <item row="0" column="0">
+     <item row="1" column="0">
       <layout class="QGridLayout" name="gridLayout_8">
        <item row="4" column="1">
         <widget class="QDoubleSpinBox" name="spinBox_waitAfterFrame">
@@ -4997,8 +5103,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>349</width>
-          <height>121</height>
+          <width>366</width>
+          <height>153</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -5338,20 +5444,6 @@
        </property>
       </spacer>
      </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="comboBox_channels">
-       <item>
-        <property name="text">
-         <string>25</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>49</string>
-        </property>
-       </item>
-      </widget>
-     </item>
      <item row="0" column="1">
       <widget class="QSpinBox" name="spinBox_DFD_nbins">
        <property name="maximum">
@@ -5379,13 +5471,6 @@
        </property>
        <property name="checked">
         <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_35">
-       <property name="text">
-        <string>SPAD Channels</string>
        </property>
       </widget>
      </item>
@@ -5449,7 +5534,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>252</x>
-     <y>195</y>
+     <y>241</y>
     </hint>
     <hint type="destinationlabel">
      <x>225</x>
@@ -5465,7 +5550,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>252</x>
-     <y>223</y>
+     <y>269</y>
     </hint>
     <hint type="destinationlabel">
      <x>222</x>
@@ -5529,7 +5614,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>129</x>
-     <y>993</y>
+     <y>1039</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -5545,7 +5630,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>129</x>
-     <y>993</y>
+     <y>1039</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5561,7 +5646,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>129</x>
-     <y>993</y>
+     <y>1039</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5576,8 +5661,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1001</y>
+     <x>125</x>
+     <y>1047</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5592,8 +5677,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1001</y>
+     <x>125</x>
+     <y>1047</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5608,8 +5693,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>1001</y>
+     <x>125</x>
+     <y>1047</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -5625,7 +5710,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>88</x>
-     <y>531</y>
+     <y>577</y>
     </hint>
     <hint type="destinationlabel">
      <x>378</x>
@@ -5641,7 +5726,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>88</x>
-     <y>559</y>
+     <y>605</y>
     </hint>
     <hint type="destinationlabel">
      <x>506</x>
@@ -5657,7 +5742,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>88</x>
-     <y>587</y>
+     <y>633</y>
     </hint>
     <hint type="destinationlabel">
      <x>630</x>
@@ -5768,8 +5853,8 @@
    <slot>checkBoxLockRatioChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>409</x>
-     <y>544</y>
+     <x>448</x>
+     <y>590</y>
     </hint>
     <hint type="destinationlabel">
      <x>250</x>
@@ -5784,8 +5869,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>993</y>
+     <x>125</x>
+     <y>1039</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -5800,8 +5885,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>993</y>
+     <x>125</x>
+     <y>1039</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -5816,8 +5901,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>123</x>
-     <y>993</y>
+     <x>125</x>
+     <y>1039</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -5832,8 +5917,8 @@
    <slot>rangeValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>292</x>
-     <y>531</y>
+     <x>311</x>
+     <y>577</y>
     </hint>
     <hint type="destinationlabel">
      <x>330</x>
@@ -5848,8 +5933,8 @@
    <slot>rangeValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>292</x>
-     <y>559</y>
+     <x>311</x>
+     <y>605</y>
     </hint>
     <hint type="destinationlabel">
      <x>332</x>
@@ -5864,8 +5949,8 @@
    <slot>rangeValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>292</x>
-     <y>587</y>
+     <x>311</x>
+     <y>633</y>
     </hint>
     <hint type="destinationlabel">
      <x>333</x>
@@ -5880,8 +5965,8 @@
    <slot>previewButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>128</x>
-     <y>54</y>
+     <x>94</x>
+     <y>81</y>
     </hint>
     <hint type="destinationlabel">
      <x>329</x>
@@ -5896,8 +5981,8 @@
    <slot>startButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>274</x>
-     <y>55</y>
+     <x>213</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>330</x>
@@ -5912,8 +5997,8 @@
    <slot>stopButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>138</x>
-     <y>119</y>
+     <x>94</x>
+     <y>145</y>
     </hint>
     <hint type="destinationlabel">
      <x>328</x>
@@ -5928,8 +6013,8 @@
    <slot>plotSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>697</x>
-     <y>1437</y>
+     <x>736</x>
+     <y>1507</y>
     </hint>
     <hint type="destinationlabel">
      <x>468</x>
@@ -5944,8 +6029,8 @@
    <slot>selectedAutoscaleImg()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>527</x>
-     <y>1436</y>
+     <x>566</x>
+     <y>1506</y>
     </hint>
     <hint type="destinationlabel">
      <x>215</x>
@@ -5960,8 +6045,8 @@
    <slot>projChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>697</x>
-     <y>1409</y>
+     <x>736</x>
+     <y>1479</y>
     </hint>
     <hint type="destinationlabel">
      <x>469</x>
@@ -6105,7 +6190,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>350</x>
-     <y>661</y>
+     <y>709</y>
     </hint>
     <hint type="destinationlabel">
      <x>871</x>
@@ -6120,8 +6205,8 @@
    <slot>addToBatch()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>273</x>
-     <y>88</y>
+     <x>212</x>
+     <y>114</y>
     </hint>
     <hint type="destinationlabel">
      <x>315</x>
@@ -6136,8 +6221,8 @@
    <slot>cmd_path_destinationfolder()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>409</x>
-     <y>1063</y>
+     <x>448</x>
+     <y>1145</y>
     </hint>
     <hint type="destinationlabel">
      <x>790</x>
@@ -6152,8 +6237,8 @@
    <slot>bit_file_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>386</x>
-     <y>1094</y>
+     <x>408</x>
+     <y>1140</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -6169,7 +6254,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1682</x>
-     <y>855</y>
+     <y>923</y>
     </hint>
     <hint type="destinationlabel">
      <x>688</x>
@@ -6184,8 +6269,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>206</x>
-     <y>434</y>
+     <x>226</x>
+     <y>480</y>
     </hint>
     <hint type="destinationlabel">
      <x>311</x>
@@ -6200,8 +6285,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>206</x>
-     <y>405</y>
+     <x>226</x>
+     <y>451</y>
     </hint>
     <hint type="destinationlabel">
      <x>314</x>
@@ -6216,8 +6301,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>206</x>
-     <y>349</y>
+     <x>226</x>
+     <y>395</y>
     </hint>
     <hint type="destinationlabel">
      <x>316</x>
@@ -6233,7 +6318,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>350</x>
-     <y>628</y>
+     <y>676</y>
     </hint>
     <hint type="destinationlabel">
      <x>253</x>
@@ -6248,8 +6333,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>206</x>
-     <y>377</y>
+     <x>226</x>
+     <y>423</y>
     </hint>
     <hint type="destinationlabel">
      <x>318</x>
@@ -6280,8 +6365,8 @@
    <slot>cmd_filename()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>409</x>
-     <y>1091</y>
+     <x>448</x>
+     <y>1173</y>
     </hint>
     <hint type="destinationlabel">
      <x>348</x>
@@ -6296,8 +6381,8 @@
    <slot>ttm_activate_change_state()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>343</x>
-     <y>88</y>
+     <x>296</x>
+     <y>152</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -6313,7 +6398,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1399</x>
-     <y>935</y>
+     <y>1003</y>
     </hint>
     <hint type="destinationlabel">
      <x>1468</x>
@@ -6329,7 +6414,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1480</x>
-     <y>935</y>
+     <y>1003</y>
     </hint>
     <hint type="destinationlabel">
      <x>1595</x>
@@ -6344,8 +6429,8 @@
    <slot>cmd_update_plugin_list()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1655</x>
-     <y>935</y>
+     <x>1672</x>
+     <y>1003</y>
     </hint>
     <hint type="destinationlabel">
      <x>1576</x>
@@ -6376,8 +6461,8 @@
    <slot>cmd_call_external()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>274</x>
-     <y>112</y>
+     <x>213</x>
+     <y>145</y>
     </hint>
     <hint type="destinationlabel">
      <x>353</x>
@@ -6392,8 +6477,8 @@
    <slot>copy_list_file()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>308</x>
-     <y>1318</y>
+     <x>347</x>
+     <y>1400</y>
     </hint>
     <hint type="destinationlabel">
      <x>354</x>
@@ -6408,8 +6493,8 @@
    <slot>delete_list_file()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>197</x>
-     <y>1318</y>
+     <x>236</x>
+     <y>1400</y>
     </hint>
     <hint type="destinationlabel">
      <x>355</x>
@@ -6425,7 +6510,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1575</x>
-     <y>1113</y>
+     <y>1211</y>
     </hint>
     <hint type="destinationlabel">
      <x>1622</x>
@@ -6441,7 +6526,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1472</x>
-     <y>1113</y>
+     <y>1211</y>
     </hint>
     <hint type="destinationlabel">
      <x>1485</x>
@@ -6456,8 +6541,8 @@
    <slot>bit_file_clicked2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>386</x>
-     <y>1181</y>
+     <x>408</x>
+     <y>1227</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -6520,8 +6605,8 @@
    <slot>updatePixelValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>409</x>
-     <y>435</y>
+     <x>448</x>
+     <y>481</y>
     </hint>
     <hint type="destinationlabel">
      <x>367</x>
@@ -6536,8 +6621,8 @@
    <slot>DFD_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>407</x>
-     <y>117</y>
+     <x>429</x>
+     <y>152</y>
     </hint>
     <hint type="destinationlabel">
      <x>400</x>
@@ -6552,8 +6637,8 @@
    <slot>loadPreset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>132</x>
-     <y>652</y>
+     <x>142</x>
+     <y>700</y>
     </hint>
     <hint type="destinationlabel">
      <x>405</x>
@@ -6568,8 +6653,8 @@
    <slot>savePreset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>213</x>
-     <y>652</y>
+     <x>223</x>
+     <y>700</y>
     </hint>
     <hint type="destinationlabel">
      <x>404</x>
@@ -6585,7 +6670,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1392</x>
-     <y>1200</y>
+     <y>1298</y>
     </hint>
     <hint type="destinationlabel">
      <x>1215</x>
@@ -6601,7 +6686,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1475</x>
-     <y>1228</y>
+     <y>1326</y>
     </hint>
     <hint type="destinationlabel">
      <x>1210</x>
@@ -6617,7 +6702,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1681</x>
-     <y>1228</y>
+     <y>1326</y>
     </hint>
     <hint type="destinationlabel">
      <x>1208</x>
@@ -6633,7 +6718,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1681</x>
-     <y>1198</y>
+     <y>1296</y>
     </hint>
     <hint type="destinationlabel">
      <x>1207</x>
@@ -6649,7 +6734,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1567</x>
-     <y>1198</y>
+     <y>1296</y>
     </hint>
     <hint type="destinationlabel">
      <x>1208</x>
@@ -6674,46 +6759,14 @@
    </hints>
   </connection>
   <connection>
-   <sender>radioButton_digital</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>checkAlerts()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>407</x>
-     <y>50</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>430</x>
-     <y>58</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>radioButton_analog</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>checkAlerts()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>343</x>
-     <y>58</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>431</x>
-     <y>89</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>checkBox_circular</sender>
    <signal>clicked()</signal>
    <receiver>MainWindowDesign</receiver>
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>400</x>
-     <y>760</y>
+     <x>439</x>
+     <y>806</y>
     </hint>
     <hint type="destinationlabel">
      <x>424</x>
@@ -6729,7 +6782,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>346</x>
-     <y>791</y>
+     <y>837</y>
     </hint>
     <hint type="destinationlabel">
      <x>430</x>
@@ -6761,7 +6814,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>129</x>
-     <y>989</y>
+     <y>1035</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6825,7 +6878,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>346</x>
-     <y>853</y>
+     <y>899</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6841,7 +6894,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>346</x>
-     <y>822</y>
+     <y>868</y>
     </hint>
     <hint type="destinationlabel">
      <x>432</x>
@@ -6856,8 +6909,8 @@
    <slot>openInExplorer()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>410</x>
-     <y>1318</y>
+     <x>449</x>
+     <y>1400</y>
     </hint>
     <hint type="destinationlabel">
      <x>437</x>
@@ -6872,7 +6925,7 @@
    <slot>pushButton_uttm_start_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>506</x>
+     <x>545</x>
      <y>52</y>
     </hint>
     <hint type="destinationlabel">
@@ -6888,7 +6941,7 @@
    <slot>pushButton_uttm_stop_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>535</x>
+     <x>574</x>
      <y>52</y>
     </hint>
     <hint type="destinationlabel">
@@ -6904,7 +6957,7 @@
    <slot>pushButton_uttm_status_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>506</x>
+     <x>545</x>
      <y>72</y>
     </hint>
     <hint type="destinationlabel">
@@ -6920,7 +6973,7 @@
    <slot>pushButton_uttm_test_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>535</x>
+     <x>574</x>
      <y>67</y>
     </hint>
     <hint type="destinationlabel">
@@ -6936,7 +6989,7 @@
    <slot>checkBox_uttm_watchdog_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>535</x>
+     <x>574</x>
      <y>57</y>
     </hint>
     <hint type="destinationlabel">
@@ -6952,7 +7005,7 @@
    <slot>pushButton_uttm_check_laser_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>506</x>
+     <x>545</x>
      <y>67</y>
     </hint>
     <hint type="destinationlabel">
@@ -7032,7 +7085,7 @@
    <slot>checkBox_uttm_watchdog_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>506</x>
+     <x>545</x>
      <y>62</y>
     </hint>
     <hint type="destinationlabel">
@@ -7048,12 +7101,44 @@
    <slot>numberChannelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1663</x>
-     <y>1384</y>
+     <x>429</x>
+     <y>90</y>
     </hint>
     <hint type="destinationlabel">
      <x>1301</x>
      <y>1418</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>groupBox_9</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>checkAlerts()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>300</x>
+     <y>43</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>465</x>
+     <y>84</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_fifo_analog</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>checkAlerts()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>269</x>
+     <y>89</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>470</x>
+     <y>127</y>
     </hint>
    </hints>
   </connection>

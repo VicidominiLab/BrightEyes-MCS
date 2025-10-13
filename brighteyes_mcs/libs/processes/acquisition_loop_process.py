@@ -182,7 +182,10 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.current_pointer_in_sample_digital = 0
         self.current_pointer_in_sample_analog = 0
+
         self.stop_event = mp.Event()
+        self.local_fifo_done = {}
+
         self.trace_reset_event = mp.Event()
         self.FCS_reset_event = mp.Event()
 
@@ -953,9 +956,6 @@ class AcquisitionLoopProcess(mp.Process):
                                 # we still run the same finalization here for the normal path
                                 finalize_frame_fifo()
 
-                            if self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL >= self.expected_words_data_digital:
-                                self.stop_event.set()
-                                stop_event_proxy.set()
 
             if "FIFOAnalog" in self.shm_activated_fifos_list:
                 max_gap_frame_analog_in_words = self.expected_words_data_per_frame_analog * (
@@ -1138,9 +1138,18 @@ class AcquisitionLoopProcess(mp.Process):
                                 finalize_frame_fifo_analog()
                             #print_dec("self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog:",
                             #         self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG, self.expected_words_data_analog)
-                            if self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog:
-                                self.stop_event.set()
-                                stop_event_proxy.set()
+
+
+            cond_digital = (self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL >= self.expected_words_data_digital)
+            cond_analog  = (self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog)
+
+            if not(
+                    ("FIFO" in self.shm_activated_fifos_list and not cond_digital)
+                    or
+                    ("FIFOAnalog" in self.shm_activated_fifos_list and not cond_analog)
+            ):
+                self.stop_event.set()
+                stop_event_proxy.set()
 
             if trace_reset_event_proxy.is_set():
                 print_dec("trace_reset_event.is_set()")

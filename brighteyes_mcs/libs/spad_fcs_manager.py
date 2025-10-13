@@ -45,6 +45,7 @@ class SpadFcsManager():
         shared_fingerprint_mask (MemorySharedNumpyArray): Shared fingerprint mask.
         is_connected (bool): Flag indicating if connected to FPGA.
         fifo_chuck_size_digital (int): Size of the FIFO chuck.
+        fifo_chuck_size_analog (int): Size of the FIFO chuck.
         acquisition_done_event (multiprocessing.Event): Event for acquisition done.
         acquisition_almost_done_event (multiprocessing.Event): Event for acquisition almost done.
         acquisition_run_event (multiprocessing.Event): Event for acquisition run.
@@ -642,17 +643,19 @@ class SpadFcsManager():
         Set the registers dictionary
         """
         # print_dec("setRegistersDict")
+        register_set = "setRegistersDict: "
         temp_dict = {}
         for i in myconf:
             if myconf[i] is not None:
-                print_dec(i, myconf[i])
+                # print_dec(i, myconf[i])
+                register_set += "%s %s " % (i, myconf[i])
                 # self.nifpga_session.registers[i].write(myconf[i])
                 if self.is_connected:
                     self.fpga_handle.register_write(i, myconf[i])
                     temp_dict[i] = myconf[i]
             else:
                 print_dec("myconf is None")
-        # print(self.registers_configuration)
+        print_dec(register_set)
         self.registers_configuration.update(temp_dict)
 
     def readRegistersDict(self):
@@ -731,13 +734,13 @@ class SpadFcsManager():
             self.fifo_chuck_size_digital = 8 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
             print_dec("update_chuck self.channels == 49")
 
-        # self.fifo_chuck_size_digital = 2 * max(self.timebins_per_pixel, 100)
 
         self.fpga_handle.set_fifo_chuck_size_digital(self.fifo_chuck_size_digital)
         self.fpga_handle.set_fifo_chuck_size_analog(self.fifo_chuck_size_analog)
-        self.fpga_handle.set_expected_words_data(self.expected_words_data_digital)
+        self.fpga_handle.set_expected_words_data_digital(self.expected_words_data_digital)
+        self.fpga_handle.set_expected_words_data_analog(self.expected_words_data_analog)
 
-        # self.fpga_handle.set_expected_words_data(self.expected_words_data_per_frame_digital)
+        # self.fpga_handle.set_expected_words_data_digital(self.expected_words_data_per_frame_digital)
 
         print_dec(
             "Updated expected_words_data_digital and fifo_chuck_size_digital",
@@ -752,41 +755,53 @@ class SpadFcsManager():
         )
 
 
-    def getCurrentPreviewElement(self, fifo_name="FIFO"):
+    def getCurrentPreviewElement(self, fifo_name=None):
         """
         Get the current preview element
         """
+        if fifo_name==None:
+            print_dec("BUG: getCurrentPreviewElement(None)")
         return self.loc_previewed[fifo_name].value * 2
 
-    def getCurrentAcquistionElement(self, fifo_name="FIFO"):
+    def getCurrentAcquistionElement(self, fifo_name=None):
         """
         Get the current acquisition element
         """
+        if fifo_name==None:
+            print_dec("BUG: getCurrentAcquistionElement(None)")
         return self.loc_acquired[fifo_name].value
 
-    def getLastPreprocessedLen(self, fifo_name="FIFO"):
+    def getLastPreprocessedLen(self, fifo_name=None):
         """
         Get the last preprocessed length
         """
+        if fifo_name==None:
+            print_dec("BUG: getLastPreprocessedLen(None)")
         return self.last_preprocessed_len[fifo_name]
 
-    def getExpectedFifoElements(self, fifo="FIFO"):
+    def getExpectedFifoElements(self, fifo_name=None):
         """
         Get the expected FIFO elements
         """
-        if fifo=="FIFO":
+        if fifo_name=="FIFO":
             return self.expected_words_data_digital
-        if fifo=="FIFOAnalog":
+        elif fifo_name=="FIFOAnalog":
             return self.expected_words_data_analog
+        else:
+            print_dec("BUG: getExpectedFifoElements WRONG CALL")
+            return 0
 
-    def getExpectedFifoElementsPerFrame(self, fifo="FIFO"):
+    def getExpectedFifoElementsPerFrame(self, fifo_name=None):
         """
         Get the expected FIFO elements per frame
         """
-        if fifo=="FIFO":
+        if fifo_name=="FIFO":
             return self.expected_words_data_per_frame_digital
-        if fifo=="FIFOAnalog":
+        elif fifo_name=="FIFOAnalog":
             return self.expected_words_data_per_frame_analog
+        else:
+            print_dec("BUG: getExpectedFifoElements WRONG CALL")
+            return 0
 
     def stopFPGA(self):
         """

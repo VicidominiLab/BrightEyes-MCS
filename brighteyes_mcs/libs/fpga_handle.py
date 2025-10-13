@@ -207,7 +207,7 @@ class FpgaHandle(object):
     def set_fifo_chuck_size_analog(self, fifo_chuck_size_analog):
         self.configuration["fifo_chuck_size_analog"].value = fifo_chuck_size_analog
 
-    def set_expected_words_data(self, expected_words_data_digital):
+    def set_expected_words_data_digital(self, expected_words_data_digital):
         self.configuration["expected_words_data_digital"].value = expected_words_data_digital
 
     def set_expected_words_data_analog(self, expected_words_data_analog):

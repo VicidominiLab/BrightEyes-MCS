@@ -67,8 +67,8 @@ class TestMyClass(unittest.TestCase):
 
     def activateFIFOflag_sets_fifo_flags(self):
         instance = MyClass()
-        instance.ui.radioButton_digital.isChecked = MagicMock(return_value=True)
-        instance.ui.radioButton_analog.isChecked = MagicMock(return_value=False)
+        instance.ui.checkBox_fifo_digital.isChecked = MagicMock(return_value=True)
+        instance.ui.checkBox_fifo_analog.isChecked = MagicMock(return_value=False)
         instance.spadfcsmanager_inst.setActivatedFifo = MagicMock()
         instance.setRegistersDict = MagicMock()
 
@@ -198,8 +198,8 @@ class TestMyClass(unittest.TestCase):
         instance.ui.spinBox_ny.setStyleSheet = MagicMock()
         instance.ui.spinBox_nframe.setStyleSheet = MagicMock()
         instance.ui.comboBox_plot_channel.setStyleSheet = MagicMock()
-        instance.ui.radioButton_analog.setStyleSheet = MagicMock()
-        instance.ui.radioButton_digital.setStyleSheet = MagicMock()
+        instance.ui.checkBox_fifo_analog.setStyleSheet = MagicMock()
+        instance.ui.checkBox_fifo_digital.setStyleSheet = MagicMock()
         instance.ui.label_plot_channel.setText = MagicMock()
         instance.spadfcsmanager_inst.read_shared_dict = MagicMock()
 
