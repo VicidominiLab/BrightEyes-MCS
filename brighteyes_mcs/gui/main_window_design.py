@@ -2780,7 +2780,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 383, 184))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, -105, 383, 184))
         self.gridLayout_63 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_63.setObjectName(u"gridLayout_63")
         self.groupBox_4 = QGroupBox(self.scrollAreaWidgetContents)
@@ -3310,7 +3310,7 @@ class Ui_MainWindowDesign(object):
         self.comboBox_slavemode_type.setCurrentIndex(2)
         self.comboLaserSeq_1.setCurrentIndex(1)
         self.tabWidget_2.setCurrentIndex(0)
-        self.comboBox_analogSelect_B.setCurrentIndex(0)
+        self.comboBox_analogSelect_B.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindowDesign)
