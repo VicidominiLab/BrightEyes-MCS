@@ -68,7 +68,7 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
     """
 
     list_pointer = np.arange(pointer_start, pointer_start + gap)
-    list_pointer_shifted = list_pointer + delay
+    list_pointer_shifted = list_pointer + (delay * timebinsPerPixel)
     list_pixel = list_pointer_shifted // timebinsPerPixel
     list_b_digital = list_pointer_shifted % timebinsPerPixel
     if clk_multiplier != 1:
@@ -892,10 +892,10 @@ class AcquisitionLoopProcess(mp.Process):
                             if not self.do_not_save:
                                 # This is for debug purpose
 
-                                # np.add.at(self.buffer_for_save_digital, (list_y_digital, list_x_digital, list_b_digital),
-                                #           buffer_up_to_gap_digital[:,:channels])
-                                # np.add.at(self.buffer_for_save_digital_extra_ch, (list_y_digital, list_x_digital, list_b_digital),
-                                #           buffer_up_to_gap_digital[:,channels:])
+                                np.add.at(self.buffer_for_save_digital, (list_y_digital, list_x_digital, list_b_digital),
+                                          buffer_up_to_gap_digital[:,:channels])
+                                np.add.at(self.buffer_for_save_digital_extra_ch, (list_y_digital, list_x_digital, list_b_digital),
+                                          buffer_up_to_gap_digital[:,channels:])
 
                                 # self.buffer_for_save_digital[
                                 #     list_y_digital, list_x_digital, list_b_digital, :
@@ -904,8 +904,8 @@ class AcquisitionLoopProcess(mp.Process):
                                 #     list_y_digital, list_x_digital, list_b_digital, :
                                 # ] = buffer_up_to_gap_digital[:, channels:]
 
-                                self.buffer_for_save_digital[list_y_digital, list_x_digital, list_b_digital] = buffer_up_to_gap_digital[:, :channels]
-                                self.buffer_for_save_digital_extra_ch[list_y_digital, list_x_digital, list_b_digital] = buffer_up_to_gap_digital[:, channels:]
+                                # self.buffer_for_save_digital[list_y_digital, list_x_digital, list_b_digital] = buffer_up_to_gap_digital[:, :channels]
+                                # self.buffer_for_save_digital_extra_ch[list_y_digital, list_x_digital, list_b_digital] = buffer_up_to_gap_digital[:, channels:]
                                 #
                                 # np.add.at(
                                 #     self.buffer_for_save_digital,
