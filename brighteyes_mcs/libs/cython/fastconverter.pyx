@@ -391,7 +391,7 @@ cpdef int convertDataFromAnalogFIFO(data, start, stop, buffer_out, force_positiv
     cdef int32_t[:,:] out_view = buffer_out
     cdef int start_c = start
     cdef int stop_c = stop
-    cdef int length = (stop_c - start_c)//2
+    cdef int length = (stop_c - start_c)
     cdef int i, j
     cdef uint64_t val
     cdef int32_t val_low, val_high
