@@ -395,6 +395,7 @@ cpdef int convertDataFromAnalogFIFO(data, start, stop, buffer_out, force_positiv
     cdef int i, j
     cdef uint64_t val
     cdef int32_t val_low, val_high
+    cdef uint64_t mask_half = 0x7FFFFFFF
     cdef uint64_t mask = 0xFFFFFFFF
 
     if force_positive:
@@ -404,8 +405,8 @@ cpdef int convertDataFromAnalogFIFO(data, start, stop, buffer_out, force_positiv
                 j = i + start_c
                 val = values_view[j]
 
-                val_low =(<uint32_t>(val & mask))
-                val_high =  (<uint32_t>(val >> 32))
+                val_low = <int32_t>(<uint32_t>(val         & mask))
+                val_high = <int32_t>(<uint32_t>(val >> 32) & mask)
 
                 out_view[i, 0] = val_low if val_low >= 0 else 0
                 out_view[i, 1] = val_high if val_high >= 0 else 0
@@ -416,7 +417,7 @@ cpdef int convertDataFromAnalogFIFO(data, start, stop, buffer_out, force_positiv
                 j = i + start_c
                 val = values_view[j]
 
-                out_view[i, 0] = (<uint32_t>(val & mask))
-                out_view[i, 1] = (<uint32_t>(val >> 32))
+                out_view[i, 0] = <int32_t>(<uint32_t>(val        & mask))
+                out_view[i, 1] = <int32_t>(<uint32_t>(val >> 32) & mask)
 
     return 0
