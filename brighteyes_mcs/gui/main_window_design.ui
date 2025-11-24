@@ -1520,8 +1520,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>349</width>
-          <height>106</height>
+          <width>377</width>
+          <height>108</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_68">
@@ -1970,8 +1970,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>383</width>
-          <height>155</height>
+          <width>416</width>
+          <height>140</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_74">
@@ -3152,9 +3152,9 @@
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>0</y>
-          <width>400</width>
-          <height>316</height>
+          <y>-165</y>
+          <width>416</width>
+          <height>354</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_64">
@@ -3170,24 +3170,85 @@
             <layout class="QGridLayout" name="gridLayout_36">
              <item row="1" column="0">
               <layout class="QGridLayout" name="gridLayout_24">
-               <item row="9" column="1">
+               <item row="12" column="0">
+                <widget class="QLabel" name="label_92">
+                 <property name="text">
+                  <string>FPGA 2nd Addr.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="10" column="2">
+                <widget class="QPushButton" name="pushButton_FPGA2_file_selection">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>...</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="10" column="1">
                 <widget class="QLineEdit" name="lineEdit_fpga2bitfile">
                  <property name="text">
                   <string/>
                  </property>
                 </widget>
                </item>
-               <item row="8" column="0">
-                <widget class="QLabel" name="label_98">
+               <item row="1" column="1">
+                <widget class="QLabel" name="label_75">
                  <property name="text">
-                  <string/>
+                  <string>Load .cfg file</string>
                  </property>
                 </widget>
                </item>
-               <item row="6" column="1">
+               <item row="7" column="0">
+                <widget class="QLabel" name="label_66">
+                 <property name="text">
+                  <string>FPGA Addr.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="10" column="0">
+                <widget class="QLabel" name="label_91">
+                 <property name="text">
+                  <string>FPGA 2nd Bitfile</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="9" column="1">
+                <spacer name="verticalSpacer_7">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="7" column="1">
                 <widget class="QLineEdit" name="lineEdit_ni_addr">
                  <property name="text">
                   <string>RIO0</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_88">
+                 <property name="text">
+                  <string>Loaded .cfg</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="0">
+                <widget class="QLabel" name="label_122">
+                 <property name="text">
+                  <string>Bitfile Sign.</string>
                  </property>
                 </widget>
                </item>
@@ -3204,34 +3265,6 @@
                  </property>
                 </widget>
                </item>
-               <item row="6" column="0">
-                <widget class="QLabel" name="label_66">
-                 <property name="text">
-                  <string>FPGA Addr.</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_88">
-                 <property name="text">
-                  <string>Loaded .cfg</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="0">
-                <widget class="QLabel" name="label_67">
-                 <property name="text">
-                  <string>Default .cfg File</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QLabel" name="label_75">
-                 <property name="text">
-                  <string>Load .cfg file</string>
-                 </property>
-                </widget>
-               </item>
                <item row="5" column="1">
                 <widget class="QLineEdit" name="lineEdit_fpgabitfile">
                  <property name="text">
@@ -3239,17 +3272,10 @@
                  </property>
                 </widget>
                </item>
-               <item row="10" column="1">
-                <widget class="QLineEdit" name="lineEdit_ni2addr">
+               <item row="2" column="1">
+                <widget class="QLabel" name="label_81">
                  <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="2">
-                <widget class="QPushButton" name="pushButton_saveCfg">
-                 <property name="text">
-                  <string>...</string>
+                  <string>Save .cfg file</string>
                  </property>
                 </widget>
                </item>
@@ -3260,21 +3286,8 @@
                  </property>
                 </widget>
                </item>
-               <item row="10" column="0">
-                <widget class="QLabel" name="label_92">
-                 <property name="text">
-                  <string>FPGA 2nd Addr.</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="9" column="2">
-                <widget class="QPushButton" name="pushButton_FPGA2_file_selection">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
+               <item row="2" column="2">
+                <widget class="QPushButton" name="pushButton_saveCfg">
                  <property name="text">
                   <string>...</string>
                  </property>
@@ -3287,24 +3300,10 @@
                  </property>
                 </widget>
                </item>
-               <item row="9" column="0">
-                <widget class="QLabel" name="label_91">
+               <item row="4" column="0">
+                <widget class="QLabel" name="label_67">
                  <property name="text">
-                  <string>FPGA 2nd Bitfile</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QLabel" name="label_81">
-                 <property name="text">
-                  <string>Save .cfg file</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QLabel" name="label_loadedcfg">
-                 <property name="text">
-                  <string>.</string>
+                  <string>Default .cfg File</string>
                  </property>
                 </widget>
                </item>
@@ -3315,18 +3314,47 @@
                  </property>
                 </widget>
                </item>
-               <item row="8" column="1">
-                <spacer name="verticalSpacer_7">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Vertical</enum>
+               <item row="12" column="1">
+                <widget class="QLineEdit" name="lineEdit_ni2addr">
+                 <property name="text">
+                  <string/>
                  </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
+                </widget>
+               </item>
+               <item row="9" column="0">
+                <widget class="QLabel" name="label_98">
+                 <property name="text">
+                  <string/>
                  </property>
-                </spacer>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QLabel" name="label_loadedcfg">
+                 <property name="text">
+                  <string>.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="11" column="0">
+                <widget class="QLabel" name="label_123">
+                 <property name="text">
+                  <string>Bitfile Sign.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="1">
+                <widget class="QLabel" name="label_bitfile_signature">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item row="11" column="1">
+                <widget class="QLabel" name="label_bitfile_signature_2">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
@@ -4409,7 +4437,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>349</width>
+          <width>377</width>
           <height>304</height>
          </rect>
         </property>
@@ -4750,9 +4778,9 @@
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>-105</y>
-          <width>383</width>
-          <height>184</height>
+          <y>0</y>
+          <width>416</width>
+          <height>186</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_63">
@@ -5103,8 +5131,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>366</width>
-          <height>153</height>
+          <width>389</width>
+          <height>151</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -5174,8 +5202,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>366</width>
-          <height>70</height>
+          <width>379</width>
+          <height>72</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_65">
@@ -5565,8 +5593,8 @@
    <slot>test1()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1432</x>
-     <y>690</y>
+     <x>1417</x>
+     <y>717</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -5581,8 +5609,8 @@
    <slot>test2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1543</x>
-     <y>690</y>
+     <x>1538</x>
+     <y>717</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -5597,8 +5625,8 @@
    <slot>test3()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1654</x>
-     <y>690</y>
+     <x>1659</x>
+     <y>717</y>
     </hint>
     <hint type="destinationlabel">
      <x>751</x>
@@ -5613,8 +5641,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1039</y>
+     <x>145</x>
+     <y>900</y>
     </hint>
     <hint type="destinationlabel">
      <x>239</x>
@@ -5629,8 +5657,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1039</y>
+     <x>145</x>
+     <y>930</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5645,8 +5673,8 @@
    <slot>calibrationFactorChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1039</y>
+     <x>145</x>
+     <y>960</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5661,8 +5689,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>125</x>
-     <y>1047</y>
+     <x>141</x>
+     <y>1014</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5677,8 +5705,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>125</x>
-     <y>1047</y>
+     <x>141</x>
+     <y>1044</y>
     </hint>
     <hint type="destinationlabel">
      <x>237</x>
@@ -5693,8 +5721,8 @@
    <slot>offset_V_Changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>125</x>
-     <y>1047</y>
+     <x>141</x>
+     <y>1074</y>
     </hint>
     <hint type="destinationlabel">
      <x>235</x>
@@ -5757,8 +5785,8 @@
    <slot>test4()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1432</x>
-     <y>720</y>
+     <x>1417</x>
+     <y>747</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -5773,8 +5801,8 @@
    <slot>test5()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1543</x>
-     <y>720</y>
+     <x>1538</x>
+     <y>747</y>
     </hint>
     <hint type="destinationlabel">
      <x>689</x>
@@ -5789,8 +5817,8 @@
    <slot>test6()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1654</x>
-     <y>720</y>
+     <x>1659</x>
+     <y>747</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -5805,8 +5833,8 @@
    <slot>test7()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1432</x>
-     <y>750</y>
+     <x>1417</x>
+     <y>777</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -5821,8 +5849,8 @@
    <slot>test8()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1543</x>
-     <y>750</y>
+     <x>1538</x>
+     <y>777</y>
     </hint>
     <hint type="destinationlabel">
      <x>690</x>
@@ -5837,8 +5865,8 @@
    <slot>test9()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1654</x>
-     <y>750</y>
+     <x>1659</x>
+     <y>777</y>
     </hint>
     <hint type="destinationlabel">
      <x>686</x>
@@ -5853,8 +5881,8 @@
    <slot>checkBoxLockRatioChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>448</x>
-     <y>590</y>
+     <x>437</x>
+     <y>608</y>
     </hint>
     <hint type="destinationlabel">
      <x>250</x>
@@ -5869,8 +5897,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>125</x>
-     <y>1039</y>
+     <x>141</x>
+     <y>900</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -5885,8 +5913,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>125</x>
-     <y>1039</y>
+     <x>141</x>
+     <y>930</y>
     </hint>
     <hint type="destinationlabel">
      <x>246</x>
@@ -5901,8 +5929,8 @@
    <slot>positionSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>125</x>
-     <y>1039</y>
+     <x>141</x>
+     <y>960</y>
     </hint>
     <hint type="destinationlabel">
      <x>248</x>
@@ -5965,8 +5993,8 @@
    <slot>previewButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>94</x>
-     <y>81</y>
+     <x>72</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>329</x>
@@ -5981,7 +6009,7 @@
    <slot>startButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>213</x>
+     <x>132</x>
      <y>82</y>
     </hint>
     <hint type="destinationlabel">
@@ -5997,8 +6025,8 @@
    <slot>stopButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>94</x>
-     <y>145</y>
+     <x>192</x>
+     <y>82</y>
     </hint>
     <hint type="destinationlabel">
      <x>328</x>
@@ -6013,8 +6041,8 @@
    <slot>plotSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>736</x>
-     <y>1507</y>
+     <x>739</x>
+     <y>1549</y>
     </hint>
     <hint type="destinationlabel">
      <x>468</x>
@@ -6029,8 +6057,8 @@
    <slot>selectedAutoscaleImg()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>566</x>
-     <y>1506</y>
+     <x>558</x>
+     <y>1547</y>
     </hint>
     <hint type="destinationlabel">
      <x>215</x>
@@ -6045,8 +6073,8 @@
    <slot>projChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>736</x>
-     <y>1479</y>
+     <x>739</x>
+     <y>1519</y>
     </hint>
     <hint type="destinationlabel">
      <x>469</x>
@@ -6061,8 +6089,8 @@
    <slot>startBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>82</y>
+     <x>1254</x>
+     <y>896</y>
     </hint>
     <hint type="destinationlabel">
      <x>747</x>
@@ -6077,8 +6105,8 @@
    <slot>copyPositionsMarkers()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>904</x>
+     <y>173</y>
     </hint>
     <hint type="destinationlabel">
      <x>555</x>
@@ -6093,8 +6121,8 @@
    <slot>stopBatchFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>82</y>
+     <x>1254</x>
+     <y>997</y>
     </hint>
     <hint type="destinationlabel">
      <x>870</x>
@@ -6109,8 +6137,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1360</x>
-     <y>478</y>
+     <x>1340</x>
+     <y>498</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -6125,8 +6153,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1402</x>
-     <y>478</y>
+     <x>1385</x>
+     <y>498</y>
     </hint>
     <hint type="destinationlabel">
      <x>871</x>
@@ -6141,8 +6169,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1443</x>
-     <y>478</y>
+     <x>1429</x>
+     <y>498</y>
     </hint>
     <hint type="destinationlabel">
      <x>874</x>
@@ -6157,8 +6185,8 @@
    <slot>laserChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1485</x>
-     <y>478</y>
+     <x>1474</x>
+     <y>498</y>
     </hint>
     <hint type="destinationlabel">
      <x>862</x>
@@ -6173,8 +6201,8 @@
    <slot>cmd_moveToSelectedColumnFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>1254</x>
+     <y>240</y>
     </hint>
     <hint type="destinationlabel">
      <x>872</x>
@@ -6205,8 +6233,8 @@
    <slot>addToBatch()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>212</x>
-     <y>114</y>
+     <x>202</x>
+     <y>144</y>
     </hint>
     <hint type="destinationlabel">
      <x>315</x>
@@ -6221,8 +6249,8 @@
    <slot>cmd_path_destinationfolder()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>448</x>
-     <y>1145</y>
+     <x>437</x>
+     <y>1199</y>
     </hint>
     <hint type="destinationlabel">
      <x>790</x>
@@ -6237,8 +6265,8 @@
    <slot>bit_file_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>408</x>
-     <y>1140</y>
+     <x>402</x>
+     <y>988</y>
     </hint>
     <hint type="destinationlabel">
      <x>357</x>
@@ -6254,7 +6282,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1682</x>
-     <y>923</y>
+     <y>955</y>
     </hint>
     <hint type="destinationlabel">
      <x>688</x>
@@ -6269,8 +6297,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>226</x>
-     <y>480</y>
+     <x>224</x>
+     <y>497</y>
     </hint>
     <hint type="destinationlabel">
      <x>311</x>
@@ -6285,8 +6313,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>226</x>
-     <y>451</y>
+     <x>224</x>
+     <y>467</y>
     </hint>
     <hint type="destinationlabel">
      <x>314</x>
@@ -6301,8 +6329,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>226</x>
-     <y>395</y>
+     <x>224</x>
+     <y>407</y>
     </hint>
     <hint type="destinationlabel">
      <x>316</x>
@@ -6333,8 +6361,8 @@
    <slot>spatialSettingsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>226</x>
-     <y>423</y>
+     <x>224</x>
+     <y>437</y>
     </hint>
     <hint type="destinationlabel">
      <x>318</x>
@@ -6349,8 +6377,8 @@
    <slot>FCSReset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>82</y>
+     <x>1119</x>
+     <y>1099</y>
     </hint>
     <hint type="destinationlabel">
      <x>840</x>
@@ -6365,8 +6393,8 @@
    <slot>cmd_filename()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>448</x>
-     <y>1173</y>
+     <x>437</x>
+     <y>1227</y>
     </hint>
     <hint type="destinationlabel">
      <x>348</x>
@@ -6381,8 +6409,8 @@
    <slot>ttm_activate_change_state()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>296</x>
-     <y>152</y>
+     <x>279</x>
+     <y>154</y>
     </hint>
     <hint type="destinationlabel">
      <x>1196</x>
@@ -6397,8 +6425,8 @@
    <slot>cmd_load_plugin()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1399</x>
-     <y>1003</y>
+     <x>1376</x>
+     <y>1035</y>
     </hint>
     <hint type="destinationlabel">
      <x>1468</x>
@@ -6413,8 +6441,8 @@
    <slot>cmd_close_plugin()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1480</x>
-     <y>1003</y>
+     <x>1457</x>
+     <y>1035</y>
     </hint>
     <hint type="destinationlabel">
      <x>1595</x>
@@ -6430,7 +6458,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1672</x>
-     <y>1003</y>
+     <y>1035</y>
     </hint>
     <hint type="destinationlabel">
      <x>1576</x>
@@ -6445,8 +6473,8 @@
    <slot>cmd_load_plugin()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1655</x>
-     <y>1014</y>
+     <x>1672</x>
+     <y>1144</y>
     </hint>
     <hint type="destinationlabel">
      <x>1397</x>
@@ -6461,8 +6489,8 @@
    <slot>cmd_call_external()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>213</x>
-     <y>145</y>
+     <x>202</x>
+     <y>174</y>
     </hint>
     <hint type="destinationlabel">
      <x>353</x>
@@ -6477,8 +6505,8 @@
    <slot>copy_list_file()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>347</x>
-     <y>1400</y>
+     <x>337</x>
+     <y>1425</y>
     </hint>
     <hint type="destinationlabel">
      <x>354</x>
@@ -6493,8 +6521,8 @@
    <slot>delete_list_file()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>236</x>
-     <y>1400</y>
+     <x>226</x>
+     <y>1425</y>
     </hint>
     <hint type="destinationlabel">
      <x>355</x>
@@ -6509,8 +6537,8 @@
    <slot>analogOutChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1575</x>
-     <y>1211</y>
+     <x>1565</x>
+     <y>1257</y>
     </hint>
     <hint type="destinationlabel">
      <x>1622</x>
@@ -6525,8 +6553,8 @@
    <slot>analogOutChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1472</x>
-     <y>1211</y>
+     <x>1460</x>
+     <y>1257</y>
     </hint>
     <hint type="destinationlabel">
      <x>1485</x>
@@ -6541,8 +6569,8 @@
    <slot>bit_file_clicked2()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>408</x>
-     <y>1227</y>
+     <x>402</x>
+     <y>1085</y>
     </hint>
     <hint type="destinationlabel">
      <x>349</x>
@@ -6605,8 +6633,8 @@
    <slot>updatePixelValueChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>448</x>
-     <y>481</y>
+     <x>437</x>
+     <y>497</y>
     </hint>
     <hint type="destinationlabel">
      <x>367</x>
@@ -6621,8 +6649,8 @@
    <slot>DFD_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>429</x>
-     <y>152</y>
+     <x>418</x>
+     <y>154</y>
     </hint>
     <hint type="destinationlabel">
      <x>400</x>
@@ -6669,8 +6697,8 @@
    <slot>traceReset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1392</x>
-     <y>1298</y>
+     <x>1367</x>
+     <y>1336</y>
     </hint>
     <hint type="destinationlabel">
      <x>1215</x>
@@ -6685,8 +6713,8 @@
    <slot>trace_parameters_changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1475</x>
-     <y>1326</y>
+     <x>1467</x>
+     <y>1366</y>
     </hint>
     <hint type="destinationlabel">
      <x>1210</x>
@@ -6702,7 +6730,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1681</x>
-     <y>1326</y>
+     <y>1366</y>
     </hint>
     <hint type="destinationlabel">
      <x>1208</x>
@@ -6718,7 +6746,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>1681</x>
-     <y>1296</y>
+     <y>1334</y>
     </hint>
     <hint type="destinationlabel">
      <x>1207</x>
@@ -6733,8 +6761,8 @@
    <slot>trace_parameters_changed()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1567</x>
-     <y>1296</y>
+     <x>1563</x>
+     <y>1334</y>
     </hint>
     <hint type="destinationlabel">
      <x>1208</x>
@@ -6749,8 +6777,8 @@
    <slot>about()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1432</x>
-     <y>660</y>
+     <x>1417</x>
+     <y>687</y>
     </hint>
     <hint type="destinationlabel">
      <x>1255</x>
@@ -6765,8 +6793,8 @@
    <slot>circularMotionActivateChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>439</x>
-     <y>806</y>
+     <x>428</x>
+     <y>812</y>
     </hint>
     <hint type="destinationlabel">
      <x>424</x>
@@ -6797,8 +6825,8 @@
    <slot>test_analog_digital()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1432</x>
-     <y>780</y>
+     <x>1417</x>
+     <y>807</y>
     </hint>
     <hint type="destinationlabel">
      <x>1255</x>
@@ -6813,8 +6841,8 @@
    <slot>httpServerCheckBoxChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>129</x>
-     <y>1035</y>
+     <x>321</x>
+     <y>874</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6829,8 +6857,8 @@
    <slot>addcurrentconfmacro()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>721</x>
+     <y>173</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6845,8 +6873,8 @@
    <slot>addcurrentconfmacrofcs()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>721</x>
+     <y>308</y>
     </hint>
     <hint type="destinationlabel">
      <x>428</x>
@@ -6861,8 +6889,8 @@
    <slot>copyPositionsMarkersFCS()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>544</x>
-     <y>73</y>
+     <x>904</x>
+     <y>308</y>
     </hint>
     <hint type="destinationlabel">
      <x>427</x>
@@ -6909,8 +6937,8 @@
    <slot>openInExplorer()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>449</x>
-     <y>1400</y>
+     <x>438</x>
+     <y>1425</y>
     </hint>
     <hint type="destinationlabel">
      <x>437</x>
@@ -6925,8 +6953,8 @@
    <slot>pushButton_uttm_start_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>52</y>
+     <x>1147</x>
+     <y>101</y>
     </hint>
     <hint type="destinationlabel">
      <x>1331</x>
@@ -6941,8 +6969,8 @@
    <slot>pushButton_uttm_stop_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>574</x>
-     <y>52</y>
+     <x>1242</x>
+     <y>101</y>
     </hint>
     <hint type="destinationlabel">
      <x>1332</x>
@@ -6957,8 +6985,8 @@
    <slot>pushButton_uttm_status_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>72</y>
+     <x>1147</x>
+     <y>213</y>
     </hint>
     <hint type="destinationlabel">
      <x>1329</x>
@@ -6973,8 +7001,8 @@
    <slot>pushButton_uttm_test_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>574</x>
-     <y>67</y>
+     <x>1242</x>
+     <y>183</y>
     </hint>
     <hint type="destinationlabel">
      <x>1332</x>
@@ -6989,8 +7017,8 @@
    <slot>checkBox_uttm_watchdog_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>574</x>
-     <y>57</y>
+     <x>1242</x>
+     <y>127</y>
     </hint>
     <hint type="destinationlabel">
      <x>1301</x>
@@ -7005,8 +7033,8 @@
    <slot>pushButton_uttm_check_laser_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>67</y>
+     <x>1147</x>
+     <y>183</y>
     </hint>
     <hint type="destinationlabel">
      <x>1301</x>
@@ -7085,8 +7113,8 @@
    <slot>checkBox_uttm_watchdog_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>545</x>
-     <y>62</y>
+     <x>1147</x>
+     <y>153</y>
     </hint>
     <hint type="destinationlabel">
      <x>1301</x>
@@ -7101,8 +7129,8 @@
    <slot>numberChannelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>429</x>
-     <y>90</y>
+     <x>418</x>
+     <y>92</y>
     </hint>
     <hint type="destinationlabel">
      <x>1301</x>
@@ -7139,6 +7167,38 @@
     <hint type="destinationlabel">
      <x>470</x>
      <y>127</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_fpgabitfile</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>bitfile_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>210</x>
+     <y>978</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>455</x>
+     <y>1039</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_fpga2bitfile</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>bitfile_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>195</x>
+     <y>1071</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>456</x>
+     <y>1101</y>
     </hint>
    </hints>
   </connection>
@@ -7236,5 +7296,6 @@
   <slot>pushButton_uttm_test_clicked()</slot>
   <slot>checkBox_uttm_watchdog_clicked()</slot>
   <slot>pushButton_uttm_check_laser_clicked()</slot>
+  <slot>bitfile_changed()</slot>
  </slots>
 </ui>

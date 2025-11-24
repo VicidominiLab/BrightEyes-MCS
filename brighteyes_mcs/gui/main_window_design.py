@@ -921,7 +921,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_6.setWidgetResizable(True)
         self.scrollAreaWidgetContents_4 = QWidget()
         self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 349, 106))
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 377, 108))
         self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName(u"gridLayout_68")
         self.gridLayout_3434 = QGridLayout()
@@ -1190,7 +1190,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollAreaWidgetContents_7 = QWidget()
         self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
-        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 383, 155))
+        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 416, 140))
         self.gridLayout_74 = QGridLayout(self.scrollAreaWidgetContents_7)
         self.gridLayout_74.setObjectName(u"gridLayout_74")
         self.groupBox = QGroupBox(self.scrollAreaWidgetContents_7)
@@ -1745,7 +1745,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 400, 316))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, -165, 416, 354))
         self.gridLayout_64 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_64.setObjectName(u"gridLayout_64")
         self.tabWidget_2 = QTabWidget(self.scrollAreaWidgetContents_2)
@@ -1756,20 +1756,56 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_36.setObjectName(u"gridLayout_36")
         self.gridLayout_24 = QGridLayout()
         self.gridLayout_24.setObjectName(u"gridLayout_24")
+        self.label_92 = QLabel(self.tab_2)
+        self.label_92.setObjectName(u"label_92")
+
+        self.gridLayout_24.addWidget(self.label_92, 12, 0, 1, 1)
+
+        self.pushButton_FPGA2_file_selection = QPushButton(self.tab_2)
+        self.pushButton_FPGA2_file_selection.setObjectName(u"pushButton_FPGA2_file_selection")
+        sizePolicy2.setHeightForWidth(self.pushButton_FPGA2_file_selection.sizePolicy().hasHeightForWidth())
+        self.pushButton_FPGA2_file_selection.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_24.addWidget(self.pushButton_FPGA2_file_selection, 10, 2, 1, 1)
+
         self.lineEdit_fpga2bitfile = QLineEdit(self.tab_2)
         self.lineEdit_fpga2bitfile.setObjectName(u"lineEdit_fpga2bitfile")
 
-        self.gridLayout_24.addWidget(self.lineEdit_fpga2bitfile, 9, 1, 1, 1)
+        self.gridLayout_24.addWidget(self.lineEdit_fpga2bitfile, 10, 1, 1, 1)
 
-        self.label_98 = QLabel(self.tab_2)
-        self.label_98.setObjectName(u"label_98")
+        self.label_75 = QLabel(self.tab_2)
+        self.label_75.setObjectName(u"label_75")
 
-        self.gridLayout_24.addWidget(self.label_98, 8, 0, 1, 1)
+        self.gridLayout_24.addWidget(self.label_75, 1, 1, 1, 1)
+
+        self.label_66 = QLabel(self.tab_2)
+        self.label_66.setObjectName(u"label_66")
+
+        self.gridLayout_24.addWidget(self.label_66, 7, 0, 1, 1)
+
+        self.label_91 = QLabel(self.tab_2)
+        self.label_91.setObjectName(u"label_91")
+
+        self.gridLayout_24.addWidget(self.label_91, 10, 0, 1, 1)
+
+        self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_24.addItem(self.verticalSpacer_7, 9, 1, 1, 1)
 
         self.lineEdit_ni_addr = QLineEdit(self.tab_2)
         self.lineEdit_ni_addr.setObjectName(u"lineEdit_ni_addr")
 
-        self.gridLayout_24.addWidget(self.lineEdit_ni_addr, 6, 1, 1, 1)
+        self.gridLayout_24.addWidget(self.lineEdit_ni_addr, 7, 1, 1, 1)
+
+        self.label_88 = QLabel(self.tab_2)
+        self.label_88.setObjectName(u"label_88")
+
+        self.gridLayout_24.addWidget(self.label_88, 3, 0, 1, 1)
+
+        self.label_122 = QLabel(self.tab_2)
+        self.label_122.setObjectName(u"label_122")
+
+        self.gridLayout_24.addWidget(self.label_122, 6, 0, 1, 1)
 
         self.pushButton_FPGA_file_selection = QPushButton(self.tab_2)
         self.pushButton_FPGA_file_selection.setObjectName(u"pushButton_FPGA_file_selection")
@@ -1778,86 +1814,70 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_24.addWidget(self.pushButton_FPGA_file_selection, 5, 2, 1, 1)
 
-        self.label_66 = QLabel(self.tab_2)
-        self.label_66.setObjectName(u"label_66")
-
-        self.gridLayout_24.addWidget(self.label_66, 6, 0, 1, 1)
-
-        self.label_88 = QLabel(self.tab_2)
-        self.label_88.setObjectName(u"label_88")
-
-        self.gridLayout_24.addWidget(self.label_88, 3, 0, 1, 1)
-
-        self.label_67 = QLabel(self.tab_2)
-        self.label_67.setObjectName(u"label_67")
-
-        self.gridLayout_24.addWidget(self.label_67, 4, 0, 1, 1)
-
-        self.label_75 = QLabel(self.tab_2)
-        self.label_75.setObjectName(u"label_75")
-
-        self.gridLayout_24.addWidget(self.label_75, 1, 1, 1, 1)
-
         self.lineEdit_fpgabitfile = QLineEdit(self.tab_2)
         self.lineEdit_fpgabitfile.setObjectName(u"lineEdit_fpgabitfile")
 
         self.gridLayout_24.addWidget(self.lineEdit_fpgabitfile, 5, 1, 1, 1)
-
-        self.lineEdit_ni2addr = QLineEdit(self.tab_2)
-        self.lineEdit_ni2addr.setObjectName(u"lineEdit_ni2addr")
-
-        self.gridLayout_24.addWidget(self.lineEdit_ni2addr, 10, 1, 1, 1)
-
-        self.pushButton_saveCfg = QPushButton(self.tab_2)
-        self.pushButton_saveCfg.setObjectName(u"pushButton_saveCfg")
-
-        self.gridLayout_24.addWidget(self.pushButton_saveCfg, 2, 2, 1, 1)
-
-        self.pushButton_loadCfg = QPushButton(self.tab_2)
-        self.pushButton_loadCfg.setObjectName(u"pushButton_loadCfg")
-
-        self.gridLayout_24.addWidget(self.pushButton_loadCfg, 1, 2, 1, 1)
-
-        self.label_92 = QLabel(self.tab_2)
-        self.label_92.setObjectName(u"label_92")
-
-        self.gridLayout_24.addWidget(self.label_92, 10, 0, 1, 1)
-
-        self.pushButton_FPGA2_file_selection = QPushButton(self.tab_2)
-        self.pushButton_FPGA2_file_selection.setObjectName(u"pushButton_FPGA2_file_selection")
-        sizePolicy2.setHeightForWidth(self.pushButton_FPGA2_file_selection.sizePolicy().hasHeightForWidth())
-        self.pushButton_FPGA2_file_selection.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_24.addWidget(self.pushButton_FPGA2_file_selection, 9, 2, 1, 1)
-
-        self.lineEdit_configurationfile = QLineEdit(self.tab_2)
-        self.lineEdit_configurationfile.setObjectName(u"lineEdit_configurationfile")
-
-        self.gridLayout_24.addWidget(self.lineEdit_configurationfile, 4, 1, 1, 1)
-
-        self.label_91 = QLabel(self.tab_2)
-        self.label_91.setObjectName(u"label_91")
-
-        self.gridLayout_24.addWidget(self.label_91, 9, 0, 1, 1)
 
         self.label_81 = QLabel(self.tab_2)
         self.label_81.setObjectName(u"label_81")
 
         self.gridLayout_24.addWidget(self.label_81, 2, 1, 1, 1)
 
-        self.label_loadedcfg = QLabel(self.tab_2)
-        self.label_loadedcfg.setObjectName(u"label_loadedcfg")
+        self.pushButton_loadCfg = QPushButton(self.tab_2)
+        self.pushButton_loadCfg.setObjectName(u"pushButton_loadCfg")
 
-        self.gridLayout_24.addWidget(self.label_loadedcfg, 3, 1, 1, 1)
+        self.gridLayout_24.addWidget(self.pushButton_loadCfg, 1, 2, 1, 1)
+
+        self.pushButton_saveCfg = QPushButton(self.tab_2)
+        self.pushButton_saveCfg.setObjectName(u"pushButton_saveCfg")
+
+        self.gridLayout_24.addWidget(self.pushButton_saveCfg, 2, 2, 1, 1)
+
+        self.lineEdit_configurationfile = QLineEdit(self.tab_2)
+        self.lineEdit_configurationfile.setObjectName(u"lineEdit_configurationfile")
+
+        self.gridLayout_24.addWidget(self.lineEdit_configurationfile, 4, 1, 1, 1)
+
+        self.label_67 = QLabel(self.tab_2)
+        self.label_67.setObjectName(u"label_67")
+
+        self.gridLayout_24.addWidget(self.label_67, 4, 0, 1, 1)
 
         self.label_65 = QLabel(self.tab_2)
         self.label_65.setObjectName(u"label_65")
 
         self.gridLayout_24.addWidget(self.label_65, 5, 0, 1, 1)
 
-        self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.lineEdit_ni2addr = QLineEdit(self.tab_2)
+        self.lineEdit_ni2addr.setObjectName(u"lineEdit_ni2addr")
 
-        self.gridLayout_24.addItem(self.verticalSpacer_7, 8, 1, 1, 1)
+        self.gridLayout_24.addWidget(self.lineEdit_ni2addr, 12, 1, 1, 1)
+
+        self.label_98 = QLabel(self.tab_2)
+        self.label_98.setObjectName(u"label_98")
+
+        self.gridLayout_24.addWidget(self.label_98, 9, 0, 1, 1)
+
+        self.label_loadedcfg = QLabel(self.tab_2)
+        self.label_loadedcfg.setObjectName(u"label_loadedcfg")
+
+        self.gridLayout_24.addWidget(self.label_loadedcfg, 3, 1, 1, 1)
+
+        self.label_123 = QLabel(self.tab_2)
+        self.label_123.setObjectName(u"label_123")
+
+        self.gridLayout_24.addWidget(self.label_123, 11, 0, 1, 1)
+
+        self.label_bitfile_signature = QLabel(self.tab_2)
+        self.label_bitfile_signature.setObjectName(u"label_bitfile_signature")
+
+        self.gridLayout_24.addWidget(self.label_bitfile_signature, 6, 1, 1, 1)
+
+        self.label_bitfile_signature_2 = QLabel(self.tab_2)
+        self.label_bitfile_signature_2.setObjectName(u"label_bitfile_signature_2")
+
+        self.gridLayout_24.addWidget(self.label_bitfile_signature_2, 11, 1, 1, 1)
 
 
         self.gridLayout_36.addLayout(self.gridLayout_24, 1, 0, 1, 1)
@@ -2559,7 +2579,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 349, 304))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 377, 304))
         self.gridLayout_67 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_67.setObjectName(u"gridLayout_67")
         self.checkBox_correlationMatrix = QCheckBox(self.scrollAreaWidgetContents_6)
@@ -2780,7 +2800,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, -105, 383, 184))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 416, 186))
         self.gridLayout_63 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_63.setObjectName(u"gridLayout_63")
         self.groupBox_4 = QGroupBox(self.scrollAreaWidgetContents)
@@ -2943,7 +2963,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 366, 153))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 389, 151))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -2988,7 +3008,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 366, 70))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 379, 72))
         self.gridLayout_65 = QGridLayout(self.scrollAreaWidgetContents_3)
         self.gridLayout_65.setObjectName(u"gridLayout_65")
         self.gridLayout_AO = QGridLayout()
@@ -3303,6 +3323,8 @@ class Ui_MainWindowDesign(object):
         self.comboBox_channels.textActivated.connect(MainWindowDesign.numberChannelsChanged)
         self.groupBox_9.clicked.connect(MainWindowDesign.checkAlerts)
         self.checkBox_fifo_analog.clicked.connect(MainWindowDesign.checkAlerts)
+        self.lineEdit_fpgabitfile.textChanged.connect(MainWindowDesign.bitfile_changed)
+        self.lineEdit_fpga2bitfile.textChanged.connect(MainWindowDesign.bitfile_changed)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(2)
@@ -3731,25 +3753,29 @@ class Ui_MainWindowDesign(object):
         self.groupBox_7.setTitle(QCoreApplication.translate("MainWindowDesign", u"Laser Frequency", None))
         self.label_120.setText(QCoreApplication.translate("MainWindowDesign", u"Clock Base \u00d7", None))
         self.dockWidget_adv.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Adv.", None))
-        self.lineEdit_fpga2bitfile.setText("")
-        self.label_98.setText("")
-        self.lineEdit_ni_addr.setText(QCoreApplication.translate("MainWindowDesign", u"RIO0", None))
-        self.pushButton_FPGA_file_selection.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.label_66.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA Addr.", None))
-        self.label_88.setText(QCoreApplication.translate("MainWindowDesign", u"Loaded .cfg", None))
-        self.label_67.setText(QCoreApplication.translate("MainWindowDesign", u"Default .cfg File", None))
-        self.label_75.setText(QCoreApplication.translate("MainWindowDesign", u"Load .cfg file", None))
-        self.lineEdit_fpgabitfile.setText(QCoreApplication.translate("MainWindowDesign", u"bitfiles/MyBitfileUSB.lvbitx", None))
-        self.lineEdit_ni2addr.setText("")
-        self.pushButton_saveCfg.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.pushButton_loadCfg.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
         self.label_92.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA 2nd Addr.", None))
         self.pushButton_FPGA2_file_selection.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.lineEdit_configurationfile.setText(QCoreApplication.translate("MainWindowDesign", u"default.cfg", None))
+        self.lineEdit_fpga2bitfile.setText("")
+        self.label_75.setText(QCoreApplication.translate("MainWindowDesign", u"Load .cfg file", None))
+        self.label_66.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA Addr.", None))
         self.label_91.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA 2nd Bitfile", None))
+        self.lineEdit_ni_addr.setText(QCoreApplication.translate("MainWindowDesign", u"RIO0", None))
+        self.label_88.setText(QCoreApplication.translate("MainWindowDesign", u"Loaded .cfg", None))
+        self.label_122.setText(QCoreApplication.translate("MainWindowDesign", u"Bitfile Sign.", None))
+        self.pushButton_FPGA_file_selection.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
+        self.lineEdit_fpgabitfile.setText(QCoreApplication.translate("MainWindowDesign", u"bitfiles/MyBitfileUSB.lvbitx", None))
         self.label_81.setText(QCoreApplication.translate("MainWindowDesign", u"Save .cfg file", None))
-        self.label_loadedcfg.setText(QCoreApplication.translate("MainWindowDesign", u".", None))
+        self.pushButton_loadCfg.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
+        self.pushButton_saveCfg.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
+        self.lineEdit_configurationfile.setText(QCoreApplication.translate("MainWindowDesign", u"default.cfg", None))
+        self.label_67.setText(QCoreApplication.translate("MainWindowDesign", u"Default .cfg File", None))
         self.label_65.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA Bitfile", None))
+        self.lineEdit_ni2addr.setText("")
+        self.label_98.setText("")
+        self.label_loadedcfg.setText(QCoreApplication.translate("MainWindowDesign", u".", None))
+        self.label_123.setText(QCoreApplication.translate("MainWindowDesign", u"Bitfile Sign.", None))
+        self.label_bitfile_signature.setText("")
+        self.label_bitfile_signature_2.setText("")
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_2), QCoreApplication.translate("MainWindowDesign", u"Board Configuration", None))
         self.lineEdit_spad_data.setText(QCoreApplication.translate("MainWindowDesign", u"33554431", None))
         self.label_94.setText(QCoreApplication.translate("MainWindowDesign", u"Data cmd", None))

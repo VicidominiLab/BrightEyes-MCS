@@ -961,6 +961,20 @@ class MainWindow(QMainWindow):
             False,
         )
 
+        configuration_helper["bitFile_sign"] = (
+            "bitFile_sign",
+            str,
+            self.ui.label_bitfile_signature,
+            False,
+        )
+
+        configuration_helper["bitFile2_sign"] = (
+            "bitFile2_sign",
+            str,
+            self.ui.label_bitfile_signature_2,
+            False,
+        )
+
         configuration_helper["plugins"] = ("Plugins", dict, None, False)
 
         return configuration_helper
@@ -1389,6 +1403,31 @@ class MainWindow(QMainWindow):
             self.ui.lineEdit_configurationfile.setText(file_cfg_nicer)
         if ret == QMessageBox.No:
             print_dec("No")
+    @Slot()
+    def bitfile_changed(self):
+        '''
+        Slot for update and check the FPGA bitfiles
+        '''
+        import nifpga
+
+        bitfile=self.ui.lineEdit_fpgabitfile.text()
+        bitfile2=self.ui.lineEdit_fpga2bitfile.text()
+        if os.path.isfile(bitfile):
+            try:
+                bitfile_reader = nifpga.Bitfile(bitfile)
+                bitfile_signature = bitfile_reader.signature
+            except:
+                bitfile_signature = ""
+            self.ui.label_bitfile_signature.setText(bitfile_signature)
+        if os.path.isfile(bitfile2):
+            try:
+                bitfile_reader = nifpga.Bitfile(bitfile2)
+                bitfile_signature = bitfile_reader.signature
+            except:
+                bitfile_signature = ""
+            self.ui.label_bitfile_signature_2.setText(bitfile_signature)
+
+
 
     @Slot()
     def bit_file_clicked(self):
