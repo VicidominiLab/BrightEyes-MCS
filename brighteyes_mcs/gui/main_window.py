@@ -798,6 +798,20 @@ class MainWindow(QMainWindow):
         # configuration_helper["PMT_Threshold_Max"] = (
         #     "PMT Thr. Max (V)", float, self.ui.spinBox_PMT_Threshold_Max, False)
 
+        configuration_helper["spad_vr0"] = (
+            "SPAD VR0",
+            bool,
+            self.ui.checkBox_SPAD_VR0,
+            False,
+        )
+
+        configuration_helper["spad_vr1"] = (
+            "SPAD VR1",
+            bool,
+            self.ui.checkBox_SPAD_VR1,
+            False,
+        )
+
         configuration_helper["default_offset_x_um"] = (
             "Default Offset X (um)",
             float,
@@ -4261,6 +4275,9 @@ Have fun!
         slave_mode = self.ui.checkBox_slavemode_enable.isChecked()
         slave_type = self.ui.comboBox_slavemode_type.currentIndex()
 
+        vr0 = self.ui.checkBox_SPAD_VR0.isChecked()
+        vr1 = self.ui.checkBox_SPAD_VR0.isChecked()
+
         self.setRegistersDict(
             {
                 "Cx": int(Cx),
@@ -4275,7 +4292,9 @@ Have fun!
                 "DummyData": dummy_data,
                 "excitation sequence": laser_sequence,
                 "ext_px_selector": slave_type,
-                "SlaveMode": slave_mode
+                "SlaveMode": slave_mode,
+                "VR0": vr0,
+                "VR1": vr1,
                 # "AD5764_MaxBit": 1,
             }
         )

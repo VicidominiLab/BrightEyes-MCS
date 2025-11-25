@@ -1745,7 +1745,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, -165, 416, 354))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 416, 354))
         self.gridLayout_64 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_64.setObjectName(u"gridLayout_64")
         self.tabWidget_2 = QTabWidget(self.scrollAreaWidgetContents_2)
@@ -1887,44 +1887,59 @@ class Ui_MainWindowDesign(object):
         self.tab.setObjectName(u"tab")
         self.gridLayout_61 = QGridLayout(self.tab)
         self.gridLayout_61.setObjectName(u"gridLayout_61")
+        self.label_119 = QLabel(self.tab)
+        self.label_119.setObjectName(u"label_119")
+
+        self.gridLayout_61.addWidget(self.label_119, 5, 0, 1, 1)
+
         self.gridLayout_59 = QGridLayout()
         self.gridLayout_59.setObjectName(u"gridLayout_59")
         self.lineEdit_spad_data = QLineEdit(self.tab)
         self.lineEdit_spad_data.setObjectName(u"lineEdit_spad_data")
 
-        self.gridLayout_59.addWidget(self.lineEdit_spad_data, 1, 1, 1, 1)
-
-        self.label_94 = QLabel(self.tab)
-        self.label_94.setObjectName(u"label_94")
-
-        self.gridLayout_59.addWidget(self.label_94, 1, 0, 1, 1)
-
-        self.verticalSpacer_12 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_59.addItem(self.verticalSpacer_12, 3, 1, 1, 1)
+        self.gridLayout_59.addWidget(self.lineEdit_spad_data, 1, 2, 1, 1)
 
         self.label_93 = QLabel(self.tab)
         self.label_93.setObjectName(u"label_93")
 
         self.gridLayout_59.addWidget(self.label_93, 0, 0, 1, 1)
 
+        self.label_94 = QLabel(self.tab)
+        self.label_94.setObjectName(u"label_94")
+
+        self.gridLayout_59.addWidget(self.label_94, 1, 0, 1, 1)
+
         self.checkBox_spad_invert = QCheckBox(self.tab)
         self.checkBox_spad_invert.setObjectName(u"checkBox_spad_invert")
 
-        self.gridLayout_59.addWidget(self.checkBox_spad_invert, 1, 2, 1, 1)
+        self.gridLayout_59.addWidget(self.checkBox_spad_invert, 1, 3, 1, 1)
 
         self.lineEdit_spad_length = QLineEdit(self.tab)
         self.lineEdit_spad_length.setObjectName(u"lineEdit_spad_length")
 
-        self.gridLayout_59.addWidget(self.lineEdit_spad_length, 0, 1, 1, 2)
+        self.gridLayout_59.addWidget(self.lineEdit_spad_length, 0, 2, 1, 2)
 
 
-        self.gridLayout_61.addLayout(self.gridLayout_59, 1, 0, 1, 1)
+        self.gridLayout_61.addLayout(self.gridLayout_59, 6, 0, 1, 1)
 
-        self.label_119 = QLabel(self.tab)
-        self.label_119.setObjectName(u"label_119")
+        self.checkBox_SPAD_VR0 = QCheckBox(self.tab)
+        self.checkBox_SPAD_VR0.setObjectName(u"checkBox_SPAD_VR0")
 
-        self.gridLayout_61.addWidget(self.label_119, 0, 0, 1, 1)
+        self.gridLayout_61.addWidget(self.checkBox_SPAD_VR0, 1, 0, 1, 1)
+
+        self.label_124 = QLabel(self.tab)
+        self.label_124.setObjectName(u"label_124")
+
+        self.gridLayout_61.addWidget(self.label_124, 0, 0, 1, 1)
+
+        self.checkBox_SPAD_VR1 = QCheckBox(self.tab)
+        self.checkBox_SPAD_VR1.setObjectName(u"checkBox_SPAD_VR1")
+
+        self.gridLayout_61.addWidget(self.checkBox_SPAD_VR1, 2, 0, 1, 1)
+
+        self.verticalSpacer_12 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_61.addItem(self.verticalSpacer_12, 3, 0, 1, 1)
 
         self.tabWidget_2.addTab(self.tab, "")
         self.tab_6 = QWidget()
@@ -3777,12 +3792,15 @@ class Ui_MainWindowDesign(object):
         self.label_bitfile_signature.setText("")
         self.label_bitfile_signature_2.setText("")
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_2), QCoreApplication.translate("MainWindowDesign", u"Board Configuration", None))
+        self.label_119.setText(QCoreApplication.translate("MainWindowDesign", u"(Legacy feature to program the old SPAD array prototype)", None))
         self.lineEdit_spad_data.setText(QCoreApplication.translate("MainWindowDesign", u"33554431", None))
-        self.label_94.setText(QCoreApplication.translate("MainWindowDesign", u"Data cmd", None))
         self.label_93.setText(QCoreApplication.translate("MainWindowDesign", u"Data length", None))
+        self.label_94.setText(QCoreApplication.translate("MainWindowDesign", u"Data cmd", None))
         self.checkBox_spad_invert.setText(QCoreApplication.translate("MainWindowDesign", u"Invert", None))
         self.lineEdit_spad_length.setText(QCoreApplication.translate("MainWindowDesign", u"25", None))
-        self.label_119.setText(QCoreApplication.translate("MainWindowDesign", u"(Legacy feature to program the old SPAD array prototype)", None))
+        self.checkBox_SPAD_VR0.setText(QCoreApplication.translate("MainWindowDesign", u"VR0", None))
+        self.label_124.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD 7x7 hold-off configuration:", None))
+        self.checkBox_SPAD_VR1.setText(QCoreApplication.translate("MainWindowDesign", u"VR1", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab), QCoreApplication.translate("MainWindowDesign", u"SPAD", None))
         self.label_56.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
         self.label_49.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
