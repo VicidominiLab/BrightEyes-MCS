@@ -1,5 +1,7 @@
 import nifpga
 import nifpga_fast_fifo_recv
+import numpy as np
+
 from .print_dec import print_dec
 
 
@@ -66,7 +68,10 @@ class RustFastFifoReader:
         print_dec(self.fast_fifo_recv_inst)
 
     def read_data(self, fifo="FIFO"):
-        read_data = self.fast_fifo_recv_inst[fifo].get_data_as_numpy()
+        try:
+            read_data = self.fast_fifo_recv_inst[fifo].get_data_as_numpy()
+        except KeyError as e:
+            return np.array([],np.uint64)
         # print_dec("read_data", fifo, read_data.shape)
         # read_data = self.fast_fifo_recv_inst[fifo].get_data() #not compatible with nifpga-fast-fifo-recv-0.101.6
         # print_dec("read_data len:", len(read_data))
