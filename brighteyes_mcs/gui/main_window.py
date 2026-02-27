@@ -2735,7 +2735,7 @@ class MainWindow(QMainWindow):
         self.configurationGUI_dict_beforeStart = self.getGUI_data()
         # self.configurationGUI_dict_beforeStart = self.configurationGUI_dict.copy()
 
-        self.startAcquisition(do_not_save=True, do_run=False)
+        self.initializeAcquisition(do_not_save=True, do_run=False)
 
     @Slot()
     def test8(self):
@@ -4176,16 +4176,19 @@ Have fun!
     # def afterFpgaRun(self):
     #     pass
 
-    def startAcquisition(self, do_not_save=False, do_run=True):
+    def initializeAcquisition(self, do_not_save=False, do_run=True):
         """
-        the actual start acquisition function
+        Initialize and configure acquisition parameters (registers, calibration, trace settings, etc.).
+        This method does NOT start the acquisition - it only prepares the system.
         """
         self.do_not_save = do_not_save
 
-        self.circularMotionActivateChanged()
-
+        # Initialize DFD settings BEFORE circular motion to ensure correct state
         self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
         self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
+
+        # Now initialize circular motion with correct DFD state
+        self.circularMotionActivateChanged()
 
         self.numberChannelsChanged()
         self.spadfcsmanager_inst.set_channels(int(self.ui.comboBox_channels.currentText()))
@@ -4278,27 +4281,6 @@ Have fun!
         vr0 = self.ui.checkBox_SPAD_VR0.isChecked()
         vr1 = self.ui.checkBox_SPAD_VR0.isChecked()
 
-        self.setRegistersDict(
-            {
-                "Cx": int(Cx),
-                "#timebinsPerPixel": int(time_bin),
-                "ClockDur": int(clock_duration),
-                "WaitForLaser": int(waitForLaserInCycle),
-                "WaitAfterFrame": int(waitAfterFrame),
-                "WaitOnlyFirstTime": waitOnlyFirstTime,
-                "#circular_points": circ_points,
-                "#circular_rep": circ_repetition,
-                "CircularMotionActivate": circular_motion,
-                "DummyData": dummy_data,
-                "excitation sequence": laser_sequence,
-                "ext_px_selector": slave_type,
-                "SlaveMode": slave_mode,
-                "VR0": vr0,
-                "VR1": vr1,
-                # "AD5764_MaxBit": 1,
-            }
-        )
-
         xx = self.ui.spinBox_range_x.value()
         yy = self.ui.spinBox_range_y.value()
         zz = self.ui.spinBox_range_z.value()
@@ -4360,8 +4342,29 @@ Have fun!
             ]
         )
 
+        laser_debug = self.ui.checkBox_DFD_LaserDebug.isChecked()
+
         self.setRegistersDict(
             {
+                "Cx": int(Cx),
+                "#timebinsPerPixel": int(time_bin),
+                "ClockDur": int(clock_duration),
+                "WaitForLaser": int(waitForLaserInCycle),
+                "WaitAfterFrame": int(waitAfterFrame),
+                "WaitOnlyFirstTime": waitOnlyFirstTime,
+                "#circular_points": circ_points,
+                "#circular_rep": circ_repetition,
+                "CircularMotionActivate": circular_motion,
+                "DummyData": dummy_data,
+                "excitation sequence": laser_sequence,
+                "ext_px_selector": slave_type,
+                "SlaveMode": slave_mode,
+                "VR0": vr0,
+                "VR1": vr1,
+                "snake": self.snake_walk_Activate_XY,
+                "snake_z": self.snake_walk_Activate_Z,
+                "DFD_LaserSyncDebug": laser_debug,
+                # "AD5764_MaxBit": 1,
                 "CalibrationFactors(V/step)": calibration_v_step,
                 "Offset/StartValue (V)": start_offset,
                 "#pixels": numbers_xx,
@@ -4372,8 +4375,16 @@ Have fun!
                 "LaserEnable1": laserEnable1,
                 "LaserEnable2": laserEnable2,
                 "LaserEnable3": laserEnable3,
+                "DFD_Trig_Selector": 5, #IT MEANS GET DFD EVERY CIRCULAR SCANNING POINT THIS SHOULD NOT HARD-CODE
             }
         )
+
+        # self.pmtThresholdChanged()
+
+        self.snake_walk_Activate_XY = self.ui.checkBox_snake.isChecked()
+        self.snake_walk_Activate_Z = self.ui.checkBox_snake_z.isChecked()
+        self.spadfcsmanager_inst.set_activate_snake_walk_xy(self.snake_walk_Activate_XY)
+        self.spadfcsmanager_inst.set_activate_snake_walk_z(self.snake_walk_Activate_Z)
 
         self.configurationFPGA_dict.update(
             self.spadfcsmanager_inst.registers_configuration
@@ -4414,19 +4425,6 @@ Have fun!
             self.activateFIFOflag()
         self.activateShowPreview(self.ui.checkBox_showPreview.isChecked())
 
-        # self.pmtThresholdChanged()
-
-        self.snake_walk_Activate_XY = self.ui.checkBox_snake.isChecked()
-        self.spadfcsmanager_inst.set_activate_snake_walk_xy(self.snake_walk_Activate_XY)
-
-        self.snake_walk_Activate_Z = self.ui.checkBox_snake_z.isChecked()
-        self.spadfcsmanager_inst.set_activate_snake_walk_z(self.snake_walk_Activate_Z)
-
-        self.setRegistersDict({"snake": self.snake_walk_Activate_XY})
-        self.setRegistersDict({"snake_z": self.snake_walk_Activate_Z})
-
-        laser_debug = self.ui.checkBox_DFD_LaserDebug.isChecked()
-        self.setRegistersDict({"DFD_LaserSyncDebug": laser_debug})
 
         self.spadfcsmanager_inst.set_do_not_save(do_not_save)
 
@@ -4737,47 +4735,91 @@ Have fun!
     @Slot()
     def start(self):
         """
-        start the acquisition
+        Start acquisition in normal mode (full duration, with saving).
+        Wrapper for backward compatibility.
         """
-        print_dec("start()")
+        self.beginAcquisition(is_preview=False)
 
+    @Slot()
+    def beginAcquisition(self, is_preview=False):
+        """
+        Start the acquisition with unified initialization for both normal and preview modes.
+        
+        Args:
+            is_preview (bool): If True, run in preview mode (limited repetitions, no saving).
+                             If False, run in normal acquisition mode.
+        """
+        print_dec("beginAcquisition(is_preview=%s)" % is_preview)
+
+        # Enable TTM if requested
         if self.ui.checkBox_ttmActivate.isChecked():
             self.ttm_activate_change_state()
 
-        # self.myfpgainst.acquisitionThread.reset_data()
-
+        # Update UI button states
         self.ui.pushButton_previewStart.setEnabled(False)
         self.ui.pushButton_acquisitionStart.setEnabled(False)
         self.ui.pushButton_stop.setEnabled(True)
 
+        # Ensure FPGA is connected
         if not self.spadfcsmanager_inst.is_connected:
-            print_dec("not self.spadfcsmanager_inst.is_connected")
+            print_dec("FPGA not connected, connecting now...")
             self.connectFPGA()
         else:
-            print_dec("FPGA Already connected!")
+            print_dec("FPGA Already connected")
 
+        # Configure preview settings
         self.updatePreviewConfiguration()
 
+        # Reset current image state
         self.currentImage = None
         self.activeFile = False
 
-        self.started_normal = True
-        self.started_preview = False
+        # Set acquisition mode flags
+        self.started_normal = not is_preview
+        self.started_preview = is_preview
 
+        # Hide ROI and reset progress bars
         self.rect_roi.hide()
-
         self.ui.progressBar_repetition.setValue(0)
         self.ui.progressBar_frame.setMaximum(0)
         self.ui.progressBar_fifo_digital.setMaximum(5)
         self.ui.progressBar_fifo_analog.setMaximum(5)
         self.ui.progressBar_saving.setMaximum(5)
 
+        # Save current GUI configuration for later comparison
         self.configurationGUI_dict_beforeStart = self.getGUI_data()
-        # self.configurationGUI_dict_beforeStart = self.configurationGUI_dict.copy()
 
+        # Lock movement controls
         self.old_status_lockmovecheckbox = self.ui.checkBox_lockMove.isChecked()
         self.ui.checkBox_lockMove.setChecked(True)
-        self.startAcquisition()
+
+        # If preview mode, adjust repetitions and disable certain controls
+        if is_preview:
+            self.nrepetition_before_run_preview = self.ui.spinBox_nrepetition.value()
+            old_lock = self.lockspatialSettingsChanged
+            self.lockspatialSettingsChanged = True
+            self.ui.spinBox_nrepetition.setValue(30000)
+            self.ui.spinBox_nx.setEnabled(0)
+            self.ui.spinBox_ny.setEnabled(0)
+            self.ui.spinBox_nframe.setEnabled(0)
+            self.ui.spinBox_nrepetition.setEnabled(0)
+            self.lockspatialSettingsChanged = old_lock
+
+            # Apply preview-specific settings
+            self.positionSettingsChanged_apply()
+            self.temporalSettingsChanged()
+            self.plotSettingsChanged()
+
+            # Disable additional UI elements for preview
+            self.ui.checkBox_fifo_digital.setEnabled(False)
+            self.ui.checkBox_fifo_analog.setEnabled(False)
+            self.ui.checkBox_DFD.setEnabled(False)
+            self.ui.checkBox_uttmActivate.setEnabled(False)
+            self.ui.checkBox_ttmActivate.setEnabled(False)
+            self.ui.pushButton_externalProgram.setEnabled(False)
+
+        # Initialize acquisition with appropriate mode flag
+        self.initializeAcquisition(do_not_save=is_preview, do_run=True)
 
     @Slot()
     def ttm_activate_change_state(self):
@@ -5076,59 +5118,14 @@ Have fun!
 
 
 
+    @Slot()
     def previewLoop(self):
         """
-        the actual preview loop
+        Start acquisition in preview mode (limited repetitions, no saving).
+        This is now a wrapper around beginAcquisition for backward compatibility.
         """
-        print_dec("previewLoop <======================================================")
-
-        self.nrepetition_before_run_preview = self.ui.spinBox_nrepetition.value()
-
-        old_lock = self.lockspatialSettingsChanged
-        self.lockspatialSettingsChanged = True
-        self.ui.spinBox_nrepetition.setValue(30000)
-        self.ui.spinBox_nx.setEnabled(0)
-        self.ui.spinBox_ny.setEnabled(0)
-        self.ui.spinBox_nframe.setEnabled(0)
-        self.ui.spinBox_nrepetition.setEnabled(0)
-        self.lockspatialSettingsChanged = old_lock
-
-        # self.myfpgainst.acquisitionThread.reset_data()
-        if not self.spadfcsmanager_inst.is_connected:
-            print_dec("not self.spadfcsmanager_inst.is_connected")
-            self.connectFPGA()
-
-        self.positionSettingsChanged_apply()
-        self.temporalSettingsChanged()
-        self.plotSettingsChanged()
-
-        print_dec("Start")
-        self.currentImage = None
-        self.activeFile = False
-
-        self.ui.pushButton_previewStart.setEnabled(False)
-        self.ui.pushButton_acquisitionStart.setEnabled(False)
-        self.ui.pushButton_externalProgram.setEnabled(False)
-
-        self.ui.checkBox_fifo_digital.setEnabled(False)
-        self.ui.checkBox_fifo_analog.setEnabled(False)
-        self.ui.checkBox_DFD.setEnabled(False)
-        self.ui.checkBox_uttmActivate.setEnabled(False)
-        self.ui.checkBox_ttmActivate.setEnabled(False)
-
-        self.started_normal = False
-        self.started_preview = True
-
-        self.rect_roi.hide()
-
-        self.ui.progressBar_repetition.setValue(0)
-        self.ui.progressBar_frame.setMaximum(0)
-
-        self.old_status_lockmovecheckbox = self.ui.checkBox_lockMove.isChecked()
-
-        self.startAcquisition(do_not_save=True)
-
-        self.ui.pushButton_stop.setEnabled(True)
+        print_dec("previewLoop() - starting preview acquisition")
+        self.beginAcquisition(is_preview=True)
 
     @Slot()
     def projChanged(self):

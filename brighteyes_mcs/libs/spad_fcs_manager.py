@@ -44,7 +44,7 @@ class SpadFcsManager():
         shared_fingerprint (MemorySharedNumpyArray): Shared fingerprint data.
         shared_fingerprint_mask (MemorySharedNumpyArray): Shared fingerprint mask.
         is_connected (bool): Flag indicating if connected to FPGA.
-        fifo_chuck_size_digital (int): Size of the FIFO chuck.
+        fifo_chuck_size_digital (int): Size of the FIF O chuck.
         fifo_chuck_size_analog (int): Size of the FIFO chuck.
         acquisition_done_event (multiprocessing.Event): Event for acquisition done.
         acquisition_almost_done_event (multiprocessing.Event): Event for acquisition almost done.
@@ -697,6 +697,13 @@ class SpadFcsManager():
                 2 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
             print_dec("self.expected_words_data_per_frame_digital calculated for 25 channels ",self.expected_words_data_per_frame_digital)
+            print_dec("timebins", self.timebins_per_pixel,
+                       "x",self.dim_x,
+                       "y",self.dim_y,
+                       "z",self.dim_z,
+                       "rep",self.dim_rep,
+                       "circ_rep",self.circ_repetition,
+                       "circ_points",self.circ_points)
         elif self.channels == 49:
             self.expected_words_data_per_frame_digital = (
                     8 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points

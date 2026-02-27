@@ -202,15 +202,19 @@ class FpgaHandle(object):
     #     return self.configuration["queueFifoRead"].get(timeout)
 
     def set_fifo_chuck_size_digital(self, fifo_chuck_size_digital):
+        print_dec("set_fifo_chuck_size_digital", fifo_chuck_size_digital)
         self.configuration["fifo_chuck_size_digital"].value = fifo_chuck_size_digital
 
     def set_fifo_chuck_size_analog(self, fifo_chuck_size_analog):
+        print_dec("set_fifo_chuck_size_analog", fifo_chuck_size_analog)
         self.configuration["fifo_chuck_size_analog"].value = fifo_chuck_size_analog
 
     def set_expected_words_data_digital(self, expected_words_data_digital):
+        print_dec("set_expected_words_data_digital", expected_words_data_digital)
         self.configuration["expected_words_data_digital"].value = expected_words_data_digital
 
     def set_expected_words_data_analog(self, expected_words_data_analog):
+        print_dec("set_expected_words_data_analog", expected_words_data_analog)
         self.configuration["expected_words_data_analog"].value = expected_words_data_analog
 
     def set_list_fifos_to_read_continously(
