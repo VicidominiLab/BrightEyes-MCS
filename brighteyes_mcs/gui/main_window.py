@@ -2025,7 +2025,26 @@ class MainWindow(QMainWindow):
             self.spadfcsmanager_inst.set_requested_depth(
                 self.ui.spinBox_fifo_buffer_size.value()
             )
-            self.spadfcsmanager_inst.connect(mydict, list_fifos=fifo)
+
+            try:
+                self.spadfcsmanager_inst.connect(mydict, list_fifos=fifo)
+            except Exception as e:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Icon.Critical)
+                msg.setWindowTitle("Error")
+                msg.setText("FPGA initialization failed.")
+                msg.setInformativeText(
+                    "<b>Please check your configuration:</b><br><br>"
+                    "• Verify that the FPGA is <b>powered on</b> and properly <b>connected</b>.<br>"
+                    '• Verify that <b>FPGA BitFile</b> firmware matches your FPGA model.<br>'
+                    '• Verify that <b>FPGA Addr</b> is correct (usually <i>RIO0</i>, but it may change if multiple FPGAs are configured).'
+                )
+                msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+
+                msg.exec()
+
+                raise ("ERROR")
+
             # self.spadfcsmanager_inst.start()
 
     def setRegistersDict(self, myconf):
