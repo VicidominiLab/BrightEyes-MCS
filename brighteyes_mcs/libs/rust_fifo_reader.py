@@ -10,6 +10,7 @@ class RustFastFifoReader:
         self.fast_fifo_recv_inst = {}
         print_dec(list_fifo)
 
+
         # Obtaining the signature by using the standard python nifpga library
         self.bitfile_reader = nifpga.Bitfile(bitfile)
         bitfile_signature = self.bitfile_reader.signature
@@ -62,6 +63,7 @@ class RustFastFifoReader:
                 delay_us=delay,
                 debug=False
             )
+
             print("RUST: %s" % fifo, self.fast_fifo_recv_inst[fifo].get_conf())
             self.fast_fifo_recv_inst[fifo].thread_start()
             print_dec("nifpga_fast_fifo_recv.thread_started ", fifo)

@@ -1,11 +1,13 @@
 from decimal import Decimal
 
 import h5py
-import threading
+import multiprocessing as mp
 import numpy as np
 from PySide6.QtCore import QByteArray, QBuffer, QIODevice
 
 from ..libs.print_dec import print_dec
+
+
 
 try:
     import pyqtgraph as pg
@@ -15,8 +17,7 @@ except:
 
 class H5Manager:
     def __init__(self, filenameh5, new_file=True, shm_number_of_threads_h5=None):
-        if shm_number_of_threads_h5 is not None:
-            self.shm_number_of_threads_h5 = shm_number_of_threads_h5
+        self.shm_number_of_threads_h5 = shm_number_of_threads_h5
         print(shm_number_of_threads_h5)
 
         if new_file:
@@ -27,11 +28,6 @@ class H5Manager:
             print_dec("r+")
 
         self.h5dset = {}
-        self.threads = []
-        self.threads_called = 0
-        self.threads_ended = 0
-
-        self.lock = threading.Lock()
         print_dec("Filename:", filenameh5)
 
     def init_dataset(self, dataset_name, shape, timebinsPerPixel, channels, dtype):
@@ -59,21 +55,12 @@ class H5Manager:
         print_dec(dataset_name, self.h5dset[dataset_name].shape)
 
     def add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z):
-        # self._add_to_dataset(dataset_name, buffer_for_save, current_rep, current_z)
-        #print_dec(dataset_name, buffer_for_save.shape, current_rep, current_z, "get_number_of_threads", self.get_number_of_threads())
-        self.threads.append(
-            threading.Thread(
-                target=lambda: self._add_to_dataset(
-                    dataset_name, buffer_for_save, current_rep, current_z
-                )
-            )
-        )
-        self.threads[-1].start()
-        self.threads_called = self.threads_called + 1
+        # Writes are already asynchronous at process level (H5ManagerProcess).
+        # Avoid per-frame Python thread creation overhead here.
+        self._add_to_dataset(dataset_name, buffer_for_save, current_rep, current_z)
         self.update_threads_number()
 
     def _add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z):
-        self.lock.acquire()
         dims = list(self.h5dset[dataset_name].shape)
         dims[0] = current_rep + 1
         # print_dec("_add_to_dataset", dataset_name, dims)
@@ -82,21 +69,16 @@ class H5Manager:
         self.h5dset[dataset_name][current_rep, current_z, :] = buffer_for_save
         # print_dec()
         # print_dec(self.h5dset[dataset_name].shape, buffer_for_save.shape)
-        self.threads_ended = self.threads_ended + 1
-        self.lock.release()
 
     def close(self):
-        for i in self.threads:
-            # print_dec("thread.join()", i)
-            i.join()
-            self.update_threads_number()
+        self.update_threads_number()
         print_dec("h5 closed")
         self.h5file.close()
 
     def get_number_of_threads(self):
-        return self.threads_called - self.threads_ended
-        # l = len(self.threads)
-        # print_dec("get_number_of_threads", l)
+        # Thread pool removed: this manager executes writes synchronously
+        # inside the dedicated H5 process.
+        return 0
 
     def update_threads_number(self):
         if self.shm_number_of_threads_h5 is not None:
@@ -155,3 +137,175 @@ class H5Manager:
 
     def print_keys(self):
         print(self.h5file.keys())
+
+
+class H5ManagerProcess(mp.Process):
+    def __init__(self, command_queue, response_queue, shm_number_of_threads_h5=None):
+        super().__init__()
+        self.command_queue = command_queue
+        self.response_queue = response_queue
+        self.shm_number_of_threads_h5 = shm_number_of_threads_h5
+
+    def _send_response(self, request_id, ok=True, result=None, error=None):
+        self.response_queue.put(
+            {
+                "request_id": request_id,
+                "ok": ok,
+                "result": result,
+                "error": error,
+            }
+        )
+
+    def _update_pending_counter(self, in_flight=0):
+        if self.shm_number_of_threads_h5 is None:
+            return
+        pending = in_flight
+        try:
+            pending += int(self.command_queue.qsize())
+        except Exception:
+            # qsize() can be unavailable on some platforms.
+            pass
+        self.shm_number_of_threads_h5.value = pending
+
+    def run(self):
+        h5mgr = None
+        keep_running = True
+
+        while keep_running:
+            self._update_pending_counter(in_flight=0)
+            msg = self.command_queue.get()
+            cmd = msg.get("cmd")
+            wait = msg.get("wait", False)
+            request_id = msg.get("request_id")
+            kwargs = msg.get("kwargs", {})
+
+            try:
+                if cmd == "init":
+                    h5mgr = H5Manager(
+                        kwargs["filenameh5"],
+                        new_file=kwargs.get("new_file", True),
+                        shm_number_of_threads_h5=self.shm_number_of_threads_h5,
+                    )
+                    result = True
+
+                elif cmd == "init_dataset":
+                    h5mgr.init_dataset(
+                        kwargs["dataset_name"],
+                        kwargs["shape"],
+                        kwargs["timebinsPerPixel"],
+                        kwargs["channels"],
+                        kwargs["dtype"],
+                    )
+                    result = True
+
+                elif cmd == "add_to_dataset":
+                    self._update_pending_counter(in_flight=1)
+                    h5mgr.add_to_dataset(
+                        kwargs["dataset_name"],
+                        kwargs["buffer_for_save"],
+                        kwargs["current_rep"],
+                        kwargs["current_z"],
+                    )
+                    result = True
+
+                elif cmd == "get_number_of_threads":
+                    result = h5mgr.get_number_of_threads()
+
+                elif cmd == "close":
+                    if h5mgr is not None:
+                        h5mgr.close()
+                        h5mgr = None
+                    result = True
+
+                elif cmd == "shutdown":
+                    if h5mgr is not None:
+                        h5mgr.close()
+                        h5mgr = None
+                    keep_running = False
+                    result = True
+
+                else:
+                    raise RuntimeError("Unknown H5ManagerProcess command: %s" % cmd)
+
+                if wait:
+                    self._send_response(request_id, ok=True, result=result)
+                self._update_pending_counter(in_flight=0)
+
+            except Exception as ex:
+                print_dec("H5ManagerProcess error", repr(ex))
+                if wait:
+                    self._send_response(request_id, ok=False, error=repr(ex))
+                self._update_pending_counter(in_flight=0)
+
+        if h5mgr is not None:
+            try:
+                h5mgr.close()
+            except Exception as ex:
+                print_dec("H5ManagerProcess close error", repr(ex))
+
+
+class H5ManagerProcessClient:
+    def __init__(self, command_queue, response_queue, timeout=120):
+        self.command_queue = command_queue
+        self.response_queue = response_queue
+        self.timeout = timeout
+        self.request_id = 0
+
+    def _next_request_id(self):
+        self.request_id += 1
+        return self.request_id
+
+    def _send(self, cmd, wait=False, timeout=None, **kwargs):
+        msg = {"cmd": cmd, "kwargs": kwargs, "wait": wait}
+        req_id = None
+        if wait:
+            req_id = self._next_request_id()
+            msg["request_id"] = req_id
+            self.command_queue.put(msg)
+        else:
+            # Non-blocking enqueue for fire-and-forget writes.
+            self.command_queue.put_nowait(msg)
+
+        if not wait:
+            return None
+
+        timeout_s = self.timeout if timeout is None else timeout
+        response = self.response_queue.get(timeout=timeout_s)
+        if response.get("request_id") != req_id:
+            raise RuntimeError("Unexpected H5ManagerProcess response id")
+        if not response.get("ok", False):
+            raise RuntimeError(response.get("error", "Unknown H5ManagerProcess error"))
+        return response.get("result")
+
+    def init(self, filenameh5, new_file=True):
+        self._send("init", wait=True, filenameh5=filenameh5, new_file=new_file)
+
+    def init_dataset(self, dataset_name, shape, timebinsPerPixel, channels, dtype):
+        self._send(
+            "init_dataset",
+            wait=True,
+            dataset_name=dataset_name,
+            shape=shape,
+            timebinsPerPixel=timebinsPerPixel,
+            channels=channels,
+            dtype=dtype,
+        )
+
+    def add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z):
+        self._send(
+            "add_to_dataset",
+            wait=False,
+            dataset_name=dataset_name,
+            buffer_for_save=buffer_for_save,
+            current_rep=current_rep,
+            current_z=current_z,
+        )
+
+    def get_number_of_threads(self):
+        return self._send("get_number_of_threads", wait=True)
+
+    def close(self):
+        self._send("close", wait=True)
+
+    def shutdown(self):
+        self._send("shutdown", wait=True)

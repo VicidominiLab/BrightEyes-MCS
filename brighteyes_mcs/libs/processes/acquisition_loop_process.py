@@ -11,9 +11,10 @@ import psutil
 import numpy as np
 
 # from ..is_parent_alive import CheckParentAlive
-from ..h5manager import H5Manager
+from ..h5manager import H5ManagerProcessClient
 
 # import pprofile
+#TODO: NEED TO BE TESTED THE NEW ADDER
 
 try:
     from ..cython.fastconverter import (
@@ -90,6 +91,38 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
     return list_b_digital, list_x_digital, list_y_digital, list_z_digital, list_rep_digital
 
 
+def accumulate_unordered_sum_4d(dst, list_y, list_x, list_b, values):
+    """
+    Faster replacement for np.add.at(dst, (y, x, b), values) with integer-safe accumulation.
+    Works with unordered indices and repeated coordinates by grouping equal (y,x,b).
+    """
+    if values.size == 0:
+        return
+
+    shape_x = dst.shape[1]
+    shape_b = dst.shape[2]
+
+    lin = (
+        (list_y.astype(np.int64) * shape_x + list_x.astype(np.int64)) * shape_b
+        + list_b.astype(np.int64)
+    )
+
+    order = np.argsort(lin, kind="mergesort")
+    lin_sorted = lin[order]
+    values_sorted = values[order]
+
+    group_start_mask = np.empty(lin_sorted.shape[0], dtype=bool)
+    group_start_mask[0] = True
+    group_start_mask[1:] = lin_sorted[1:] != lin_sorted[:-1]
+    group_starts = np.nonzero(group_start_mask)[0]
+
+    grouped_values = np.add.reduceat(values_sorted, group_starts, axis=0)
+    lin_unique = lin_sorted[group_starts]
+
+    flat = dst.reshape(-1, dst.shape[-1])
+    flat[lin_unique] += grouped_values
+
+
 class AcquisitionLoopProcess(mp.Process):
     def __init__(
             self,
@@ -108,6 +141,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.daemon = True
         set_debug(debug)
         print_dec("AcquisitionLoopProcess INIT")
+        self.shared_objects = shared_objects
 
         self.DATA_WORDS_PER_SAMPLE_ANALOG = 1
 
@@ -308,8 +342,13 @@ class AcquisitionLoopProcess(mp.Process):
         #     self.timebinsPerPixel = self.DFD_nbins
 
         if not self.do_not_save:
-            self.h5mgr = H5Manager(
-                self.filenameh5, shm_number_of_threads_h5=self.shm_number_of_threads_h5
+            self.h5mgr = H5ManagerProcessClient(
+                self.shared_objects["h5_command_queue"],
+                self.shared_objects["h5_response_queue"],
+            )
+            self.h5mgr.init(
+                self.filenameh5,
+                new_file=True,
             )
             # self.h5file = h5py.File(self.filenameh5, "w")
             print_dec("Filename:", self.filenameh5)
@@ -892,10 +931,20 @@ class AcquisitionLoopProcess(mp.Process):
                             if not self.do_not_save:
                                 # This is for debug purpose
 
-                                np.add.at(self.buffer_for_save_digital, (list_y_digital, list_x_digital, list_b_digital),
-                                          buffer_up_to_gap_digital[:,:channels])
-                                np.add.at(self.buffer_for_save_digital_extra_ch, (list_y_digital, list_x_digital, list_b_digital),
-                                          buffer_up_to_gap_digital[:,channels:])
+                                accumulate_unordered_sum_4d(
+                                    self.buffer_for_save_digital,
+                                    list_y_digital,
+                                    list_x_digital,
+                                    list_b_digital,
+                                    buffer_up_to_gap_digital[:, :channels],
+                                )
+                                accumulate_unordered_sum_4d(
+                                    self.buffer_for_save_digital_extra_ch,
+                                    list_y_digital,
+                                    list_x_digital,
+                                    list_b_digital,
+                                    buffer_up_to_gap_digital[:, channels:],
+                                )
 
                                 # self.buffer_for_save_digital[
                                 #     list_y_digital, list_x_digital, list_b_digital, :
@@ -1178,6 +1227,7 @@ class AcquisitionLoopProcess(mp.Process):
         if not self.do_not_save:
             # self.h5file.close()
             self.h5mgr.close()
+            self.h5mgr.shutdown()
         self.acquisition_done.set()
         print_dec("Acquisition done")
         stop_event_proxy.clear()

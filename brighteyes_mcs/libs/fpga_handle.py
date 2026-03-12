@@ -87,7 +87,7 @@ class FpgaHandle(object):
         self.fpga_handle_process.start()
         print_dec("Waiting for the ready to run")
         tstart = datetime.now()
-        flag = self.configuration["is_readytorun"].wait(timeout=1000)
+        flag = self.configuration["is_readytorun"].wait(timeout=1.)
         if flag != True:
             raise ("TIMEOUT")
         tstop = datetime.now()

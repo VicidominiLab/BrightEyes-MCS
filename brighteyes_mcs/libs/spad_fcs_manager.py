@@ -6,6 +6,7 @@ import multiprocessing as mp
 from ..libs.processes.data_pre_process import DataPreProcess
 from ..libs.processes.acquisition_loop_process import AcquisitionLoopProcess
 from ..libs.fpga_handle import FpgaHandle
+from ..libs.h5manager import H5ManagerProcess
 from ..libs.print_dec import print_dec
 from ..libs.mp_shared_array import MemorySharedNumpyArray
 
@@ -198,6 +199,9 @@ class SpadFcsManager():
         self.use_rust_fifo = True
 
         self.debug = False
+        self.h5_manager_process = None
+        self.h5_command_queue = None
+        self.h5_response_queue = None
 
 
 
@@ -401,16 +405,17 @@ class SpadFcsManager():
                 ni_address2=self.niAddr2,
             )
             self.is_connected = True
+            print_dec(".is_conneccted", self.is_connected)
+
+            self.update_chuck()
+
+            self.fpga_handle.run(initial_registers)
+            print_dec("self.fpga_handle.run()")
         except Exception as e:
             self.is_connected = False
             print_dec("connect ERROR", repr(e))
             raise ("ERROR")
-        print_dec(".is_conneccted", self.is_connected)
 
-        self.update_chuck()
-
-        self.fpga_handle.run(initial_registers)
-        print_dec("self.fpga_handle.run()")
 
     def set_filename_h5(self, filename):
         """
@@ -518,6 +523,20 @@ class SpadFcsManager():
         }
 
         self.number_of_threads_h5 = mp.Value("i", 0)
+        if not do_not_save:
+            self.h5_command_queue = mp.Queue()
+            self.h5_response_queue = mp.Queue()
+            self.h5_manager_process = H5ManagerProcess(
+                self.h5_command_queue,
+                self.h5_response_queue,
+                shm_number_of_threads_h5=self.number_of_threads_h5,
+            )
+            self.h5_manager_process.daemon = True
+            self.h5_manager_process.start()
+        else:
+            self.h5_command_queue = None
+            self.h5_response_queue = None
+            self.h5_manager_process = None
 
         self.trace_pos = mp.Value("i", 0)
 
@@ -558,6 +577,8 @@ class SpadFcsManager():
             "trace_sample_per_bins": self.trace_sample_per_bins,
             "trace_pos": self.trace_pos,
             "imposed_data_shift": self.imposed_data_shift,
+            "h5_command_queue": self.h5_command_queue,
+            "h5_response_queue": self.h5_response_queue,
         }
 
         self.shared_dict["shape"] = [self.dim_x, self.dim_y, self.dim_z]
@@ -837,6 +858,15 @@ class SpadFcsManager():
         # if self.previewEnabled:
         self.previewProcess.stop()
         self.previewProcess.join()
+        if self.h5_manager_process is not None:
+            self.h5_manager_process.join(timeout=2)
+            if self.h5_manager_process.is_alive():
+                print_dec("H5 manager process still alive, terminating")
+                self.h5_manager_process.terminate()
+                self.h5_manager_process.join(timeout=2)
+        self.h5_manager_process = None
+        self.h5_command_queue = None
+        self.h5_response_queue = None
         print_dec("self.previewThread.join() done")
 
     def get_current_z(self, fifo="FIFO"):
