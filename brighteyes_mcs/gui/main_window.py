@@ -6,6 +6,9 @@ __version__ = "0.0.1"
 __email__ = ["mattia.donato@iit.it", "giuseppe.vicidomini@iit.it"]
 
 # pyside6-uic main_design.ui -o main_design.py
+#
+# This module is the GUI/controller entry point: it wires the Designer UI to the
+# acquisition manager, the live preview widgets, and the background processes.
 
 from PySide6.QtWidgets import QMainWindow, QSplashScreen, QFileDialog
 from PySide6.QtWidgets import QMessageBox, QTableWidgetItem, QLabel
@@ -15,7 +18,8 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QWidget,
     QTextBrowser,
-    QHeaderView
+    QHeaderView,
+    QProgressDialog
 )
 from PySide6.QtGui import QScreen  # Replaces QDesktopWidget
 
@@ -48,6 +52,7 @@ from ..libs.ttm import TtmRemoteManager
 from ..libs.plugin_loader import PluginsManager
 from ..gui.dfd_widget import DfdWidget
 from ..libs.restapi import FastAPIServerThread
+from ..libs.raw_acquisition_converter import convert_raw_acquisition
 
 import numpy as np
 import time
@@ -57,11 +62,13 @@ import requests
 
 import json
 import h5py
+import traceback
 from ..libs.h5manager import H5Manager
 
 import os, sys
 
 import socket
+from pathlib import Path
 
 import pyqtgraph as pg
 
@@ -158,6 +165,8 @@ class MainWindow(QMainWindow):
         self.CHANNELS_y = 5
         self.started_preview = False
         self.started_normal = False
+        self.raw_stream_mode = False
+        self.raw_stream_output_files = {}
         self.console_widget = None
         self.selected_channel = None
         self.webcam_capture = None
@@ -173,6 +182,7 @@ class MainWindow(QMainWindow):
         # self.thread_timerPreviewImg_tick = Runnable(self.timerPreviewImg_tick)
         # self.thread_timerConfigurationViewer_tick = Runnable(self.timerConfigurationViewer_tick)
 
+        # The preview timer is the main GUI-side refresh loop for plots and images.
         self.timerPreviewImg = QTimer(None)
         self.timerPreviewImg_tick_mutex = QMutex()
         self.timerPreviewImg.timeout.connect(self.timerPreviewImg_tick)
@@ -197,6 +207,7 @@ class MainWindow(QMainWindow):
         self.im_plugin = pg.ImageView(self, view=self.im_plugin_plot_item)
         self.ui.gridLayout_pluginImage.addWidget(self.im_plugin)
 
+        # Main live preview view used by the xy/xz/zy projection widgets.
         self.im_widget = pg.ImageView(self, view=self.im_widget_plot_item)
 
         self.ui.gridLayout_im.addWidget(self.im_widget, 0, 0, 1, 3)
@@ -219,6 +230,8 @@ class MainWindow(QMainWindow):
 
         self.im_panorama_widget.show()
 
+        # The trace/FCS widgets are updated from shared-memory data produced by the
+        # acquisition loop process.
         self.trace_widget = pg.PlotWidget(self)
         self.trace_widget.setToolTip("Double-click for reset the trace")
         self.trace_widget.setLabel("left", "Freq.", "Hz")
@@ -1227,6 +1240,84 @@ class MainWindow(QMainWindow):
             )
 
     @Slot()
+    def cmd_convertRawAcquisition(self):
+        """
+        Convert a metadata-only RAW acquisition into a standard BrightEyes H5 file.
+        """
+        suggested_input = self.ui.lineEdit_destinationfolder.text()
+        if self.last_saved_filename:
+            last_saved_path = Path(self.last_saved_filename)
+            if last_saved_path.exists():
+                suggested_input = str(last_saved_path)
+
+        metadata_filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select RAW acquisition metadata",
+            suggested_input,
+            "HDF5 File (*.h5)",
+        )
+        if metadata_filename == "":
+            return
+
+        metadata_path = os.path.abspath(metadata_filename)
+        metadata_stem = Path(metadata_path).stem
+        if metadata_stem.endswith("_only_metadata"):
+            default_output = str(Path(metadata_path).with_name(metadata_stem[: -len("_only_metadata")] + ".h5"))
+        else:
+            default_output = os.path.splitext(metadata_path)[0] + "_converted.h5"
+        output_filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save converted acquisition as",
+            default_output,
+            "HDF5 File (*.h5)",
+        )
+        if output_filename == "":
+            return
+
+        progress_dialog = QProgressDialog("Preparing RAW conversion...", None, 0, 100, self)
+        progress_dialog.setWindowTitle("Converting RAW acquisition")
+        progress_dialog.setMinimumDuration(0)
+        progress_dialog.setAutoClose(True)
+        progress_dialog.setAutoReset(True)
+        progress_dialog.setValue(0)
+
+        def progress_callback(value, message):
+            progress_dialog.setLabelText(message)
+            progress_dialog.setValue(value)
+            QCoreApplication.processEvents()
+
+        try:
+            converted_path = convert_raw_acquisition(
+                metadata_path,
+                output_filename,
+                progress_callback=progress_callback,
+            )
+        except Exception as ex:
+            traceback.print_exc()
+            progress_dialog.close()
+            QMessageBox.critical(self, "RAW conversion failed", str(ex))
+            return
+
+        progress_dialog.setValue(100)
+        self.last_saved_filename = str(converted_path)
+        self.ui.pushButton_externalProgram.setEnabled(True)
+        self.plugin_signals.signal.emit(
+            "acquisitionDone %s" % self.last_saved_filename
+        )
+        try:
+            self.dfd_page.lineEdit_file_meas.setText(self.last_saved_filename)
+        except:
+            print_dec(
+                "Failed to dfd_page.lineEdit_file_meas.setText(last_saved_filename) "
+            )
+        self.ui.statusBar.showMessage(f"Converted RAW acquisition to {converted_path}", 10000)
+        QMessageBox.information(
+            self,
+            "RAW conversion completed",
+            f"Converted acquisition saved in:\n{converted_path}",
+        )
+
+    @Slot()
     def cmd_moveToSelectedRowMarker(self):
         """
         Slot for moving to the selected row marker
@@ -1284,6 +1375,13 @@ class MainWindow(QMainWindow):
         if not k:
             return
         self.moveToSelectedColumnFCS(k)
+
+    @Slot(name="copyPositionMarkers")
+    def copyPositionMarkers_legacy(self):
+        """
+        Backward-compatible alias for the legacy Designer slot typo.
+        """
+        self.copyPositionsMarkers()
 
     @Slot()
     def prova(self, ev):
@@ -2001,14 +2099,14 @@ class MainWindow(QMainWindow):
                     }
                 )
 
-            # self.spadfcsmanager_inst.set(self.ui.spinBox_fifo_buffer_size.value())
-            self.spadfcsmanager_inst.set_preview_buffer_size_in_sample(
-                self.ui.spinBox_preview_buffer_size.value()
+            # self.spadfcsmanager_inst.set(self.ui.spinBox_requested_fifo_depth.value())
+            self.spadfcsmanager_inst.set_preview_buffer_capacity_samples(
+                self.ui.spinBox_preview_buffer_samples.value()
             )
-            self.ui.label_actual_preview_buffer_size.setText(
+            self.ui.label_preview_buffer_capacity_samples.setText(
                 "%d"
                 % (
-                        self.ui.spinBox_preview_buffer_size.value()
+                        self.ui.spinBox_preview_buffer_samples.value()
                         * self.ui.spinBox_time_bin_per_px.value()
                 )
             )
@@ -2019,11 +2117,11 @@ class MainWindow(QMainWindow):
             if self.ui.checkBox_fifo_digital.isChecked():
                 fifo.append("FIFO")
 
-            self.spadfcsmanager_inst.set_len_fifo_prebuffer(
-                self.ui.spinBox_fifo_prebuffer.value()
+            self.spadfcsmanager_inst.set_fifo_prebuffer_length(
+                self.ui.spinBox_fifo_prebuffer_length.value()
             )
-            self.spadfcsmanager_inst.set_requested_depth(
-                self.ui.spinBox_fifo_buffer_size.value()
+            self.spadfcsmanager_inst.set_requested_fifo_depth(
+                self.ui.spinBox_requested_fifo_depth.value()
             )
 
             try:
@@ -3123,6 +3221,8 @@ class MainWindow(QMainWindow):
         timer tick event for the preview image
         continuosly update the preview image
         """
+        # This method runs frequently, so extra copies or full redraws here
+        # directly affect UI responsiveness during acquisition.
         if not self.timerPreviewImg_tick_mutex.tryLock():
             print_dec("self.timerPreviewImg_tick_lock called but busy")
             return
@@ -3163,6 +3263,73 @@ class MainWindow(QMainWindow):
         self.ui.label_tot_num_dat_point_val.setText(data_point_str)
 
         self.ui.progressBar_repetition.setMaximum(100.0)
+
+        if self.raw_stream_mode:
+            label_frame = ""
+            label_repetition = ""
+            for fifo in fifo_activated:
+                label_frame += "%d " % self.spadfcsmanager_inst.get_current_z(fifo)
+                label_repetition += "%d " % self.spadfcsmanager_inst.get_current_rep(fifo)
+
+            self.ui.label_current_time_val.setText("RAW")
+            self.ui.label_current_frame_val.setText(label_frame)
+            self.ui.label_current_repetition_val.setText(label_repetition)
+
+            if expected_fifo_elements[fifo_name] != 0:
+                self.ui.progressBar_repetition.setValue(
+                    100.0 * fifo_elements[fifo_name] / expected_fifo_elements[fifo_name]
+                )
+            else:
+                self.ui.progressBar_repetition.setValue(0)
+
+            if fifo_elements[fifo_name] != 0:
+                self.ui.progressBar_frame.setMaximum(100.0)
+            else:
+                self.ui.progressBar_frame.setMaximum(0)
+            self.ui.progressBar_frame.setValue(
+                100.0
+                * (fifo_elements[fifo_name] % expected_fifo_elements_per_frame[fifo_name])
+                / expected_fifo_elements_per_frame[fifo_name]
+            )
+
+            if self.spadfcsmanager_inst.acquisition_is_almost_done():
+                self.ui.pushButton_stop.setEnabled(False)
+                self.ui.pushButton_acquisitionStart.setEnabled(False)
+
+            if self.spadfcsmanager_inst.acquisition_is_done():
+                self.my_tick_counter += self.timerPreviewImg.interval()
+                self.spadfcsmanager_inst.acquisition_done_reset()
+                self.finalizeAcquisition()
+
+            fifo1, fifo2 = self.spadfcsmanager_inst.get_FIFO_status()
+            self.ui.progressBar_fifo_digital.setValue(fifo1)
+            self.ui.progressBar_fifo_analog.setValue(fifo2)
+            self.ui.progressBar_saving.setValue(0)
+            self.ui.label_preview_delay.setText("RAW")
+
+            try:
+                self.ui.label_fifo_last_pkt_size.setText(
+                    "%d" % self.spadfcsmanager_inst.shared_dict["last_packet_size"]
+                )
+            except:
+                print_dec("self.ui.last_packet_size FAIL")
+
+            try:
+                self.ui.label_last_preprocessed_size.setText(
+                    "%d" % self.spadfcsmanager_inst.last_preprocessed_len["FIFOAnalog"].value
+                )
+            except:
+                pass
+
+            try:
+                self.ui.label_last_preprocessed_size.setText(
+                    "%d" % self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value
+                )
+            except:
+                pass
+
+            self.timerPreviewImg_tick_mutex.unlock()
+            return
 
         current_time = {}
         current_frame = {}
@@ -3394,7 +3561,7 @@ class MainWindow(QMainWindow):
         try:
             # print(self.spadfcsmanager_inst.last_preprocessed_len)
             # print(self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value)
-            self.ui.label_fifo_prebuffer_len.setText(
+            self.ui.label_last_preprocessed_size.setText(
                 "%d"
                 % self.spadfcsmanager_inst.last_preprocessed_len["FIFOAnalog"].value
             )
@@ -3404,7 +3571,7 @@ class MainWindow(QMainWindow):
         try:
             # print(self.spadfcsmanager_inst.last_preprocessed_len)
             # print(self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value)
-            self.ui.label_fifo_prebuffer_len.setText(
+            self.ui.label_last_preprocessed_size.setText(
                 "%d" % self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value
             )
 
@@ -4195,12 +4362,13 @@ Have fun!
     # def afterFpgaRun(self):
     #     pass
 
-    def initializeAcquisition(self, do_not_save=False, do_run=True):
+    def initializeAcquisition(self, do_not_save=False, do_run=True, raw_stream_mode=False):
         """
         Initialize and configure acquisition parameters (registers, calibration, trace settings, etc.).
         This method does NOT start the acquisition - it only prepares the system.
         """
         self.do_not_save = do_not_save
+        self.raw_stream_mode = raw_stream_mode
 
         # Initialize DFD settings BEFORE circular motion to ensure correct state
         self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
@@ -4442,10 +4610,11 @@ Have fun!
 
         if do_run:
             self.activateFIFOflag()
-        self.activateShowPreview(self.ui.checkBox_showPreview.isChecked())
+        self.activateShowPreview(self.ui.checkBox_showPreview.isChecked() and not raw_stream_mode)
 
 
         self.spadfcsmanager_inst.set_do_not_save(do_not_save)
+        self.spadfcsmanager_inst.set_raw_stream_mode(raw_stream_mode)
 
         filename_for_ttm = self.defineFilename(with_folder=False)
         if self.ttm_remote_is_up() and not do_not_save:
@@ -4456,8 +4625,17 @@ Have fun!
                 filename_for_ttm.replace(".h5", ".ttr")
             )
 
-        filename = self.defineFilename(with_folder=True)
+        filename = (
+            self.defineMetadataFilename(with_folder=True)
+            if raw_stream_mode
+            else self.defineFilename(with_folder=True)
+        )
         self.spadfcsmanager_inst.set_filename_h5(filename)
+        if raw_stream_mode:
+            self.raw_stream_output_files = self.defineRawOutputFiles(filename)
+            self.spadfcsmanager_inst.set_raw_output_files(self.raw_stream_output_files)
+        else:
+            self.raw_stream_output_files = {}
         self.spadfcsmanager_inst.set_autocorrelation_maxx(
             self.ui.spinBox_FCSbins.value()
         )
@@ -4503,8 +4681,8 @@ Have fun!
             )
 
             self.ui.label_trace_total_bins.setText("%s" % trace_sample_per_bins)
-            self.ui.label_actual_buffer_size.setText(
-                "%d" % self.spadfcsmanager_inst.fpga_handle.get_actual_depth()
+            self.ui.label_configured_fifo_depth.setText(
+                "%d" % self.spadfcsmanager_inst.fpga_handle.get_actual_fifo_depth()
             )
             self.spadfcsmanager_inst.set_clk_multiplier(1)
 
@@ -4751,6 +4929,29 @@ Have fun!
         else:
             return filename
 
+    def defineMetadataFilename(self, with_folder=True):
+        """
+        Derive the metadata-only H5 filename used by preview-less RAW acquisitions.
+        """
+        filename = self.defineFilename(with_folder=with_folder)
+        if filename.endswith(".h5") and not filename.endswith("_only_metadata.h5"):
+            filename = filename[:-3] + "_only_metadata.h5"
+        return filename
+
+    def defineRawOutputFiles(self, metadata_filename):
+        """
+        Derive raw FIFO output paths from the metadata H5 filename.
+        """
+        base_filename = metadata_filename.replace(".h5", "")
+        if base_filename.endswith("_only_metadata"):
+            base_filename = base_filename[: -len("_only_metadata")]
+        raw_files = {}
+        if self.ui.checkBox_fifo_digital.isChecked():
+            raw_files["FIFO"] = base_filename + "_FIFO.raw"
+        if self.ui.checkBox_fifo_analog.isChecked():
+            raw_files["FIFOAnalog"] = base_filename + "_FIFOAnalog.raw"
+        return raw_files
+
     @Slot()
     def start(self):
         """
@@ -4792,10 +4993,14 @@ Have fun!
         # Reset current image state
         self.currentImage = None
         self.activeFile = False
+        self.spadfcsmanager_inst.acquisition_done_reset()
+        self.spadfcsmanager_inst.acquisition_almost_done_reset()
 
         # Set acquisition mode flags
         self.started_normal = not is_preview
         self.started_preview = is_preview
+        raw_stream_mode = (not is_preview) and self.ui.checkBox_rawStreamAcquisition.isChecked()
+        self.raw_stream_mode = raw_stream_mode
 
         # Hide ROI and reset progress bars
         self.rect_roi.hide()
@@ -4838,7 +5043,11 @@ Have fun!
             self.ui.pushButton_externalProgram.setEnabled(False)
 
         # Initialize acquisition with appropriate mode flag
-        self.initializeAcquisition(do_not_save=is_preview, do_run=True)
+        self.initializeAcquisition(
+            do_not_save=is_preview,
+            do_run=True,
+            raw_stream_mode=raw_stream_mode,
+        )
 
     @Slot()
     def ttm_activate_change_state(self):
@@ -5178,11 +5387,9 @@ Have fun!
                     self.pushButton_uttm_stop_clicked()
 
             print_dec(self.spadfcsmanager_inst.shared_dict)
-            self.last_saved_filename = self.spadfcsmanager_inst.shared_dict[
-                "filenameh5"
-            ]
+            self.last_saved_filename = self.spadfcsmanager_inst.shared_dict["filenameh5"]
 
-            h5mgr = H5Manager(self.last_saved_filename, new_file=False)
+            h5mgr = H5Manager(self.last_saved_filename, new_file=self.raw_stream_mode)
 
             comment = self.ui.lineEdit_comment.toPlainText()
             self.ui.lineEdit_comment.setText("")
@@ -5204,7 +5411,35 @@ Have fun!
                 "configurationGUI_beforeStart", self.configurationGUI_dict_beforeStart
             )
 
-            h5mgr.metadata_add_thumbnail(self.im_widget.imageItem)
+            if self.raw_stream_mode:
+                h5mgr.metadata_add_dict(
+                    "rawStreamAcquisition",
+                    {
+                        "enabled": True,
+                        "digital_fifo_present": "FIFO" in self.spadfcsmanager_inst.activated_fifos_list,
+                        "analog_fifo_present": "FIFOAnalog" in self.spadfcsmanager_inst.activated_fifos_list,
+                        "digital_channels": self.CHANNELS,
+                        "digital_words_per_sample": 2 if self.CHANNELS == 25 else 8,
+                        "analog_words_per_sample": 1,
+                        "effective_timebins_per_pixel": (
+                            self.spadfcsmanager_inst.registers_configuration.get("#timebinsPerPixel", 1)
+                            * self.spadfcsmanager_inst.registers_configuration.get("#circular_rep", 1)
+                            * self.spadfcsmanager_inst.registers_configuration.get("#circular_points", 1)
+                        ),
+                        "clock_base_mhz": self.clock_base,
+                        "clk_multiplier": self.spadfcsmanager_inst.clk_multiplier,
+                        "dfd_shift": self.spadfcsmanager_inst.dfd_shift,
+                        "snake_walk_xy": self.spadfcsmanager_inst.snake_walk_xy,
+                        "snake_walk_z": self.spadfcsmanager_inst.snake_walk_z,
+                        "dfd_activate": self.spadfcsmanager_inst.DFD_Activate,
+                        "digital_raw_file": self.raw_stream_output_files.get("FIFO", ""),
+                        "analog_raw_file": self.raw_stream_output_files.get("FIFOAnalog", ""),
+                        "digital_raw_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFO_bytes_written", 0),
+                        "analog_raw_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_bytes_written", 0),
+                    },
+                )
+            else:
+                h5mgr.metadata_add_thumbnail(self.im_widget.imageItem)
             h5mgr.print_keys()
 
             print_dec("currentImage_size", self.currentImage_size)
@@ -5213,7 +5448,7 @@ Have fun!
 
             self.stop()
 
-            if self.started_normal:
+            if self.started_normal and not self.raw_stream_mode:
                 self.finalizeImage()
 
             h5mgr.close()
@@ -5316,6 +5551,7 @@ Have fun!
 
         self.started_normal = False
         self.started_preview = False
+        self.raw_stream_mode = False
 
     # @Slot()
     # def connectCmd(self):
@@ -5500,6 +5736,8 @@ Have fun!
         """
         plot the preview image
         """
+        # Keep projection-specific transforms in the GUI layer so the worker can
+        # publish compact shared buffers without duplicating display logic.
         (preview_img,
          ch,
          autoLevels,

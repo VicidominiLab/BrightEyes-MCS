@@ -6,7 +6,7 @@ from .print_dec import print_dec
 
 
 class RustFastFifoReader:
-    def __init__(self, bitfile, list_fifo, chunk_digital=2, chunk_analog=4, requested_depth=10000, nifpga_addr="RIO0", delay_us=1):
+    def __init__(self, bitfile, list_fifo, chunk_digital=2, chunk_analog=4, requested_fifo_depth=10000, nifpga_addr="RIO0", delay_us=1):
         self.fast_fifo_recv_inst = {}
         print_dec(list_fifo)
 
@@ -23,8 +23,8 @@ class RustFastFifoReader:
             if fifo.endswith("In"):
                 continue
 
-            dma_buffer_size = (50 * requested_depth // 8) * 8  # (500000//8)*8
-            fifo_buffer_size = (requested_depth // 8) * 8  # (10000//8)*8
+            dma_read_buffer_size = (50 * requested_fifo_depth // 8) * 8
+            fifo_read_buffer_size = (requested_fifo_depth // 8) * 8
             fifo_number = self.bitfile_fifo_number[fifo]
 
             if fifo=="FIFOAnalog":
@@ -41,8 +41,8 @@ class RustFastFifoReader:
                 "run" : False,
                 "close_on_reset" : True,
                 "fifo" : fifo_number,
-                "dma_buffer_size" : dma_buffer_size,
-                "fifo_reading_buffer" : fifo_buffer_size,
+                "dma_read_buffer_size" : dma_read_buffer_size,
+                "fifo_read_buffer_size" : fifo_read_buffer_size,
                 "min_packet" : chunk,
                 "delay_us" : delay,
                 "debug" : False
@@ -57,8 +57,8 @@ class RustFastFifoReader:
                 run=False,
                 close_on_reset=True,
                 fifo=fifo_number,
-                dma_buffer_size=dma_buffer_size,
-                fifo_reading_buffer=fifo_buffer_size,
+                dma_buffer_size=dma_read_buffer_size,
+                fifo_reading_buffer=fifo_read_buffer_size,
                 min_packet=chunk_digital,
                 delay_us=delay,
                 debug=False

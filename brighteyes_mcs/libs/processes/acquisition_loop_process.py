@@ -1,3 +1,5 @@
+"""Acquisition worker that converts FIFO payloads into preview images, traces, and HDF5 writes."""
+
 import multiprocessing as mp
 import os
 import threading
@@ -68,6 +70,8 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
         (list_b_digital, list_x_digital, list_y_digital, list_z_digital, list_rep_digital)
     """
 
+    # Pointer decoding expands each FIFO packet into per-sample coordinates; this
+    # scales linearly with timebins and is one of the dominant vectorized costs.
     list_pointer = np.arange(pointer_start, pointer_start + gap)
     list_pointer_shifted = list_pointer + (delay * timebinsPerPixel)
     list_pixel = list_pointer_shifted // timebinsPerPixel
@@ -99,6 +103,8 @@ def accumulate_unordered_sum_4d(dst, list_y, list_x, list_b, values):
     if values.size == 0:
         return
 
+    # Group equal coordinates once and perform a single indexed accumulation per
+    # unique voxel; this is much cheaper than repeated np.add.at on dense data.
     shape_x = dst.shape[1]
     shape_b = dst.shape[2]
 
@@ -227,11 +233,13 @@ class AcquisitionLoopProcess(mp.Process):
         self.trace_reset_event = mp.Event()
         self.FCS_reset_event = mp.Event()
 
-        self.buffer_size_in_sample_digital = shared_dict["preview_buffer_size_in_sample"]  # 15000
-        self.buffer_size_in_sample_analog = self.buffer_size_in_sample_digital
+        self.preview_buffer_capacity_samples_digital = shared_dict["preview_buffer_capacity_samples"]  # 15000
+        self.preview_buffer_capacity_samples_analog = self.preview_buffer_capacity_samples_digital
 
-        self.buffer_size_in_words_digital = self.timebinsPerPixel * self.buffer_size_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL
-        self.buffer_size_in_words_analog = self.timebinsPerPixel * self.buffer_size_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG
+        # Buffer sizes grow with both preview depth and timebins-per-pixel, so
+        # large DFD/high-sample-rate scans can multiply memory pressure quickly.
+        self.buffer_size_in_words_digital = self.timebinsPerPixel * self.preview_buffer_capacity_samples_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL
+        self.buffer_size_in_words_analog = self.timebinsPerPixel * self.preview_buffer_capacity_samples_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG
 
         if self.channels == 25:
             self.buffer_digital = np.zeros((self.buffer_size_in_words_digital, 25 + 2), dtype=np.uint64)
@@ -373,6 +381,7 @@ class AcquisitionLoopProcess(mp.Process):
                     np.int32,
                 )
 
+            # Save buffers hold one full frame before it is committed to HDF5.
             self.buffer_for_save_digital = np.zeros(
                 (
                     self.shape[1],

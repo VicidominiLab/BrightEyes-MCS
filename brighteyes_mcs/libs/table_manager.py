@@ -1,3 +1,5 @@
+"""Utility wrapper around the batch-acquisition table widget."""
+
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtCore import Qt, Signal, Slot
 from .print_dec import print_dec

@@ -1,3 +1,4 @@
+"""FastAPI bridge that exposes live GUI state and control endpoints."""
 
 import uvicorn
 import threading

@@ -24,7 +24,7 @@ class FpgaHandleProcess(mp.Process):
         self.timeout_fifos = self.configuration["timeout_fifos"]
         self.bitfile = self.configuration["bitfile"]
         self.ni_address = self.configuration["ni_address"]
-        self.requested_depth = self.configuration["requested_depth"]
+        self.requested_fifo_depth = self.configuration["requested_fifo_depth"]
         self.stop_event = self.configuration["stop_event"]
         self.stop_done_event = self.configuration["stop_done_event"]
         self.print_event = self.configuration["print_event"]
@@ -37,7 +37,7 @@ class FpgaHandleProcess(mp.Process):
         self.is_connected = self.configuration["is_connected"]
         self.is_readytorun = self.configuration["is_readytorun"]
         self.list_registers = self.configuration["list_registers"]
-        self.actual_depth = self.configuration["actual_depth"]
+        self.actual_fifo_depth = self.configuration["actual_fifo_depth"]
         self.fpgarunning = self.configuration["fpgarunning"]
         self.list_fifos_to_read_continously = self.configuration[
             "list_fifos_to_read_continously"
@@ -76,7 +76,7 @@ class FpgaHandleProcess(mp.Process):
                     self.list_fifos,
                     self.fifo_chuck_size_digital.value,
                     self.fifo_chuck_size_analog.value,
-                    self.requested_depth,
+                    self.requested_fifo_depth,
                     self.ni_address
                 )
                 self.rust_reader_ready.set()
@@ -360,23 +360,23 @@ class FpgaHandleProcess(mp.Process):
 
             for fifo in self.list_fifos:
                 if self.use_rust_fifo == False:
-                    self.actual_depth.value = self.nifpga_session.fifos[fifo].configure(
-                        self.requested_depth
+                    self.actual_fifo_depth.value = self.nifpga_session.fifos[fifo].configure(
+                        self.requested_fifo_depth
                     )
-                    self.nifpga_session.fifos[fifo].configure(self.requested_depth)
+                    self.nifpga_session.fifos[fifo].configure(self.requested_fifo_depth)
                     self.nifpga_session.fifos[fifo].start()
                 print_dec(
                     "FIFO",
                     fifo,
                     "req:",
-                    self.requested_depth,
+                    self.requested_fifo_depth,
                     "actual:",
-                    self.actual_depth.value,
+                    self.actual_fifo_depth.value,
                 )
                 self.fifo_element_remaining[fifo] = 0
 
             # print_dec(self.fifo_element_remaining)
-            # here I assume that self.actual_depth is the same for all FIFOs
+            # Here we assume the configured depth is the same for all FIFOs.
 
             print_dec("fpgaManagerProcess.run() started")
             for register in dict(self.initial_registers):

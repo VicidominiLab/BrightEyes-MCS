@@ -1,3 +1,5 @@
+"""FIFO preprocessing worker that batches raw queue payloads into numpy arrays."""
+
 import multiprocessing as mp
 import numpy as np
 from ..print_dec import print_dec, set_debug
@@ -79,7 +81,9 @@ class DataPreProcess(mp.Process):
                         counter_total_len[fifo_name] = 0
                         time_start[fifo_name] = time.time()
                         # fifo_lists.append(fifo_name)
-                    #pre_buffer_list[fifo_name] += data #not compatible with nifpga-fast-fifo-recv-0.101.6
+                    # Rust FIFO packets currently arrive as numpy arrays, but the
+                    # local pre-buffer is still a Python list, so this conversion is
+                    # one of the hottest overhead sources at high sample rates.
                     pre_buffer_list[fifo_name] += data.tolist()
                     pre_buffer_len[fifo_name] += len_values
                     counter_total_len[fifo_name] += len_values
@@ -95,6 +99,8 @@ class DataPreProcess(mp.Process):
                     or delta_time[fifo_name] > timeout
                 ) and (pre_buffer_len[fifo_name] > 0):
                     time_start[fifo_name] = time.time()
+                    # Convert the accumulated Python list back to a contiguous array
+                    # only when the downstream worker is ready to consume it.
                     data_as_array = np.fromiter(
                         pre_buffer_list[fifo_name],
                         dtype=np.uint64,

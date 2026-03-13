@@ -4269,7 +4269,7 @@
              <item row="5" column="0">
               <widget class="QLabel" name="label_63">
                <property name="text">
-                <string>Preview Buffer size (divided timebin)</string>
+                <string>Preview buffer samples</string>
                </property>
               </widget>
              </item>
@@ -4288,7 +4288,7 @@
               </widget>
              </item>
              <item row="5" column="1">
-              <widget class="QSpinBox" name="spinBox_preview_buffer_size">
+              <widget class="QSpinBox" name="spinBox_preview_buffer_samples">
                <property name="maximum">
                 <number>1000000</number>
                </property>
@@ -4298,7 +4298,7 @@
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QSpinBox" name="spinBox_fifo_buffer_size">
+              <widget class="QSpinBox" name="spinBox_requested_fifo_depth">
                <property name="maximum">
                 <number>20000000</number>
                </property>
@@ -4308,7 +4308,7 @@
               </widget>
              </item>
              <item row="4" column="1">
-              <widget class="QLabel" name="label_fifo_prebuffer_len">
+              <widget class="QLabel" name="label_last_preprocessed_size">
                <property name="text">
                 <string>0</string>
                </property>
@@ -4317,7 +4317,7 @@
              <item row="1" column="0">
               <widget class="QLabel" name="label_64">
                <property name="text">
-                <string>FIFO Actual Buffer size</string>
+                <string>Configured FIFO depth</string>
                </property>
               </widget>
              </item>
@@ -4335,7 +4335,7 @@
               </spacer>
              </item>
              <item row="1" column="1">
-              <widget class="QLabel" name="label_actual_buffer_size">
+              <widget class="QLabel" name="label_configured_fifo_depth">
                <property name="text">
                 <string>0</string>
                </property>
@@ -4344,19 +4344,19 @@
              <item row="0" column="0">
               <widget class="QLabel" name="label_62">
                <property name="text">
-                <string>FIFO Buffer size</string>
+                <string>Requested FIFO depth</string>
                </property>
               </widget>
              </item>
              <item row="2" column="0">
               <widget class="QLabel" name="label_78">
                <property name="text">
-                <string>FIFO Last Packet Received size</string>
+                <string>Last FIFO packet size</string>
                </property>
               </widget>
              </item>
              <item row="6" column="1">
-              <widget class="QLabel" name="label_actual_preview_buffer_size">
+              <widget class="QLabel" name="label_preview_buffer_capacity_samples">
                <property name="text">
                 <string>0</string>
                </property>
@@ -4401,7 +4401,7 @@
               </widget>
              </item>
              <item row="3" column="1">
-              <widget class="QSpinBox" name="spinBox_fifo_prebuffer">
+              <widget class="QSpinBox" name="spinBox_fifo_prebuffer_length">
                <property name="maximum">
                 <number>10000000</number>
                </property>
@@ -4537,6 +4537,16 @@
             <widget class="QPushButton" name="pushButton_11">
              <property name="text">
               <string>Test9</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QPushButton" name="pushButton_convertRawAcquisition">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Convert a preview-less RAW acquisition back into a standard BrightEyes H5 file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Convert RAW</string>
              </property>
             </widget>
            </item>
@@ -5156,7 +5166,7 @@
           <x>0</x>
           <y>0</y>
           <width>389</width>
-          <height>151</height>
+          <height>144</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -5480,7 +5490,40 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_16">
     <layout class="QGridLayout" name="gridLayout_79">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_111">
+       <property name="text">
+        <string>DFD N. Bins</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <spacer name="verticalSpacer_19">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
      <item row="3" column="0">
+      <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Laser Ref. in CH26 (for DFD)</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
       <spacer name="horizontalSpacer_15">
        <property name="orientation">
         <enum>Qt::Orientation::Horizontal</enum>
@@ -5496,7 +5539,7 @@
        </property>
       </spacer>
      </item>
-     <item row="0" column="1">
+     <item row="1" column="1">
       <widget class="QSpinBox" name="spinBox_DFD_nbins">
        <property name="maximum">
         <number>1023</number>
@@ -5507,37 +5550,14 @@
       </widget>
      </item>
      <item row="0" column="0">
-      <widget class="QLabel" name="label_111">
-       <property name="text">
-        <string>DFD N. Bins</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
+      <widget class="QCheckBox" name="checkBox_rawStreamAcquisition">
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bypass preview, conversion, traces, autocorrelation, and H5 image datasets. FIFO payloads are streamed directly to raw files and metadata are saved in a small H5 file at the end.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="text">
-        <string>Laser Ref. in CH26 (for DFD)</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
+        <string>Preview-less RAW acquisition</string>
        </property>
       </widget>
-     </item>
-     <item row="4" column="0">
-      <spacer name="verticalSpacer_19">
-       <property name="orientation">
-        <enum>Qt::Orientation::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
      </item>
     </layout>
    </widget>
@@ -7230,22 +7250,15 @@
  <slots>
   <slot>temporalSettingsChanged()</slot>
   <slot>plotSettingsChanged()</slot>
-  <slot>previewFlagChanged()</slot>
-  <slot>saveRaw()</slot>
-  <slot>saveHDF()</slot>
-  <slot>callNapari()</slot>
   <slot>test1()</slot>
   <slot>test2()</slot>
   <slot>test3()</slot>
   <slot>selectChannelSum()</slot>
-  <slot>selectISM()</slot>
   <slot>selectedAutoscaleImg()</slot>
   <slot>selectedAutoscaleFingerprint()</slot>
-  <slot>selectedCumulativeFingerprint()</slot>
   <slot>calibrationFactorChanged()</slot>
   <slot>offset_V_Changed()</slot>
   <slot>offset_um_Changed()</slot>
-  <slot>useROI()</slot>
   <slot>test4()</slot>
   <slot>test5()</slot>
   <slot>test6()</slot>
@@ -7256,16 +7269,11 @@
   <slot>positionSettingsChanged()</slot>
   <slot>panoramaButton()</slot>
   <slot>grabPanorama()</slot>
-  <slot>pmtThresholdChanged()</slot>
   <slot>rangeValueChanged()</slot>
   <slot>projChanged()</slot>
-  <slot>removeMarkerCmd()</slot>
-  <slot>connectButtonClicked()</slot>
   <slot>startButtonClicked()</slot>
   <slot>stopButtonClicked()</slot>
   <slot>previewButtonClicked()</slot>
-  <slot>previewPresetButtonClicked()</slot>
-  <slot>previewButtonClickedPreset()</slot>
   <slot>spatialSettingsChanged()</slot>
   <slot>startBatchFCS()</slot>
   <slot>copyPositionsMarkers()</slot>
@@ -7276,7 +7284,6 @@
   <slot>microimageType()</slot>
   <slot>addToBatch()</slot>
   <slot>cmd_path_destinationfolder()</slot>
-  <slot>cfg_file_clicked()</slot>
   <slot>bit_file_clicked()</slot>
   <slot>copyPositionsMarkersFCS()</slot>
   <slot>trace_parameters_changed()</slot>
@@ -7284,8 +7291,6 @@
   <slot>traceReset()</slot>
   <slot>FCSReset()</slot>
   <slot>cmd_filename()</slot>
-  <slot>cmd_circular()</slot>
-  <slot>startWithTTMButtonClicked()</slot>
   <slot>cmd_path_ttm()</slot>
   <slot>cmd_filename_ttm()</slot>
   <slot>ttm_activate_change_state()</slot>
@@ -7310,7 +7315,6 @@
   <slot>httpServerCheckBoxChanged()</slot>
   <slot>addcurrentconfmacro()</slot>
   <slot>addcurrentconfmacrofcs()</slot>
-  <slot>copyPositionMarkers()</slot>
   <slot>openInExplorer()</slot>
   <slot>radioButton_ttm_type_ttm_toggle()</slot>
   <slot>radioButton_ttm_type_uttm_toggle()</slot>

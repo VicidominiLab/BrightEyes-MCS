@@ -736,6 +736,7 @@ class Ui_MainWindowDesign(object):
         self.spinBox_timeresolution = QDoubleSpinBox(self.dockWidgetContents_3)
         self.spinBox_timeresolution.setObjectName(u"spinBox_timeresolution")
         self.spinBox_timeresolution.setKeyboardTracking(False)
+        self.spinBox_timeresolution.setDecimals(4)
         self.spinBox_timeresolution.setMaximum(10000000000000.000000000000000)
         self.spinBox_timeresolution.setValue(1.000000000000000)
 
@@ -1190,7 +1191,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollAreaWidgetContents_7 = QWidget()
         self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
-        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 416, 140))
+        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 422, 140))
         self.gridLayout_74 = QGridLayout(self.scrollAreaWidgetContents_7)
         self.gridLayout_74.setObjectName(u"gridLayout_74")
         self.groupBox = QGroupBox(self.scrollAreaWidgetContents_7)
@@ -1745,7 +1746,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 416, 354))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 422, 354))
         self.gridLayout_64 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_64.setObjectName(u"gridLayout_64")
         self.tabWidget_2 = QTabWidget(self.scrollAreaWidgetContents_2)
@@ -2476,24 +2477,24 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_52.addWidget(self.comboBox_fifobackend, 10, 1, 1, 3)
 
-        self.spinBox_preview_buffer_size = QSpinBox(self.tab_5)
-        self.spinBox_preview_buffer_size.setObjectName(u"spinBox_preview_buffer_size")
-        self.spinBox_preview_buffer_size.setMaximum(1000000)
-        self.spinBox_preview_buffer_size.setValue(30000)
+        self.spinBox_preview_buffer_samples = QSpinBox(self.tab_5)
+        self.spinBox_preview_buffer_samples.setObjectName(u"spinBox_preview_buffer_samples")
+        self.spinBox_preview_buffer_samples.setMaximum(1000000)
+        self.spinBox_preview_buffer_samples.setValue(30000)
 
-        self.gridLayout_52.addWidget(self.spinBox_preview_buffer_size, 5, 1, 1, 1)
+        self.gridLayout_52.addWidget(self.spinBox_preview_buffer_samples, 5, 1, 1, 1)
 
-        self.spinBox_fifo_buffer_size = QSpinBox(self.tab_5)
-        self.spinBox_fifo_buffer_size.setObjectName(u"spinBox_fifo_buffer_size")
-        self.spinBox_fifo_buffer_size.setMaximum(20000000)
-        self.spinBox_fifo_buffer_size.setValue(200000)
+        self.spinBox_requested_fifo_depth = QSpinBox(self.tab_5)
+        self.spinBox_requested_fifo_depth.setObjectName(u"spinBox_requested_fifo_depth")
+        self.spinBox_requested_fifo_depth.setMaximum(20000000)
+        self.spinBox_requested_fifo_depth.setValue(200000)
 
-        self.gridLayout_52.addWidget(self.spinBox_fifo_buffer_size, 0, 1, 1, 1)
+        self.gridLayout_52.addWidget(self.spinBox_requested_fifo_depth, 0, 1, 1, 1)
 
-        self.label_fifo_prebuffer_len = QLabel(self.tab_5)
-        self.label_fifo_prebuffer_len.setObjectName(u"label_fifo_prebuffer_len")
+        self.label_last_preprocessed_size = QLabel(self.tab_5)
+        self.label_last_preprocessed_size.setObjectName(u"label_last_preprocessed_size")
 
-        self.gridLayout_52.addWidget(self.label_fifo_prebuffer_len, 4, 1, 1, 1)
+        self.gridLayout_52.addWidget(self.label_last_preprocessed_size, 4, 1, 1, 1)
 
         self.label_64 = QLabel(self.tab_5)
         self.label_64.setObjectName(u"label_64")
@@ -2504,10 +2505,10 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_52.addItem(self.verticalSpacer_9, 9, 0, 1, 1)
 
-        self.label_actual_buffer_size = QLabel(self.tab_5)
-        self.label_actual_buffer_size.setObjectName(u"label_actual_buffer_size")
+        self.label_configured_fifo_depth = QLabel(self.tab_5)
+        self.label_configured_fifo_depth.setObjectName(u"label_configured_fifo_depth")
 
-        self.gridLayout_52.addWidget(self.label_actual_buffer_size, 1, 1, 1, 1)
+        self.gridLayout_52.addWidget(self.label_configured_fifo_depth, 1, 1, 1, 1)
 
         self.label_62 = QLabel(self.tab_5)
         self.label_62.setObjectName(u"label_62")
@@ -2519,10 +2520,10 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_52.addWidget(self.label_78, 2, 0, 1, 1)
 
-        self.label_actual_preview_buffer_size = QLabel(self.tab_5)
-        self.label_actual_preview_buffer_size.setObjectName(u"label_actual_preview_buffer_size")
+        self.label_preview_buffer_capacity_samples = QLabel(self.tab_5)
+        self.label_preview_buffer_capacity_samples.setObjectName(u"label_preview_buffer_capacity_samples")
 
-        self.gridLayout_52.addWidget(self.label_actual_preview_buffer_size, 6, 1, 1, 1)
+        self.gridLayout_52.addWidget(self.label_preview_buffer_capacity_samples, 6, 1, 1, 1)
 
         self.label_fifo_last_pkt_size = QLabel(self.tab_5)
         self.label_fifo_last_pkt_size.setObjectName(u"label_fifo_last_pkt_size")
@@ -2551,12 +2552,12 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_52.addWidget(self.label_96, 7, 0, 1, 1)
 
-        self.spinBox_fifo_prebuffer = QSpinBox(self.tab_5)
-        self.spinBox_fifo_prebuffer.setObjectName(u"spinBox_fifo_prebuffer")
-        self.spinBox_fifo_prebuffer.setMaximum(10000000)
-        self.spinBox_fifo_prebuffer.setValue(24000)
+        self.spinBox_fifo_prebuffer_length = QSpinBox(self.tab_5)
+        self.spinBox_fifo_prebuffer_length.setObjectName(u"spinBox_fifo_prebuffer_length")
+        self.spinBox_fifo_prebuffer_length.setMaximum(10000000)
+        self.spinBox_fifo_prebuffer_length.setValue(24000)
 
-        self.gridLayout_52.addWidget(self.spinBox_fifo_prebuffer, 3, 1, 1, 1)
+        self.gridLayout_52.addWidget(self.spinBox_fifo_prebuffer_length, 3, 1, 1, 1)
 
         self.label_95 = QLabel(self.tab_5)
         self.label_95.setObjectName(u"label_95")
@@ -2644,6 +2645,11 @@ class Ui_MainWindowDesign(object):
         self.pushButton_11.setObjectName(u"pushButton_11")
 
         self.gridLayout_23.addWidget(self.pushButton_11, 3, 2, 1, 1)
+
+        self.pushButton_convertRawAcquisition = QPushButton(self.scrollAreaWidgetContents_6)
+        self.pushButton_convertRawAcquisition.setObjectName(u"pushButton_convertRawAcquisition")
+
+        self.gridLayout_23.addWidget(self.pushButton_convertRawAcquisition, 4, 2, 1, 1)
 
         self.pushButton_3 = QPushButton(self.scrollAreaWidgetContents_6)
         self.pushButton_3.setObjectName(u"pushButton_3")
@@ -2815,7 +2821,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 416, 186))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 422, 186))
         self.gridLayout_63 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_63.setObjectName(u"gridLayout_63")
         self.groupBox_4 = QGroupBox(self.scrollAreaWidgetContents)
@@ -2978,7 +2984,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 389, 151))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 389, 144))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -3184,31 +3190,36 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_16.setObjectName(u"dockWidgetContents_16")
         self.gridLayout_79 = QGridLayout(self.dockWidgetContents_16)
         self.gridLayout_79.setObjectName(u"gridLayout_79")
+        self.label_111 = QLabel(self.dockWidgetContents_16)
+        self.label_111.setObjectName(u"label_111")
+
+        self.gridLayout_79.addWidget(self.label_111, 1, 0, 1, 1)
+
+        self.verticalSpacer_19 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_79.addItem(self.verticalSpacer_19, 5, 0, 1, 1)
+
+        self.checkBox_DFD_LaserDebug = QCheckBox(self.dockWidgetContents_16)
+        self.checkBox_DFD_LaserDebug.setObjectName(u"checkBox_DFD_LaserDebug")
+        self.checkBox_DFD_LaserDebug.setChecked(True)
+
+        self.gridLayout_79.addWidget(self.checkBox_DFD_LaserDebug, 3, 0, 1, 1)
+
         self.horizontalSpacer_15 = QSpacerItem(40, 20, QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_79.addItem(self.horizontalSpacer_15, 3, 0, 1, 1)
+        self.gridLayout_79.addItem(self.horizontalSpacer_15, 4, 0, 1, 1)
 
         self.spinBox_DFD_nbins = QSpinBox(self.dockWidgetContents_16)
         self.spinBox_DFD_nbins.setObjectName(u"spinBox_DFD_nbins")
         self.spinBox_DFD_nbins.setMaximum(1023)
         self.spinBox_DFD_nbins.setValue(81)
 
-        self.gridLayout_79.addWidget(self.spinBox_DFD_nbins, 0, 1, 1, 1)
+        self.gridLayout_79.addWidget(self.spinBox_DFD_nbins, 1, 1, 1, 1)
 
-        self.label_111 = QLabel(self.dockWidgetContents_16)
-        self.label_111.setObjectName(u"label_111")
+        self.checkBox_rawStreamAcquisition = QCheckBox(self.dockWidgetContents_16)
+        self.checkBox_rawStreamAcquisition.setObjectName(u"checkBox_rawStreamAcquisition")
 
-        self.gridLayout_79.addWidget(self.label_111, 0, 0, 1, 1)
-
-        self.checkBox_DFD_LaserDebug = QCheckBox(self.dockWidgetContents_16)
-        self.checkBox_DFD_LaserDebug.setObjectName(u"checkBox_DFD_LaserDebug")
-        self.checkBox_DFD_LaserDebug.setChecked(True)
-
-        self.gridLayout_79.addWidget(self.checkBox_DFD_LaserDebug, 2, 0, 1, 1)
-
-        self.verticalSpacer_19 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_79.addItem(self.verticalSpacer_19, 4, 0, 1, 1)
+        self.gridLayout_79.addWidget(self.checkBox_rawStreamAcquisition, 0, 0, 1, 1)
 
         self.dockWidget_dfd.setWidget(self.dockWidgetContents_16)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_dfd)
@@ -3222,7 +3233,8 @@ class Ui_MainWindowDesign(object):
         QWidget.setTabOrder(self.pushButton_6, self.pushButton_9)
         QWidget.setTabOrder(self.pushButton_9, self.pushButton_10)
         QWidget.setTabOrder(self.pushButton_10, self.pushButton_11)
-        QWidget.setTabOrder(self.pushButton_11, self.spinBox_nframe)
+        QWidget.setTabOrder(self.pushButton_11, self.pushButton_convertRawAcquisition)
+        QWidget.setTabOrder(self.pushButton_convertRawAcquisition, self.spinBox_nframe)
         QWidget.setTabOrder(self.spinBox_nframe, self.spinBox_ny)
         QWidget.setTabOrder(self.spinBox_ny, self.spinBox_nx)
         QWidget.setTabOrder(self.spinBox_nx, self.spinBox_nrepetition)
@@ -3257,6 +3269,7 @@ class Ui_MainWindowDesign(object):
         self.pushButton_9.clicked.connect(MainWindowDesign.test7)
         self.pushButton_10.clicked.connect(MainWindowDesign.test8)
         self.pushButton_11.clicked.connect(MainWindowDesign.test9)
+        self.pushButton_convertRawAcquisition.clicked.connect(MainWindowDesign.cmd_convertRawAcquisition)
         self.checkBoxLockRatio.clicked.connect(MainWindowDesign.checkBoxLockRatioChanged)
         self.spinBox_offExtra_x_V.valueChanged.connect(MainWindowDesign.positionSettingsChanged)
         self.spinBox_offExtra_y_V.valueChanged.connect(MainWindowDesign.positionSettingsChanged)
@@ -3859,16 +3872,16 @@ class Ui_MainWindowDesign(object):
         self.label_5.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_8), QCoreApplication.translate("MainWindowDesign", u"Calibration", None))
         self.label_90.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Last PreProcessed size", None))
-        self.label_63.setText(QCoreApplication.translate("MainWindowDesign", u"Preview Buffer size (divided timebin)", None))
+        self.label_63.setText(QCoreApplication.translate("MainWindowDesign", u"Preview buffer samples", None))
         self.comboBox_fifobackend.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Rust nifpga_fast_fifo_recv", None))
         self.comboBox_fifobackend.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Python nifpga library", None))
 
-        self.label_fifo_prebuffer_len.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.label_64.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Actual Buffer size", None))
-        self.label_actual_buffer_size.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.label_62.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Buffer size", None))
-        self.label_78.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Last Packet Received size", None))
-        self.label_actual_preview_buffer_size.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.label_last_preprocessed_size.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.label_64.setText(QCoreApplication.translate("MainWindowDesign", u"Configured FIFO depth", None))
+        self.label_configured_fifo_depth.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.label_62.setText(QCoreApplication.translate("MainWindowDesign", u"Requested FIFO depth", None))
+        self.label_78.setText(QCoreApplication.translate("MainWindowDesign", u"Last FIFO packet size", None))
+        self.label_preview_buffer_capacity_samples.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.label_fifo_last_pkt_size.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.label_79.setText(QCoreApplication.translate("MainWindowDesign", u"Preview Buffer size total", None))
         self.label_89.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Last PreProcessed actual size", None))
@@ -3885,6 +3898,8 @@ class Ui_MainWindowDesign(object):
         self.pushButton_6.setText(QCoreApplication.translate("MainWindowDesign", u"Test4", None))
         self.pushButton_2.setText(QCoreApplication.translate("MainWindowDesign", u"Test2", None))
         self.pushButton_11.setText(QCoreApplication.translate("MainWindowDesign", u"Test9", None))
+        self.pushButton_convertRawAcquisition.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Convert a preview-less RAW acquisition back into a standard BrightEyes H5 file.</p></body></html>", None))
+        self.pushButton_convertRawAcquisition.setText(QCoreApplication.translate("MainWindowDesign", u"Convert RAW", None))
         self.pushButton_3.setText(QCoreApplication.translate("MainWindowDesign", u"Test3", None))
         self.pushButton_10.setText(QCoreApplication.translate("MainWindowDesign", u"Test8", None))
         self.pushButton_9.setText(QCoreApplication.translate("MainWindowDesign", u"Test7", None))
@@ -4000,5 +4015,9 @@ class Ui_MainWindowDesign(object):
         self.checkBox_DFD_LaserDebug.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_DFD_LaserDebug.setText(QCoreApplication.translate("MainWindowDesign", u"Laser Ref. in CH26 (for DFD)", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_rawStreamAcquisition.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Bypass preview, conversion, traces, autocorrelation, and H5 image datasets. FIFO payloads are streamed directly to raw files and metadata are saved in a small H5 file at the end.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_rawStreamAcquisition.setText(QCoreApplication.translate("MainWindowDesign", u"Preview-less RAW acquisition", None))
     # retranslateUi
 

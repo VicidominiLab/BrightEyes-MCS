@@ -1,3 +1,5 @@
+"""Shared-memory orchestration for FPGA acquisition, preprocessing, and preview."""
+
 import numpy as np
 import multiprocessing as mp
 
@@ -5,6 +7,7 @@ import multiprocessing as mp
 
 from ..libs.processes.data_pre_process import DataPreProcess
 from ..libs.processes.acquisition_loop_process import AcquisitionLoopProcess
+from ..libs.processes.raw_stream_writer_process import RawStreamWriterProcess
 from ..libs.fpga_handle import FpgaHandle
 from ..libs.h5manager import H5ManagerProcess
 from ..libs.print_dec import print_dec
@@ -28,8 +31,8 @@ class SpadFcsManager():
         initial_registers_dict (dict): Dictionary for ultra configuration.
         shared_dict (dict): Shared dictionary for multiprocessing.
         default_configuration (dict): Default configuration for the registers.
-        requested_depth (int): Requested depth for acquisition.
-        actual_depth (int): Actual depth for acquisition.
+        requested_fifo_depth (int): Requested FPGA FIFO depth.
+        actual_fifo_depth (int): Configured FPGA FIFO depth reported by the driver.
         timebins_per_pixel (int): Number of time bins per pixel.
         time_resolution (float): Time resolution.
         dim_x (int): Number of pixels in x dimension.
@@ -55,8 +58,8 @@ class SpadFcsManager():
         autocorrelation_maxx (int): Maximum value for autocorrelation.
         trace_bins (int): Number of trace bins.
         trace_sample_per_bins (int): Number of words per trace bin.
-        preview_buffer_size_in_sample (int): Size of the preview buffer in sample.
-        len_fifo_prebuffer (int): Length of the FIFO prebuffer.
+        preview_buffer_capacity_samples (int): Preview buffer capacity in samples.
+        fifo_prebuffer_length (int): Number of FIFO values accumulated before dispatch.
         activated_fifos_list (list): List of activated FIFOs.
         DFD_Activate (bool): Flag for DFD activation.
         snake_walk_xy (bool): Flag for snake walk mode on xy.
@@ -137,8 +140,8 @@ class SpadFcsManager():
             "L4": 0,
             # 'LaserOffAfterMeasurement' : False,
         }
-        self.requested_depth = 100000
-        self.actual_depth = 0
+        self.requested_fifo_depth = 100000
+        self.actual_fifo_depth = 0
 
         self.timebins_per_pixel = 0
         self.time_resolution = 0
@@ -183,8 +186,8 @@ class SpadFcsManager():
         self.trace_bins = 30000
         self.trace_sample_per_bins = 10000
 
-        self.preview_buffer_size_in_sample = 15000
-        self.len_fifo_prebuffer = 0
+        self.preview_buffer_capacity_samples = 15000
+        self.fifo_prebuffer_length = 0
         self.activated_fifos_list = []
 
         self.DFD_Activate = False
@@ -202,6 +205,9 @@ class SpadFcsManager():
         self.h5_manager_process = None
         self.h5_command_queue = None
         self.h5_response_queue = None
+        self.raw_stream_mode = False
+        self.raw_output_files = {}
+        self.raw_writer_process = None
 
 
 
@@ -360,22 +366,31 @@ class SpadFcsManager():
         self.niAddr2 = niAddr
 
 
+    def set_requested_fifo_depth(self, requested_fifo_depth):
+        print_dec("requested_fifo_depth", requested_fifo_depth)
+        self.requested_fifo_depth = requested_fifo_depth
+
     def set_requested_depth(self, requested_depth):
-        print_dec("requested_depth", requested_depth)
-        self.requested_depth = requested_depth
+        self.set_requested_fifo_depth(requested_depth)
+
+    def set_preview_buffer_capacity_samples(self, preview_buffer_capacity_samples):
+        """
+        Set the preview buffer capacity in samples.
+        """
+        print_dec("preview_buffer_capacity_samples", preview_buffer_capacity_samples)
+        self.preview_buffer_capacity_samples = preview_buffer_capacity_samples
 
     def set_preview_buffer_size_in_sample(self, preview_buffer_size_in_sample):
+        self.set_preview_buffer_capacity_samples(preview_buffer_size_in_sample)
+
+    def set_fifo_prebuffer_length(self, fifo_prebuffer_length):
         """
-        Set the preview buffer size in sample
+        Set the FIFO prebuffer length.
         """
-        print_dec("preview_buffer_size_in_sample", preview_buffer_size_in_sample)
-        self.preview_buffer_size_in_sample = preview_buffer_size_in_sample
+        self.fifo_prebuffer_length = fifo_prebuffer_length
 
     def set_len_fifo_prebuffer(self, len_fifo_prebuffer):
-        """
-        Set the length of the FIFO prebuffer
-        """
-        self.len_fifo_prebuffer = len_fifo_prebuffer
+        self.set_fifo_prebuffer_length(len_fifo_prebuffer)
 
     def set_timeout_fifos(self, timeout):
         """
@@ -395,7 +410,7 @@ class SpadFcsManager():
                 bitfile=self.bitfile,
                 ni_address=self.niAddr,
                 mp_manager=self.mp_manager,
-                requested_depth=self.requested_depth,
+                requested_fifo_depth=self.requested_fifo_depth,
                 list_fifos=["FIFO"],
                 initial_registers_dict=self.initial_registers_dict,
                 debug=self.debug,
@@ -435,6 +450,18 @@ class SpadFcsManager():
         """
         self.use_rust_fifo = value
 
+    def set_raw_stream_mode(self, enabled=False):
+        """
+        Enable direct FIFO-to-disk streaming without preview/conversion.
+        """
+        self.raw_stream_mode = enabled
+
+    def set_raw_output_files(self, raw_output_files=None):
+        """
+        Set the per-FIFO destination files used by raw streaming mode.
+        """
+        self.raw_output_files = dict(raw_output_files or {})
+
     def run(self):
         """
         Run the FPGA, start the data process, the preview process and run the FPGA handle class
@@ -451,50 +478,62 @@ class SpadFcsManager():
 
         self.fpga_handle.set_list_fifos_to_read_continously(self.activated_fifos_list)
 
-        self.shared_autocorrelation = MemorySharedNumpyArray(
-            dtype=float, shape=[2, self.autocorrelation_maxx], lock=True
-        )
+        if not self.raw_stream_mode:
+            # Preview data lives in shared memory so the GUI can inspect it without
+            # blocking the acquisition workers.
+            self.shared_autocorrelation = MemorySharedNumpyArray(
+                dtype=float, shape=[2, self.autocorrelation_maxx], lock=True
+            )
 
-        self.shared_trace = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[2, self.trace_bins], lock=True
-        )
+            self.shared_trace = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[2, self.trace_bins], lock=True
+            )
 
-        self.shared_image_xy_rgb = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_y, self.dim_x, 3], lock=True
-        )
+            self.shared_image_xy_rgb = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[self.dim_y, self.dim_x, 3], lock=True
+            )
 
-        self.shared_image_xy = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_y, self.dim_x], lock=True
-        )
+            self.shared_image_xy = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[self.dim_y, self.dim_x], lock=True
+            )
 
-        self.shared_image_xz = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_z, self.dim_x], lock=True
-        )
+            self.shared_image_xz = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[self.dim_z, self.dim_x], lock=True
+            )
 
-        self.shared_image_zy = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_y, self.dim_z], lock=True
-        )
+            self.shared_image_zy = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[self.dim_y, self.dim_z], lock=True
+            )
 
-        self.shared_fingerprint = MemorySharedNumpyArray(
-            dtype=np.uint64,
-            shape=[
-                6,
-                self.dim_detector,
-                self.dim_detector,
-            ],  # [x,y,0] cumulative figerprint [x,y,1] last fingerprint
-            sampling=0,
-            lock=True,
-        )
+            self.shared_fingerprint = MemorySharedNumpyArray(
+                dtype=np.uint64,
+                shape=[
+                    6,
+                    self.dim_detector,
+                    self.dim_detector,
+                ],
+                sampling=0,
+                lock=True,
+            )
 
-        self.shared_fingerprint_mask = MemorySharedNumpyArray(
-            dtype=np.uint8,
-            shape=[self.dim_detector * self.dim_detector],
-            sampling=0,
-            lock=True,
-        )
-        self.shared_fingerprint_mask.get_numpy_handle()[:] = np.ones(
-            self.dim_detector * self.dim_detector, dtype=np.uint8
-        )
+            self.shared_fingerprint_mask = MemorySharedNumpyArray(
+                dtype=np.uint8,
+                shape=[self.dim_detector * self.dim_detector],
+                sampling=0,
+                lock=True,
+            )
+            self.shared_fingerprint_mask.get_numpy_handle()[:] = np.ones(
+                self.dim_detector * self.dim_detector, dtype=np.uint8
+            )
+        else:
+            self.shared_autocorrelation = None
+            self.shared_trace = None
+            self.shared_image_xy_rgb = None
+            self.shared_image_xy = None
+            self.shared_image_xz = None
+            self.shared_image_zy = None
+            self.shared_fingerprint = None
+            self.shared_fingerprint_mask = None
         # self.shared_index = mp.Value("i",0)
         # , self.dim_z
 
@@ -523,7 +562,7 @@ class SpadFcsManager():
         }
 
         self.number_of_threads_h5 = mp.Value("i", 0)
-        if not do_not_save:
+        if not do_not_save and not self.raw_stream_mode:
             self.h5_command_queue = mp.Queue()
             self.h5_response_queue = mp.Queue()
             self.h5_manager_process = H5ManagerProcess(
@@ -538,26 +577,30 @@ class SpadFcsManager():
             self.h5_response_queue = None
             self.h5_manager_process = None
 
-        self.trace_pos = mp.Value("i", 0)
+        self.trace_pos = mp.Value("i", 0) if not self.raw_stream_mode else None
 
         # self.acquisitionThread = AcquireFIFOinBackground(self.queue,
         #                                                  self.fifo)
 
-        self.imposed_data_shift = mp.Value("i", 0)
+        self.imposed_data_shift = mp.Value("i", 0) if not self.raw_stream_mode else None
 
-        self.dataProcess = DataPreProcess(
-            self.fpga_handle.configuration["queueFifoRead"],
-            # self.shared_memory_buffer,
-            self.loc_acquired,
-            self.last_preprocessed_len,
-            self.data_queue,
-            self.dtype_data_queue,
-            len_buffer=self.len_fifo_prebuffer,
-            debug=self.debug,
-            use_rust_fifo=self.use_rust_fifo,
-        )
+        # The preprocessing worker repacks FIFO chunks into arrays that are
+        # cheaper for the acquisition loop to consume repeatedly.
+        if not self.raw_stream_mode:
+            self.dataProcess = DataPreProcess(
+                self.fpga_handle.configuration["queueFifoRead"],
+                self.loc_acquired,
+                self.last_preprocessed_len,
+                self.data_queue,
+                self.dtype_data_queue,
+                len_buffer=self.fifo_prebuffer_length,
+                debug=self.debug,
+                use_rust_fifo=self.use_rust_fifo,
+            )
 
-        self.dataProcess.daemon = True
+            self.dataProcess.daemon = True
+        else:
+            self.dataProcess = None
 
         self.shared_objects = {
             "activated_fifos_list": self.activated_fifos_list,
@@ -593,6 +636,7 @@ class SpadFcsManager():
         self.shared_dict["expected_words_data_per_frame_analog"] = self.expected_words_data_per_frame_analog
         self.shared_dict["filenameh5"] = self.filenameh5
         self.shared_dict["DFD_nbins"] = self.DFD_nbins
+        self.shared_dict["raw_output_files"] = dict(self.raw_output_files)
 
         print_dec("self.activate_show_preview", self.activate_show_preview)
         self.shared_dict.update(
@@ -605,37 +649,56 @@ class SpadFcsManager():
                 "total_photon": 0,
                 "FIFO_status": 0,
                 "FIFOAnalog_status": 0,
-                "preview_buffer_size_in_sample": self.preview_buffer_size_in_sample,
+                "preview_buffer_capacity_samples": self.preview_buffer_capacity_samples,
                 "last_packet_size": 0,
                 "DFD_Activate": self.DFD_Activate,
                 "DFD_nBins": self.DFD_nbins,
                 "snake_walk_xy": self.snake_walk_xy,
                 "snake_walk_z": self.snake_walk_z,
                 "clk_multiplier": self.clk_multiplier,
-                "dfd_shift": self.dfd_shift
+                "dfd_shift": self.dfd_shift,
+                "raw_stream_mode": self.raw_stream_mode,
             }
         )
 
-        # if self.previewEnabled:
-        print_dec("self.previewProcess()")
-        self.previewProcess = AcquisitionLoopProcess(
-            self.channels,
-            self.shared_objects,
-            do_not_save,
-            self.data_queue,
-            self.acquisition_done_event,
-            self.acquisition_almost_done_event,
-            self.shared_dict,
-            debug=self.debug,
-        )
-        self.previewProcess.daemon = True
+        if self.raw_stream_mode:
+            print_dec("self.raw_writer_process()")
+            self.raw_writer_process = RawStreamWriterProcess(
+                self.fpga_handle.configuration["queueFifoRead"],
+                self.activated_fifos_list,
+                self.raw_output_files,
+                self.loc_acquired,
+                self.loc_previewed,
+                self.last_preprocessed_len,
+                self.acquisition_done_event,
+                self.acquisition_almost_done_event,
+                self.shared_dict,
+                debug=self.debug,
+            )
+            self.raw_writer_process.daemon = True
+            self.previewProcess = None
+        else:
+            print_dec("self.previewProcess()")
+            self.previewProcess = AcquisitionLoopProcess(
+                self.channels,
+                self.shared_objects,
+                do_not_save,
+                self.data_queue,
+                self.acquisition_done_event,
+                self.acquisition_almost_done_event,
+                self.shared_dict,
+                debug=self.debug,
+            )
+            self.previewProcess.daemon = True
 
-        self.shared_arrays_ready = True
-        print_dec("self.dataProcess.start()")
-        self.dataProcess.start()
-        # self.acquisitionThread.start()
-        # if self.previewEnabled:
-        self.previewProcess.start()
+        self.shared_arrays_ready = not self.raw_stream_mode
+        if self.dataProcess is not None:
+            print_dec("self.dataProcess.start()")
+            self.dataProcess.start()
+        if self.raw_stream_mode:
+            self.raw_writer_process.start()
+        else:
+            self.previewProcess.start()
         # self.nifpga_session.run()
         self.fpga_handle.runfpga()
 
@@ -653,7 +716,7 @@ class SpadFcsManager():
         dataProcess is alive
         """
         try:
-            return self.dataProcess.is_alive()
+            return self.dataProcess is not None and self.dataProcess.is_alive()
         except:
             return False
 
@@ -847,7 +910,8 @@ class SpadFcsManager():
         Stop the acquisition
         """
         print_dec("stopAcquisition.stop()")
-        self.dataProcess.stop()
+        if self.dataProcess is not None:
+            self.dataProcess.stop()
         self.is_connected = False
 
     def stopPreview(self):
@@ -855,9 +919,14 @@ class SpadFcsManager():
         Stop the preview
         """
         print_dec("myfpga.stopPreview()")
-        # if self.previewEnabled:
-        self.previewProcess.stop()
-        self.previewProcess.join()
+        if self.raw_stream_mode:
+            if self.raw_writer_process is not None:
+                self.raw_writer_process.stop()
+                self.raw_writer_process.join(timeout=5)
+                self.raw_writer_process = None
+        elif self.previewProcess is not None:
+            self.previewProcess.stop()
+            self.previewProcess.join()
         if self.h5_manager_process is not None:
             self.h5_manager_process.join(timeout=2)
             if self.h5_manager_process.is_alive():
@@ -1043,6 +1112,8 @@ class SpadFcsManager():
         if rgb == True:
             shared_image = self.shared_image_xy_rgb
 
+        # Return an owned array because the GUI will use it after the shared lock
+        # is released.
         shared_image.get_lock().acquire()
         array = np.copy(shared_image.get_numpy_handle()[:])
         shared_image.get_lock().release()

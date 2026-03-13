@@ -1,3 +1,5 @@
+"""Runtime discovery and lifecycle management for BrightEyes plug-ins."""
+
 from .print_dec import print_dec
 from os import listdir
 from os.path import isfile, join, isdir

@@ -1,3 +1,5 @@
+"""Tree-model adapter used to expose nested dictionaries in Qt views."""
+
 from PySide6.QtCore import Qt, QModelIndex, QAbstractItemModel
 from ..libs.print_dec import print_dec, set_debug
 

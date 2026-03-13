@@ -1,3 +1,5 @@
+"""HDF5 writer helpers for both GUI-side metadata and worker-side bulk writes."""
+
 from decimal import Decimal
 
 import h5py

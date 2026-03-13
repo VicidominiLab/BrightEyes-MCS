@@ -1,3 +1,5 @@
+"""GUI helpers for browsing DFD datasets and derived histograms."""
+
 from PySide6.QtWidgets import (
     QWidget,
     QFileDialog,

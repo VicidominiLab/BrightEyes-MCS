@@ -1,3 +1,5 @@
+"""Thin process/controller wrapper around the NI FPGA reader backends."""
+
 import multiprocessing as mp
 import time
 
@@ -15,7 +17,7 @@ class FpgaHandle(object):
         ni_address,
         mp_manager,
         timeout_fifos=10e6,
-        requested_depth=10000,
+        requested_fifo_depth=10000,
         list_fifos=[],
         initial_registers_dict={},
         debug=True,
@@ -43,7 +45,7 @@ class FpgaHandle(object):
             "ni_address": ni_address,
             "bitfile2": bitfile2,
             "ni_address2": ni_address2,
-            "requested_depth": requested_depth,
+            "requested_fifo_depth": requested_fifo_depth,
             "list_fifos_to_read_continously": self.mp_manager.list(list(list_fifos)),
             "stop_event": self.mp_manager.Event(),
             "stop_done_event": self.mp_manager.Event(),
@@ -54,7 +56,7 @@ class FpgaHandle(object):
             "is_connected": self.mp_manager.Event(),
             "is_readytorun": self.mp_manager.Event(),
             "list_registers": self.mp_manager.list(),
-            "actual_depth": self.mp_manager.Value("I", 0),
+            "actual_fifo_depth": self.mp_manager.Value("I", 0),
             "fpgarunning": self.mp_manager.Event(),
             "fifo_chuck_size_digital": self.mp_manager.Value("I", 0),
             "fifo_chuck_size_analog": self.mp_manager.Value("I", 0),
@@ -225,5 +227,8 @@ class FpgaHandle(object):
             list_fifos_to_read_continously
         )
 
+    def get_actual_fifo_depth(self):
+        return self.configuration["actual_fifo_depth"].value
+
     def get_actual_depth(self):
-        return self.configuration["actual_depth"].value
+        return self.get_actual_fifo_depth()
