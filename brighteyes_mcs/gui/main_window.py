@@ -3382,10 +3382,15 @@ class MainWindow(QMainWindow):
 
         trace, trace_pos = self.spadfcsmanager_inst.getTrace()
 
-        trace_x = trace[0, :trace_pos]
-        trace_y = trace[1, :trace_pos]
+        if self.DFD_Activate:
+            trace_x = trace[0, :]
+            trace_live = trace[1, :]
+            trace_sum = trace[2, :]
+        else:
+            trace_x = trace[0, :trace_pos]
+            trace_y = trace[1, :trace_pos]
 
-        if clk_multiplier > 1:
+        if clk_multiplier > 1 and not self.DFD_Activate:
             size = trace_x.shape[0]
             idx = np.arange(size)
             trace_x_n = trace_x[:size//clk_multiplier]
@@ -3419,7 +3424,27 @@ class MainWindow(QMainWindow):
             self.trace_widget.setLabel("left", "Freq.", "Hz")
             coeff = 1
 
-        if self.ui.checkBox_trace_autorange.isChecked():
+        if self.DFD_Activate:
+            live_max = np.max(trace_live)
+            sum_max = np.max(trace_sum)
+
+            if live_max > 0:
+                trace_live = trace_live / live_max
+            if sum_max > 0:
+                trace_sum = trace_sum / sum_max
+
+            self.trace_widget.plot(
+                trace_x,
+                trace_live * coeff,
+                clear=True,
+                pen=pg.mkPen(color=(255, 255, 255), width=1),
+            )
+            self.trace_widget.plot(
+                trace_x,
+                trace_sum * coeff,
+                pen=pg.mkPen(color=(180, 180, 180), width=2),
+            )
+        elif self.ui.checkBox_trace_autorange.isChecked():
             self.trace_widget.plot(
                 trace_x, trace_y * coeff, clear=True
             )

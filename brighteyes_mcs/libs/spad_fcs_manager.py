@@ -486,7 +486,7 @@ class SpadFcsManager():
             )
 
             self.shared_trace = MemorySharedNumpyArray(
-                dtype=np.int64, shape=[2, self.trace_bins], lock=True
+                dtype=np.int64, shape=[3, self.trace_bins], lock=True
             )
 
             self.shared_image_xy_rgb = MemorySharedNumpyArray(

@@ -441,6 +441,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.trace[0, :] = temporalBinner.get_x()
         self.trace[1, :] = 0
+        self.trace[2, :] = 0
 
         self.gap_digital_in_sample = 0
         self.gap_analog_in_sample = 0
@@ -486,9 +487,22 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.selected_channel = self.shared_dict["channel"]
 
+        def update_trace(trace_values, time_bins=None):
+            temporalBinner.add(trace_values)
+            self.trace_pos.value = temporalBinner.get_current_position_bins()
+            self.trace[1, :] = temporalBinner.get_bins()
+
+            if self.DFD_Activate and time_bins is not None:
+                valid = (time_bins >= 0) & (time_bins < self.trace.shape[1])
+                if np.any(valid):
+                    np.add.at(self.trace[2, :], time_bins[valid], trace_values[valid])
+
         def finalize_frame_fifo():
             print_dec("finalize_frame_fifo()")
             try:
+                if self.activate_trace and self.DFD_Activate:
+                    self.trace[2, :] = 0
+
                 # reset and finalize fingerprints (same block as original)
                 frameComplete["FIFO"] = False
                 self.fingerprint[3, :, :] = self.fingerprint[0, :, :]
@@ -754,11 +768,10 @@ class AcquisitionLoopProcess(mp.Process):
                                             1, :
                                         ] = correlator.get_correlation_normalized()
                                     if self.activate_trace:
-                                        temporalBinner.add(buffer_up_to_gap_digital[:, selected_channel])
-                                        self.trace_pos.value = (
-                                            temporalBinner.get_current_position_bins()
+                                        update_trace(
+                                            buffer_up_to_gap_digital[:, selected_channel],
+                                            list_b_digital,
                                         )
-                                        self.trace[1, :] = temporalBinner.get_bins()
 
                             elif selected_channel.startswith("Sum"):
                                 if self.activate_show_preview == True:
@@ -801,11 +814,10 @@ class AcquisitionLoopProcess(mp.Process):
                                         1, :
                                     ] = correlator.get_correlation_normalized()
                                 if self.activate_trace:
-                                    temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample])
-                                    self.trace_pos.value = (
-                                        temporalBinner.get_current_position_bins()
+                                    update_trace(
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample],
+                                        list_b_digital,
                                     )
-                                    self.trace[1, :] = temporalBinner.get_bins()
 
                             elif selected_channel.startswith("RGB"):
                                 if selected_channel.startswith("RGB "):
@@ -931,11 +943,10 @@ class AcquisitionLoopProcess(mp.Process):
                                         1, :
                                     ] = correlator.get_correlation_normalized()
                                 if self.activate_trace:
-                                    temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample])
-                                    self.trace_pos.value = (
-                                        temporalBinner.get_current_position_bins()
+                                    update_trace(
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample],
+                                        list_b_digital,
                                     )
-                                    self.trace[1, :] = temporalBinner.get_bins()
 
                             if not self.do_not_save:
                                 # This is for debug purpose
@@ -1218,6 +1229,8 @@ class AcquisitionLoopProcess(mp.Process):
             if trace_reset_event_proxy.is_set():
                 print_dec("trace_reset_event.is_set()")
                 temporalBinner.reset()
+                if self.DFD_Activate:
+                    self.trace[2, :] = 0
                 trace_reset_event_proxy.clear()
             if FCS_reset_event_proxy.is_set():
                 correlator.reset()
