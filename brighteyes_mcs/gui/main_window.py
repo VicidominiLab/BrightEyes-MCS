@@ -3383,10 +3383,12 @@ class MainWindow(QMainWindow):
         trace, trace_pos = self.spadfcsmanager_inst.getTrace()
 
         if self.DFD_Activate:
+            self.trace_widget.setLabel("bottom", "DFD bin")
             trace_x = trace[0, :]
             trace_live = trace[1, :]
             trace_sum = trace[2, :]
         else:
+            self.trace_widget.setLabel("bottom", "Time", "s")
             trace_x = trace[0, :trace_pos]
             trace_y = trace[1, :trace_pos]
 
@@ -3428,10 +3430,10 @@ class MainWindow(QMainWindow):
             live_max = np.max(trace_live)
             sum_max = np.max(trace_sum)
 
-            if live_max > 0:
+            if live_max > 0 and sum_max > 0:
+                trace_live = (trace_live / live_max) * sum_max
+            elif live_max > 0 and sum_max <= 0:
                 trace_live = trace_live / live_max
-            if sum_max > 0:
-                trace_sum = trace_sum / sum_max
 
             self.trace_widget.plot(
                 trace_x,

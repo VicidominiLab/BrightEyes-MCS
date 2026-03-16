@@ -1078,13 +1078,44 @@ class SpadFcsManager():
         """
         Get the trace
         """
+        a = self.shared_trace.get_numpy_handle() * 1.0
         if self.DFD_Activate:
-            a = self.shared_trace.get_numpy_handle() * 1.0
-            a[1, :] = a[1, :]
-            a[0, :] = a[0, :]
+            dfd_bin_width_s = (
+                self.time_resolution * 1e-6 * max(self.clk_multiplier, 1)
+            )
+            if dfd_bin_width_s > 0:
+                a[1, :] = a[1, :] / dfd_bin_width_s
+
+                bins_per_cycle = max(
+                    int(self.timebins_per_pixel // max(self.clk_multiplier, 1)),
+                    1,
+                )
+                samples_processed = int(self.loc_previewed["FIFO"].value)
+                data_words_per_sample_digital = 8 if self.channels == 49 else 2
+                if self.expected_words_data_per_frame_digital > 0:
+                    samples_per_frame = max(
+                        int(
+                            self.expected_words_data_per_frame_digital
+                            // data_words_per_sample_digital
+                        ),
+                        1,
+                    )
+                    samples_processed = samples_processed % samples_per_frame
+                completed_cycles, partial_cycle_bins = divmod(
+                    samples_processed, bins_per_cycle
+                )
+                exposure_cycles = np.full(a.shape[1], completed_cycles, dtype=np.float64)
+                exposure_cycles[: min(partial_cycle_bins, a.shape[1])] += 1.0
+                exposure_time_s = exposure_cycles * dfd_bin_width_s
+                np.divide(
+                    a[2, :],
+                    exposure_time_s,
+                    out=a[2, :],
+                    where=exposure_time_s > 0,
+                )
+                a[2, exposure_time_s <= 0] = 0
             return a, self.trace_pos.value
         else:
-            a = self.shared_trace.get_numpy_handle() * 1.0
             a[1, :] = a[1, :] / (
                 self.trace_sample_per_bins * self.time_resolution * 1e-6
             )

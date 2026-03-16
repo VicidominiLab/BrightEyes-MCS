@@ -5,6 +5,7 @@ sys.path.insert(1, os.getcwd())
 
 import unittest
 from unittest.mock import MagicMock, patch
+import numpy as np
 from brighteyes_mcs.libs.spad_fcs_manager import SpadFcsManager
 
 class TestSpadFcsManager(unittest.TestCase):
@@ -135,6 +136,40 @@ class TestSpadFcsManager(unittest.TestCase):
         result = instance.getPreviewImage()
 
         self.assertTrue((result == np.array([[1, 2], [3, 4]])).all())
+
+    def getTrace_in_dfd_mode_returns_counts_per_second(self):
+        with patch("brighteyes_mcs.libs.spad_fcs_manager.mp.Manager", return_value=MagicMock()):
+            instance = SpadFcsManager()
+        instance.DFD_Activate = True
+        instance.time_resolution = 2.0
+        instance.clk_multiplier = 2
+        instance.timebins_per_pixel = 8
+        instance.expected_words_data_per_frame_digital = 80
+        instance.trace_pos = MagicMock(value=0)
+        instance.loc_previewed = {"FIFO": MagicMock(value=10)}
+        instance.shared_trace = MagicMock()
+        instance.shared_trace.get_numpy_handle = MagicMock(
+            return_value=np.array(
+                [
+                    [0.0, 1.0, 2.0, 3.0],
+                    [4.0, 8.0, 12.0, 16.0],
+                    [20.0, 40.0, 60.0, 80.0],
+                ]
+            )
+        )
+
+        trace, trace_pos = instance.getTrace()
+
+        self.assertEqual(trace_pos, 0)
+        np.testing.assert_allclose(trace[0], np.array([0.0, 1.0, 2.0, 3.0]))
+        np.testing.assert_allclose(
+            trace[1],
+            np.array([1.0e6, 2.0e6, 3.0e6, 4.0e6]),
+        )
+        np.testing.assert_allclose(
+            trace[2],
+            np.array([20.0 / (12e-6), 40.0 / (12e-6), 60.0 / (8e-6), 80.0 / (8e-6)]),
+        )
 
 
 if __name__ == '__main__':
