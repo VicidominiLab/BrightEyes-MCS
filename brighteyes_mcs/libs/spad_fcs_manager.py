@@ -697,6 +697,7 @@ class SpadFcsManager():
                 "last_packet_size": 0,
                 "DFD_Activate": self.DFD_Activate,
                 "DFD_nBins": self.DFD_nbins,
+                "dfd_peak_idx": -1,
                 "snake_walk_xy": self.snake_walk_xy,
                 "snake_walk_z": self.snake_walk_z,
                 "clk_multiplier": self.clk_multiplier,

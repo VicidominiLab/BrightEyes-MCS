@@ -128,16 +128,55 @@ def circular_mean_std(weights):
     return mean_bin, std_circ, std_wrap, R
 
 
-def flim_parameters_from_3samples(d1, d2, d3, T_cycle):
+def circular_mean_from_positions(weights, phases):
+    """
+    weights : (..., M)
+    phases  : (M,) in [0, 1), referred to the full T_cycle
+
+    Returns
+    -------
+    mean_phase : (...) in [0, 1)
+    std_phase  : (...) in cycle units
+    """
+    weights = np.asarray(weights, dtype=float)
+    phases = np.asarray(phases, dtype=float)
+
+    angles = 2.0 * np.pi * phases
+    z = np.sum(weights * np.exp(1j * angles), axis=-1)
+
+    wsum = np.sum(weights, axis=-1)
+    z = np.where(wsum > 0, z / wsum, np.nan + 1j * np.nan)
+
+    mean_angle = np.mod(np.angle(z), 2.0 * np.pi)
+    mean_phase = mean_angle / (2.0 * np.pi)
+
+    R = np.abs(z)
+    std_angle = np.sqrt(np.maximum(0.0, -2.0 * np.log(np.clip(R, 1e-15, 1.0))))
+    std_phase = std_angle / (2.0 * np.pi)
+
+    return mean_phase, std_phase
+
+
+def flim_parameters_from_3samples(d1, d2, d3, T_cycle, sample_idx, peak_idx=None, total_bins=None):
     """
     Estimate lifetime and quality metrics from three sampled points.
 
     Tau is returned in T_cycle units, where 1.0 corresponds to one full cycle.
     Callers that need physical time can convert it afterwards, for example to ns.
     """
-    weights = np.stack([d1, d2, d3], axis=-1)
-    tau_bin, std_circ, _, _ = circular_mean_std(weights)
-    tau = tau_bin / max(weights.shape[-1], 1)
+    if total_bins is None or total_bins <= 0:
+        raise ValueError("total_bins must be provided and > 0")
+
+    weights = np.stack([d1, d2, d3], axis=-1).astype(float)
+    sample_idx = np.asarray(sample_idx, dtype=float)
+    sample_phase = np.mod(sample_idx / float(total_bins), 1.0)
+
+    phase, std_circ = circular_mean_from_positions(weights, sample_phase)
+    tau = phase
+    if peak_idx is not None:
+        peak_phase = np.mod(float(peak_idx), float(total_bins)) / float(total_bins)
+        tau = np.mod(peak_phase-phase, 1.0)
+
     brightness = np.sum(weights, axis=-1)
     quality = std_circ
     valid = brightness > 0
@@ -1117,16 +1156,28 @@ class AcquisitionLoopProcess(mp.Process):
                                     d1 = self.image_xy_rgb[:, :, 0][yy, xx].astype(np.float64)
                                     d2 = self.image_xy_rgb[:, :, 1][yy, xx].astype(np.float64)
                                     d3 = self.image_xy_rgb[:, :, 2][yy, xx].astype(np.float64)
+                                    chunk_lengths = np.array(
+                                        [gbins, gbins, max(tbins - 2 * gbins, 1)],
+                                        dtype=float,
+                                    )
+                                    chunk_starts = np.array([0.0, float(gbins), float(2 * gbins)], dtype=float)
+                                    sample_idx = chunk_starts + 0.5 * np.maximum(chunk_lengths - 1.0, 0.0)
 
                                     T_cycle = 1.0 / (
                                         max(float(self.dfd_cycle_mhz), 1e-12)
                                         * max(clk_multiplier, 1)
                                     )
+                                    peak_idx = self.shared_dict.get("dfd_peak_idx", -1)
+                                    if peak_idx is not None and peak_idx < 0:
+                                        peak_idx = None
                                     tau, brightness, quality, valid = flim_parameters_from_3samples(
                                         d1,
                                         d2,
                                         d3,
                                         T_cycle=T_cycle,
+                                        sample_idx=sample_idx,
+                                        peak_idx=peak_idx,
+                                        total_bins=self.DFD_nbins,
                                     )
                                     h, c, l = flim_map_to_hcl(
                                         tau,

@@ -3507,6 +3507,7 @@ class MainWindow(QMainWindow):
             trace_live = dfd_trace[1, :]
             trace_sum = dfd_trace[2, :]
             peak_idx = int(np.argmax(trace_sum))
+            self.spadfcsmanager_inst.update_shared_dict({"dfd_peak_idx": peak_idx})
             trace_dfd_x_bins = np.asarray(trace_dfd_x, dtype=float)
             tcycle_s = 1.0 / (
                 max(float(self.dfd_cycle_mhz), 1e-12) * 1e6 * max(clk_multiplier, 1)
@@ -3591,6 +3592,7 @@ class MainWindow(QMainWindow):
                     symbolPen=pg.mkPen(color=(255, 200, 0), width=1),
                 )
         else:
+            self.spadfcsmanager_inst.update_shared_dict({"dfd_peak_idx": -1})
             self.trace_dfd_widget.clear()
             self.trace_dfd_widget.setLabel("top", "DFD bin")
 
