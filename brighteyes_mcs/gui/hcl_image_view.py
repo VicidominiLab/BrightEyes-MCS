@@ -77,8 +77,23 @@ class HclHistogramLUTItem(pg.HistogramLUTItem):
         self._hcl_bounds = {}
         self._hcl_display_max = {"H": 1.0, "C": 1.0, "L": 1.0}
         self._suspend_hcl_range_signal = False
+        self._color_lifetime_widgets_attached = False
+        self._hl_colorbar_plot = None
+        self._hl_colorbar_image = None
+        self._build_hl_colorbar()
         self._build_hcl_controls()
-        self.set_hcl_visible(False)
+        self.deactivate_color_lifetime_mode()
+
+    def _build_hl_colorbar(self):
+        self._hl_colorbar_plot = pg.PlotItem()
+        self._hl_colorbar_plot.setMenuEnabled(False)
+        self._hl_colorbar_plot.setMouseEnabled(x=False, y=False)
+        self._hl_colorbar_plot.hideButtons()
+        self._hl_colorbar_plot.setAspectLocked(False)
+        self._hl_colorbar_image = pg.ImageItem(axisOrder="row-major")
+        self._hl_colorbar_plot.addItem(self._hl_colorbar_image)
+        self._hl_colorbar_plot.setVisible(False)
+        self._update_hl_colorbar()
 
     def _build_hcl_controls(self):
         base_row = 4
@@ -97,13 +112,84 @@ class HclHistogramLUTItem(pg.HistogramLUTItem):
             region.sigRegionChanged.connect(self._emit_hcl_ranges_changed)
             plot.addItem(region)
 
-            self.layout.addItem(label, base_row + idx * 2, 0, 1, 3)
-            self.layout.addItem(plot, base_row + idx * 2 + 1, 0, 1, 3)
             self._hcl_labels[key] = label
             self._hcl_plots[key] = plot
             self._hcl_curves[key] = curve
             self._hcl_regions[key] = region
             self._update_axis_representation(key)
+
+    def _set_native_histogram_visible(self, visible):
+        for attr in ("plot", "gradient"):
+            item = getattr(self, attr, None)
+            if item is not None:
+                item.setVisible(visible)
+
+    def activate_color_lifetime_mode(self):
+        if not self._color_lifetime_widgets_attached:
+            self.layout.addItem(self._hl_colorbar_plot, 0, 0, 4, 3)
+            base_row = 4
+            for idx, key in enumerate(("H", "C", "L")):
+                self.layout.addItem(self._hcl_labels[key], base_row + idx * 2, 0, 1, 3)
+                self.layout.addItem(self._hcl_plots[key], base_row + idx * 2 + 1, 0, 1, 3)
+            self._color_lifetime_widgets_attached = True
+        self._set_native_histogram_visible(False)
+        if self._hl_colorbar_plot is not None:
+            self._hl_colorbar_plot.setVisible(True)
+        for key in ("H", "C", "L"):
+            self._hcl_labels[key].setVisible(True)
+            self._hcl_plots[key].setVisible(True)
+
+    def deactivate_color_lifetime_mode(self):
+        self._set_native_histogram_visible(True)
+        if self._hl_colorbar_plot is not None:
+            self._hl_colorbar_plot.setVisible(False)
+        for key in ("H", "C", "L"):
+            self._hcl_labels[key].setVisible(False)
+            self._hcl_plots[key].setVisible(False)
+        if self._color_lifetime_widgets_attached:
+            self.layout.removeItem(self._hl_colorbar_plot)
+            for key in ("H", "C", "L"):
+                self.layout.removeItem(self._hcl_labels[key])
+                self.layout.removeItem(self._hcl_plots[key])
+            self._color_lifetime_widgets_attached = False
+
+    def _update_hl_colorbar(self, width=192, height=192):
+        if self._hl_colorbar_image is None:
+            return
+
+        h = np.tile(np.linspace(1.0, 0.0, height, dtype=float)[:, None], (1, width))
+        l = np.tile(np.linspace(0.0, 100.0, width, dtype=float), (height, 1))
+        c = np.full((height, width), 100.0, dtype=float)
+        rgb = lch_to_srgb(l, c, h)
+        self._hl_colorbar_image.setImage(rgb, autoLevels=False)
+        self._hl_colorbar_image.setLevels(_FIXED_RGB_LEVELS)
+
+        h_display_max = float(self._hcl_display_max.get("H", 1.0))
+        h_range = self._hcl_ranges.get("H", (0.0, 1.0))
+        l_range = self._hcl_ranges.get("L", (0.0, 1.0))
+        h_low = float(h_range[0]) * h_display_max
+        h_high = float(h_range[1]) * h_display_max
+        l_low, l_high = map(float, l_range)
+        if h_high <= h_low:
+            h_high = h_low + 1e-12
+        if l_high <= l_low:
+            l_high = l_low + 1e-12
+
+        self._hl_colorbar_image.setRect(QtCore.QRectF(l_low, h_low, l_high - l_low, h_high - h_low))
+        bottom_axis = self._hl_colorbar_plot.getAxis("bottom")
+        left_axis = self._hl_colorbar_plot.getAxis("left")
+        bottom_axis.setLabel("counts")
+        left_axis.setLabel("lifetime [ns]")
+        bottom_axis.setTicks([[
+            (l_low, f"{l_low:.3g}"),
+            (0.5 * (l_low + l_high), f"{0.5 * (l_low + l_high):.3g}"),
+            (l_high, f"{l_high:.3g}"),
+        ]])
+        left_axis.setTicks([[
+            (h_low, f"{h_low:.3f}"),
+            (0.5 * (h_low + h_high), f"{0.5 * (h_low + h_high):.3f}"),
+            (h_high, f"{h_high:.3f}"),
+        ]])
 
     def _update_axis_representation(self, key):
         plot = self._hcl_plots[key]
@@ -133,9 +219,10 @@ class HclHistogramLUTItem(pg.HistogramLUTItem):
         axis.setTicks([list(zip(tick_values, tick_labels))])
 
     def set_hcl_visible(self, visible):
-        for key in ("H", "C", "L"):
-            self._hcl_labels[key].setVisible(visible)
-            self._hcl_plots[key].setVisible(visible)
+        if visible:
+            self.activate_color_lifetime_mode()
+        else:
+            self.deactivate_color_lifetime_mode()
 
     def set_hcl_data(self, h, c, l, valid=None, h_display_max=None):
         if valid is None:
@@ -184,13 +271,14 @@ class HclHistogramLUTItem(pg.HistogramLUTItem):
                 if tuple(self._hcl_regions[key].getRegion()) != tuple(current):
                     self._hcl_regions[key].setRegion(current)
                 self._update_axis_representation(key)
+            self._update_hl_colorbar()
         finally:
             self._suspend_hcl_range_signal = False
 
         self._emit_hcl_ranges_changed()
 
     def clear_hcl_data(self):
-        self.set_hcl_visible(False)
+        self.deactivate_color_lifetime_mode()
 
     def get_hcl_ranges(self):
         return dict(self._hcl_ranges)
@@ -248,6 +336,8 @@ class HclImageView(pg.ImageView):
         self.imageItem.setLevels(_FIXED_RGB_LEVELS)
 
     def setHclImage(self, hcl, valid=None, h_display_max=None, h_shift=0.0, **kwargs):
+        if hasattr(self.ui.histogram.item, "activate_color_lifetime_mode"):
+            self.ui.histogram.item.activate_color_lifetime_mode()
         self._hcl_source = np.asarray(hcl, dtype=float)
         self._hcl_valid = (
             np.asarray(valid, dtype=bool)
@@ -271,6 +361,8 @@ class HclImageView(pg.ImageView):
         self._hcl_valid = None
         if hasattr(self.ui.histogram, "clear_hcl_data"):
             self.ui.histogram.clear_hcl_data()
+        if hasattr(self.ui.histogram.item, "deactivate_color_lifetime_mode"):
+            self.ui.histogram.item.deactivate_color_lifetime_mode()
 
     def setImage(self, *args, **kwargs):
         self.clearHclImage()
