@@ -3586,7 +3586,11 @@ class MainWindow(QMainWindow):
                 self.trace_dfd_widget.plot(
                     fit_x,
                     fit_y,
-                    pen=pg.mkPen(color=(255, 200, 0), width=2, style=Qt.PenStyle.DashLine),
+                    pen=None,
+                    symbol="o",
+                    symbolSize=2,
+                    symbolBrush=(255, 200, 0),
+                    symbolPen=pg.mkPen(color=(255, 200, 0), width=1),
                 )
         else:
             self.trace_dfd_widget.clear()
