@@ -3568,7 +3568,7 @@ class MainWindow(QMainWindow):
                 end_level=self.ui.doubleSpinBox_trace_dfd_end_percent.value() / 100.0,
             )
             if tau_ns is not None:
-                self.trace_dfd_widget.setLabel("top", f"{axis_name}   tau_fit={tau_ns:.3f} ns", "s" if axis_name == "Time" else None)
+                self.trace_dfd_widget.setLabel("top", f"tau_fit={tau_ns:.3f} ns - {axis_name}", "s" if axis_name == "Time" else None)
             else:
                 self.trace_dfd_widget.setLabel("top", axis_name, "s" if axis_name == "Time" else None)
 
@@ -3581,14 +3581,12 @@ class MainWindow(QMainWindow):
                 order = np.argsort(fit_x)
                 fit_x = fit_x[order]
                 fit_y = fit_y[order]
-                print_dec(fit_x)
-                print_dec(fit_y)
                 self.trace_dfd_widget.plot(
                     fit_x,
                     fit_y,
                     pen=None,
                     symbol="o",
-                    symbolSize=2,
+                    symbolSize=3,
                     symbolBrush=(255, 200, 0),
                     symbolPen=pg.mkPen(color=(255, 200, 0), width=1),
                 )
@@ -4542,7 +4540,7 @@ Have fun!
 
         peak_value = float(trace_sum_peak0[0])
         if not np.isfinite(peak_value) or peak_value <= 0:
-            print_dec("FIT: invalid peak value")
+            #print_dec("FIT: invalid peak value")
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
         y_start = start_level * peak_value
@@ -4563,30 +4561,30 @@ Have fun!
                 break
 
         if idx_start_candidates.size == 0 or idx_end_candidates.size == 0:
-            print_dec("FIT: y_start, y_end, idx_start_candidates, idx_end_candidates", y_start, y_end, idx_start_candidates, idx_end_candidates)
-            print_dec("FIT: no candidates for start or end indices")
+            #print_dec("FIT: y_start, y_end, idx_start_candidates, idx_end_candidates", y_start, y_end, idx_start_candidates, idx_end_candidates)
+            #print_dec("FIT: no candidates for start or end indices")
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
-        print_dec("FIT: start_level, selected_end_level", start_level, selected_end_level)
+        #print_dec("FIT: start_level, selected_end_level", start_level, selected_end_level)
 
         start_idx = int(idx_start_candidates[0])
         end_idx = int(idx_end_candidates[0])
         if end_idx <= start_idx:
-            print_dec("FIT: end_idx <= start_idx")
+            #print_dec("FIT: end_idx <= start_idx")
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
         y_section = trace_sum_peak0[start_idx : end_idx + 1]
         x_section_seconds = trace_x_peak0_seconds[start_idx : end_idx + 1]
         positive = y_section > 0
         if np.count_nonzero(positive) < 4:
-            print_dec("FIT: np.count_nonzero(positive) < 4")
+            #print_dec("FIT: np.count_nonzero(positive) < 4")
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
         x_fit_bins = np.arange(start_idx, end_idx + 1, dtype=float)[positive]
         x_fit_seconds = x_section_seconds[positive]
         y_fit_input = y_section[positive]
         slope, intercept = np.polyfit(x_fit_bins, np.log(y_fit_input), 1)
-        print_dec("FIT: slope and intercept", slope, intercept)
+        #print_dec("FIT: slope and intercept", slope, intercept)
         if not np.isfinite(slope) or slope >= 0:
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 

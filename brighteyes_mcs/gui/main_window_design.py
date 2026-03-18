@@ -3186,7 +3186,7 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_trace_dfd_start_percent.setMinimum(0.100000000000000)
         self.doubleSpinBox_trace_dfd_start_percent.setMaximum(99.900000000000006)
         self.doubleSpinBox_trace_dfd_start_percent.setSingleStep(1.000000000000000)
-        self.doubleSpinBox_trace_dfd_start_percent.setValue(95.000000000000000)
+        self.doubleSpinBox_trace_dfd_start_percent.setValue(98.000000000000000)
 
         self.gridLayout_62.addWidget(self.doubleSpinBox_trace_dfd_start_percent, 6, 1, 1, 1)
 
@@ -3196,7 +3196,7 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_trace_dfd_end_percent.setMinimum(0.100000000000000)
         self.doubleSpinBox_trace_dfd_end_percent.setMaximum(99.900000000000006)
         self.doubleSpinBox_trace_dfd_end_percent.setSingleStep(1.000000000000000)
-        self.doubleSpinBox_trace_dfd_end_percent.setValue(40.000000000000000)
+        self.doubleSpinBox_trace_dfd_end_percent.setValue(60.000000000000000)
 
         self.gridLayout_62.addWidget(self.doubleSpinBox_trace_dfd_end_percent, 6, 2, 1, 1)
 

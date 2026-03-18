@@ -232,6 +232,10 @@ class SpadFcsManager():
     def parse_dfd_metadata_from_bitfile_name(bitfile="", default_cycle_mhz=40):
         """
         Infer DFD metadata from a bitfile name token like ``40M91``.
+
+        Accept any ``xxxxxMyyyyyyy`` token found in the basename, provided:
+        - 3 < xxxxx < 100
+        - 3 < yyyyyyy < 1000
         """
         filename = str(bitfile).replace("\\", "/").split("/")[-1]
         match = re.search(r"(?P<cycle>\d+)M(?P<bins>\d+)", filename, re.IGNORECASE)
@@ -240,13 +244,10 @@ class SpadFcsManager():
 
         parsed_cycle_mhz = int(match.group("cycle"))
         parsed_bins = int(match.group("bins"))
-        supported_cycle_mhz = {40, 80}
-        dfd_cycle_mhz = (
-            parsed_cycle_mhz
-            if parsed_cycle_mhz in supported_cycle_mhz
-            else default_cycle_mhz
-        )
-        return dfd_cycle_mhz, parsed_bins
+        if not (3 < parsed_cycle_mhz < 100 and 3 < parsed_bins < 1000):
+            return default_cycle_mhz, None
+
+        return parsed_cycle_mhz, parsed_bins
 
     def set_channels(self, ch):
         """

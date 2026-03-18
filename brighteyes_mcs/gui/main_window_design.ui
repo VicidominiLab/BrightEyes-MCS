@@ -5494,7 +5494,7 @@
           <double>1.000000000000000</double>
          </property>
          <property name="value">
-          <double>95.000000000000000</double>
+          <double>98.000000000000000</double>
          </property>
          <property name="suffix">
           <string> start</string>
@@ -5516,7 +5516,7 @@
           <double>1.000000000000000</double>
          </property>
          <property name="value">
-          <double>40.000000000000000</double>
+          <double>60.000000000000000</double>
          </property>
          <property name="suffix">
           <string> end</string>
