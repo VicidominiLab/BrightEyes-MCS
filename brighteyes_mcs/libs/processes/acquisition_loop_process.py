@@ -95,6 +95,133 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
     return list_b_digital, list_x_digital, list_y_digital, list_z_digital, list_rep_digital
 
 
+def circular_mean_std(weights):
+    """
+    Compute circular mean and two circular std estimates for histogram weights.
+    """
+    w = np.asarray(weights, dtype=float)
+    n = w.shape[-1]
+
+    total = np.sum(w, axis=-1)
+    k = np.arange(n, dtype=float)
+    theta = 2.0 * np.pi * k / n
+
+    C = np.sum(w * np.cos(theta), axis=-1)
+    S = np.sum(w * np.sin(theta), axis=-1)
+
+    theta_mean = np.arctan2(S, C)
+    theta_mean = np.where(theta_mean < 0, theta_mean + 2.0 * np.pi, theta_mean)
+    mean_bin = n * theta_mean / (2.0 * np.pi)
+
+    R = np.zeros_like(total, dtype=float)
+    positive = total > 0
+    R[positive] = np.hypot(C[positive], S[positive]) / total[positive]
+    R = np.clip(R, 1e-15, 1.0)
+
+    std_circ = (n / (2.0 * np.pi)) * np.sqrt(-2.0 * np.log(R))
+
+    d = (k - mean_bin[..., None] + n / 2.0) % n - n / 2.0
+    var_wrap = np.zeros_like(total, dtype=float)
+    var_wrap[positive] = np.sum(w[positive] * d[positive] ** 2, axis=-1) / total[positive]
+    std_wrap = np.sqrt(var_wrap)
+
+    return mean_bin, std_circ, std_wrap, R
+
+
+def flim_parameters_from_3samples(d1, d2, d3, T_cycle):
+    """
+    Estimate lifetime and quality metrics from three sampled points.
+
+    Tau is returned in T_cycle units, where 1.0 corresponds to one full cycle.
+    Callers that need physical time can convert it afterwards, for example to ns.
+    """
+    weights = np.stack([d1, d2, d3], axis=-1)
+    tau_bin, std_circ, _, _ = circular_mean_std(weights)
+    tau = tau_bin / max(weights.shape[-1], 1)
+    brightness = np.sum(weights, axis=-1)
+    quality = std_circ
+    valid = brightness > 0
+
+    return tau, brightness, quality, valid
+
+
+def flim_map_to_hcl(tau, brightness, quality, valid,
+                    tau_min, tau_max,
+                    log_brightness=True,
+                    alpha=1.0):
+    h = np.zeros_like(tau, dtype=float)
+    mask = valid & np.isfinite(tau)
+    if tau_max > tau_min:
+        h[mask] = (tau[mask] - tau_min) / (tau_max - tau_min)
+    h = np.clip(h, 0.0, 1.0)
+
+    c = np.zeros_like(tau, dtype=float)
+    c[valid] = np.clip(quality[valid], 0.0, 1.0)
+
+    l = brightness.astype(float)
+    l[~valid] = 0
+
+    return h, c, l
+
+
+def _lab_f_inv(t):
+    delta = 6.0 / 29.0
+    return np.where(
+        t > delta,
+        t ** 3,
+        3.0 * (delta ** 2) * (t - 4.0 / 29.0),
+    )
+
+
+def lch_to_srgb(l, c, h):
+    """
+    Convert CIE LCh(ab) values to sRGB.
+    """
+    angle = 2.0 * np.pi * h
+    a = c * np.cos(angle)
+    b = c * np.sin(angle)
+
+    fy = (l + 16.0) / 116.0
+    fx = fy + a / 500.0
+    fz = fy - b / 200.0
+
+    # D65 reference white
+    Xn = 95.047
+    Yn = 100.0
+    Zn = 108.883
+
+    X = Xn * _lab_f_inv(fx) / 100.0
+    Y = Yn * _lab_f_inv(fy) / 100.0
+    Z = Zn * _lab_f_inv(fz) / 100.0
+
+    r_lin = 3.2406 * X - 1.5372 * Y - 0.4986 * Z
+    g_lin = -0.9689 * X + 1.8758 * Y + 0.0415 * Z
+    b_lin = 0.0557 * X - 0.2040 * Y + 1.0570 * Z
+
+    rgb_lin = np.stack([r_lin, g_lin, b_lin], axis=-1)
+
+    threshold = 0.0031308
+    rgb = np.where(
+        rgb_lin <= threshold,
+        12.92 * rgb_lin,
+        1.055 * np.power(np.clip(rgb_lin, 0.0, None), 1.0 / 2.4) - 0.055,
+    )
+    return np.clip(rgb, 0.0, 1.0)
+
+
+def flim_render_hcl(tau, brightness, quality, valid,
+                    tau_min, tau_max,
+                    log_brightness=True,
+                    alpha=1.0):
+    """
+    Convert lifetime parameters into RGB visualization using HCL/LCh.
+    """
+    h, c, l = flim_map_to_hcl(
+        tau, brightness, quality, valid, tau_min, tau_max, log_brightness, alpha
+    )
+    return lch_to_srgb(l, c, h)
+
+
 def accumulate_unordered_sum_4d(dst, list_y, list_x, list_b, values):
     """
     Faster replacement for np.add.at(dst, (y, x, b), values) with integer-safe accumulation.
@@ -173,6 +300,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.current_frame_analog = 0
 
         self.shm_image_xy_rgb = shared_objects["shared_image_xy_rgb"]
+        self.shm_image_xy_hcl = shared_objects["shared_image_xy_hcl"]
         self.shm_image_xy = shared_objects["shared_image_xy"]
         self.shm_image_xz = shared_objects["shared_image_xz"]
         self.shm_image_zy = shared_objects["shared_image_zy"]
@@ -181,6 +309,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.shm_fingerprint_mask = shared_objects["shared_fingerprint_mask"]
 
         self.shm_trace = shared_objects["shared_trace"]
+        self.shm_trace_dfd = shared_objects["shared_trace_dfd"]
         self.shm_number_of_threads_h5 = shared_objects["number_of_threads_h5"]
 
         self.autocorrelation_maxx = shared_objects["autocorrelation_maxx"]
@@ -207,6 +336,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.snake_walk_z = shared_dict["snake_walk_z"]
 
         self.clk_multiplier = shared_dict["clk_multiplier"]
+        self.dfd_cycle_mhz = shared_dict["dfd_cycle_mhz"]
         self.dfd_shift = shared_dict["dfd_shift"]
 
         self.filenameh5 = shared_dict["filenameh5"]
@@ -314,6 +444,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         print_dec(stop_event_proxy.is_set())
         self.image_xy_rgb = self.shm_image_xy_rgb.get_numpy_handle()
+        self.image_xy_hcl = self.shm_image_xy_hcl.get_numpy_handle()
         self.image_xy = self.shm_image_xy.get_numpy_handle()
         self.image_xz = self.shm_image_xz.get_numpy_handle()
         self.image_zy = self.shm_image_zy.get_numpy_handle()
@@ -321,10 +452,12 @@ class AcquisitionLoopProcess(mp.Process):
         self.fingerprint = self.shm_fingerprint.get_numpy_handle()
         self.autocorrelation = self.shm_autocorrelation.get_numpy_handle()
         self.trace = self.shm_trace.get_numpy_handle()
+        self.trace_dfd = self.shm_trace_dfd.get_numpy_handle()
 
         self.fingerprint_mask = self.shm_fingerprint_mask.get_numpy_handle()
 
         self.image_xy_rgb_lock = self.shm_image_xy_rgb.get_lock()
+        self.image_xy_hcl_lock = self.shm_image_xy_hcl.get_lock()
         self.image_xy_lock = self.shm_image_xy.get_lock()
         self.image_xz_lock = self.shm_image_xz.get_lock()
         self.image_zy_lock = self.shm_image_zy.get_lock()
@@ -441,7 +574,9 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.trace[0, :] = temporalBinner.get_x()
         self.trace[1, :] = 0
-        self.trace[2, :] = 0
+        self.trace_dfd[0, :] = np.arange(self.DFD_nbins, dtype=np.int64)
+        self.trace_dfd[1, :] = 0
+        self.trace_dfd[2, :] = 0
 
         self.gap_digital_in_sample = 0
         self.gap_analog_in_sample = 0
@@ -493,15 +628,17 @@ class AcquisitionLoopProcess(mp.Process):
             self.trace[1, :] = temporalBinner.get_bins()
 
             if self.DFD_Activate and time_bins is not None:
-                valid = (time_bins >= 0) & (time_bins < self.trace.shape[1])
+                valid = (time_bins >= 0) & (time_bins < self.trace_dfd.shape[1])
+                self.trace_dfd[1, :] = 0
                 if np.any(valid):
-                    np.add.at(self.trace[2, :], time_bins[valid], trace_values[valid])
+                    np.add.at(self.trace_dfd[1, :], time_bins[valid], trace_values[valid])
+                    np.add.at(self.trace_dfd[2, :], time_bins[valid], trace_values[valid])
 
         def finalize_frame_fifo():
             print_dec("finalize_frame_fifo()")
             try:
                 if self.activate_trace and self.DFD_Activate:
-                    self.trace[2, :] = 0
+                    self.trace_dfd[2, :] = 0
 
                 # reset and finalize fingerprints (same block as original)
                 frameComplete["FIFO"] = False
@@ -819,7 +956,9 @@ class AcquisitionLoopProcess(mp.Process):
                                         list_b_digital,
                                     )
 
-                            elif selected_channel.startswith("RGB"):
+                            elif selected_channel.startswith("RGB") or selected_channel.startswith(
+                                ("COLOR_LIFETIME", "LIFETIME", "QUALITY")
+                            ):
                                 if selected_channel.startswith("RGB "):
                                     if self.activate_show_preview == True:
                                         channelA = int(selected_channel.split(" ")[1])
@@ -936,6 +1075,77 @@ class AcquisitionLoopProcess(mp.Process):
                                         )
 
                                     self.image_xy_rgb_lock.release()
+
+                                if selected_channel.startswith(("COLOR_LIFETIME", "LIFETIME", "QUALITY")):
+                                    tparts = 3
+                                    tbins = max(self.timebinsPerPixel // max(clk_multiplier, 1), 1)
+                                    gbins = max(tbins // tparts, 1)
+
+                                    self.image_xy_rgb_lock.acquire()
+                                    self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
+                                    self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
+                                    self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
+
+                                    cond0 = list_b_digital < gbins
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 0],
+                                        (list_y_digital[cond0], list_x_digital[cond0]),
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond0],
+                                    )
+
+                                    cond0 = (list_b_digital >= gbins) & (list_b_digital < 2 * gbins)
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 1],
+                                        (list_y_digital[cond0], list_x_digital[cond0]),
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond0],
+                                    )
+
+                                    cond0 = list_b_digital >= 2 * gbins
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 2],
+                                        (list_y_digital[cond0], list_x_digital[cond0]),
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond0],
+                                    )
+
+                                    touched_pixels = np.unique(
+                                        np.stack([list_y_digital, list_x_digital], axis=1),
+                                        axis=0,
+                                    )
+                                    yy = touched_pixels[:, 0]
+                                    xx = touched_pixels[:, 1]
+
+                                    d1 = self.image_xy_rgb[:, :, 0][yy, xx].astype(np.float64)
+                                    d2 = self.image_xy_rgb[:, :, 1][yy, xx].astype(np.float64)
+                                    d3 = self.image_xy_rgb[:, :, 2][yy, xx].astype(np.float64)
+
+                                    T_cycle = 1.0 / (
+                                        max(float(self.dfd_cycle_mhz), 1e-12)
+                                        * max(clk_multiplier, 1)
+                                    )
+                                    tau, brightness, quality, valid = flim_parameters_from_3samples(
+                                        d1,
+                                        d2,
+                                        d3,
+                                        T_cycle=T_cycle,
+                                    )
+                                    h, c, l = flim_map_to_hcl(
+                                        tau,
+                                        brightness,
+                                        quality,
+                                        valid,
+                                        tau_min=0.0,
+                                        tau_max=1.0,
+                                    )
+                                    self.image_xy_rgb[yy, xx, 0] = 0
+                                    self.image_xy_rgb[yy, xx, 1] = 0
+                                    self.image_xy_rgb[yy, xx, 2] = 0
+                                    self.image_xy_rgb_lock.release()
+
+                                    self.image_xy_hcl_lock.acquire()
+                                    self.image_xy_hcl[yy, xx, 0] = h
+                                    self.image_xy_hcl[yy, xx, 1] = c
+                                    self.image_xy_hcl[yy, xx, 2] = l
+                                    self.image_xy_hcl_lock.release()
 
                                 if self.active_autocorrelation:
                                     correlator.add(self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample])
@@ -1230,7 +1440,8 @@ class AcquisitionLoopProcess(mp.Process):
                 print_dec("trace_reset_event.is_set()")
                 temporalBinner.reset()
                 if self.DFD_Activate:
-                    self.trace[2, :] = 0
+                    self.trace_dfd[1, :] = 0
+                    self.trace_dfd[2, :] = 0
                 trace_reset_event_proxy.clear()
             if FCS_reset_event_proxy.is_set():
                 correlator.reset()

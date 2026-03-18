@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QComboBox,
     QCheckBox,
+    QFrame,
     QWidget,
     QTextBrowser,
     QHeaderView,
@@ -41,6 +42,7 @@ from PySide6.QtGui import QPixmap, QIcon, QGuiApplication, QDesktopServices
 from datetime import datetime
 
 from .main_window_design import Ui_MainWindowDesign
+from .hcl_image_view import HclImageView
 
 from ..gui.console_widget import ConsoleWidget
 from ..libs.spad_fcs_manager import SpadFcsManager
@@ -85,6 +87,15 @@ except:
 
 pg.setConfigOption("background", "k")
 pg.setConfigOption("foreground", "w")
+
+
+class DoubleClickDoubleSpinBox(QDoubleSpinBox):
+    doubleClicked = Signal()
+
+    def mouseDoubleClickEvent(self, event):
+        self.doubleClicked.emit()
+        event.accept()
+
 
 class RectROI_noHandle(pg.RectROI):
     def __init__(self, *args, **kwargs):
@@ -172,6 +183,24 @@ class MainWindow(QMainWindow):
         self.webcam_capture = None
         self.ui = Ui_MainWindowDesign()
         self.ui.setupUi(self)
+        for special_channel in ("RGBDFD", "COLOR_LIFETIME", "LIFETIME", "QUALITY"):
+            if self.ui.comboBox_plot_channel.findText(special_channel) < 0:
+                self.ui.comboBox_plot_channel.addItem(special_channel)
+        self.ui.label_delta_tau_ns = QLabel("delta_tau")
+        self.ui.doubleSpinBox_delta_tau_ns = DoubleClickDoubleSpinBox(self)
+        self.ui.doubleSpinBox_delta_tau_ns.setDecimals(4)
+        self.ui.doubleSpinBox_delta_tau_ns.setRange(0.0, 1e6)
+        self.ui.doubleSpinBox_delta_tau_ns.setSingleStep(0.1)
+        self.ui.doubleSpinBox_delta_tau_ns.setSuffix(" ns")
+        self.ui.gridLayout_4.addWidget(self.ui.label_delta_tau_ns, 2, 6, 1, 1)
+        self.ui.gridLayout_4.addWidget(self.ui.doubleSpinBox_delta_tau_ns, 2, 7, 1, 1)
+        self.ui.doubleSpinBox_delta_tau_ns.valueChanged.connect(
+            self.colorLifetimeDeltaTauChanged
+        )
+        self.ui.doubleSpinBox_delta_tau_ns.doubleClicked.connect(
+            self.colorLifetimeDeltaTauUseHistogramMean
+        )
+        self.updateColorLifetimeShiftControls()
 
         self.configuration_helper = self.configuration_helper_init()
 
@@ -208,7 +237,7 @@ class MainWindow(QMainWindow):
         self.ui.gridLayout_pluginImage.addWidget(self.im_plugin)
 
         # Main live preview view used by the xy/xz/zy projection widgets.
-        self.im_widget = pg.ImageView(self, view=self.im_widget_plot_item)
+        self.im_widget = HclImageView(self, view=self.im_widget_plot_item)
 
         self.ui.gridLayout_im.addWidget(self.im_widget, 0, 0, 1, 3)
 
@@ -236,10 +265,31 @@ class MainWindow(QMainWindow):
         self.trace_widget.setToolTip("Double-click for reset the trace")
         self.trace_widget.setLabel("left", "Freq.", "Hz")
         self.trace_widget.setLabel("bottom", "Time", "s")
-        self.ui.gridLayout_trace.addWidget(self.trace_widget, 0, 0)
+        self.trace_widget.hideAxis("top")
+        self.trace_widget.showAxis("bottom")
+        self.ui.gridLayout_trace.setVerticalSpacing(0)
+        self.ui.gridLayout_trace.setContentsMargins(0, 0, 0, 0)
+        self.trace_separator = QFrame(self)
+        self.trace_separator.setFrameShape(QFrame.Shape.HLine)
+        self.trace_separator.setFrameShadow(QFrame.Shadow.Plain)
+        self.trace_separator.setLineWidth(2)
+        self.trace_separator.setMidLineWidth(0)
+        self.trace_separator.setStyleSheet("color: rgb(90, 90, 90);")
+        self.ui.gridLayout_trace.addWidget(self.trace_widget, 2, 0)
+        self.ui.gridLayout_trace.addWidget(self.trace_separator, 1, 0)
         self.trace_widget.show()
         self.trace_widget.setDownsampling(1, True, "mean")
         self.trace_widget.setMinimumSize(100, 130)
+        self.trace_dfd_widget = pg.PlotWidget(self)
+        self.trace_dfd_widget.setToolTip("Double-click for reset the DFD trace")
+        self.trace_dfd_widget.setLabel("left", "Freq.", "Hz")
+        self.trace_dfd_widget.setLabel("top", "DFD bin")
+        self.trace_dfd_widget.showAxis("top")
+        self.trace_dfd_widget.hideAxis("bottom")
+        self.ui.gridLayout_trace.addWidget(self.trace_dfd_widget, 0, 0)
+        self.trace_dfd_widget.setDownsampling(1, True, "mean")
+        self.trace_dfd_widget.setMinimumSize(100, 130)
+        self.trace_dfd_widget.hide()
         self.fcs_widget = pg.PlotWidget(self)
         self.fcs_widget.setLabel("left", "Autocorr. (Norm.)")
         self.fcs_widget.setLabel("bottom", "Delay", "s")
@@ -274,6 +324,7 @@ class MainWindow(QMainWindow):
 
         self.spadfcsmanager_inst = SpadFcsManager()
         print_dec("SpadFcsManager()")
+        self.apply_dfd_metadata_from_bitfile_name(self.ui.lineEdit_fpgabitfile.text())
         # self.qthread = QThread()
         # self.spadfcsmanager_inst.moveToThread(self.qthread)
         # print_dec("spadfcsmanager_inst.moveToThread()")
@@ -359,6 +410,7 @@ class MainWindow(QMainWindow):
         self.im_widget.scene.sigMouseMoved.connect(self.imageMoved)
 
         self.trace_widget.scene().sigMouseClicked.connect(self.traceClicked)
+        self.trace_dfd_widget.scene().sigMouseClicked.connect(self.traceClicked)
 
         self.rect_roi.sigRegionChanged.connect(self.roiModified)
         # self.rect_roi_panorama.sigRegionChanged.connect(self.roi_panoramaModified)
@@ -491,6 +543,7 @@ class MainWindow(QMainWindow):
         self.last_saved_filename = None
 
         self.clock_base = 40 #MHz
+        self.dfd_cycle_mhz = 40
 
         self.DFD_Activate = False
         self.DFD_nbins = 81
@@ -1524,6 +1577,7 @@ class MainWindow(QMainWindow):
 
         bitfile=self.ui.lineEdit_fpgabitfile.text()
         bitfile2=self.ui.lineEdit_fpga2bitfile.text()
+        self.apply_dfd_metadata_from_bitfile_name(bitfile)
         if os.path.isfile(bitfile):
             try:
                 bitfile_reader = nifpga.Bitfile(bitfile)
@@ -1538,6 +1592,22 @@ class MainWindow(QMainWindow):
             except:
                 bitfile_signature = ""
             self.ui.label_bitfile_signature_2.setText(bitfile_signature)
+
+    def apply_dfd_metadata_from_bitfile_name(self, bitfile):
+        """
+        Update inferred DFD metadata from the primary FPGA bitfile name.
+        """
+        dfd_cycle_mhz, inferred_dfd_nbins = (
+            self.spadfcsmanager_inst.parse_dfd_metadata_from_bitfile_name(
+                bitfile,
+                default_cycle_mhz=40,
+            )
+        )
+        self.dfd_cycle_mhz = dfd_cycle_mhz
+        self.spadfcsmanager_inst.dfd_cycle_mhz = dfd_cycle_mhz
+        self.ui.label_120.setText(f"Clock Base {dfd_cycle_mhz}M x")
+        if inferred_dfd_nbins is not None:
+            self.ui.spinBox_DFD_nbins.setValue(inferred_dfd_nbins)
 
 
 
@@ -3381,16 +3451,9 @@ class MainWindow(QMainWindow):
         clk_multiplier = self.ui.spinBox_clk_base_multiplier.value()
 
         trace, trace_pos = self.spadfcsmanager_inst.getTrace()
-
-        if self.DFD_Activate:
-            self.trace_widget.setLabel("bottom", "DFD bin")
-            trace_x = trace[0, :]
-            trace_live = trace[1, :]
-            trace_sum = trace[2, :]
-        else:
-            self.trace_widget.setLabel("bottom", "Time", "s")
-            trace_x = trace[0, :trace_pos]
-            trace_y = trace[1, :trace_pos]
+        self.trace_widget.setLabel("bottom", "Time", "s")
+        trace_x = trace[0, :trace_pos]
+        trace_y = trace[1, :trace_pos]
 
         if clk_multiplier > 1 and not self.DFD_Activate:
             size = trace_x.shape[0]
@@ -3426,7 +3489,46 @@ class MainWindow(QMainWindow):
             self.trace_widget.setLabel("left", "Freq.", "Hz")
             coeff = 1
 
+        if self.ui.checkBox_trace_autorange.isChecked():
+            self.trace_widget.plot(
+                trace_x, trace_y * coeff, clear=True
+            )
+        else:
+            self.trace_widget.plot(trace_x, trace_y, clear=True)
+
+        self.trace_dfd_widget.setVisible(self.DFD_Activate)
         if self.DFD_Activate:
+            dfd_trace = self.spadfcsmanager_inst.getDfdTrace()
+            trace_dfd_x = dfd_trace[0, :]
+            trace_live = dfd_trace[1, :]
+            trace_sum = dfd_trace[2, :]
+            peak_idx = int(np.argmax(trace_sum))
+            trace_sum_peak0 = np.roll(trace_sum, -peak_idx)
+            trace_dfd_x_bins = np.asarray(trace_dfd_x, dtype=float)
+            tcycle_s = 1.0 / (
+                max(float(self.dfd_cycle_mhz), 1e-12) * 1e6 * max(clk_multiplier, 1)
+            )
+            trace_dfd_x_seconds = trace_dfd_x_bins / max(int(self.DFD_nbins), 1) * tcycle_s
+            axis_name = "DFD bin"
+            if self.ui.checkBox_trace_dfd_time_axis.isChecked():
+                trace_dfd_x = trace_dfd_x_seconds
+                axis_name = "Time"
+            else:
+                trace_dfd_x = trace_dfd_x_bins
+            trace_dfd_x_peak0_seconds = np.roll(
+                np.mod(trace_dfd_x_seconds - trace_dfd_x_seconds[peak_idx], tcycle_s),
+                -peak_idx,
+            )
+            trace_dfd_x_peak0_bins = np.roll(
+                np.mod(trace_dfd_x_bins - trace_dfd_x_bins[peak_idx], float(max(int(self.DFD_nbins), 1))),
+                -peak_idx,
+            )
+            trace_dfd_x_peak0 = (
+                trace_dfd_x_peak0_seconds
+                if self.ui.checkBox_trace_dfd_time_axis.isChecked()
+                else trace_dfd_x_peak0_bins
+            )
+            bin_width_ns = tcycle_s * 1e9 / max(int(self.DFD_nbins), 1)
             live_max = np.max(trace_live)
             sum_max = np.max(trace_sum)
 
@@ -3435,23 +3537,54 @@ class MainWindow(QMainWindow):
             elif live_max > 0 and sum_max <= 0:
                 trace_live = trace_live / live_max
 
-            self.trace_widget.plot(
-                trace_x,
-                trace_live * coeff,
+            self.trace_dfd_widget.plot(
+                trace_dfd_x,
+                trace_live,
                 clear=True,
                 pen=pg.mkPen(color=(255, 255, 255), width=1),
             )
-            self.trace_widget.plot(
-                trace_x,
-                trace_sum * coeff,
+            self.trace_dfd_widget.plot(
+                trace_dfd_x,
+                trace_sum,
                 pen=pg.mkPen(color=(180, 180, 180), width=2),
             )
-        elif self.ui.checkBox_trace_autorange.isChecked():
-            self.trace_widget.plot(
-                trace_x, trace_y * coeff, clear=True
+            self.trace_dfd_widget.plot(
+                trace_dfd_x_peak0,
+                trace_sum_peak0,
+                pen=pg.mkPen(color=(255, 80, 80), width=2),
             )
+            tau_ns, fit_curve = self.estimateDfdDecayLifetimeNs(
+                trace_sum_peak0,
+                trace_dfd_x_peak0_seconds,
+                bin_width_ns,
+                peak_idx,
+                max(int(self.DFD_nbins), 1),
+                tcycle_s,
+            )
+            if tau_ns is not None:
+                self.trace_dfd_widget.setLabel("top", f"{axis_name}   tau_fit={tau_ns:.3f} ns", "s" if axis_name == "Time" else None)
+            else:
+                self.trace_dfd_widget.setLabel("top", axis_name, "s" if axis_name == "Time" else None)
+
+            if fit_curve is not None:
+                if self.ui.checkBox_trace_dfd_time_axis.isChecked():
+                    fit_x = fit_curve["x_fit_seconds"]
+                else:
+                    fit_x = fit_curve["x_fit_bins"]
+                fit_y = fit_curve["y_fit"]
+                order = np.argsort(fit_x)
+                fit_x = fit_x[order]
+                fit_y = fit_y[order]
+                print_dec(fit_x)
+                print_dec(fit_y)
+                self.trace_dfd_widget.plot(
+                    fit_x,
+                    fit_y,
+                    pen=pg.mkPen(color=(255, 200, 0), width=2, style=Qt.PenStyle.DashLine),
+                )
         else:
-            self.trace_widget.plot(trace_x, trace_y, clear=True)
+            self.trace_dfd_widget.clear()
+            self.trace_dfd_widget.setLabel("top", "DFD bin")
 
         # numpy random.rand also much faster than list comprehension
         # img = np.random.rand(512, 512)
@@ -4323,6 +4456,7 @@ Have fun!
         activate the DFD mode
         """
         self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
+        self.trace_dfd_widget.setVisible(self.ui.checkBox_DFD.isChecked())
         if self.ui.checkBox_DFD.isChecked():
             self.ui.spinBox_time_bin_per_px.setValue(self.DFD_nbins)
             self.ui.spinBox_timeresolution.setValue(2.0)
@@ -4358,8 +4492,107 @@ Have fun!
 
         """
         print_dec("plotSettingsChanged")
+        self.updateColorLifetimeShiftControls()
         self.updatePreviewConfiguration()
         self.checkAlerts()
+
+    def estimateDfdDecayLifetimeNs(
+        self,
+        trace_sum_peak0,
+        trace_x_peak0_seconds,
+        bin_width_ns,
+        peak_idx,
+        nbins,
+        tcycle_s,
+    ):
+        trace_sum_peak0 = np.asarray(trace_sum_peak0, dtype=float)
+        trace_x_peak0_seconds = np.asarray(trace_x_peak0_seconds, dtype=float)
+        if (
+            trace_sum_peak0.size < 4
+            or trace_x_peak0_seconds.size != trace_sum_peak0.size
+            or not np.isfinite(bin_width_ns)
+            or bin_width_ns <= 0
+            or nbins <= 0
+            or not np.isfinite(tcycle_s)
+            or tcycle_s <= 0
+        ):
+            return None, None
+
+        fit_len = max(trace_sum_peak0.size // 3, 4)
+        fit_len = min(fit_len, trace_sum_peak0.size)
+        y_section = trace_sum_peak0[:fit_len]
+        x_section_seconds = trace_x_peak0_seconds[:fit_len]
+        positive = y_section > 0
+        if np.count_nonzero(positive) < 4:
+            return None, None
+
+        x_fit_bins = np.arange(fit_len, dtype=float)[positive]
+        x_fit_seconds = x_section_seconds[positive]
+        y_fit_input = y_section[positive]
+        slope, intercept = np.polyfit(x_fit_bins, np.log(y_fit_input), 1)
+        if not np.isfinite(slope) or slope >= 0:
+            return None, None
+
+        tau_ns = -float(bin_width_ns) / slope
+        if not np.isfinite(tau_ns) or tau_ns <= 0:
+            return None, None
+
+        y_fit = np.exp(intercept + slope * x_fit_bins)
+        x_fit_bins_plot = np.mod(x_fit_bins + int(peak_idx), int(nbins))
+        x_fit_seconds_plot = np.mod(x_fit_seconds + int(peak_idx) * bin_width_ns * 1e-9, tcycle_s)
+
+        fit_curve = {
+            "fit_len": fit_len,
+            "x_fit_bins": x_fit_bins_plot,
+            "x_fit_seconds": x_fit_seconds_plot,
+            "y_fit": y_fit,
+        }
+        return float(tau_ns), fit_curve
+
+    def updateColorLifetimeShiftControls(self):
+        current_channel = self.ui.comboBox_plot_channel.currentText()
+        visible = current_channel == "COLOR_LIFETIME"
+        self.ui.label_delta_tau_ns.setVisible(visible)
+        self.ui.doubleSpinBox_delta_tau_ns.setVisible(visible)
+
+        clk_multiplier = 1
+        if hasattr(self, "spadfcsmanager_inst") and self.spadfcsmanager_inst is not None:
+            clk_multiplier = max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
+        dfd_cycle_mhz = max(float(getattr(self, "dfd_cycle_mhz", 40.0)), 1e-12)
+        tcycle_ns = 1e3 / (dfd_cycle_mhz * clk_multiplier)
+        self.ui.label_delta_tau_ns.setText(f"delta_tau [ns] (T={tcycle_ns:.4f})")
+
+        self.ui.doubleSpinBox_delta_tau_ns.blockSignals(True)
+        self.ui.doubleSpinBox_delta_tau_ns.setRange(0.0, max(tcycle_ns, 1e-12))
+        self.ui.doubleSpinBox_delta_tau_ns.setSingleStep(max(tcycle_ns / 100.0, 1e-4))
+        if tcycle_ns > 0.0:
+            wrapped_value = self.ui.doubleSpinBox_delta_tau_ns.value() % tcycle_ns
+            self.ui.doubleSpinBox_delta_tau_ns.setValue(wrapped_value)
+        self.ui.doubleSpinBox_delta_tau_ns.blockSignals(False)
+
+    @Slot()
+    def colorLifetimeDeltaTauChanged(self):
+        self.updateColorLifetimeShiftControls()
+        if self.ui.comboBox_plot_channel.currentText() == "COLOR_LIFETIME":
+            self.plotPreviewImage()
+
+    @Slot()
+    def colorLifetimeDeltaTauUseHistogramMean(self):
+        if self.ui.comboBox_plot_channel.currentText() != "COLOR_LIFETIME":
+            return
+
+        tcycle_ns = 1e3 / (
+            max(float(self.dfd_cycle_mhz), 1e-12)
+            * max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
+        )
+        h_mean = self.im_widget.getDisplayedHMean()
+        if h_mean is None:
+            return
+
+        self.ui.doubleSpinBox_delta_tau_ns.blockSignals(True)
+        self.ui.doubleSpinBox_delta_tau_ns.setValue(float(h_mean) * tcycle_ns)
+        self.ui.doubleSpinBox_delta_tau_ns.blockSignals(False)
+        self.plotPreviewImage()
 
     @Slot()
     def previewButtonClicked(self):
@@ -4667,50 +4900,38 @@ Have fun!
             self.ui.spinBox_FCSbins.value()
         )
 
-        if self.DFD_Activate:
-            trace_bins = self.DFD_nbins
+        trace_bins = int(
+            self.ui.doubleSpinBox_binsize.value()
+            * 1e3
+            / (self.ui.spinBox_timeresolution.value())
+        )
 
-            trace_length = self.DFD_nbins
-
-            trace_sample_per_bins = int(trace_length // trace_bins)
-
-            print_dec("trace_bins", trace_bins)
-            print_dec("trace_length", trace_length)
-            print_dec("trace_sample_per_bins", trace_sample_per_bins)
-
-            self.spadfcsmanager_inst.set_trace_bins(trace_bins=trace_bins)
-            self.spadfcsmanager_inst.set_trace_sample_per_bins(
-                trace_sample_per_bins=trace_sample_per_bins
-            )
-            self.spadfcsmanager_inst.set_clk_multiplier(self.ui.spinBox_clk_base_multiplier.value())
-        else:
-            trace_bins = int(
-                self.ui.doubleSpinBox_binsize.value()
-                * 1e3
+        trace_length = (
+                self.ui.doubleSpinBox_maxlength.value()
+                * 1e6
                 / (self.ui.spinBox_timeresolution.value())
+        )
+
+        trace_sample_per_bins = int(trace_length // trace_bins)
+
+        print_dec("trace_bins", trace_bins)
+        print_dec("trace_length", trace_length)
+        print_dec("trace_sample_per_bins", trace_sample_per_bins)
+
+        self.spadfcsmanager_inst.set_trace_bins(trace_bins=trace_bins)
+        self.spadfcsmanager_inst.set_trace_sample_per_bins(
+            trace_sample_per_bins=trace_sample_per_bins
+        )
+
+        self.ui.label_trace_total_bins.setText("%s" % trace_sample_per_bins)
+        self.ui.label_configured_fifo_depth.setText(
+            "%d" % self.spadfcsmanager_inst.fpga_handle.get_actual_fifo_depth()
+        )
+        if self.DFD_Activate:
+            self.spadfcsmanager_inst.set_clk_multiplier(
+                self.ui.spinBox_clk_base_multiplier.value()
             )
-
-            trace_length = (
-                    self.ui.doubleSpinBox_maxlength.value()
-                    * 1e6
-                    / (self.ui.spinBox_timeresolution.value())
-            )
-
-            trace_sample_per_bins = int(trace_length // trace_bins)
-
-            print_dec("trace_bins", trace_bins)
-            print_dec("trace_length", trace_length)
-            print_dec("trace_sample_per_bins", trace_sample_per_bins)
-
-            self.spadfcsmanager_inst.set_trace_bins(trace_bins=trace_bins)
-            self.spadfcsmanager_inst.set_trace_sample_per_bins(
-                trace_sample_per_bins=trace_sample_per_bins
-            )
-
-            self.ui.label_trace_total_bins.setText("%s" % trace_sample_per_bins)
-            self.ui.label_configured_fifo_depth.setText(
-                "%d" % self.spadfcsmanager_inst.fpga_handle.get_actual_fifo_depth()
-            )
+        else:
             self.spadfcsmanager_inst.set_clk_multiplier(1)
 
         # self.spadfcsmanager_inst.acquistion_run()
@@ -5641,7 +5862,17 @@ Have fun!
         proj = self.ui.comboBox_view_projection.currentText()
         ch = self.ui.comboBox_plot_channel.currentText()
         if preview_img is None:
-            if ch.startswith("RGB"):
+            if ch in ("COLOR_LIFETIME", "LIFETIME", "QUALITY"):
+                preview_hcl = self.spadfcsmanager_inst.getPreviewHclImage()
+                if ch == "COLOR_LIFETIME":
+                    preview_img = preview_hcl
+                elif ch == "LIFETIME":
+                    preview_img = preview_hcl[:, :, 0]
+                else:
+                    preview_img = preview_hcl[:, :, 1]
+                if ch in ("LIFETIME", "QUALITY"):
+                    proj = "xy"
+            elif ch.startswith("RGB"):
                 preview_img = self.getPreviewImage(proj, rgb=True)
             else:
                 preview_img = self.getPreviewImage(proj)
@@ -5660,7 +5891,7 @@ Have fun!
             currentImage_size[2] = 1e-12
 
 
-        if ch.startswith("RGB"):
+        if ch.startswith("RGB") or ch == "COLOR_LIFETIME":
             preview_img = np.moveaxis(preview_img, 0, 1)
             autoLevels = self.autoscale_image
             autoRange = False
@@ -5771,8 +6002,30 @@ Have fun!
          autoRange,
          pos,
          scale) = self.getCurrentPreviewImage(img)
-
-        if ch.startswith("RGB"):
+        #print_dec("preview_img",preview_img)
+        if ch == "COLOR_LIFETIME":
+            preview_hcl = preview_img
+            tcycle_ns = 1e3 / (
+                max(float(self.dfd_cycle_mhz), 1e-12)
+                * max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
+            )
+            self.updateColorLifetimeShiftControls()
+            h_shift = 0.0
+            if tcycle_ns > 0.0:
+                h_shift = (
+                    self.ui.doubleSpinBox_delta_tau_ns.value() % tcycle_ns
+                ) / tcycle_ns
+            self.im_widget.setHclImage(
+                preview_hcl,
+                valid=preview_hcl[:, :, 2],
+                h_display_max=tcycle_ns,
+                h_shift=h_shift,
+                autoLevels=autoLevels,
+                autoRange=autoRange,
+                pos=pos,
+                scale=scale,
+            )
+        elif ch.startswith("RGB"):
             print(preview_img.shape)
             self.im_widget.setImage(
                 preview_img,

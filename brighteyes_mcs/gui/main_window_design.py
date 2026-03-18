@@ -2984,7 +2984,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 389, 144))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 389, 142))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -3165,8 +3165,17 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_62.addWidget(self.label_plot_channel, 4, 0, 1, 1)
 
+        self.checkBox_trace_dfd_time_axis = QCheckBox(self.dockWidgetContents_20)
+        self.checkBox_trace_dfd_time_axis.setObjectName(u"checkBox_trace_dfd_time_axis")
+
+        self.gridLayout_62.addWidget(self.checkBox_trace_dfd_time_axis, 5, 0, 1, 2)
+
 
         self.gridLayout_70.addLayout(self.gridLayout_62, 0, 0, 1, 1)
+
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_70.addItem(self.verticalSpacer_2, 1, 0, 1, 1)
 
         self.dockWidget_traceConf.setWidget(self.dockWidgetContents_20)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_traceConf)
@@ -3233,8 +3242,7 @@ class Ui_MainWindowDesign(object):
         QWidget.setTabOrder(self.pushButton_6, self.pushButton_9)
         QWidget.setTabOrder(self.pushButton_9, self.pushButton_10)
         QWidget.setTabOrder(self.pushButton_10, self.pushButton_11)
-        QWidget.setTabOrder(self.pushButton_11, self.pushButton_convertRawAcquisition)
-        QWidget.setTabOrder(self.pushButton_convertRawAcquisition, self.spinBox_nframe)
+        QWidget.setTabOrder(self.pushButton_11, self.spinBox_nframe)
         QWidget.setTabOrder(self.spinBox_nframe, self.spinBox_ny)
         QWidget.setTabOrder(self.spinBox_ny, self.spinBox_nx)
         QWidget.setTabOrder(self.spinBox_nx, self.spinBox_nrepetition)
@@ -3269,7 +3277,6 @@ class Ui_MainWindowDesign(object):
         self.pushButton_9.clicked.connect(MainWindowDesign.test7)
         self.pushButton_10.clicked.connect(MainWindowDesign.test8)
         self.pushButton_11.clicked.connect(MainWindowDesign.test9)
-        self.pushButton_convertRawAcquisition.clicked.connect(MainWindowDesign.cmd_convertRawAcquisition)
         self.checkBoxLockRatio.clicked.connect(MainWindowDesign.checkBoxLockRatioChanged)
         self.spinBox_offExtra_x_V.valueChanged.connect(MainWindowDesign.positionSettingsChanged)
         self.spinBox_offExtra_y_V.valueChanged.connect(MainWindowDesign.positionSettingsChanged)
@@ -3898,7 +3905,9 @@ class Ui_MainWindowDesign(object):
         self.pushButton_6.setText(QCoreApplication.translate("MainWindowDesign", u"Test4", None))
         self.pushButton_2.setText(QCoreApplication.translate("MainWindowDesign", u"Test2", None))
         self.pushButton_11.setText(QCoreApplication.translate("MainWindowDesign", u"Test9", None))
+#if QT_CONFIG(tooltip)
         self.pushButton_convertRawAcquisition.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Convert a preview-less RAW acquisition back into a standard BrightEyes H5 file.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButton_convertRawAcquisition.setText(QCoreApplication.translate("MainWindowDesign", u"Convert RAW", None))
         self.pushButton_3.setText(QCoreApplication.translate("MainWindowDesign", u"Test3", None))
         self.pushButton_10.setText(QCoreApplication.translate("MainWindowDesign", u"Test8", None))
@@ -4008,6 +4017,7 @@ class Ui_MainWindowDesign(object):
         self.label_trace_total_bins.setText(QCoreApplication.translate("MainWindowDesign", u"30000", None))
         self.label_76.setText(QCoreApplication.translate("MainWindowDesign", u"Trace tot. bins", None))
         self.label_plot_channel.setText(QCoreApplication.translate("MainWindowDesign", u"Selected Ch: X", None))
+        self.checkBox_trace_dfd_time_axis.setText(QCoreApplication.translate("MainWindowDesign", u"DFD axis in us", None))
         self.dockWidget_pluginImage.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Image Script", None))
         self.dockWidget_dfd.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"DFD", None))
         self.label_111.setText(QCoreApplication.translate("MainWindowDesign", u"DFD N. Bins", None))

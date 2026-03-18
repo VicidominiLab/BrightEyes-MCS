@@ -2,6 +2,7 @@
 
 import numpy as np
 import multiprocessing as mp
+import re
 
 # from PySide6.QtCore import QObject
 
@@ -56,8 +57,8 @@ class SpadFcsManager():
         acquisition_stop_event (multiprocessing.Event): Event for acquisition stop.
         do_not_save_event (multiprocessing.Event): Event for activating preview.
         autocorrelation_maxx (int): Maximum value for autocorrelation.
-        trace_bins (int): Number of trace bins.
-        trace_sample_per_bins (int): Number of words per trace bin.
+        trace_bins (int): Number of time-trace bins.
+        trace_sample_per_bins (int): Number of words per time-trace bin.
         preview_buffer_capacity_samples (int): Preview buffer capacity in samples.
         fifo_prebuffer_length (int): Number of FIFO values accumulated before dispatch.
         activated_fifos_list (list): List of activated FIFOs.
@@ -166,8 +167,10 @@ class SpadFcsManager():
 
         self.shared_memory_buffer = None
         self.shared_image_xy = None
+        self.shared_image_xy_hcl = None
         self.shared_fingerprint = None
         self.shared_fingerprint_mask = None
+        self.shared_trace_dfd = None
 
 
         self.is_connected = False
@@ -192,6 +195,7 @@ class SpadFcsManager():
 
         self.DFD_Activate = False
         self.DFD_nbins = 0
+        self.dfd_cycle_mhz = 40
 
         self.snake_walk_xy = False
         self.snake_walk_z = False
@@ -223,6 +227,26 @@ class SpadFcsManager():
         """
         print_dec("DFD_nbins", DFD_nbins)
         self.DFD_nbins = DFD_nbins
+
+    @staticmethod
+    def parse_dfd_metadata_from_bitfile_name(bitfile="", default_cycle_mhz=40):
+        """
+        Infer DFD metadata from a bitfile name token like ``40M91``.
+        """
+        filename = str(bitfile).replace("\\", "/").split("/")[-1]
+        match = re.search(r"(?P<cycle>\d+)M(?P<bins>\d+)", filename, re.IGNORECASE)
+        if not match:
+            return default_cycle_mhz, None
+
+        parsed_cycle_mhz = int(match.group("cycle"))
+        parsed_bins = int(match.group("bins"))
+        supported_cycle_mhz = {40, 80}
+        dfd_cycle_mhz = (
+            parsed_cycle_mhz
+            if parsed_cycle_mhz in supported_cycle_mhz
+            else default_cycle_mhz
+        )
+        return dfd_cycle_mhz, parsed_bins
 
     def set_channels(self, ch):
         """
@@ -343,6 +367,12 @@ class SpadFcsManager():
         """
         print_dec("set_bit_file", bitfile)
         self.bitfile = bitfile
+        self.dfd_cycle_mhz, inferred_dfd_nbins = self.parse_dfd_metadata_from_bitfile_name(
+            bitfile,
+            default_cycle_mhz=self.dfd_cycle_mhz,
+        )
+        if inferred_dfd_nbins is not None:
+            self.DFD_nbins = inferred_dfd_nbins
 
     def set_ni_addr(self, niAddr=""):
         """
@@ -486,11 +516,19 @@ class SpadFcsManager():
             )
 
             self.shared_trace = MemorySharedNumpyArray(
-                dtype=np.int64, shape=[3, self.trace_bins], lock=True
+                dtype=np.int64, shape=[2, self.trace_bins], lock=True
+            )
+
+            self.shared_trace_dfd = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[3, self.DFD_nbins], lock=True
             )
 
             self.shared_image_xy_rgb = MemorySharedNumpyArray(
                 dtype=np.int64, shape=[self.dim_y, self.dim_x, 3], lock=True
+            )
+
+            self.shared_image_xy_hcl = MemorySharedNumpyArray(
+                dtype=np.float64, shape=[self.dim_y, self.dim_x, 3], lock=True
             )
 
             self.shared_image_xy = MemorySharedNumpyArray(
@@ -528,7 +566,9 @@ class SpadFcsManager():
         else:
             self.shared_autocorrelation = None
             self.shared_trace = None
+            self.shared_trace_dfd = None
             self.shared_image_xy_rgb = None
+            self.shared_image_xy_hcl = None
             self.shared_image_xy = None
             self.shared_image_xz = None
             self.shared_image_zy = None
@@ -607,12 +647,14 @@ class SpadFcsManager():
             "loc_acquired": self.loc_acquired,
             "loc_previewed": self.loc_previewed,
             "shared_image_xy_rgb": self.shared_image_xy_rgb,
+            "shared_image_xy_hcl": self.shared_image_xy_hcl,
             "shared_image_xy": self.shared_image_xy,
             "shared_image_xz": self.shared_image_xz,
             "shared_image_zy": self.shared_image_zy,
             "shared_fingerprint": self.shared_fingerprint,
             "shared_autocorrelation": self.shared_autocorrelation,
             "shared_trace": self.shared_trace,
+            "shared_trace_dfd": self.shared_trace_dfd,
             "shared_fingerprint_mask": self.shared_fingerprint_mask,
             "number_of_threads_h5": self.number_of_threads_h5,
             "autocorrelation_maxx": self.autocorrelation_maxx,
@@ -636,6 +678,7 @@ class SpadFcsManager():
         self.shared_dict["expected_words_data_per_frame_analog"] = self.expected_words_data_per_frame_analog
         self.shared_dict["filenameh5"] = self.filenameh5
         self.shared_dict["DFD_nbins"] = self.DFD_nbins
+        self.shared_dict["dfd_cycle_mhz"] = self.dfd_cycle_mhz
         self.shared_dict["raw_output_files"] = dict(self.raw_output_files)
 
         print_dec("self.activate_show_preview", self.activate_show_preview)
@@ -656,6 +699,7 @@ class SpadFcsManager():
                 "snake_walk_xy": self.snake_walk_xy,
                 "snake_walk_z": self.snake_walk_z,
                 "clk_multiplier": self.clk_multiplier,
+                "dfd_cycle_mhz": self.dfd_cycle_mhz,
                 "dfd_shift": self.dfd_shift,
                 "raw_stream_mode": self.raw_stream_mode,
             }
@@ -1076,51 +1120,55 @@ class SpadFcsManager():
 
     def getTrace(self):
         """
-        Get the trace
+        Get the time trace
         """
         a = self.shared_trace.get_numpy_handle() * 1.0
-        if self.DFD_Activate:
-            dfd_bin_width_s = (
-                self.time_resolution * 1e-6 * max(self.clk_multiplier, 1)
-            )
-            if dfd_bin_width_s > 0:
-                a[1, :] = a[1, :] / dfd_bin_width_s
+        a[1, :] = a[1, :] / (
+            self.trace_sample_per_bins * self.time_resolution * 1e-6
+        )
+        a[0, :] = a[0, :] * self.time_resolution * 1e-6 * self.trace_sample_per_bins
+        return a, self.trace_pos.value
 
-                bins_per_cycle = max(
-                    int(self.timebins_per_pixel // max(self.clk_multiplier, 1)),
+    def getDfdTrace(self):
+        """
+        Get the DFD trace curves.
+        """
+        a = self.shared_trace_dfd.get_numpy_handle() * 1.0
+        dfd_bin_width_s = (
+            self.time_resolution * 1e-6 * max(self.clk_multiplier, 1)
+        )
+        if dfd_bin_width_s > 0:
+            a[1, :] = a[1, :] / dfd_bin_width_s
+
+            bins_per_cycle = max(
+                int(self.timebins_per_pixel // max(self.clk_multiplier, 1)),
+                1,
+            )
+            samples_processed = int(self.loc_previewed["FIFO"].value)
+            data_words_per_sample_digital = 8 if self.channels == 49 else 2
+            if self.expected_words_data_per_frame_digital > 0:
+                samples_per_frame = max(
+                    int(
+                        self.expected_words_data_per_frame_digital
+                        // data_words_per_sample_digital
+                    ),
                     1,
                 )
-                samples_processed = int(self.loc_previewed["FIFO"].value)
-                data_words_per_sample_digital = 8 if self.channels == 49 else 2
-                if self.expected_words_data_per_frame_digital > 0:
-                    samples_per_frame = max(
-                        int(
-                            self.expected_words_data_per_frame_digital
-                            // data_words_per_sample_digital
-                        ),
-                        1,
-                    )
-                    samples_processed = samples_processed % samples_per_frame
-                completed_cycles, partial_cycle_bins = divmod(
-                    samples_processed, bins_per_cycle
-                )
-                exposure_cycles = np.full(a.shape[1], completed_cycles, dtype=np.float64)
-                exposure_cycles[: min(partial_cycle_bins, a.shape[1])] += 1.0
-                exposure_time_s = exposure_cycles * dfd_bin_width_s
-                np.divide(
-                    a[2, :],
-                    exposure_time_s,
-                    out=a[2, :],
-                    where=exposure_time_s > 0,
-                )
-                a[2, exposure_time_s <= 0] = 0
-            return a, self.trace_pos.value
-        else:
-            a[1, :] = a[1, :] / (
-                self.trace_sample_per_bins * self.time_resolution * 1e-6
+                samples_processed = samples_processed % samples_per_frame
+            completed_cycles, partial_cycle_bins = divmod(
+                samples_processed, bins_per_cycle
             )
-            a[0, :] = a[0, :] * self.time_resolution * 1e-6 * self.trace_sample_per_bins
-            return a, self.trace_pos.value
+            exposure_cycles = np.full(a.shape[1], completed_cycles, dtype=np.float64)
+            exposure_cycles[: min(partial_cycle_bins, a.shape[1])] += 1.0
+            exposure_time_s = exposure_cycles * dfd_bin_width_s
+            np.divide(
+                a[2, :],
+                exposure_time_s,
+                out=a[2, :],
+                where=exposure_time_s > 0,
+            )
+            a[2, exposure_time_s <= 0] = 0
+        return a
 
     def getPreviewImage(self, projection="xy", rgb=False):
         """
@@ -1148,6 +1196,15 @@ class SpadFcsManager():
         shared_image.get_lock().acquire()
         array = np.copy(shared_image.get_numpy_handle()[:])
         shared_image.get_lock().release()
+        return array
+
+    def getPreviewHclImage(self):
+        """
+        Get the HCL preview image used by COLOR_LIFETIME rendering.
+        """
+        self.shared_image_xy_hcl.get_lock().acquire()
+        array = np.copy(self.shared_image_xy_hcl.get_numpy_handle()[:])
+        self.shared_image_xy_hcl.get_lock().release()
         return array
 
     def getPreviewFlatData(self, frame=0, channel=10):
