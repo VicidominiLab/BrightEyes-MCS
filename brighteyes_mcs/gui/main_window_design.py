@@ -3168,7 +3168,37 @@ class Ui_MainWindowDesign(object):
         self.checkBox_trace_dfd_time_axis = QCheckBox(self.dockWidgetContents_20)
         self.checkBox_trace_dfd_time_axis.setObjectName(u"checkBox_trace_dfd_time_axis")
 
-        self.gridLayout_62.addWidget(self.checkBox_trace_dfd_time_axis, 5, 0, 1, 2)
+        self.gridLayout_62.addWidget(self.checkBox_trace_dfd_time_axis, 5, 0, 1, 1)
+
+        self.checkBox_trace_dfd_align_peak = QCheckBox(self.dockWidgetContents_20)
+        self.checkBox_trace_dfd_align_peak.setObjectName(u"checkBox_trace_dfd_align_peak")
+
+        self.gridLayout_62.addWidget(self.checkBox_trace_dfd_align_peak, 5, 1, 1, 1)
+
+        self.label_trace_dfd_fit_levels = QLabel(self.dockWidgetContents_20)
+        self.label_trace_dfd_fit_levels.setObjectName(u"label_trace_dfd_fit_levels")
+
+        self.gridLayout_62.addWidget(self.label_trace_dfd_fit_levels, 6, 0, 1, 1)
+
+        self.doubleSpinBox_trace_dfd_start_percent = QDoubleSpinBox(self.dockWidgetContents_20)
+        self.doubleSpinBox_trace_dfd_start_percent.setObjectName(u"doubleSpinBox_trace_dfd_start_percent")
+        self.doubleSpinBox_trace_dfd_start_percent.setDecimals(1)
+        self.doubleSpinBox_trace_dfd_start_percent.setMinimum(0.100000000000000)
+        self.doubleSpinBox_trace_dfd_start_percent.setMaximum(99.900000000000006)
+        self.doubleSpinBox_trace_dfd_start_percent.setSingleStep(1.000000000000000)
+        self.doubleSpinBox_trace_dfd_start_percent.setValue(90.000000000000000)
+
+        self.gridLayout_62.addWidget(self.doubleSpinBox_trace_dfd_start_percent, 6, 1, 1, 1)
+
+        self.doubleSpinBox_trace_dfd_end_percent = QDoubleSpinBox(self.dockWidgetContents_20)
+        self.doubleSpinBox_trace_dfd_end_percent.setObjectName(u"doubleSpinBox_trace_dfd_end_percent")
+        self.doubleSpinBox_trace_dfd_end_percent.setDecimals(1)
+        self.doubleSpinBox_trace_dfd_end_percent.setMinimum(0.100000000000000)
+        self.doubleSpinBox_trace_dfd_end_percent.setMaximum(99.900000000000006)
+        self.doubleSpinBox_trace_dfd_end_percent.setSingleStep(1.000000000000000)
+        self.doubleSpinBox_trace_dfd_end_percent.setValue(20.000000000000000)
+
+        self.gridLayout_62.addWidget(self.doubleSpinBox_trace_dfd_end_percent, 6, 2, 1, 1)
 
 
         self.gridLayout_70.addLayout(self.gridLayout_62, 0, 0, 1, 1)
@@ -4018,6 +4048,10 @@ class Ui_MainWindowDesign(object):
         self.label_76.setText(QCoreApplication.translate("MainWindowDesign", u"Trace tot. bins", None))
         self.label_plot_channel.setText(QCoreApplication.translate("MainWindowDesign", u"Selected Ch: X", None))
         self.checkBox_trace_dfd_time_axis.setText(QCoreApplication.translate("MainWindowDesign", u"DFD axis in us", None))
+        self.checkBox_trace_dfd_align_peak.setText(QCoreApplication.translate("MainWindowDesign", u"Align DFD to peak", None))
+        self.label_trace_dfd_fit_levels.setText(QCoreApplication.translate("MainWindowDesign", u"DFD fit [%]", None))
+        self.doubleSpinBox_trace_dfd_start_percent.setSuffix(QCoreApplication.translate("MainWindowDesign", u" start", None))
+        self.doubleSpinBox_trace_dfd_end_percent.setSuffix(QCoreApplication.translate("MainWindowDesign", u" end", None))
         self.dockWidget_pluginImage.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Image Script", None))
         self.dockWidget_dfd.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"DFD", None))
         self.label_111.setText(QCoreApplication.translate("MainWindowDesign", u"DFD N. Bins", None))

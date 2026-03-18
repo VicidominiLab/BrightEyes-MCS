@@ -201,6 +201,10 @@ class MainWindow(QMainWindow):
             self.colorLifetimeDeltaTauUseHistogramMean
         )
         self.updateColorLifetimeShiftControls()
+        self.ui.checkBox_trace_dfd_time_axis.toggled.connect(self.plotSettingsChanged)
+        self.ui.checkBox_trace_dfd_align_peak.toggled.connect(self.plotSettingsChanged)
+        self.ui.doubleSpinBox_trace_dfd_start_percent.valueChanged.connect(self.plotSettingsChanged)
+        self.ui.doubleSpinBox_trace_dfd_end_percent.valueChanged.connect(self.plotSettingsChanged)
 
         self.configuration_helper = self.configuration_helper_init()
 
@@ -3503,7 +3507,6 @@ class MainWindow(QMainWindow):
             trace_live = dfd_trace[1, :]
             trace_sum = dfd_trace[2, :]
             peak_idx = int(np.argmax(trace_sum))
-            trace_sum_peak0 = np.roll(trace_sum, -peak_idx)
             trace_dfd_x_bins = np.asarray(trace_dfd_x, dtype=float)
             tcycle_s = 1.0 / (
                 max(float(self.dfd_cycle_mhz), 1e-12) * 1e6 * max(clk_multiplier, 1)
@@ -3515,19 +3518,6 @@ class MainWindow(QMainWindow):
                 axis_name = "Time"
             else:
                 trace_dfd_x = trace_dfd_x_bins
-            trace_dfd_x_peak0_seconds = np.roll(
-                np.mod(trace_dfd_x_seconds - trace_dfd_x_seconds[peak_idx], tcycle_s),
-                -peak_idx,
-            )
-            trace_dfd_x_peak0_bins = np.roll(
-                np.mod(trace_dfd_x_bins - trace_dfd_x_bins[peak_idx], float(max(int(self.DFD_nbins), 1))),
-                -peak_idx,
-            )
-            trace_dfd_x_peak0 = (
-                trace_dfd_x_peak0_seconds
-                if self.ui.checkBox_trace_dfd_time_axis.isChecked()
-                else trace_dfd_x_peak0_bins
-            )
             bin_width_ns = tcycle_s * 1e9 / max(int(self.DFD_nbins), 1)
             live_max = np.max(trace_live)
             sum_max = np.max(trace_sum)
@@ -3537,29 +3527,45 @@ class MainWindow(QMainWindow):
             elif live_max > 0 and sum_max <= 0:
                 trace_live = trace_live / live_max
 
+            if self.ui.checkBox_trace_dfd_align_peak.isChecked():
+                trace_live = np.roll(trace_live, -peak_idx)
+                trace_sum = np.roll(trace_sum, -peak_idx)
+                trace_dfd_x_plot = (
+                    np.roll(
+                        np.mod(trace_dfd_x_seconds - trace_dfd_x_seconds[peak_idx], tcycle_s),
+                        -peak_idx,
+                    )
+                    if self.ui.checkBox_trace_dfd_time_axis.isChecked()
+                    else np.roll(
+                        np.mod(
+                            trace_dfd_x_bins - trace_dfd_x_bins[peak_idx],
+                            float(max(int(self.DFD_nbins), 1)),
+                        ),
+                        -peak_idx,
+                    )
+                )
+            else:
+                trace_dfd_x_plot = trace_dfd_x
+
             self.trace_dfd_widget.plot(
-                trace_dfd_x,
+                trace_dfd_x_plot,
                 trace_live,
                 clear=True,
                 pen=pg.mkPen(color=(255, 255, 255), width=1),
             )
             self.trace_dfd_widget.plot(
-                trace_dfd_x,
+                trace_dfd_x_plot,
                 trace_sum,
                 pen=pg.mkPen(color=(180, 180, 180), width=2),
             )
-            self.trace_dfd_widget.plot(
-                trace_dfd_x_peak0,
-                trace_sum_peak0,
-                pen=pg.mkPen(color=(255, 80, 80), width=2),
-            )
-            tau_ns, fit_curve = self.estimateDfdDecayLifetimeNs(
-                trace_sum_peak0,
-                trace_dfd_x_peak0_seconds,
+            tau_ns, fit_curve, peak_idx, trace_sum_peak0, trace_dfd_x_peak0_seconds = self.estimateDfdDecayLifetimeNs(
+                trace_sum,
+                trace_dfd_x_seconds,
                 bin_width_ns,
-                peak_idx,
                 max(int(self.DFD_nbins), 1),
                 tcycle_s,
+                start_level=self.ui.doubleSpinBox_trace_dfd_start_percent.value() / 100.0,
+                end_level=self.ui.doubleSpinBox_trace_dfd_end_percent.value() / 100.0,
             )
             if tau_ns is not None:
                 self.trace_dfd_widget.setLabel("top", f"{axis_name}   tau_fit={tau_ns:.3f} ns", "s" if axis_name == "Time" else None)
@@ -4498,56 +4504,103 @@ Have fun!
 
     def estimateDfdDecayLifetimeNs(
         self,
-        trace_sum_peak0,
-        trace_x_peak0_seconds,
+        trace_sum,
+        trace_x_seconds,
         bin_width_ns,
-        peak_idx,
         nbins,
         tcycle_s,
+        start_level=0.95,
+        end_level=0.25,
     ):
-        trace_sum_peak0 = np.asarray(trace_sum_peak0, dtype=float)
-        trace_x_peak0_seconds = np.asarray(trace_x_peak0_seconds, dtype=float)
+        trace_sum = np.asarray(trace_sum, dtype=float)
+        trace_x_seconds = np.asarray(trace_x_seconds, dtype=float)
         if (
-            trace_sum_peak0.size < 4
-            or trace_x_peak0_seconds.size != trace_sum_peak0.size
+            trace_sum.size < 4
+            or trace_x_seconds.size != trace_sum.size
             or not np.isfinite(bin_width_ns)
             or bin_width_ns <= 0
             or nbins <= 0
             or not np.isfinite(tcycle_s)
             or tcycle_s <= 0
+            or not np.isfinite(start_level)
+            or not np.isfinite(end_level)
+            or not (0.0 < end_level < start_level < 1.0)
         ):
-            return None, None
+            print_dec("FIT: invalid input parameters")
+            return None, None, None, None, None
 
-        fit_len = max(trace_sum_peak0.size // 3, 4)
-        fit_len = min(fit_len, trace_sum_peak0.size)
-        y_section = trace_sum_peak0[:fit_len]
-        x_section_seconds = trace_x_peak0_seconds[:fit_len]
+        peak_idx = int(np.argmax(trace_sum))
+        trace_sum_peak0 = np.roll(trace_sum, -peak_idx)
+        trace_x_peak0_seconds = np.roll(
+            np.mod(trace_x_seconds - trace_x_seconds[peak_idx], tcycle_s),
+            -peak_idx,
+        )
+
+        peak_value = float(trace_sum_peak0[0])
+        if not np.isfinite(peak_value) or peak_value <= 0:
+            print_dec("FIT: invalid peak value")
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+        y_start = start_level * peak_value
+        idx_start_candidates = np.flatnonzero(trace_sum_peak0 <= y_start)
+        fallback_levels = [end_level, 0.30, 0.40]
+        fallback_levels = [level for level in fallback_levels if 0.0 < level < start_level]
+        fallback_levels = list(dict.fromkeys(fallback_levels))
+        selected_end_level = None
+        idx_end_candidates = np.asarray([], dtype=int)
+        y_end = None
+        for candidate_end_level in fallback_levels:
+            y_end_candidate = candidate_end_level * peak_value
+            idx_end_candidate = np.flatnonzero(trace_sum_peak0 <= y_end_candidate)
+            if idx_start_candidates.size != 0 and idx_end_candidate.size != 0:
+                selected_end_level = candidate_end_level
+                idx_end_candidates = idx_end_candidate
+                y_end = y_end_candidate
+                break
+
+        if idx_start_candidates.size == 0 or idx_end_candidates.size == 0:
+            print_dec("FIT: y_start, y_end, idx_start_candidates, idx_end_candidates", y_start, y_end, idx_start_candidates, idx_end_candidates)
+            print_dec("FIT: no candidates for start or end indices")
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+        print_dec("FIT: start_level, selected_end_level", start_level, selected_end_level)
+
+        start_idx = int(idx_start_candidates[0])
+        end_idx = int(idx_end_candidates[0])
+        if end_idx <= start_idx:
+            print_dec("FIT: end_idx <= start_idx")
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+        y_section = trace_sum_peak0[start_idx : end_idx + 1]
+        x_section_seconds = trace_x_peak0_seconds[start_idx : end_idx + 1]
         positive = y_section > 0
         if np.count_nonzero(positive) < 4:
-            return None, None
+            print_dec("FIT: np.count_nonzero(positive) < 4")
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
-        x_fit_bins = np.arange(fit_len, dtype=float)[positive]
+        x_fit_bins = np.arange(start_idx, end_idx + 1, dtype=float)[positive]
         x_fit_seconds = x_section_seconds[positive]
         y_fit_input = y_section[positive]
         slope, intercept = np.polyfit(x_fit_bins, np.log(y_fit_input), 1)
+        print_dec("FIT: slope and intercept", slope, intercept)
         if not np.isfinite(slope) or slope >= 0:
-            return None, None
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
         tau_ns = -float(bin_width_ns) / slope
         if not np.isfinite(tau_ns) or tau_ns <= 0:
-            return None, None
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
         y_fit = np.exp(intercept + slope * x_fit_bins)
         x_fit_bins_plot = np.mod(x_fit_bins + int(peak_idx), int(nbins))
         x_fit_seconds_plot = np.mod(x_fit_seconds + int(peak_idx) * bin_width_ns * 1e-9, tcycle_s)
 
         fit_curve = {
-            "fit_len": fit_len,
+            "fit_len": int(end_idx - start_idx + 1),
             "x_fit_bins": x_fit_bins_plot,
             "x_fit_seconds": x_fit_seconds_plot,
             "y_fit": y_fit,
         }
-        return float(tau_ns), fit_curve
+        return float(tau_ns), fit_curve, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
     def updateColorLifetimeShiftControls(self):
         current_channel = self.ui.comboBox_plot_channel.currentText()
