@@ -16,8 +16,10 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QComboBox,
     QCheckBox,
+    QPushButton,
     QFrame,
     QWidget,
+    QHBoxLayout,
     QTextBrowser,
     QHeaderView,
     QProgressDialog
@@ -42,7 +44,7 @@ from PySide6.QtGui import QPixmap, QIcon, QGuiApplication, QDesktopServices
 from datetime import datetime
 
 from .main_window_design import Ui_MainWindowDesign
-from .hcl_image_view import HclImageView
+from .flim_image_view import FlimImageView
 
 from ..gui.console_widget import ConsoleWidget
 from ..libs.spad_fcs_manager import SpadFcsManager
@@ -183,24 +185,63 @@ class MainWindow(QMainWindow):
         self.webcam_capture = None
         self.ui = Ui_MainWindowDesign()
         self.ui.setupUi(self)
-        for special_channel in ("RGBDFD", "COLOR_LIFETIME", "LIFETIME", "QUALITY"):
+        for special_channel in (
+            "RGBDFD",
+            "LIFETIME_HCL",
+            "LIFETIME_HSV",
+            "LIFETIME_HSL",
+            "LIFETIME",
+            "QUALITY",
+        ):
             if self.ui.comboBox_plot_channel.findText(special_channel) < 0:
                 self.ui.comboBox_plot_channel.addItem(special_channel)
-        self.ui.label_delta_tau_ns = QLabel("delta_tau")
+        self.ui.label_delta_tau_ns = QLabel("Corr. delta_tau [ns]")
         self.ui.doubleSpinBox_delta_tau_ns = DoubleClickDoubleSpinBox(self)
         self.ui.doubleSpinBox_delta_tau_ns.setDecimals(4)
         self.ui.doubleSpinBox_delta_tau_ns.setRange(0.0, 1e6)
         self.ui.doubleSpinBox_delta_tau_ns.setSingleStep(0.1)
         self.ui.doubleSpinBox_delta_tau_ns.setSuffix(" ns")
+        self.ui.pushButton_delta_tau_auto = QPushButton("A", self)
+        self.ui.pushButton_delta_tau_auto.setToolTip("Automatic lifetime correction from the cumulative fit")
+        self.ui.pushButton_delta_tau_auto.setFixedWidth(28)
         self.ui.gridLayout_4.addWidget(self.ui.label_delta_tau_ns, 2, 6, 1, 1)
         self.ui.gridLayout_4.addWidget(self.ui.doubleSpinBox_delta_tau_ns, 2, 7, 1, 1)
+        self.ui.gridLayout_4.addWidget(self.ui.pushButton_delta_tau_auto, 2, 8, 1, 1)
         self.ui.doubleSpinBox_delta_tau_ns.valueChanged.connect(
             self.colorLifetimeDeltaTauChanged
         )
-        self.ui.doubleSpinBox_delta_tau_ns.doubleClicked.connect(
+        self.ui.pushButton_delta_tau_auto.clicked.connect(
             self.colorLifetimeDeltaTauUseHistogramMean
         )
+        self.ui.label_lifetime_hue_range = QLabel("Hue vis. [0..1]")
+        self.ui.doubleSpinBox_lifetime_hue_min = QDoubleSpinBox(self)
+        self.ui.doubleSpinBox_lifetime_hue_max = QDoubleSpinBox(self)
+        self.ui.checkBox_lifetime_force_quality_full = QCheckBox("Force S/C=1", self)
+        self.ui.checkBox_lifetime_force_quality_full.setChecked(True)
+        for spinbox, value in (
+            (self.ui.doubleSpinBox_lifetime_hue_min, 2.0 / 3.0),
+            (self.ui.doubleSpinBox_lifetime_hue_max, 0.0),
+        ):
+            spinbox.setDecimals(4)
+            spinbox.setRange(0.0, 1.0)
+            spinbox.setSingleStep(0.01)
+            spinbox.setValue(value)
+        self.ui.widget_lifetime_hue_range = QWidget(self)
+        self.ui.layout_lifetime_hue_range = QHBoxLayout(self.ui.widget_lifetime_hue_range)
+        self.ui.layout_lifetime_hue_range.setContentsMargins(0, 0, 0, 0)
+        self.ui.layout_lifetime_hue_range.setSpacing(4)
+        self.ui.layout_lifetime_hue_range.addWidget(self.ui.label_lifetime_hue_range)
+        self.ui.layout_lifetime_hue_range.addWidget(self.ui.doubleSpinBox_lifetime_hue_min)
+        self.ui.layout_lifetime_hue_range.addWidget(QLabel("to"))
+        self.ui.layout_lifetime_hue_range.addWidget(self.ui.doubleSpinBox_lifetime_hue_max)
+        self.ui.layout_lifetime_hue_range.addWidget(self.ui.checkBox_lifetime_force_quality_full)
+        self.ui.gridLayout_4.addWidget(self.ui.widget_lifetime_hue_range, 0, 6, 1, 4)
+        self.ui.doubleSpinBox_lifetime_hue_min.valueChanged.connect(self.plotSettingsChanged)
+        self.ui.doubleSpinBox_lifetime_hue_max.valueChanged.connect(self.plotSettingsChanged)
+        self.ui.checkBox_lifetime_force_quality_full.toggled.connect(self.plotSettingsChanged)
         self.updateColorLifetimeShiftControls()
+        self.updateImageInteractionHints()
+        self.latest_dfd_tau_fit_ns = None
         self.ui.checkBox_trace_dfd_time_axis.toggled.connect(self.plotSettingsChanged)
         self.ui.checkBox_trace_dfd_align_peak.toggled.connect(self.plotSettingsChanged)
         self.ui.doubleSpinBox_trace_dfd_start_percent.valueChanged.connect(self.plotSettingsChanged)
@@ -241,7 +282,7 @@ class MainWindow(QMainWindow):
         self.ui.gridLayout_pluginImage.addWidget(self.im_plugin)
 
         # Main live preview view used by the xy/xz/zy projection widgets.
-        self.im_widget = HclImageView(self, view=self.im_widget_plot_item)
+        self.im_widget = FlimImageView(self, view=self.im_widget_plot_item)
 
         self.ui.gridLayout_im.addWidget(self.im_widget, 0, 0, 1, 3)
 
@@ -3568,6 +3609,7 @@ class MainWindow(QMainWindow):
                 start_level=self.ui.doubleSpinBox_trace_dfd_start_percent.value() / 100.0,
                 end_level=self.ui.doubleSpinBox_trace_dfd_end_percent.value() / 100.0,
             )
+            self.latest_dfd_tau_fit_ns = tau_ns
             if tau_ns is not None:
                 self.trace_dfd_widget.setLabel("top", f"tau_fit={tau_ns:.3f} ns - {axis_name}", "s" if axis_name == "Time" else None)
             else:
@@ -3592,6 +3634,7 @@ class MainWindow(QMainWindow):
                     symbolPen=pg.mkPen(color=(255, 200, 0), width=1),
                 )
         else:
+            self.latest_dfd_tau_fit_ns = None
             self.spadfcsmanager_inst.update_shared_dict({"dfd_peak_idx": -1})
             self.trace_dfd_widget.clear()
             self.trace_dfd_widget.setLabel("top", "DFD bin")
@@ -4608,16 +4651,19 @@ Have fun!
 
     def updateColorLifetimeShiftControls(self):
         current_channel = self.ui.comboBox_plot_channel.currentText()
-        visible = current_channel == "COLOR_LIFETIME"
+        visible = self.isLifetimeColorChannel(current_channel)
         self.ui.label_delta_tau_ns.setVisible(visible)
         self.ui.doubleSpinBox_delta_tau_ns.setVisible(visible)
+        self.ui.pushButton_delta_tau_auto.setVisible(visible)
+        self.ui.widget_lifetime_hue_range.setVisible(visible)
+        self.updateImageInteractionHints()
 
         clk_multiplier = 1
         if hasattr(self, "spadfcsmanager_inst") and self.spadfcsmanager_inst is not None:
             clk_multiplier = max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
         dfd_cycle_mhz = max(float(getattr(self, "dfd_cycle_mhz", 40.0)), 1e-12)
         tcycle_ns = 1e3 / (dfd_cycle_mhz * clk_multiplier)
-        self.ui.label_delta_tau_ns.setText(f"delta_tau [ns] (T={tcycle_ns:.4f})")
+        self.ui.label_delta_tau_ns.setText(f"Corr. delta_tau [ns] (T={tcycle_ns:.4f})")
 
         self.ui.doubleSpinBox_delta_tau_ns.blockSignals(True)
         self.ui.doubleSpinBox_delta_tau_ns.setRange(0.0, max(tcycle_ns, 1e-12))
@@ -4630,12 +4676,12 @@ Have fun!
     @Slot()
     def colorLifetimeDeltaTauChanged(self):
         self.updateColorLifetimeShiftControls()
-        if self.ui.comboBox_plot_channel.currentText() == "COLOR_LIFETIME":
+        if self.isLifetimeColorChannel():
             self.plotPreviewImage()
 
     @Slot()
     def colorLifetimeDeltaTauUseHistogramMean(self):
-        if self.ui.comboBox_plot_channel.currentText() != "COLOR_LIFETIME":
+        if not self.isLifetimeColorChannel():
             return
 
         tcycle_ns = 1e3 / (
@@ -4643,13 +4689,51 @@ Have fun!
             * max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
         )
         h_mean = self.im_widget.getDisplayedHMean()
-        if h_mean is None:
+        tau_fit_ns = self.latest_dfd_tau_fit_ns
+        if h_mean is None or tau_fit_ns is None:
             return
 
+        current_mean_ns = float(h_mean) * tcycle_ns
+        corrected_value = (
+            self.ui.doubleSpinBox_delta_tau_ns.value()
+            + current_mean_ns
+            - float(tau_fit_ns)
+        ) % tcycle_ns
+
         self.ui.doubleSpinBox_delta_tau_ns.blockSignals(True)
-        self.ui.doubleSpinBox_delta_tau_ns.setValue(float(h_mean) * tcycle_ns)
+        self.ui.doubleSpinBox_delta_tau_ns.setValue(corrected_value)
         self.ui.doubleSpinBox_delta_tau_ns.blockSignals(False)
         self.plotPreviewImage()
+
+    def getLifetimeColorRenderMode(self, channel_name=None):
+        if channel_name is None:
+            channel_name = self.ui.comboBox_plot_channel.currentText()
+        render_modes = {
+            "COLOR_LIFETIME": "hcl",
+            "LIFETIME_HCL": "hcl",
+            "LIFETIME_HSV": "hsv",
+            "LIFETIME_HSL": "hsl",
+        }
+        return render_modes.get(channel_name)
+
+    def isLifetimeColorChannel(self, channel_name=None):
+        return self.getLifetimeColorRenderMode(channel_name) is not None
+
+    def getLifetimeHueDisplayRange(self):
+        return (
+            float(self.ui.doubleSpinBox_lifetime_hue_min.value()),
+            float(self.ui.doubleSpinBox_lifetime_hue_max.value()),
+        )
+
+    def getLifetimeForceQualityFull(self):
+        return bool(self.ui.checkBox_lifetime_force_quality_full.isChecked())
+
+    def updateImageInteractionHints(self):
+        visible = not self.isLifetimeColorChannel()
+        for label_name in ("label_106", "label_107"):
+            label = getattr(self.ui, label_name, None)
+            if label is not None:
+                label.setVisible(visible)
 
     @Slot()
     def previewButtonClicked(self):
@@ -5919,9 +6003,9 @@ Have fun!
         proj = self.ui.comboBox_view_projection.currentText()
         ch = self.ui.comboBox_plot_channel.currentText()
         if preview_img is None:
-            if ch in ("COLOR_LIFETIME", "LIFETIME", "QUALITY"):
+            if self.isLifetimeColorChannel(ch) or ch in ("LIFETIME", "QUALITY"):
                 preview_hcl = self.spadfcsmanager_inst.getPreviewHclImage()
-                if ch == "COLOR_LIFETIME":
+                if self.isLifetimeColorChannel(ch):
                     preview_img = preview_hcl
                 elif ch == "LIFETIME":
                     preview_img = preview_hcl[:, :, 0]
@@ -5948,7 +6032,7 @@ Have fun!
             currentImage_size[2] = 1e-12
 
 
-        if ch.startswith("RGB") or ch == "COLOR_LIFETIME":
+        if ch.startswith("RGB") or self.isLifetimeColorChannel(ch):
             preview_img = np.moveaxis(preview_img, 0, 1)
             autoLevels = self.autoscale_image
             autoRange = False
@@ -6060,7 +6144,7 @@ Have fun!
          pos,
          scale) = self.getCurrentPreviewImage(img)
         #print_dec("preview_img",preview_img)
-        if ch == "COLOR_LIFETIME":
+        if self.isLifetimeColorChannel(ch):
             preview_hcl = preview_img
             tcycle_ns = 1e3 / (
                 max(float(self.dfd_cycle_mhz), 1e-12)
@@ -6072,11 +6156,14 @@ Have fun!
                 h_shift = (
                     self.ui.doubleSpinBox_delta_tau_ns.value() % tcycle_ns
                 ) / tcycle_ns
-            self.im_widget.setHclImage(
+            self.im_widget.setFlimImage(
                 preview_hcl,
                 valid=preview_hcl[:, :, 2],
                 h_display_max=tcycle_ns,
                 h_shift=h_shift,
+                render_mode=self.getLifetimeColorRenderMode(ch),
+                hue_display_range=self.getLifetimeHueDisplayRange(),
+                force_quality_full=self.getLifetimeForceQualityFull(),
                 autoLevels=autoLevels,
                 autoRange=autoRange,
                 pos=pos,

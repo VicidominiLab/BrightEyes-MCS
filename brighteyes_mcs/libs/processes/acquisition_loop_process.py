@@ -996,7 +996,14 @@ class AcquisitionLoopProcess(mp.Process):
                                     )
 
                             elif selected_channel.startswith("RGB") or selected_channel.startswith(
-                                ("COLOR_LIFETIME", "LIFETIME", "QUALITY")
+                                (
+                                    "COLOR_LIFETIME",
+                                    "LIFETIME_HCL",
+                                    "LIFETIME_HSV",
+                                    "LIFETIME_HSL",
+                                    "LIFETIME",
+                                    "QUALITY",
+                                )
                             ):
                                 if selected_channel.startswith("RGB "):
                                     if self.activate_show_preview == True:
@@ -1115,7 +1122,16 @@ class AcquisitionLoopProcess(mp.Process):
 
                                     self.image_xy_rgb_lock.release()
 
-                                if selected_channel.startswith(("COLOR_LIFETIME", "LIFETIME", "QUALITY")):
+                                if selected_channel.startswith(
+                                    (
+                                        "COLOR_LIFETIME",
+                                        "LIFETIME_HCL",
+                                        "LIFETIME_HSV",
+                                        "LIFETIME_HSL",
+                                        "LIFETIME",
+                                        "QUALITY",
+                                    )
+                                ):
                                     tparts = 3
                                     tbins = max(self.timebinsPerPixel // max(clk_multiplier, 1), 1)
                                     gbins = max(tbins // tparts, 1)
