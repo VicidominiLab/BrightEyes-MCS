@@ -80,6 +80,8 @@ class HclHistogramLUTItem(pg.HistogramLUTItem):
         self._color_lifetime_widgets_attached = False
         self._hl_colorbar_plot = None
         self._hl_colorbar_image = None
+        self._hl_hist_curve = None
+        self._hl_hist_values = np.asarray([], dtype=float)
         self._build_hl_colorbar()
         self._build_hcl_controls()
         self.deactivate_color_lifetime_mode()
@@ -92,6 +94,10 @@ class HclHistogramLUTItem(pg.HistogramLUTItem):
         self._hl_colorbar_plot.setAspectLocked(False)
         self._hl_colorbar_image = pg.ImageItem(axisOrder="row-major")
         self._hl_colorbar_plot.addItem(self._hl_colorbar_image)
+        self._hl_hist_curve = pg.PlotCurveItem(
+            pen=pg.mkPen(color=(255, 255, 255, 220), width=2)
+        )
+        self._hl_colorbar_plot.addItem(self._hl_hist_curve)
         self._hl_colorbar_plot.setVisible(False)
         self._update_hl_colorbar()
 
@@ -157,7 +163,7 @@ class HclHistogramLUTItem(pg.HistogramLUTItem):
         if self._hl_colorbar_image is None:
             return
 
-        h = np.tile(np.linspace(1.0, 0.0, height, dtype=float)[:, None], (1, width))
+        h = np.tile(np.linspace(0.0, 1.0, height, dtype=float)[:, None], (1, width))
         l = np.tile(np.linspace(0.0, 100.0, width, dtype=float), (height, 1))
         c = np.full((height, width), 100.0, dtype=float)
         rgb = lch_to_srgb(l, c, h)
@@ -190,6 +196,24 @@ class HclHistogramLUTItem(pg.HistogramLUTItem):
             (0.5 * (h_low + h_high), f"{0.5 * (h_low + h_high):.3f}"),
             (h_high, f"{h_high:.3f}"),
         ]])
+
+        if self._hl_hist_curve is not None:
+            h_values = np.asarray(self._hl_hist_values, dtype=float)
+            mask = np.isfinite(h_values)
+            h_values = h_values[mask]
+            h_range = self._hcl_ranges.get("H", (0.0, 1.0))
+            if h_values.size == 0:
+                self._hl_hist_curve.setData([], [])
+            else:
+                hist, edges = np.histogram(h_values, bins=64, range=h_range)
+                centers = 0.5 * (edges[:-1] + edges[1:])
+                centers_ns = centers * h_display_max
+                if np.max(hist) > 0:
+                    hist_norm = hist / np.max(hist)
+                    x_hist = l_low + hist_norm * (l_high - l_low)
+                    self._hl_hist_curve.setData(x_hist, centers_ns)
+                else:
+                    self._hl_hist_curve.setData([], [])
 
     def _update_axis_representation(self, key):
         plot = self._hcl_plots[key]
@@ -228,6 +252,7 @@ class HclHistogramLUTItem(pg.HistogramLUTItem):
         if valid is None:
             valid = np.ones_like(h, dtype=bool)
         datasets = {"H": h, "C": c, "L": l}
+        self._hl_hist_values = np.asarray(h, dtype=float)[np.asarray(valid, dtype=bool)]
         if h_display_max is not None:
             self._hcl_display_max["H"] = max(float(h_display_max), 1e-12)
         self.set_hcl_visible(True)
