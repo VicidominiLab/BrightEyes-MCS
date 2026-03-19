@@ -109,6 +109,61 @@ class ResettableLinearRegionItem(pg.LinearRegionItem):
         ev.accept()
 
 
+class ZoomableHistogramViewBox(pg.ViewBox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, enableMenu=False, **kwargs)
+        self.setMouseEnabled(x=False, y=False)
+        self._default_x_range = (0.0, 1.0)
+
+    def set_default_x_range(self, bounds, reset=False):
+        low, high = map(float, bounds)
+        if high <= low:
+            high = low + 1e-12
+        self._default_x_range = (low, high)
+        self.setLimits(xMin=low, xMax=high)
+        if reset:
+            self.reset_x_range()
+
+    def reset_x_range(self):
+        low, high = self._default_x_range
+        self.setXRange(low, high, padding=0.0)
+
+    def wheelEvent(self, ev, axis=None):
+        low, high = self.viewRange()[0]
+        default_low, default_high = self._default_x_range
+        full_span = max(default_high - default_low, 1e-12)
+        span = max(high - low, 1e-12)
+
+        factor = 1.25 ** (ev.delta() / 120.0)
+        new_span = np.clip(span / factor, full_span * 1e-4, full_span)
+
+        anchor = float(self.mapToView(ev.pos()).x())
+        anchor = float(np.clip(anchor, low, high))
+        anchor_fraction = np.clip((anchor - low) / span, 0.0, 1.0)
+
+        new_low = anchor - anchor_fraction * new_span
+        new_high = new_low + new_span
+
+        if new_low < default_low:
+            new_low = default_low
+            new_high = new_low + new_span
+        if new_high > default_high:
+            new_high = default_high
+            new_low = new_high - new_span
+
+        self.setXRange(new_low, new_high, padding=0.0)
+        ev.accept()
+        self.sigRangeChangedManually.emit([True, False])
+
+    def mouseClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.MouseButton.MiddleButton:
+            self.reset_x_range()
+            ev.accept()
+            self.sigRangeChangedManually.emit([True, False])
+            return
+        super().mouseClickEvent(ev)
+
+
 class FlimHistogramLUTItem(pg.HistogramLUTItem):
     sigFlimRangesChanged = QtCore.Signal(object)
 
@@ -127,6 +182,7 @@ class FlimHistogramLUTItem(pg.HistogramLUTItem):
         self._hcl_curves = {}
         self._hcl_labels = {}
         self._hcl_bounds = {}
+        self._hcl_plot_ranges_initialized = {"H": False, "C": False, "L": False}
         self._hcl_display_max = {"H": 1.0, "C": 1.0, "L": 1.0}
         self._suspend_hcl_range_signal = False
         self._color_lifetime_widgets_attached = False
@@ -179,10 +235,10 @@ class FlimHistogramLUTItem(pg.HistogramLUTItem):
         for idx, key in enumerate(("H", "C", "L")):
             label = pg.LabelItem(justify="left")
             label.setText(f"{key} range")
-            plot = pg.PlotItem()
+            plot = pg.PlotItem(viewBox=ZoomableHistogramViewBox())
             plot.hideAxis("left")
-            plot.setMouseEnabled(x=False, y=False)
-            plot.setMaximumHeight(55)
+            plot.setMinimumHeight(90)
+            plot.setMaximumHeight(90)
             plot.setMenuEnabled(False)
             plot.showGrid(x=False, y=False, alpha=0.1)
             curve = pg.PlotCurveItem(fillLevel=0, brush=(120, 120, 120, 80))
@@ -446,6 +502,13 @@ class FlimHistogramLUTItem(pg.HistogramLUTItem):
 
                 self._hcl_bounds[key] = (low, high)
                 self._hcl_curves[key].setData(xs, ys)
+                plot_view = self._hcl_plots[key].getViewBox()
+                if hasattr(plot_view, "set_default_x_range"):
+                    plot_view.set_default_x_range(
+                        (low, high),
+                        reset=not self._hcl_plot_ranges_initialized.get(key, False),
+                    )
+                    self._hcl_plot_ranges_initialized[key] = True
                 current = self._hcl_ranges.get(key, (low, high))
                 current = (max(low, current[0]), min(high, current[1]))
                 if current[0] >= current[1]:
@@ -464,6 +527,7 @@ class FlimHistogramLUTItem(pg.HistogramLUTItem):
         self._emit_hcl_ranges_changed()
 
     def clear_flim_data(self):
+        self._hcl_plot_ranges_initialized = {"H": False, "C": False, "L": False}
         self.deactivate_color_lifetime_mode()
 
     def get_flim_ranges(self):
