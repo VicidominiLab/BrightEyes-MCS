@@ -1,12 +1,11 @@
-echo "Your configurations backup to brighteyes_mcs\cfg.bck\"
-xcopy /Y brighteyes_mcs\cfg\* brighteyes_mcs\cfg.bck\
+@echo off
+cd /d %~dp0
 
-echo "git fetch origin"
-git fetch origin
-echo "git reset --hard origin/master"
-git reset --hard origin/master
+if exist .venv\Scripts\activate.bat (
+    echo Activating .venv
+    call .venv\Scripts\activate.bat
+) else (
+    echo Warning: .venv\Scripts\activate.bat was not found. Using the current Python environment.
+)
 
-echo Compiling the Cython code
-compile_cython
-
-xcopy /Y brighteyes_mcs\cfg.bck\* brighteyes_mcs\cfg\
+python upgrade_mcs.py %*
