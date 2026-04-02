@@ -2,7 +2,7 @@
 
 import uvicorn
 import threading
-from fastapi import FastAPI, HTTPException, UploadFile, File, Request
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Path
 
 from fastapi.responses import StreamingResponse, Response
 import io
@@ -38,9 +38,61 @@ class FastAPIServerThread(threading.Thread):
         super().__init__()
         self.host = host
         self.port = port
-        self.app = FastAPI()
+        self.app = FastAPI(
+            title="BrightEyes-MCS HTTP API",
+            description=(
+                "Remote control and status API for BrightEyes-MCS.\n\n"
+                "Use `/cmd/` to discover supported commands, `/cmd/{item}` to "
+                "dispatch one, `/state/` to inspect the current runtime "
+                "state, and `/full_state` to inspect filenames, counters, "
+                "and other acquisition metadata."
+            ),
+            version="1.0.0",
+        )
         self.main_window = main_window
         self.server = None
+        command_catalog = {
+            "preview": {
+                "description": "Start preview mode without saving an acquisition file.",
+                "resulting_program_state": "preview",
+            },
+            "acquisition": {
+                "description": "Start a normal acquisition with saving enabled.",
+                "resulting_program_state": "acquisition",
+            },
+            "stop": {
+                "description": "Stop the current preview or acquisition.",
+                "resulting_program_state": "idle or acquisition_done",
+            },
+        }
+        supported_commands_description = ", ".join(
+            "`%s`" % command for command in command_catalog
+        )
+        full_status_example = {
+            "program_state": "idle",
+            "allowed_program_states": [
+                "idle",
+                "acquisition",
+                "preview",
+                "acquisition_done",
+            ],
+            "program_state_reason": "startup",
+            "program_state_changed_at": "2026-04-01T12:00:00+02:00",
+            "acquisition_running": False,
+            "started_normal": False,
+            "started_preview": False,
+            "do_not_save": False,
+            "last_requested_filename": "C:/data/example.h5",
+            "last_saved_filename": "C:/data/example.h5",
+            "last_completed_filename": "C:/data/example.h5",
+            "acquisition_run_id": 4,
+            "preview_run_id": 7,
+            "completed_acquisition_count": 3,
+            "last_acquisition_started_at": "2026-04-01T11:58:00+02:00",
+            "last_preview_started_at": "2026-04-01T11:55:00+02:00",
+            "last_acquisition_completed_at": "2026-04-01T11:59:30+02:00",
+            "http_server_running": True,
+        }
 
         class MySignal(QObject):
             """
@@ -62,8 +114,58 @@ class FastAPIServerThread(threading.Thread):
             """
             return {"message": "Hello, World!"}
 
+        @self.app.get(
+            "/state/",
+            tags=["Status"],
+            summary="Get the current program state",
+            description=(
+                "Return only the current BrightEyes-MCS program state."
+            ),
+            responses={
+                200: {
+                    "description": "Current application state payload.",
+                    "content": {
+                        "application/json": {
+                            "example": {"program_state": "idle"}
+                        }
+                    },
+                },
+            },
+        )
+        async def read_state():
+            """
+            route that returns only the current main window program state
+            """
+            return self.main_window.get_state_payload()
+
+        @self.app.get(
+            "/full_state",
+            tags=["Status"],
+            summary="Get the full acquisition state",
+            description=(
+                "Return the current BrightEyes-MCS runtime state together with "
+                "useful metadata such as filenames, counters, timestamps, and "
+                "whether a preview or acquisition is currently running."
+            ),
+            responses={
+                200: {
+                    "description": "Current full application status payload.",
+                    "content": {
+                        "application/json": {
+                            "example": full_status_example
+                        }
+                    },
+                },
+            },
+        )
+        async def read_full_state():
+            """
+            route that returns the full main window status payload
+            """
+            return self.main_window.get_full_status_payload()
+
         @self.app.get("/gui/")
-        async def read_item():
+        async def read_gui():
             """
             route that returns the GUI data as a JSON string
             """
@@ -72,7 +174,7 @@ class FastAPIServerThread(threading.Thread):
             return json.dumps(mydict, cls=NumpyEncoder)
 
         @self.app.get("/gui/{item}")
-        async def read_item(item: str = None):
+        async def read_gui_item(item: str = None):
             """
             route that returns a specific item from the GUI data as a JSON string
             if the item is 'all', the entire GUI data is returned
@@ -85,14 +187,97 @@ class FastAPIServerThread(threading.Thread):
             else:
                 return json.dumps(mydict[item], cls=NumpyEncoder)
 
-        @self.app.get("/cmd/{item}")
-        async def read_item(item: str = None):
+        @self.app.get(
+            "/cmd/",
+            tags=["Commands"],
+            summary="List supported GUI commands",
+            description=(
+                "Return the supported command names for `/cmd/{item}` together "
+                "with a short description and the expected program state."
+            ),
+            responses={
+                200: {
+                    "description": "Supported command catalog.",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "supported_commands": command_catalog,
+                                "state_endpoint": "/state/",
+                                "full_state_endpoint": "/full_state",
+                                "notes": [
+                                    "Use `/cmd/{item}` to dispatch a command.",
+                                    "Use `/state/` after dispatching a command to inspect the resulting state.",
+                                    "Use `/full_state` for filenames, counters, and timestamps.",
+                                ],
+                            }
+                        }
+                    },
+                },
+            },
+        )
+        async def list_commands():
+            """
+            route that returns the supported commands for the command dispatcher
+            """
+            return {
+                "supported_commands": command_catalog,
+                "state_endpoint": "/state/",
+                "full_state_endpoint": "/full_state",
+                "notes": [
+                    "Use `/cmd/{item}` to dispatch a command.",
+                    "Use `/state/` after dispatching a command to inspect the resulting state.",
+                    "Use `/full_state` for filenames, counters, and timestamps.",
+                ],
+            }
+
+        @self.app.get(
+            "/cmd/{item}",
+            tags=["Commands"],
+            summary="Dispatch a GUI command",
+            description=(
+                "Supported commands:\n"
+                "- `preview`: start preview mode without saving a file.\n"
+                "- `acquisition`: start a normal acquisition with saving enabled.\n"
+                "- `stop`: stop the current preview or acquisition.\n\n"
+                "Call `/state/` after dispatching a command to inspect the current "
+                "program state. Call `/full_state` when you also need the last "
+                "filename, counters, and acquisition timestamps."
+            ),
+            responses={
+                200: {
+                    "description": "Command accepted by the GUI dispatcher.",
+                    "content": {
+                        "application/json": {
+                            "example": "Done"
+                        }
+                    },
+                },
+                400: {
+                    "description": "Unsupported command name.",
+                },
+            },
+        )
+        async def dispatch_command(
+            item: str = Path(
+                ...,
+                description="Supported values: %s." % supported_commands_description,
+            )
+        ):
             """
              route that receives a command and emits a signal to the main window based on the command
              preview: emits the preview signal
              acquisition: emits the start signal
              stop: emits the stop signal
             """
+            if item not in command_catalog:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Unsupported command '%s'. Supported commands: %s"
+                        % (item, ", ".join(command_catalog.keys()))
+                    ),
+                )
+
             if item == "preview":
                 print("preview")
                 self.signal.preview.emit()

@@ -124,6 +124,17 @@ class MainWindow(QMainWindow):
         splash (QSplashScreen): Splash screen for the application.
     """
 
+    PROGRAM_STATE_IDLE = "idle"
+    PROGRAM_STATE_ACQUISITION = "acquisition"
+    PROGRAM_STATE_PREVIEW = "preview"
+    PROGRAM_STATE_ACQUISITION_DONE = "acquisition_done"
+    PROGRAM_STATES = (
+        PROGRAM_STATE_IDLE,
+        PROGRAM_STATE_ACQUISITION,
+        PROGRAM_STATE_PREVIEW,
+        PROGRAM_STATE_ACQUISITION_DONE,
+    )
+
     def __init__(self, args=None):
         self.http_server_thread = None
         self.guiReadyFlag = False
@@ -178,6 +189,19 @@ class MainWindow(QMainWindow):
         self.CHANNELS_y = 5
         self.started_preview = False
         self.started_normal = False
+        self.program_state = self.PROGRAM_STATE_IDLE
+        self.program_state_changed_at = self._make_status_timestamp()
+        self.program_state_reason = "startup"
+        self.last_requested_filename = None
+        self.last_saved_filename = None
+        self.last_completed_filename = None
+        self.last_acquisition_started_at = None
+        self.last_preview_started_at = None
+        self.last_acquisition_completed_at = None
+        self.acquisition_run_id = 0
+        self.preview_run_id = 0
+        self.completed_acquisition_count = 0
+        self._pending_program_state_after_stop = None
         self.raw_stream_mode = False
         self.raw_stream_output_files = {}
         self.console_widget = None
@@ -399,6 +423,7 @@ class MainWindow(QMainWindow):
         self.ui.statusBar.addPermanentWidget(self.statusBar_status)
         self.ui.statusBar.addPermanentWidget(self.statusBar_processes)
 
+        self._update_program_state_label()
         self.ui.statusBar.showMessage("Ready", 5000)
 
         self.currentImage = np.zeros((512, 512))
@@ -616,6 +641,62 @@ class MainWindow(QMainWindow):
             print_dec("call guiReadyEvent from __init__")
 
         self.init_ready = True
+
+    def _make_status_timestamp(self):
+        """
+        Return an ISO 8601 timestamp for status transitions and HTTP payloads.
+        """
+        return datetime.now().astimezone().isoformat(timespec="seconds")
+
+    def _update_program_state_label(self):
+        """
+        Reflect the current runtime state in the GUI status bar when available.
+        """
+        if hasattr(self, "statusBar_status") and self.statusBar_status is not None:
+            self.statusBar_status.setText("State: %s" % self.program_state)
+
+    def _set_program_state(self, state, reason=""):
+        """
+        Update the main runtime state and keep the GUI label in sync.
+        """
+        self.program_state = state
+        self.program_state_reason = reason
+        self.program_state_changed_at = self._make_status_timestamp()
+        self._update_program_state_label()
+
+    def get_state_payload(self):
+        """
+        Return only the current program state.
+        """
+        return {
+            "program_state": self.program_state,
+        }
+
+    def get_full_status_payload(self):
+        """
+        Return the extended status payload consumed by the HTTP server.
+        """
+        acquisition_running = self.started_normal or self.started_preview
+        return {
+            "program_state": self.program_state,
+            "allowed_program_states": list(self.PROGRAM_STATES),
+            "program_state_reason": self.program_state_reason,
+            "program_state_changed_at": self.program_state_changed_at,
+            "acquisition_running": acquisition_running,
+            "started_normal": self.started_normal,
+            "started_preview": self.started_preview,
+            "do_not_save": getattr(self, "do_not_save", False),
+            "last_requested_filename": self.last_requested_filename,
+            "last_saved_filename": self.last_saved_filename,
+            "last_completed_filename": self.last_completed_filename,
+            "acquisition_run_id": self.acquisition_run_id,
+            "preview_run_id": self.preview_run_id,
+            "completed_acquisition_count": self.completed_acquisition_count,
+            "last_acquisition_started_at": self.last_acquisition_started_at,
+            "last_preview_started_at": self.last_preview_started_at,
+            "last_acquisition_completed_at": self.last_acquisition_completed_at,
+            "http_server_running": self.http_server_thread is not None,
+        }
 
     # @staticmethod
     # def _add_padding_to_plot_widget(plot_widget, padding=0.1):
@@ -2968,6 +3049,8 @@ class MainWindow(QMainWindow):
         # self.configurationGUI_dict_beforeStart = self.configurationGUI_dict.copy()
 
         self.initializeAcquisition(do_not_save=True, do_run=False)
+        self.last_acquisition_started_at = self._make_status_timestamp()
+        self._set_program_state(self.PROGRAM_STATE_ACQUISITION, "test_mode_started")
 
     @Slot()
     def test8(self):
@@ -5031,6 +5114,7 @@ Have fun!
             if raw_stream_mode
             else self.defineFilename(with_folder=True)
         )
+        self.last_requested_filename = filename
         self.spadfcsmanager_inst.set_filename_h5(filename)
         if raw_stream_mode:
             self.raw_stream_output_files = self.defineRawOutputFiles(filename)
@@ -5388,6 +5472,7 @@ Have fun!
         # Set acquisition mode flags
         self.started_normal = not is_preview
         self.started_preview = is_preview
+        self._pending_program_state_after_stop = None
         raw_stream_mode = (not is_preview) and self.ui.checkBox_rawStreamAcquisition.isChecked()
         self.raw_stream_mode = raw_stream_mode
 
@@ -5437,6 +5522,19 @@ Have fun!
             do_run=True,
             raw_stream_mode=raw_stream_mode,
         )
+
+        if is_preview:
+            self.preview_run_id += 1
+            self.last_preview_started_at = self._make_status_timestamp()
+            self._set_program_state(
+                self.PROGRAM_STATE_PREVIEW, "preview_started"
+            )
+        else:
+            self.acquisition_run_id += 1
+            self.last_acquisition_started_at = self._make_status_timestamp()
+            self._set_program_state(
+                self.PROGRAM_STATE_ACQUISITION, "acquisition_started"
+            )
 
     @Slot()
     def ttm_activate_change_state(self):
@@ -5777,6 +5875,9 @@ Have fun!
 
             print_dec(self.spadfcsmanager_inst.shared_dict)
             self.last_saved_filename = self.spadfcsmanager_inst.shared_dict["filenameh5"]
+            self.last_completed_filename = self.last_saved_filename
+            self.completed_acquisition_count += 1
+            self.last_acquisition_completed_at = self._make_status_timestamp()
 
             h5mgr = H5Manager(self.last_saved_filename, new_file=self.raw_stream_mode)
 
@@ -5835,6 +5936,9 @@ Have fun!
             print_dec("currentImage_pos", self.currentImage_pos)
             print_dec("currentImage_pixels", self.currentImage_pixels)
 
+            self._pending_program_state_after_stop = (
+                self.PROGRAM_STATE_ACQUISITION_DONE
+            )
             self.stop()
 
             if self.started_normal and not self.raw_stream_mode:
@@ -5941,6 +6045,13 @@ Have fun!
         self.started_normal = False
         self.started_preview = False
         self.raw_stream_mode = False
+        next_state = self._pending_program_state_after_stop
+        self._pending_program_state_after_stop = None
+
+        if next_state is None:
+            self._set_program_state(self.PROGRAM_STATE_IDLE, "stopped")
+        else:
+            self._set_program_state(next_state, "acquisition_completed")
 
     # @Slot()
     # def connectCmd(self):
