@@ -67,6 +67,7 @@ class SpadFcsManager():
         snake_walk_z (bool): Flag for snake walk mode on z.
         clk_multiplier (int): DFD Laser Clk multiplier = decimation on the time dimension
         dfd_shift (int): DFD bin to shift
+        compensation_delay_for_snake (int): Pixel delay compensation used with snake walk.
         use_rust_fifo (bool): Flag for using Rust FIFO.
         debug (bool): Debug flag.
     """
@@ -202,6 +203,8 @@ class SpadFcsManager():
 
         self.clk_multiplier = 1
         self.dfd_shift = 0
+        self.compensation_delay_for_snake = 0
+        self.compensation_delay_for_snake_shared = None
 
         self.use_rust_fifo = True
 
@@ -623,7 +626,11 @@ class SpadFcsManager():
         # self.acquisitionThread = AcquireFIFOinBackground(self.queue,
         #                                                  self.fifo)
 
-        self.imposed_data_shift = mp.Value("i", 0) if not self.raw_stream_mode else None
+        self.compensation_delay_for_snake_shared = (
+            mp.Value("i", int(self.compensation_delay_for_snake))
+            if not self.raw_stream_mode
+            else None
+        )
 
         # The preprocessing worker repacks FIFO chunks into arrays that are
         # cheaper for the acquisition loop to consume repeatedly.
@@ -662,7 +669,7 @@ class SpadFcsManager():
             "trace_bins": self.trace_bins,
             "trace_sample_per_bins": self.trace_sample_per_bins,
             "trace_pos": self.trace_pos,
-            "imposed_data_shift": self.imposed_data_shift,
+            "compensation_delay_for_snake": self.compensation_delay_for_snake_shared,
             "h5_command_queue": self.h5_command_queue,
             "h5_response_queue": self.h5_response_queue,
         }
@@ -1101,6 +1108,12 @@ class SpadFcsManager():
 
     def set_dfd_shift(self, shift=0):
         self.dfd_shift = shift
+
+    def set_compensation_delay_for_snake(self, delay=0):
+        delay = int(delay)
+        self.compensation_delay_for_snake = delay
+        if self.compensation_delay_for_snake_shared is not None:
+            self.compensation_delay_for_snake_shared.value = delay
 
     def set_trace_bins(self, trace_bins=30000):
         """

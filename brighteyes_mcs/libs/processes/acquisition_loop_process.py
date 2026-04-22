@@ -355,7 +355,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.trace_bins = shared_objects["trace_bins"]
         self.trace_sample_per_bins = shared_objects["trace_sample_per_bins"]
         self.trace_pos = shared_objects["trace_pos"]
-        self.imposed_data_shift = shared_objects["imposed_data_shift"]
+        self.compensation_delay_for_snake = shared_objects["compensation_delay_for_snake"]
 
 
         self.timebinsPerPixel = shared_dict["timebins_per_pixel"] * \
@@ -865,7 +865,7 @@ class AcquisitionLoopProcess(mp.Process):
                             snake_walk_xy=self.snake_walk_xy,
                             snake_walk_z=self.snake_walk_z,
                             clk_multiplier=clk_multiplier,
-                            delay=self.imposed_data_shift.value
+                            delay=self.compensation_delay_for_snake.value
                         )
 
                         self.shared_dict_proxy["last_packet_size"] = self.gap_digital_in_sample
@@ -1396,7 +1396,7 @@ class AcquisitionLoopProcess(mp.Process):
                             self.shape,
                             snake_walk_xy=self.snake_walk_xy,
                             snake_walk_z=self.snake_walk_z,
-                            delay=self.imposed_data_shift.value
+                            delay=self.compensation_delay_for_snake.value
                         )
 
                         self.shared_dict_proxy["last_packet_size"] = self.gap_analog_in_sample

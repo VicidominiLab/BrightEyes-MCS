@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1692</width>
+    <width>1753</width>
     <height>1596</height>
    </rect>
   </property>
@@ -892,6 +892,12 @@
    </layout>
   </widget>
   <widget class="QDockWidget" name="dockWidget_preview">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
@@ -903,6 +909,183 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_8">
     <layout class="QGridLayout" name="gridLayout_15">
+     <item row="9" column="0">
+      <spacer name="verticalSpacer_21">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="pushButton_14">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add the current configuration to the Batch acquisition table&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Add to Batch</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <spacer name="verticalSpacer_17">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="4" column="0">
+      <widget class="QCheckBox" name="checkBox_showPreview">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Show Image Preview</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" rowspan="9">
+      <widget class="QGroupBox" name="groupBox_9">
+       <property name="title">
+        <string/>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_30">
+        <item row="3" column="1">
+         <widget class="QGroupBox" name="groupBox_12">
+          <property name="title">
+           <string>TCSPC</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_85">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="checkBox_DFD">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the Digital Frequency Domain data acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>DFD</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QGroupBox" name="groupBox_10">
+          <property name="title">
+           <string>Time Tagging</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_80">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="checkBox_ttmActivate">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>TTM</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="checkBox_uttmActivate">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>uTTM</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="checkBox_fifo_analog">
+          <property name="text">
+           <string>Analog</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" rowspan="2">
+         <widget class="QGroupBox" name="groupBox_13">
+          <property name="title">
+           <string>Channels</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_86">
+           <item row="0" column="0">
+            <widget class="QComboBox" name="comboBox_channels">
+             <item>
+              <property name="text">
+               <string>25</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>49</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="checkBox_fifo_digital">
+          <property name="text">
+           <string>Digital</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QPushButton" name="pushButton_externalProgram">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open the last saved file with Napari or another viewer as selected in the configuration&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Ext. Viewer/Analysis</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="0">
       <widget class="QGroupBox" name="groupBox_11">
        <property name="sizePolicy">
@@ -1026,146 +1209,8 @@
        </layout>
       </widget>
      </item>
-     <item row="3" column="0">
-      <widget class="QPushButton" name="pushButton_14">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add the current configuration to the Batch acquisition table&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>Add to Batch</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1" rowspan="5">
-      <widget class="QGroupBox" name="groupBox_9">
-       <property name="title">
-        <string/>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_30">
-        <item row="3" column="1">
-         <widget class="QGroupBox" name="groupBox_12">
-          <property name="title">
-           <string>TCSPC</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_85">
-           <item row="0" column="0">
-            <widget class="QCheckBox" name="checkBox_DFD">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the Digital Frequency Domain data acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>DFD</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QGroupBox" name="groupBox_10">
-          <property name="title">
-           <string>Time Tagging</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_80">
-           <item row="0" column="0">
-            <widget class="QCheckBox" name="checkBox_ttmActivate">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>TTM</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QCheckBox" name="checkBox_uttmActivate">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>uTTM</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QCheckBox" name="checkBox_fifo_analog">
-          <property name="text">
-           <string>Analog</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1" rowspan="2">
-         <widget class="QGroupBox" name="groupBox_13">
-          <property name="title">
-           <string>Channels</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_86">
-           <item row="0" column="0">
-            <widget class="QComboBox" name="comboBox_channels">
-             <item>
-              <property name="text">
-               <string>25</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>49</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="checkBox_fifo_digital">
-          <property name="text">
-           <string>Digital</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QPushButton" name="pushButton_externalProgram">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open the last saved file with Napari or another viewer as selected in the configuration&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>Ext. Viewer/Analysis</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <spacer name="verticalSpacer_17">
+     <item row="5" column="0">
+      <spacer name="verticalSpacer_22">
        <property name="orientation">
         <enum>Qt::Orientation::Vertical</enum>
        </property>
@@ -1523,7 +1568,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>377</width>
+          <width>436</width>
           <height>108</height>
          </rect>
         </property>
@@ -1973,7 +2018,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>422</width>
+          <width>439</width>
           <height>140</height>
          </rect>
         </property>
@@ -2389,6 +2434,12 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockWidget_activatefifo">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
@@ -2400,95 +2451,33 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_4">
     <layout class="QGridLayout" name="gridLayout_27">
-     <item row="1" column="1">
-      <widget class="QCheckBox" name="checkBox_snake">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use for the scanning a &amp;quot;snake-walk&amp;quot; instead of a normal &amp;quot;raster-scan&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>Snake walk</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QCheckBox" name="checkBox_showPreview">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>Show Image Preview</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QGroupBox" name="groupBox_8">
-       <property name="title">
-        <string>Slave Mode</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_28">
-        <item row="0" column="0" rowspan="2" colspan="2">
-         <widget class="QCheckBox" name="checkBox_slavemode_enable">
-          <property name="text">
-           <string>Activate</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_112">
-          <property name="text">
-           <string>Wait a trigger for:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QComboBox" name="comboBox_slavemode_type">
-          <property name="currentIndex">
-           <number>2</number>
-          </property>
-          <item>
-           <property name="text">
-            <string>Circ. Pos.</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Circ. Rep.</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Pixel</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Line</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Frame</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Repetition</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="0" column="2" rowspan="3">
+     <item row="1" column="0">
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
         <string>Circular Motion</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_20">
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_108">
+          <property name="text">
+           <string>Radius</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QLabel" name="label_109">
+          <property name="text">
+           <string>[nm]</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_43">
+          <property name="text">
+           <string>Number of points</string>
+          </property>
+         </widget>
+        </item>
         <item row="4" column="1">
          <widget class="sciSpinBox" name="spinBox_circular_radius_nm">
           <property name="toolTip">
@@ -2508,60 +2497,6 @@
           </property>
           <property name="value">
            <double>0.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="2">
-         <widget class="QLabel" name="label_109">
-          <property name="text">
-           <string>[nm]</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_108">
-          <property name="text">
-           <string>Radius</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <spacer name="horizontalSpacer_14">
-          <property name="orientation">
-           <enum>Qt::Orientation::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_43">
-          <property name="text">
-           <string>Number of points</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QSpinBox" name="spinBox_circular_points">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>32</number>
-          </property>
-          <property name="value">
-           <number>1</number>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="label_110">
-          <property name="text">
-           <string>Repetition</string>
           </property>
          </widget>
         </item>
@@ -2588,8 +2523,107 @@
           </property>
          </widget>
         </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_110">
+          <property name="text">
+           <string>Repetition</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <spacer name="horizontalSpacer_14">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="1">
+         <widget class="QSpinBox" name="spinBox_circular_points">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>32</number>
+          </property>
+          <property name="value">
+           <number>1</number>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QGroupBox" name="groupBox_14">
+       <property name="title">
+        <string>Snake walk</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_55">
+        <item row="2" column="1">
+         <widget class="QSpinBox" name="spinBox_compensation_delay">
+          <property name="maximum">
+           <number>100000</number>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QCheckBox" name="checkBox_snake">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use for the scanning a &amp;quot;snake-walk&amp;quot; instead of a normal &amp;quot;raster-scan&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Enable</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <spacer name="verticalSpacer_20">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_35">
+          <property name="text">
+           <string>Delay</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLabel" name="label_125">
+          <property name="text">
+           <string>[px]</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <spacer name="verticalSpacer_19">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </widget>
@@ -2609,6 +2643,90 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_13">
     <layout class="QGridLayout" name="gridLayout_42">
+     <item row="0" column="0">
+      <widget class="QGroupBox" name="groupBox_3">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="title">
+        <string>Activate</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_75">
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="checkBox_laser1">
+          <property name="text">
+           <string>L2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QCheckBox" name="checkBox_laser2">
+          <property name="text">
+           <string>L3</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="checkBox_laser0">
+          <property name="text">
+           <string>L1</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QCheckBox" name="checkBox_laser3">
+          <property name="text">
+           <string>L4</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QGroupBox" name="groupBox_7">
+       <property name="title">
+        <string>Laser Frequency</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_7">
+        <item row="0" column="1">
+         <widget class="QSpinBox" name="spinBox_clk_base_multiplier">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>6</number>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_120">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Clock Base ×</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
      <item row="2" column="0" colspan="2">
       <widget class="QGroupBox" name="groupBox_6">
        <property name="sizePolicy">
@@ -3047,89 +3165,18 @@
        </layout>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QGroupBox" name="groupBox_3">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+     <item row="3" column="0">
+      <spacer name="verticalSpacer_24">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
-       <property name="title">
-        <string>Activate</string>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
        </property>
-       <layout class="QGridLayout" name="gridLayout_75">
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="checkBox_laser1">
-          <property name="text">
-           <string>L2</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QCheckBox" name="checkBox_laser2">
-          <property name="text">
-           <string>L3</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QCheckBox" name="checkBox_laser0">
-          <property name="text">
-           <string>L1</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QCheckBox" name="checkBox_laser3">
-          <property name="text">
-           <string>L4</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QGroupBox" name="groupBox_7">
-       <property name="title">
-        <string>Laser Frequency</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_7">
-        <item row="0" column="1">
-         <widget class="QSpinBox" name="spinBox_clk_base_multiplier">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>6</number>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_120">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Clock Base ×</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+      </spacer>
      </item>
     </layout>
    </widget>
@@ -3156,7 +3203,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>422</width>
+          <width>439</width>
           <height>354</height>
          </rect>
         </property>
@@ -4439,6 +4486,19 @@
        </widget>
       </widget>
      </item>
+     <item row="1" column="0">
+      <spacer name="verticalSpacer_23">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </widget>
   </widget>
@@ -4461,7 +4521,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>377</width>
+          <width>436</width>
           <height>304</height>
          </rect>
         </property>
@@ -4813,7 +4873,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>422</width>
+          <width>439</width>
           <height>186</height>
          </rect>
         </property>
@@ -5165,8 +5225,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>389</width>
-          <height>142</height>
+          <width>448</width>
+          <height>120</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -5236,7 +5296,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>379</width>
+          <width>436</width>
           <height>72</height>
          </rect>
         </property>
@@ -5481,6 +5541,9 @@
        </item>
        <item row="6" column="1">
         <widget class="QDoubleSpinBox" name="doubleSpinBox_trace_dfd_start_percent">
+         <property name="suffix">
+          <string> start</string>
+         </property>
          <property name="decimals">
           <number>1</number>
          </property>
@@ -5496,13 +5559,13 @@
          <property name="value">
           <double>98.000000000000000</double>
          </property>
-         <property name="suffix">
-          <string> start</string>
-         </property>
         </widget>
        </item>
        <item row="6" column="2">
         <widget class="QDoubleSpinBox" name="doubleSpinBox_trace_dfd_end_percent">
+         <property name="suffix">
+          <string> end</string>
+         </property>
          <property name="decimals">
           <number>1</number>
          </property>
@@ -5517,9 +5580,6 @@
          </property>
          <property name="value">
           <double>60.000000000000000</double>
-         </property>
-         <property name="suffix">
-          <string> end</string>
          </property>
         </widget>
        </item>
@@ -5559,24 +5619,77 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_dfd">
+  <widget class="QDockWidget" name="dockWidget_adv2">
    <property name="windowTitle">
-    <string>DFD</string>
+    <string>Adv2.</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_16">
     <layout class="QGridLayout" name="gridLayout_79">
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_111">
-       <property name="text">
-        <string>DFD N. Bins</string>
+     <item row="3" column="1">
+      <widget class="QGroupBox" name="groupBox_8">
+       <property name="title">
+        <string>Slave Mode</string>
        </property>
+       <layout class="QGridLayout" name="gridLayout_28">
+        <item row="0" column="0" rowspan="2" colspan="2">
+         <widget class="QCheckBox" name="checkBox_slavemode_enable">
+          <property name="text">
+           <string>Activate</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QComboBox" name="comboBox_slavemode_type">
+          <property name="currentIndex">
+           <number>2</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>Circ. Pos.</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Circ. Rep.</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Pixel</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Line</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Frame</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Repetition</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_112">
+          <property name="text">
+           <string>Wait a trigger for:</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
-     <item row="5" column="0">
-      <spacer name="verticalSpacer_19">
+     <item row="4" column="1">
+      <spacer name="verticalSpacer_18">
        <property name="orientation">
         <enum>Qt::Orientation::Vertical</enum>
        </property>
@@ -5589,52 +5702,52 @@
       </spacer>
      </item>
      <item row="3" column="0">
-      <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <widget class="QGroupBox" name="groupBox_15">
+       <property name="title">
+        <string>DFD</string>
        </property>
-       <property name="text">
-        <string>Laser Ref. in CH26 (for DFD)</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <spacer name="horizontalSpacer_15">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Policy::MinimumExpanding</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="1">
-      <widget class="QSpinBox" name="spinBox_DFD_nbins">
-       <property name="maximum">
-        <number>1023</number>
-       </property>
-       <property name="value">
-        <number>81</number>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QCheckBox" name="checkBox_rawStreamAcquisition">
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bypass preview, conversion, traces, autocorrelation, and H5 image datasets. FIFO payloads are streamed directly to raw files and metadata are saved in a small H5 file at the end.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>Preview-less RAW acquisition</string>
-       </property>
+       <layout class="QGridLayout" name="gridLayout_78">
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_111">
+          <property name="text">
+           <string>DFD N. Bins</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QSpinBox" name="spinBox_DFD_nbins">
+          <property name="maximum">
+           <number>1023</number>
+          </property>
+          <property name="value">
+           <number>81</number>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Laser Ref. in CH26 (for DFD)</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QCheckBox" name="checkBox_rawStreamAcquisition">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bypass preview, conversion, traces, autocorrelation, and H5 image datasets. FIFO payloads are streamed directly to raw files and metadata are saved in a small H5 file at the end.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>RAW acquisition (No preview)</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
     </layout>

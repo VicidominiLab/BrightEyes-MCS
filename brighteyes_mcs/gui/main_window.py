@@ -393,6 +393,12 @@ class MainWindow(QMainWindow):
 
         self.spadfcsmanager_inst = SpadFcsManager()
         print_dec("SpadFcsManager()")
+        self.ui.spinBox_compensation_delay.valueChanged.connect(
+            self.compensationDelayForSnakeChanged
+        )
+        self.compensationDelayForSnakeChanged(
+            self.ui.spinBox_compensation_delay.value()
+        )
         self.apply_dfd_metadata_from_bitfile_name(self.ui.lineEdit_fpgabitfile.text())
         # self.qthread = QThread()
         # self.spadfcsmanager_inst.moveToThread(self.qthread)
@@ -533,7 +539,7 @@ class MainWindow(QMainWindow):
         )
         # self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_PMT_adv)
         self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_laser)
-        self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_dfd)
+        self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_adv2)
 
         # self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_TTM)
 
@@ -1157,6 +1163,12 @@ class MainWindow(QMainWindow):
             "DFDnbins",
             float,
             self.ui.spinBox_DFD_nbins,
+            False,
+        )
+        configuration_helper["compensation_delay_for_snake"] = (
+            "Snake Compensation Delay [px]",
+            int,
+            self.ui.spinBox_compensation_delay,
             False,
         )
 
@@ -4597,6 +4609,14 @@ Have fun!
             self.ui.spinBox_time_bin_per_px.setValue(self.DFD_nbins)
             self.ui.spinBox_timeresolution.setValue(2.0)
 
+    @Slot(int)
+    def compensationDelayForSnakeChanged(self, value):
+        """
+        Keep the snake-walk compensation delay synced with the runtime manager.
+        """
+        if hasattr(self, "spadfcsmanager_inst") and self.spadfcsmanager_inst is not None:
+            self.spadfcsmanager_inst.set_compensation_delay_for_snake(value)
+
     @Slot()
     def updateMaxMinVoltages(self):
         """
@@ -5004,6 +5024,13 @@ Have fun!
         laserEnable1 = self.ui.checkBox_laser1.isChecked()
         laserEnable2 = self.ui.checkBox_laser2.isChecked()
         laserEnable3 = self.ui.checkBox_laser3.isChecked()
+        self.snake_walk_Activate_XY = self.ui.checkBox_snake.isChecked()
+        self.snake_walk_Activate_Z = self.ui.checkBox_snake_z.isChecked()
+        self.spadfcsmanager_inst.set_activate_snake_walk_xy(self.snake_walk_Activate_XY)
+        self.spadfcsmanager_inst.set_activate_snake_walk_z(self.snake_walk_Activate_Z)
+        self.compensationDelayForSnakeChanged(
+            self.ui.spinBox_compensation_delay.value()
+        )
 
         start_offset = np.asarray(
             [
@@ -5051,11 +5078,6 @@ Have fun!
         )
 
         # self.pmtThresholdChanged()
-
-        self.snake_walk_Activate_XY = self.ui.checkBox_snake.isChecked()
-        self.snake_walk_Activate_Z = self.ui.checkBox_snake_z.isChecked()
-        self.spadfcsmanager_inst.set_activate_snake_walk_xy(self.snake_walk_Activate_XY)
-        self.spadfcsmanager_inst.set_activate_snake_walk_z(self.snake_walk_Activate_Z)
 
         self.configurationFPGA_dict.update(
             self.spadfcsmanager_inst.registers_configuration
