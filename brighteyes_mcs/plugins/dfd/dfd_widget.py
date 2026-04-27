@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 import shutil
 import h5py
 
-from ..libs.multithread_caller_helper import pushButton_multithread_call
+from brighteyes_mcs.libs.multithread_caller_helper import pushButton_multithread_call
 
 from PySide6.QtCore import (
     QThreadPool,
@@ -26,7 +26,7 @@ from matplotlib.backends.backend_qtagg import (
 )
 from matplotlib.figure import Figure
 
-from brighteyes_mcs.gui import dfd_widget_design
+from . import dfd_widget_design
 
 
 try:
@@ -456,6 +456,9 @@ class DfdWidget(QWidget, dfd_widget_design.Ui_Form):
             if f is not None:
                 self.lineEdit_file_meas.setText(f)
         print("pushButton_meas_last_acq_clicked")
+
+    def after_acquisition(self, txt):
+        self.lineEdit_file_meas.setText("%s" % txt)
 
     @Slot()
     def pushButton_export_h5_clicked(self):

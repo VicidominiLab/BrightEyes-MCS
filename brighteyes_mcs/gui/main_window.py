@@ -54,7 +54,6 @@ from ..libs.print_dec import print_dec
 from .dict_to_tree import TreeModel
 from ..libs.ttm import TtmRemoteManager
 from ..libs.plugin_loader import PluginsManager
-from ..gui.dfd_widget import DfdWidget
 from ..libs.restapi import FastAPIServerThread
 from ..libs.raw_acquisition_converter import convert_raw_acquisition
 
@@ -627,12 +626,11 @@ class MainWindow(QMainWindow):
         self.snake_walk_Activate_Z = False
 
         self.setupAnalogOutputGUI()
+        # Plug-in autoload
         # Replace the terminal with ScriptLauncher
         self.plugin_manager.plugin_loader("script_launcher")
-
-        print_dec("Added DfdWidget")
-        self.dfd_page = DfdWidget(self)
-        self.ui.tabWidget.addTab(self.dfd_page, "DFD Preview")
+        #self.plugin_manager.plugin_loader("dfd")
+        self.plugin_manager.plugin_loader("channel_delay_skew")
 
         self.setStyleSheet(self.styleSheet() +
                            """
@@ -1495,12 +1493,6 @@ class MainWindow(QMainWindow):
         self.plugin_signals.signal.emit(
             "acquisitionDone %s" % self.last_saved_filename
         )
-        try:
-            self.dfd_page.lineEdit_file_meas.setText(self.last_saved_filename)
-        except:
-            print_dec(
-                "Failed to dfd_page.lineEdit_file_meas.setText(last_saved_filename) "
-            )
         self.ui.statusBar.showMessage(f"Converted RAW acquisition to {converted_path}", 10000)
         QMessageBox.information(
             self,
@@ -1903,6 +1895,7 @@ class MainWindow(QMainWindow):
                 print_dec("ERROR setGUI_data")
                 print_dec(name, (caption, mtype, ref_obj, visible))
                 print_dec(repr(e))
+        self.plugin_signals.signal.emit("configurationLoaded")
         #
         # self.lock_parameters_changed_call = lock_old
         # self.positionSettingsChanged()
@@ -5976,13 +5969,6 @@ Have fun!
                 "acquisitionDone %s" % self.last_saved_filename
             )
 
-            try:
-                self.dfd_page.lineEdit_file_meas.setText(self.last_saved_filename)
-            except:
-                print_dec(
-                    "Failed to dfd_page.lineEdit_file_meas.setText(last_saved_filename) "
-                )
-
     @Slot()
     def cmd_filename_ttm(self):
         """
@@ -6482,12 +6468,6 @@ Have fun!
                     "%s opened and GUI configuration updated." % filecfg, 5000
                 )
                 self.ui.label_loadedcfg.setText(filecfg)
-
-                try:
-                    self.dfd_page.UpdateTable()
-                except:
-                    print("self.dfd_page.UpdateTable() FAILED")
-                    pass
 
     @Slot()
     def openInExplorer(self):
