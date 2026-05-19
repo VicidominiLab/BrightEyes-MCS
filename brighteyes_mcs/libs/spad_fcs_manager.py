@@ -1,4 +1,4 @@
-"""Shared-memory orchestration for FPGA acquisition, preprocessing, and preview."""
+﻿"""Shared-memory orchestration for FPGA acquisition, preprocessing, and preview."""
 
 import numpy as np
 import multiprocessing as mp
@@ -11,7 +11,7 @@ from ..libs.processes.acquisition_loop_process import AcquisitionLoopProcess
 from ..libs.processes.raw_stream_writer_process import RawStreamWriterProcess
 from ..libs.fpga_handle import FpgaHandle
 from ..libs.h5manager import H5ManagerProcess
-from ..libs.print_dec import print_dec
+from ..libs.print_debug import print_debug
 from ..libs.mp_shared_array import MemorySharedNumpyArray
 
 from ..libs.mp_circular_shm import CircularSharedBuffer
@@ -222,13 +222,13 @@ class SpadFcsManager():
         """
         Destructor of the class
         """
-        print_dec("Destructor called.")
+        print_debug("Destructor called.")
 
     def set_DFD_nbins(self, DFD_nbins):
         """
         Set the number of DFD_nbins
         """
-        print_dec("DFD_nbins", DFD_nbins)
+        print_debug("DFD_nbins", DFD_nbins)
         self.DFD_nbins = DFD_nbins
 
     @staticmethod
@@ -256,7 +256,7 @@ class SpadFcsManager():
         """
         Set the number of channels
         """
-        print_dec("Channels", ch)
+        print_debug("Channels", ch)
         self.channels = ch
         self.dim_detector = int(np.sqrt(self.channels))
 
@@ -281,14 +281,14 @@ class SpadFcsManager():
         """
         Activate the preview flag
         """
-        print_dec("activate_show_preview", enable)
+        print_debug("activate_show_preview", enable)
         self.activate_show_preview = enable
 
     def setActivatedFifo(self, fifos_list):
         """
         Set the activated FIFOs
         """
-        print_dec("self.activated_fifos_list", fifos_list)
+        print_debug("self.activated_fifos_list", fifos_list)
         self.activated_fifos_list = fifos_list
 
     def acquisition_stop(self):
@@ -336,30 +336,30 @@ class SpadFcsManager():
         """
         if active:
             self.do_not_save_event.set()
-            print_dec("self.do_not_save_event.set()")
+            print_debug("self.do_not_save_event.set()")
         else:
             self.do_not_save_event.clear()
-            print_dec("self.do_not_save_event.clear()")
+            print_debug("self.do_not_save_event.clear()")
 
     def set_activate_DFD(self, activate=True):
         """
         Activate the DFD mode
         """
-        print_dec("set_activate_DFD() set to ", activate)
+        print_debug("set_activate_DFD() set to ", activate)
         self.DFD_Activate = activate
 
     def set_activate_snake_walk_xy(self, activate=True):
         """
         Set the snake walk (bidirectional scanning)
         """
-        print_dec("set_activate_snake_walk_xy() set to ", activate)
+        print_debug("set_activate_snake_walk_xy() set to ", activate)
         self.snake_walk_xy = activate
 
     def set_activate_snake_walk_z(self, activate=True):
         """
         Set the snake walk (bidirectional scanning)
         """
-        print_dec("set_activate_snake_walk_z() set to ", activate)
+        print_debug("set_activate_snake_walk_z() set to ", activate)
         self.snake_walk_z = activate
 
     # def set_default_destination_folder(self, folder=""):
@@ -369,7 +369,7 @@ class SpadFcsManager():
         """
         Set the bit file for the 1st FPGA
         """
-        print_dec("set_bit_file", bitfile)
+        print_debug("set_bit_file", bitfile)
         self.bitfile = bitfile
         self.dfd_cycle_mhz, inferred_dfd_nbins = self.parse_dfd_metadata_from_bitfile_name(
             bitfile,
@@ -382,26 +382,26 @@ class SpadFcsManager():
         """
         Set the NI address for the 1st FPGA
         """
-        print_dec("set_ni_addr", niAddr)
+        print_debug("set_ni_addr", niAddr)
         self.niAddr = niAddr
 
     def set_bit_file_second_fpga(self, bitfile=""):
         """
         Set the bit file for the 2nd FPGA
         """
-        print_dec("set_bit_file 2nd FPGA", bitfile)
+        print_debug("set_bit_file 2nd FPGA", bitfile)
         self.bitfile2 = bitfile
 
     def set_ni_addr_second_fpga(self, niAddr=""):
         """
         Set the NI address for the 2nd FPGA
         """
-        print_dec("set_ni_addr 2nd FPGA", niAddr)
+        print_debug("set_ni_addr 2nd FPGA", niAddr)
         self.niAddr2 = niAddr
 
 
     def set_requested_fifo_depth(self, requested_fifo_depth):
-        print_dec("requested_fifo_depth", requested_fifo_depth)
+        print_debug("requested_fifo_depth", requested_fifo_depth)
         self.requested_fifo_depth = requested_fifo_depth
 
     def set_requested_depth(self, requested_depth):
@@ -411,7 +411,7 @@ class SpadFcsManager():
         """
         Set the preview buffer capacity in samples.
         """
-        print_dec("preview_buffer_capacity_samples", preview_buffer_capacity_samples)
+        print_debug("preview_buffer_capacity_samples", preview_buffer_capacity_samples)
         self.preview_buffer_capacity_samples = preview_buffer_capacity_samples
 
     def set_preview_buffer_size_in_sample(self, preview_buffer_size_in_sample):
@@ -430,14 +430,14 @@ class SpadFcsManager():
         """
         Set the timeout for the FIFOs
         """
-        print_dec("set_timeout_fifos", timeout)
+        print_debug("set_timeout_fifos", timeout)
         self.timeout_fifos = timeout
 
     def connect(self, initial_registers={}, list_fifos=[]):
         """
         Connect to the FPGA using FPGA handle class
         """
-        print_dec("FPGA connect()")
+        print_debug("FPGA connect()")
         # self.nifpga_session = nifpga.Session(self.bitfile, self.niAddr)
         try:
             self.fpga_handle = FpgaHandle(
@@ -454,15 +454,15 @@ class SpadFcsManager():
                 ni_address2=self.niAddr2,
             )
             self.is_connected = True
-            print_dec(".is_conneccted", self.is_connected)
+            print_debug(".is_conneccted", self.is_connected)
 
             self.update_chuck()
 
             self.fpga_handle.run(initial_registers)
-            print_dec("self.fpga_handle.run()")
+            print_debug("self.fpga_handle.run()")
         except Exception as e:
             self.is_connected = False
-            print_dec("connect ERROR", repr(e))
+            print_debug("connect ERROR", repr(e))
             raise ("ERROR")
 
 
@@ -502,13 +502,13 @@ class SpadFcsManager():
         """
         do_not_save = self.do_not_save_event.is_set()
 
-        print_dec("spadfcsmanager.run()")
+        print_debug("spadfcsmanager.run()")
 
-        print_dec("do_not_save", do_not_save)
-        print_dec("fpga_process.runed from run")
+        print_debug("do_not_save", do_not_save)
+        print_debug("fpga_process.runed from run")
         self.readRegistersDict()
-        print_dec("spadfcsmanager.registers_configuration")
-        print_dec("spadfcsmanager.expected_words_data_digital", self.expected_words_data_digital)
+        print_debug("spadfcsmanager.registers_configuration")
+        print_debug("spadfcsmanager.expected_words_data_digital", self.expected_words_data_digital)
 
         self.fpga_handle.set_list_fifos_to_read_continously(self.activated_fifos_list)
 
@@ -689,7 +689,7 @@ class SpadFcsManager():
         self.shared_dict["dfd_cycle_mhz"] = self.dfd_cycle_mhz
         self.shared_dict["raw_output_files"] = dict(self.raw_output_files)
 
-        print_dec("self.activate_show_preview", self.activate_show_preview)
+        print_debug("self.activate_show_preview", self.activate_show_preview)
         self.shared_dict.update(
             {
                 "activate_show_preview": self.activate_show_preview,
@@ -715,7 +715,7 @@ class SpadFcsManager():
         )
 
         if self.raw_stream_mode:
-            print_dec("self.raw_writer_process()")
+            print_debug("self.raw_writer_process()")
             self.raw_writer_process = RawStreamWriterProcess(
                 self.fpga_handle.configuration["queueFifoRead"],
                 self.activated_fifos_list,
@@ -731,7 +731,7 @@ class SpadFcsManager():
             self.raw_writer_process.daemon = True
             self.previewProcess = None
         else:
-            print_dec("self.previewProcess()")
+            print_debug("self.previewProcess()")
             self.previewProcess = AcquisitionLoopProcess(
                 self.channels,
                 self.shared_objects,
@@ -746,7 +746,7 @@ class SpadFcsManager():
 
         self.shared_arrays_ready = not self.raw_stream_mode
         if self.dataProcess is not None:
-            print_dec("self.dataProcess.start()")
+            print_debug("self.dataProcess.start()")
             self.dataProcess.start()
         if self.raw_stream_mode:
             self.raw_writer_process.start()
@@ -783,35 +783,35 @@ class SpadFcsManager():
         """
         Set the registers dictionary
         """
-        # print_dec("setRegistersDict")
+        # print_debug("setRegistersDict")
         register_set = "setRegistersDict: "
         temp_dict = {}
         for i in myconf:
             if myconf[i] is not None:
-                # print_dec(i, myconf[i])
+                # print_debug(i, myconf[i])
                 register_set += "%s %s " % (i, myconf[i])
                 # self.nifpga_session.registers[i].write(myconf[i])
                 if self.is_connected:
                     self.fpga_handle.register_write(i, myconf[i])
                     temp_dict[i] = myconf[i]
             else:
-                print_dec("myconf is None")
-        print_dec(register_set)
+                print_debug("myconf is None")
+        print_debug(register_set)
         self.registers_configuration.update(temp_dict)
 
     def readRegistersDict(self):
         """
         Read the registers dictionary
         """
-        print_dec("readRegistersDict()")
+        print_debug("readRegistersDict()")
         if self.is_connected:
             self.registers_configuration.update(self.fpga_handle.register_read_all())
-            print_dec(
+            print_debug(
                 "readRegistersDict self.registers_configuration:",
                 self.registers_configuration,
             )
         else:
-            print_dec("register_read_all() not called due to FPGAhandle not connected")
+            print_debug("register_read_all() not called due to FPGAhandle not connected")
 
         self.timebins_per_pixel = self.registers_configuration["#timebinsPerPixel"]
         self.circ_repetition = self.registers_configuration["#circular_rep"]
@@ -827,14 +827,14 @@ class SpadFcsManager():
         self.expected_words_data_per_frame_analog = (
                 self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
         )
-        print_dec("self.expected_words_data_per_frame_analog calculated ", self.expected_words_data_per_frame_analog)
+        print_debug("self.expected_words_data_per_frame_analog calculated ", self.expected_words_data_per_frame_analog)
 
         if self.channels == 25:
             self.expected_words_data_per_frame_digital = (
                 2 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
-            print_dec("self.expected_words_data_per_frame_digital calculated for 25 channels ",self.expected_words_data_per_frame_digital)
-            print_dec("timebins", self.timebins_per_pixel,
+            print_debug("self.expected_words_data_per_frame_digital calculated for 25 channels ",self.expected_words_data_per_frame_digital)
+            print_debug("timebins", self.timebins_per_pixel,
                        "x",self.dim_x,
                        "y",self.dim_y,
                        "z",self.dim_z,
@@ -845,10 +845,10 @@ class SpadFcsManager():
             self.expected_words_data_per_frame_digital = (
                     8 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
-            print_dec("self.expected_words_data_per_frame_digital calculated for 49 channels", self.expected_words_data_per_frame_digital)
+            print_debug("self.expected_words_data_per_frame_digital calculated for 49 channels", self.expected_words_data_per_frame_digital)
 
         else:
-            print_dec("self.expected_words_data_per_frame_digital DISASTER")
+            print_debug("self.expected_words_data_per_frame_digital DISASTER")
 
         self.expected_words_data_digital = (
             self.expected_words_data_per_frame_digital * self.dim_z * self.dim_rep
@@ -877,10 +877,10 @@ class SpadFcsManager():
         self.fifo_chuck_size_analog = self.timebins_per_pixel * self.circ_repetition * self.circ_points
         if self.channels==25:
             self.fifo_chuck_size_digital = 2 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
-            print_dec("update_chuck self.channels == 25")
+            print_debug("update_chuck self.channels == 25")
         elif self.channels == 49:
             self.fifo_chuck_size_digital = 8 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
-            print_dec("update_chuck self.channels == 49")
+            print_debug("update_chuck self.channels == 49")
 
 
         self.fpga_handle.set_fifo_chuck_size_digital(self.fifo_chuck_size_digital)
@@ -890,13 +890,13 @@ class SpadFcsManager():
 
         # self.fpga_handle.set_expected_words_data_digital(self.expected_words_data_per_frame_digital)
 
-        print_dec(
+        print_debug(
             "Updated expected_words_data_digital and fifo_chuck_size_digital",
             self.expected_words_data_digital,
             self.fifo_chuck_size_digital,
         )
 
-        print_dec(
+        print_debug(
             "Updated expected_words_data_analog and fifo_chuck_size_analog",
             self.expected_words_data_analog,
             self.fifo_chuck_size_analog,
@@ -908,7 +908,7 @@ class SpadFcsManager():
         Get the current preview element
         """
         if fifo_name==None:
-            print_dec("BUG: getCurrentPreviewElement(None)")
+            print_debug("BUG: getCurrentPreviewElement(None)")
         return self.loc_previewed[fifo_name].value * 2
 
     def getCurrentAcquistionElement(self, fifo_name=None):
@@ -916,7 +916,7 @@ class SpadFcsManager():
         Get the current acquisition element
         """
         if fifo_name==None:
-            print_dec("BUG: getCurrentAcquistionElement(None)")
+            print_debug("BUG: getCurrentAcquistionElement(None)")
         return self.loc_acquired[fifo_name].value
 
     def getLastPreprocessedLen(self, fifo_name=None):
@@ -924,7 +924,7 @@ class SpadFcsManager():
         Get the last preprocessed length
         """
         if fifo_name==None:
-            print_dec("BUG: getLastPreprocessedLen(None)")
+            print_debug("BUG: getLastPreprocessedLen(None)")
         return self.last_preprocessed_len[fifo_name]
 
     def getExpectedFifoElements(self, fifo_name=None):
@@ -936,7 +936,7 @@ class SpadFcsManager():
         elif fifo_name=="FIFOAnalog":
             return self.expected_words_data_analog
         else:
-            print_dec("BUG: getExpectedFifoElements WRONG CALL")
+            print_debug("BUG: getExpectedFifoElements WRONG CALL")
             return 0
 
     def getExpectedFifoElementsPerFrame(self, fifo_name=None):
@@ -948,21 +948,21 @@ class SpadFcsManager():
         elif fifo_name=="FIFOAnalog":
             return self.expected_words_data_per_frame_analog
         else:
-            print_dec("BUG: getExpectedFifoElements WRONG CALL")
+            print_debug("BUG: getExpectedFifoElements WRONG CALL")
             return 0
 
     def stopFPGA(self):
         """
         stop the FPGA
         """
-        print_dec("stopAcquisition.stop()")
+        print_debug("stopAcquisition.stop()")
         self.fpga_handle.stop()
 
     def stopAcquisition(self):
         """
         Stop the acquisition
         """
-        print_dec("stopAcquisition.stop()")
+        print_debug("stopAcquisition.stop()")
         if self.dataProcess is not None:
             self.dataProcess.stop()
         self.is_connected = False
@@ -971,7 +971,7 @@ class SpadFcsManager():
         """
         Stop the preview
         """
-        print_dec("myfpga.stopPreview()")
+        print_debug("myfpga.stopPreview()")
         if self.raw_stream_mode:
             if self.raw_writer_process is not None:
                 self.raw_writer_process.stop()
@@ -983,13 +983,13 @@ class SpadFcsManager():
         if self.h5_manager_process is not None:
             self.h5_manager_process.join(timeout=2)
             if self.h5_manager_process.is_alive():
-                print_dec("H5 manager process still alive, terminating")
+                print_debug("H5 manager process still alive, terminating")
                 self.h5_manager_process.terminate()
                 self.h5_manager_process.join(timeout=2)
         self.h5_manager_process = None
         self.h5_command_queue = None
         self.h5_response_queue = None
-        print_dec("self.previewThread.join() done")
+        print_debug("self.previewThread.join() done")
 
     def get_current_z(self, fifo="FIFO"):
         """
@@ -1086,7 +1086,7 @@ class SpadFcsManager():
     #             self.channels,
     #         ),
     #     )
-    #     print_dec(d.shape, type(d))
+    #     print_debug(d.shape, type(d))
     #     return d
 
     def setSelectedChannel(self, ch):
@@ -1099,11 +1099,11 @@ class SpadFcsManager():
         """
         Set the autocorrelation maxx
         """
-        print("set_autocorrelation_maxx", value)
+        print_debug("set_autocorrelation_maxx", value)
         self.autocorrelation_maxx = value
 
     def set_clk_multiplier(self, multiplier=1):
-        print_dec("set_clk_multiplier", multiplier)
+        print_debug("set_clk_multiplier", multiplier)
         self.clk_multiplier = multiplier
 
     def set_dfd_shift(self, shift=0):
@@ -1263,3 +1263,4 @@ class SpadFcsManager():
         Reset the FCS process
         """
         self.previewProcess.FCS_reset()
+

@@ -1,4 +1,4 @@
-"""Process that streams FIFO payloads directly to raw files without conversion."""
+﻿"""Process that streams FIFO payloads directly to raw files without conversion."""
 
 import multiprocessing as mp
 import os
@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 
-from ..print_dec import print_dec, set_debug
+from ..print_debug import print_debug, set_debug
 
 
 class RawStreamWriterProcess(mp.Process):
@@ -76,7 +76,7 @@ class RawStreamWriterProcess(mp.Process):
             self.shared_dict["current_rep_analog"] = current_rep
 
     def run(self):
-        print_dec("RawStreamWriterProcess RUN", os.getpid())
+        print_debug("RawStreamWriterProcess RUN", os.getpid())
         self.acquisition_done.clear()
         self.acquisition_almost_done.clear()
 
@@ -143,8 +143,9 @@ class RawStreamWriterProcess(mp.Process):
 
         self.acquisition_almost_done.set()
         self.acquisition_done.set()
-        print_dec("RawStreamWriterProcess DONE")
+        print_debug("RawStreamWriterProcess DONE")
 
     def stop(self):
-        print_dec("RawStreamWriterProcess STOP")
+        print_debug("RawStreamWriterProcess STOP")
         self.stop_event.set()
+

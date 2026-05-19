@@ -1,0 +1,396 @@
+BrightEyes-MCS lifetime estimation notes
+========================================
+
+This note explains two different lifetime paths used in the code:
+
+1. the tau value fitted on top of the DFD time trace / photon-arrival trace
+2. the live pixel-by-pixel lifetime image used when the preview channel is
+   COLOR_LIFETIME, LIFETIME_HCL, LIFETIME_HSV, or LIFETIME_HSL
+
+Important: these two paths are not the same algorithm.
+The trace overlay uses a log-linear exponential decay fit.
+The live image uses a much faster 3-sample phase/circular-mean estimator.
+
+
+1) Tau fitted on top of the DFD trace
+-------------------------------------
+
+Code path:
+- brighteyes_mcs/gui/main_window.py
+- MainWindow.estimateDfdDecayLifetimeNs(...)
+- MainWindow.timerPreviewImg_tick(...)
+
+What is fitted:
+- The GUI gets the DFD trace from getDfdTrace().
+- trace_sum = dfd_trace[2, :] is the cumulative photon-arrival histogram.
+- This is the curve shown in gray on the DFD trace widget.
+- The white curve is the live trace, rescaled to the same vertical range.
+
+How the fit window is chosen:
+- The code finds the peak bin:
+  peak_idx = argmax(trace_sum)
+- Then it rolls the histogram so the peak becomes bin 0:
+  trace_sum_peak0 = roll(trace_sum, -peak_idx)
+- The time axis is rolled in the same way, so the decay is analyzed starting
+  from the peak.
+
+- A start threshold and an end threshold are taken from the GUI controls:
+  doubleSpinBox_trace_dfd_start_percent
+  doubleSpinBox_trace_dfd_end_percent
+
+- The current UI defaults are:
+  start = 98%
+  end   = 60%
+
+- The code searches:
+  start_idx = first bin where trace_sum_peak0 <= start_level * peak_value
+  end_idx   = first bin where trace_sum_peak0 <= end_level   * peak_value
+
+- If the requested end level does not give a valid interval, the code tries
+  fallback end levels 30% and 40%.
+
+- Only strictly positive samples are kept for the fit, and at least 4 points
+  are required.
+
+Fit model:
+- The decay is assumed to be approximately single exponential in the selected
+  interval:
+
+  y(k) = A * exp(-k * bin_width_ns / tau_ns)
+
+- Taking the logarithm:
+
+  ln(y) = ln(A) + slope * k
+
+  where
+
+  slope = -bin_width_ns / tau_ns
+
+- The code fits:
+
+  slope, intercept = np.polyfit(x_fit_bins, np.log(y_fit_input), 1)
+
+- Then it converts the slope into lifetime:
+
+  tau_ns = -bin_width_ns / slope
+
+Validity checks:
+- The fit is rejected if:
+  trace is too short
+  bin width is invalid
+  thresholds are invalid
+  peak is non-positive
+  there are fewer than 4 positive points
+  fitted slope is non-negative
+  computed tau is not finite or <= 0
+
+How the fitted curve is drawn:
+- After the fit, the code reconstructs:
+
+  y_fit = exp(intercept + slope * x_fit_bins)
+
+- The x values are moved back to the original cyclic position:
+  x_fit_bins_plot    = mod(x_fit_bins + peak_idx, nbins)
+  x_fit_seconds_plot = mod(x_fit_seconds + peak_idx * bin_width, T_cycle)
+
+- These points are plotted as yellow markers on top of the DFD trace.
+
+Important implementation detail:
+- The checkbox "Align DFD to peak" changes the displayed trace.
+- However, the fit itself always internally rolls the trace to the peak first.
+- So the fit is always peak-referenced, even if the display is not aligned.
+
+
+2) Live pixel-by-pixel lifetime for LIFETIME_HSV / HSL / HCL
+-------------------------------------------------------------
+
+Code path:
+- brighteyes_mcs/libs/processes/acquisition_loop_process.py
+- flim_parameters_from_3samples(...)
+- flim_map_to_hcl(...)
+- brighteyes_mcs/gui/main_window.py -> plotPreviewImage(...)
+- brighteyes_mcs/gui/flim_image_view.py -> setFlimImage(...) and _apply_hcl_render(...)
+
+Important:
+- This live mode is not doing a full exponential fit for each pixel.
+- For speed, it compresses the per-pixel photon-arrival histogram into only
+  three coarse temporal slices and estimates a phase-like lifetime from them.
+
+2.1) Per-pixel accumulation
+---------------------------
+
+When one of these channels is selected:
+- COLOR_LIFETIME
+- LIFETIME_HCL
+- LIFETIME_HSV
+- LIFETIME_HSL
+- LIFETIME
+- QUALITY
+
+the worker process does the following:
+
+- It uses the summed photon counts over all SPAD channels:
+  self.buffer_sum_SPAD_ch
+
+- It splits the time axis into 3 parts:
+
+  tparts = 3
+  tbins = timebinsPerPixel / clk_multiplier
+  gbins = tbins // 3
+
+- Then each photon sample is accumulated into one of 3 coarse bins:
+  d1 = counts for arrival bins < gbins
+  d2 = counts for arrival bins in [gbins, 2*gbins)
+  d3 = counts for arrival bins >= 2*gbins
+
+- Only the pixels touched by the current packet are recomputed live.
+
+Important:
+- The 3rd chunk absorbs the remainder if tbins is not exactly divisible by 3.
+- Its length is:
+  max(tbins - 2 * gbins, 1)
+
+2.2) Effective sample positions
+-------------------------------
+
+The algorithm does not use all original DFD bins directly.
+It assigns one representative sample position to each coarse chunk:
+
+- chunk lengths:
+  [gbins, gbins, max(tbins - 2 * gbins, 1)]
+
+- chunk starts:
+  [0, gbins, 2 * gbins]
+
+- representative positions:
+  sample_idx = chunk_start + 0.5 * (chunk_length - 1)
+
+So each pixel is reduced to:
+- d1 at position p1
+- d2 at position p2
+- d3 at position p3
+
+2.3) Circular-mean lifetime estimator
+-------------------------------------
+
+The three representative positions are converted to phases in the laser cycle:
+
+  sample_phase = sample_idx / total_bins
+
+Then the code computes a weighted circular mean:
+
+  z = sum_i w_i * exp(j * 2*pi*phase_i) / sum_i w_i
+
+with:
+- w_i = [d1, d2, d3]
+
+It is useful to separate the complex number z into two pieces:
+
+- angle(z): gives the mean phase position
+- abs(z)  = R: tells how concentrated the 3 samples are around one phase
+
+How tau is obtained:
+
+1. From z, the code first extracts the angle:
+
+   mean_angle = angle(z)
+
+2. The angle is wrapped into the interval [0, 2*pi):
+
+   mean_angle = mod(mean_angle, 2*pi)
+
+3. This angle is converted from radians to "fraction of one laser period":
+
+   phase = mean_angle / (2*pi)
+
+4. This phase is the raw lifetime coordinate in cycle units.
+
+If no reference peak is used:
+- tau = phase
+
+If a reference peak is available:
+- peak_phase = peak_idx / total_bins
+- tau = mod(peak_phase - phase, 1.0)
+
+So the important point is:
+- tau comes from the angle of z
+- not from R = abs(z)
+
+So tau is stored in units of one laser cycle:
+- tau = 0.0 means 0 cycle
+- tau = 0.5 means half cycle
+- tau = 1.0 would correspond to one full cycle, but the stored values are
+  wrapped into [0, 1)
+
+Important implementation detail:
+- peak_idx is not estimated independently for every pixel.
+- peak_idx comes from the global cumulative DFD trace:
+  peak_idx = argmax(trace_sum)
+- It is written into shared_dict["dfd_peak_idx"] by the GUI trace update and
+  reused by the worker for all pixels.
+- Therefore, the live per-pixel lifetime is referenced to one global peak
+  position, not to a different peak fitted per pixel.
+
+2.4) Brightness, quality, validity
+----------------------------------
+
+The worker also computes:
+
+- brightness = d1 + d2 + d3
+- quality    = circular standard deviation
+- valid      = brightness > 0
+
+How quality is obtained:
+
+After tau has already been obtained from angle(z), the code looks at the
+magnitude of z:
+
+  R = abs(z)
+
+Interpretation of R:
+- R close to 1 means the weighted phase vectors point almost in the same
+  direction, so the phase estimate is well concentrated
+- R small means the weighted phase vectors are more spread, so the phase
+  estimate is less concentrated
+
+The code converts R into a circular standard deviation:
+
+  std_angle = sqrt(-2 * ln(R))
+  quality   = std_angle / (2*pi)
+
+This means:
+- std_angle is the phase spread in radians
+- quality is the same spread expressed as fraction of one cycle
+
+Important:
+- In the current implementation, this quantity is written directly into the
+  C/S channel for display.
+- So the variable called "quality" is mathematically a circular spread value,
+  not an inverse-error score.
+
+In other words:
+- tau answers "where is the mean phase?"
+- R and quality answer "how tightly clustered are the samples around that mean?"
+- there is no direct formula that converts R into tau
+
+2.5) What is stored in the live lifetime image
+----------------------------------------------
+
+The worker does not directly store an RGB image.
+It stores a 3-plane floating array called image_xy_hcl:
+
+- H plane = tau in cycle units, normalized in [0, 1)
+- C plane = quality
+- L plane = brightness (raw summed counts)
+
+This is why getPreviewHclImage() returns a 3-channel float image, not the final
+displayed colors.
+
+
+3) How the GUI turns H/C/L into the final live image
+----------------------------------------------------
+
+Code path:
+- brighteyes_mcs/gui/main_window.py -> plotPreviewImage(...)
+- brighteyes_mcs/gui/flim_image_view.py
+
+When the selected preview channel is a lifetime color channel:
+
+- The GUI reads image_xy_hcl from shared memory.
+- The H plane is interpreted as lifetime.
+- The C plane is interpreted as quality / saturation / chroma.
+- The L plane is interpreted as brightness / counts.
+
+3.1) Delta tau correction
+-------------------------
+
+The GUI applies a cyclic hue shift before rendering:
+
+  h_shift = (delta_tau_ns mod T_cycle_ns) / T_cycle_ns
+  h_for_display = mod(H - h_shift, 1.0)
+
+This lets the user rotate the lifetime colormap so the visual hue matches the
+desired reference lifetime.
+
+The "A" button computes an automatic correction from:
+- the current displayed circular mean lifetime in the image
+- the latest DFD trace fitted tau
+
+It updates:
+
+  delta_tau <- delta_tau + current_mean_ns - tau_fit_ns   (mod T_cycle)
+
+So the image mean is aligned to the trace-fit lifetime.
+
+3.2) Histogram ranges and clipping
+----------------------------------
+
+The custom histogram widget exposes three ranges:
+- H range
+- C range
+- L range
+
+Before final rendering, each plane is normalized with the selected ranges:
+
+  h = clip((H - H_min) / (H_max - H_min), 0, 1)
+  c = clip((C - C_min) / (C_max - C_min), 0, 1)
+  l = clip((L - L_min) / (L_max - L_min), 0, 1)
+
+Then:
+- H is optionally remapped through the chosen hue-display interval
+- C can be forced to 1.0 when "Force S/C=1" is checked
+- invalid pixels are set to black
+
+3.3) Difference between HCL, HSV, and HSL modes
+-----------------------------------------------
+
+The underlying tau estimation is the same in all three live lifetime modes.
+Only the final color conversion changes:
+
+- LIFETIME_HCL / COLOR_LIFETIME:
+  H = hue from lifetime
+  C = chroma from quality
+  L = lightness from normalized counts
+  conversion: LCh(ab) -> sRGB
+
+- LIFETIME_HSV:
+  H = hue from lifetime
+  S = saturation from quality
+  V = value from normalized counts
+  conversion: HSV -> RGB
+
+- LIFETIME_HSL:
+  H = hue from lifetime
+  S = saturation from quality
+  L = lightness from normalized counts
+  conversion: HSL -> RGB
+
+So:
+- the tau estimator is identical
+- the look of the image changes because the color model changes
+
+
+4) Short summary
+----------------
+
+Tau on the DFD trace:
+- fit of ln(counts) versus bin index on the decay tail
+- returns tau_ns from the fitted slope
+- based on the cumulative DFD trace, not per pixel
+
+Live LIFETIME_HSV/HSL/HCL image:
+- not a full exponential fit per pixel
+- each pixel is compressed into 3 coarse time slices
+- a weighted circular mean gives a phase-like tau in cycle units
+- the global DFD peak is used as the reference zero
+- brightness and the spread metric are stored too
+- the GUI maps these three planes into color using HCL, HSV, or HSL
+
+
+5) Main files involved
+----------------------
+
+- brighteyes_mcs/gui/main_window.py
+- brighteyes_mcs/gui/flim_image_view.py
+- brighteyes_mcs/libs/processes/acquisition_loop_process.py
+- brighteyes_mcs/libs/spad_fcs_manager.py

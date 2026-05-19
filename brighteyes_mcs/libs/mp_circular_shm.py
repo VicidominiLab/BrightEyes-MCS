@@ -1,4 +1,4 @@
-
+﻿
 import numpy as np
 from multiprocessing import shared_memory, Lock, Value
 
@@ -64,19 +64,19 @@ class CircularSharedBuffer:
                 self.head.value = idx
                 self.tail.value = end % self.size
 
-        # print_dec("CircularShardBuffer - get()")
-        #print_dec("available_data",self.available_data, self.size, self.available_data/self.size )
+        # print_debug("CircularShardBuffer - get()")
+        #print_debug("available_data",self.available_data, self.size, self.available_data/self.size )
         #
         # print("CircularShardBuffer - put()")
-        # print_dec("self.size",  self.size)
-        # print_dec("self.head.value", self.head.value)
-        # print_dec("self.tail.value", self.tail.value)
-        # print_dec("self.available_space()", self.available_space)
+        # print_debug("self.size",  self.size)
+        # print_debug("self.head.value", self.head.value)
+        # print_debug("self.tail.value", self.tail.value)
+        # print_debug("self.available_space()", self.available_space)
 
     def get(self, n=-1):
         """Return a copy of all valid elements in insertion order (non-destructive)."""
         ret = None
-        # print_dec("CircularShardBuffer - get()")
+        # print_debug("CircularShardBuffer - get()")
         qsize = self.qsize()
         if n > qsize:
             print("Too large")
@@ -105,11 +105,11 @@ class CircularSharedBuffer:
 
 
         #
-        # print_dec("self.size",  self.size)
-        # print_dec("n", n)
-        # print_dec("self.head.value", self.head.value)
-        # print_dec("self.tail.value", self.tail.value)
-        # print_dec("self.available_space()", self.available_space)
+        # print_debug("self.size",  self.size)
+        # print_debug("n", n)
+        # print_debug("self.head.value", self.head.value)
+        # print_debug("self.tail.value", self.tail.value)
+        # print_debug("self.available_space()", self.available_space)
         return ret
 
     def empty(self):

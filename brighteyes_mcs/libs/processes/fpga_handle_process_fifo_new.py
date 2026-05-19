@@ -1,7 +1,7 @@
-import multiprocessing as mp
+﻿import multiprocessing as mp
 from threading import Thread
 import nifpga
-from ..print_dec import print_dec
+from ..print_debug import print_debug
 from time import perf_counter_ns
 
 import os, psutil
@@ -15,8 +15,8 @@ class FpgaHandleProcess(mp.Process):
     def __init__(self, configuration, debug=True, use_rust_fifo=True):
         super().__init__()
 
-        print_dec("FpgaHandleProcess INIT")
-        # print_dec("=> configuration", configuration)
+        print_debug("FpgaHandleProcess INIT")
+        # print_debug("=> configuration", configuration)
         # for i in configuration:
         #     print("==", i, "==")
         #     print(configuration[i])
@@ -48,7 +48,7 @@ class FpgaHandleProcess(mp.Process):
         self.expected_words_data_digital = self.configuration["expected_words_data_digital"]
         self.expected_words_data_analog = self.configuration["expected_words_data_analog"]
         self.initial_registers = self.configuration["initial_registers"]
-        print(self.configuration)
+        print_debug(self.configuration)
 
         # mp_mng = mp.Manager()
 
@@ -61,7 +61,7 @@ class FpgaHandleProcess(mp.Process):
         self.rust_reader_ready = mp.Event()
         
         self.fpgarunning_internal = False
-        print_dec("FpgaHandleProcess INIT done")
+        print_debug("FpgaHandleProcess INIT done")
 
         # self.rust_subprocess = None
 
@@ -95,9 +95,9 @@ class FpgaHandleProcess(mp.Process):
             if self.fpgarunning.is_set() and not self.fpgarunning_internal:
                 self.nifpga_session.run()
                 self.fpgarunning_internal = True
-                print_dec("FPGA self.nifpga_session.run()")
+                print_debug("FPGA self.nifpga_session.run()")
                 self.fpgarunning.clear()                
-        print_dec("self.stop_event.is_set()")
+        print_debug("self.stop_event.is_set()")
 
         if self.use_rust_fifo == True:
             self.rust_reader_ready.clear()
@@ -114,7 +114,7 @@ class FpgaHandleProcess(mp.Process):
                             command[current_register]
                         )
                     except Exception as e:
-                        print_dec(
+                        print_debug(
                             "self.queueRegisterWrite",
                             repr(e),
                             " ERROR",
@@ -122,7 +122,7 @@ class FpgaHandleProcess(mp.Process):
                             command[current_register],
                         )
                         try:
-                            print_dec(
+                            print_debug(
                                 "self.queueRegisterWrite SECOND ATTEMPT",
                                 current_register,
                                 command[current_register],
@@ -131,14 +131,14 @@ class FpgaHandleProcess(mp.Process):
                                 command[current_register]
                             )
                         except Exception as e:
-                            print_dec(
+                            print_debug(
                                 "self.queueRegisterWrite 2nd attempt",
                                 repr(e),
                                 " ERROR",
                                 current_register,
                                 command[current_register],
                             )
-        print_dec("self.stop_event.is_set()")
+        print_debug("self.stop_event.is_set()")
 
     def loop_readReq(self):
         while not self.stop_event.is_set():
@@ -151,34 +151,34 @@ class FpgaHandleProcess(mp.Process):
                             current_register
                         ].read()
                     except Exception as e:
-                        print_dec(
+                        print_debug(
                             "self.queueRegisterReadReq", repr(e), "ERROR", command
                         )
                 self.queueRegisterRead.put(out_dict)
-        print_dec("self.stop_event.is_set()")
+        print_debug("self.stop_event.is_set()")
 
     def loop_fifoWrite(self):
         while not self.stop_event.is_set():
             if not self.queueFifoWrite.empty():
                 command = self.queueFifoWrite.get()
-                print_dec("loop_fifoWrite", command)
+                print_debug("loop_fifoWrite", command)
                 for current_fifo in command:
                     self.nifpga_session.fifos[current_fifo].write(command[current_fifo])
-        print_dec("self.stop_event.is_set()")
+        print_debug("self.stop_event.is_set()")
 
     def loop_fifoRead(self):
         while not self.stop_event.is_set():
             if not self.queueFifoReadReq.empty():
                 out_dict = {}
                 command = self.queueFifoReadReq.get()
-                print_dec(command)
+                print_debug(command)
                 for current_fifo in command:
                     if current_fifo == "FIFO":
                         chunk = self.fifo_chuck_size_digital.value
                     elif current_fifo == "FIFOAnalog":
                         chunk = self.fifo_chuck_size_analog.value
                     else:
-                        print_dec("BUG")
+                        print_debug("BUG")
                         chunk = self.fifo_chuck_size_digital.value
                     elements_to_be_read = (
                         self.fifo_element_remaining[current_fifo] // chunk
@@ -199,7 +199,7 @@ class FpgaHandleProcess(mp.Process):
 
                     except nifpga.FifoTimeoutError:
                         pass
-        print_dec("self.stop_event.is_set()")
+        print_debug("self.stop_event.is_set()")
 
     def loop_fifoReadContinously(self):
         while not self.stop_event.is_set():
@@ -217,7 +217,7 @@ class FpgaHandleProcess(mp.Process):
                     elif current_fifo == "FIFOAnalog":
                         chunk = self.fifo_chuck_size_analog.value
                     else:
-                        print_dec("BUG")
+                        print_debug("BUG")
                         chunk = self.fifo_chuck_size_digital.value
                     elements_to_be_read = (
                         self.fifo_element_remaining[current_fifo] // chunk
@@ -256,7 +256,7 @@ class FpgaHandleProcess(mp.Process):
                     elif current_fifo == "FIFOAnalog":
                         chunk = self.fifo_chuck_size_analog.value
                     else:
-                        print_dec("BUG")
+                        print_debug("BUG")
                         chunk = self.fifo_chuck_size_digital.value
                     elements_to_be_read = (
                         self.fifo_element_remaining[current_fifo] // chunk
@@ -299,7 +299,7 @@ class FpgaHandleProcess(mp.Process):
                             out_dict[current_fifo] = [read_data, length]
                             self.queueFifoRead.put(out_dict)
 
-        print_dec("self.stop_event.is_set()")
+        print_debug("self.stop_event.is_set()")
 
 
 
@@ -316,7 +316,7 @@ class FpgaHandleProcess(mp.Process):
                 if length > 0:
                     out_dict[current_fifo] = [read_data, length]
                     self.queueFifoRead.put_nowait(out_dict)
-        print_dec("self.stop_event.is_set()")
+        print_debug("self.stop_event.is_set()")
 
 
     def run(self):
@@ -324,17 +324,17 @@ class FpgaHandleProcess(mp.Process):
 
         p = psutil.Process(os.getpid())
         p.nice(psutil.HIGH_PRIORITY_CLASS)
-        print_dec("FpgaHandleProcess RUN - PID:", os.getpid(), p.nice())
+        print_debug("FpgaHandleProcess RUN - PID:", os.getpid(), p.nice())
 
-        print_dec("nifpga.Session(self.bitfile, self.ni_address)")
+        print_debug("nifpga.Session(self.bitfile, self.ni_address)")
         # print(self.configuration)
         try:
             self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address)
-            print_dec("nifpga.Session(self.bitfile, self.ni_address) DONE!")
+            print_debug("nifpga.Session(self.bitfile, self.ni_address) DONE!")
             self.is_connected.set()
 
         except Exception as e:
-            print_dec("FPGA Connection failed Error", repr(e))
+            print_debug("FPGA Connection failed Error", repr(e))
             self.is_connected.clear()
 
             import traceback
@@ -351,8 +351,8 @@ class FpgaHandleProcess(mp.Process):
             self.list_fifos[:] = list(self.nifpga_session.fifos.keys())
             self.list_registers[:] = list(self.nifpga_session.registers.keys())
 
-            print_dec("FIFOs: ", self.list_fifos)
-            print_dec("Registers: ", self.list_registers)
+            print_debug("FIFOs: ", self.list_fifos)
+            print_debug("Registers: ", self.list_registers)
 
             # self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address)
 
@@ -365,7 +365,7 @@ class FpgaHandleProcess(mp.Process):
                     )
                     self.nifpga_session.fifos[fifo].configure(self.requested_fifo_depth)
                     self.nifpga_session.fifos[fifo].start()
-                print_dec(
+                print_debug(
                     "FIFO",
                     fifo,
                     "req:",
@@ -375,19 +375,19 @@ class FpgaHandleProcess(mp.Process):
                 )
                 self.fifo_element_remaining[fifo] = 0
 
-            # print_dec(self.fifo_element_remaining)
+            # print_debug(self.fifo_element_remaining)
             # Here we assume the configured depth is the same for all FIFOs.
 
-            print_dec("fpgaManagerProcess.run() started")
+            print_debug("fpgaManagerProcess.run() started")
             for register in dict(self.initial_registers):
                 try:
                     if self.initial_registers[register] is not None:
                         self.nifpga_session.registers[register].write(
                             self.initial_registers[register]
                         )
-                    print_dec("initial_registers: ", register, self.initial_registers[register])
+                    print_debug("initial_registers: ", register, self.initial_registers[register])
                 except Exception as e:
-                    print_dec(
+                    print_debug(
                         "initial_registers - self.queueRegisterWrite",
                         repr(e),
                         " ERROR",
@@ -395,7 +395,7 @@ class FpgaHandleProcess(mp.Process):
                         "========",
                         self.initial_registers,
                     )
-            print_dec("initial_registers done")
+            print_debug("initial_registers done")
 
             # emptyQueue(self.queueRegisterWrite)
             # emptyQueue(self.queueRegisterReadReq)
@@ -409,7 +409,7 @@ class FpgaHandleProcess(mp.Process):
             for fifo in self.list_fifos:
                 self.fifo_last_read_time[fifo] = perf_counter_ns()  # time
 
-            print_dec("ready to run")
+            print_debug("ready to run")
 
             if self.use_rust_fifo == True:
                 threads = [
@@ -436,17 +436,17 @@ class FpgaHandleProcess(mp.Process):
 
             for th, name in threads:
                 th.start()
-                print_dec(name + ".start()")
+                print_debug(name + ".start()")
 
             self.stop_event.wait(-1)
 
-            print_dec("stop_event.wait DONE")
+            print_debug("stop_event.wait DONE")
 
             for th, name in threads:
                 th.join()
-                print_dec(name + ".join()")
+                print_debug(name + ".join()")
 
-            print_dec("stop_event.wait DONE")
+            print_debug("stop_event.wait DONE")
             if self.use_rust_fifo == True:
                 self.rust_fifo_reader.close()
 
@@ -458,12 +458,12 @@ class FpgaHandleProcess(mp.Process):
             self.nifpga_session.close()
 
         self.stop_done_event.set()
-        print_dec("self.nifpga_session.reset()\nself.nifpga_session.close()")
+        print_debug("self.nifpga_session.reset()\nself.nifpga_session.close()")
         self.is_connected.clear()
         self.fpgarunning_internal = False
         self.fpgarunning.clear()
         self.stop_event.clear()
-        print_dec("fpgaManagerProcess.run() stopped")
+        print_debug("fpgaManagerProcess.run() stopped")
 
     def stop(self):
         self.stop_event.set()
@@ -476,11 +476,12 @@ class FpgaHandleProcess(mp.Process):
             self.nifpga_session.reset()
             self.nifpga_session.close()
         except:
-            print_dec("nifpga_session was already terminated.")
+            print_debug("nifpga_session was already terminated.")
 
         if self.stop_done_event.wait(timeout=1.0):
-            print_dec("FpgaHandleProcess STOP nicely")
+            print_debug("FpgaHandleProcess STOP nicely")
         else:
-            print_dec("FpgaHandleProcess STOP BADLY")
+            print_debug("FpgaHandleProcess STOP BADLY")
         self.stop_done_event.clear()
         super().terminate()
+

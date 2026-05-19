@@ -1,14 +1,14 @@
-import nifpga
+﻿import nifpga
 import nifpga_fast_fifo_recv
 import numpy as np
 
-from .print_dec import print_dec
+from .print_debug import print_debug
 
 
 class RustFastFifoReader:
     def __init__(self, bitfile, list_fifo, chunk_digital=2, chunk_analog=4, requested_fifo_depth=10000, nifpga_addr="RIO0", delay_us=1):
         self.fast_fifo_recv_inst = {}
-        print_dec(list_fifo)
+        print_debug(list_fifo)
 
 
         # Obtaining the signature by using the standard python nifpga library
@@ -48,7 +48,7 @@ class RustFastFifoReader:
                 "debug" : False
                 }
 
-            print_dec("rust NI FIFO reader", fifo,  configuration)
+            print_debug("rust NI FIFO reader", fifo,  configuration)
 
             self.fast_fifo_recv_inst[fifo] = nifpga_fast_fifo_recv.NifpgaFastFifoRecv(
                 bitfile,
@@ -64,30 +64,30 @@ class RustFastFifoReader:
                 debug=False
             )
 
-            print("RUST: %s" % fifo, self.fast_fifo_recv_inst[fifo].get_conf())
+            print_debug("RUST: %s" % fifo, self.fast_fifo_recv_inst[fifo].get_conf())
             self.fast_fifo_recv_inst[fifo].thread_start()
-            print_dec("nifpga_fast_fifo_recv.thread_started ", fifo)
-        print_dec(self.fast_fifo_recv_inst)
+            print_debug("nifpga_fast_fifo_recv.thread_started ", fifo)
+        print_debug(self.fast_fifo_recv_inst)
 
     def read_data(self, fifo="FIFO"):
         try:
             read_data = self.fast_fifo_recv_inst[fifo].get_data_as_numpy()
         except KeyError as e:
             return np.array([],np.uint64)
-        # print_dec("read_data", fifo, read_data.shape)
+        # print_debug("read_data", fifo, read_data.shape)
         # read_data = self.fast_fifo_recv_inst[fifo].get_data() #not compatible with nifpga-fast-fifo-recv-0.101.6
-        # print_dec("read_data len:", len(read_data))
+        # print_debug("read_data len:", len(read_data))
         return read_data
 
     def close(self):
-        print_dec("Trying to close", self.fast_fifo_recv_inst.keys())
+        print_debug("Trying to close", self.fast_fifo_recv_inst.keys())
         for i in self.fast_fifo_recv_inst:
             try:
-                print_dec("trying fast_fifo_recv_inst[%s].thread_stop() " % i)
+                print_debug("trying fast_fifo_recv_inst[%s].thread_stop() " % i)
                 self.fast_fifo_recv_inst[i].thread_stop()
-                print_dec("fast_fifo_recv_inst[%s].thread_stop() done " % i)
+                print_debug("fast_fifo_recv_inst[%s].thread_stop() done " % i)
             except Exception as e:
-                print_dec(
+                print_debug(
                     "fast_fifo_recv_inst[%s].thread_stop() already closed(?) %s"
                     % (i, e)
                 )
@@ -95,11 +95,12 @@ class RustFastFifoReader:
     def __del__(self):
         for i in self.fast_fifo_recv_inst:
             try:
-                print_dec("trying fast_fifo_recv_inst[%s].thread_stop() " % i)
+                print_debug("trying fast_fifo_recv_inst[%s].thread_stop() " % i)
                 self.fast_fifo_recv_inst[i].thread_stop()
-                print_dec("fast_fifo_recv_inst[%s].thread_stop() done " % i)
+                print_debug("fast_fifo_recv_inst[%s].thread_stop() done " % i)
             except Exception as e:
-                print_dec(
+                print_debug(
                     "fast_fifo_recv_inst[%s].thread_stop() already closed(?) %s"
                     % (i, e)
                 )
+

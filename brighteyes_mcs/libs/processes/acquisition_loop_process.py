@@ -1,4 +1,4 @@
-"""Acquisition worker that converts FIFO payloads into preview images, traces, and HDF5 writes."""
+﻿"""Acquisition worker that converts FIFO payloads into preview images, traces, and HDF5 writes."""
 
 import multiprocessing as mp
 import os
@@ -38,7 +38,7 @@ except Exception as e:
     )
     os._exit(1)
 
-from ..print_dec import print_dec, set_debug
+from ..print_debug import print_debug, set_debug
 from numpy import sqrt
 
 import numpy as np
@@ -312,21 +312,21 @@ class AcquisitionLoopProcess(mp.Process):
         self.gap_digital_in_sample = 0
         self.daemon = True
         set_debug(debug)
-        print_dec("AcquisitionLoopProcess INIT")
+        print_debug("AcquisitionLoopProcess INIT")
         self.shared_objects = shared_objects
 
         self.DATA_WORDS_PER_SAMPLE_ANALOG = 1
 
         if channels == 25:
-            print_dec("Found 25 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
+            print_debug("Found 25 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
             self.channels = 25
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 2
         elif channels == 49:
-            print_dec("Found 49 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 8")
+            print_debug("Found 49 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 8")
             self.channels = 49
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 8
         else:
-            print_dec("Found NOT STANDARD NUMBER OF CHANNELS FALLBACK TO DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
+            print_debug("Found NOT STANDARD NUMBER OF CHANNELS FALLBACK TO DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
             self.channels = 25
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 2
 
@@ -436,7 +436,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.channels_analog = 2
 
-        print_dec("AcquisitionLoopProcess INIT DONE")
+        print_debug("AcquisitionLoopProcess INIT DONE")
 
     def run(self):
 
@@ -472,7 +472,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         p = psutil.Process(os.getpid())
         p.nice(psutil.HIGH_PRIORITY_CLASS)
-        print_dec("AcquisitionLoopProcess RUN - PID:", os.getpid(), p.nice())
+        print_debug("AcquisitionLoopProcess RUN - PID:", os.getpid(), p.nice())
 
         stop_event_proxy.clear()
         self.current_pointer_in_sample_digital = 0  # self.timebinsPerPixel * self.DATA_WORDS_PER_SAMPLE_DIGITAL
@@ -481,7 +481,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.current_frame_digital = 0
         self.current_frame_analog = 0
 
-        print_dec(stop_event_proxy.is_set())
+        print_debug(stop_event_proxy.is_set())
         self.image_xy_rgb = self.shm_image_xy_rgb.get_numpy_handle()
         self.image_xy_hcl = self.shm_image_xy_hcl.get_numpy_handle()
         self.image_xy = self.shm_image_xy.get_numpy_handle()
@@ -531,7 +531,7 @@ class AcquisitionLoopProcess(mp.Process):
                 new_file=True,
             )
             # self.h5file = h5py.File(self.filenameh5, "w")
-            print_dec("Filename:", self.filenameh5)
+            print_debug("Filename:", self.filenameh5)
 
             if "FIFO" in self.shm_activated_fifos_list:
                 self.h5mgr.init_dataset(
@@ -583,12 +583,12 @@ class AcquisitionLoopProcess(mp.Process):
                 ),
                 dtype="int32",
             )
-            print_dec("BUFFER SIZE")
-            print_dec("buffer_for_save size = %.3f GB" % (
+            print_debug("BUFFER SIZE")
+            print_debug("buffer_for_save size = %.3f GB" % (
                         self.buffer_for_save_digital.size * self.buffer_for_save_digital.itemsize / 1024 / 1024 / 1024))
-            print_dec("buffer_for_save_channels_extra size = %.3f GB" % (
+            print_debug("buffer_for_save_channels_extra size = %.3f GB" % (
                         self.buffer_for_save_digital_extra_ch.size * self.buffer_for_save_digital_extra_ch.itemsize / 1024 / 1024 / 1024))
-            print_dec("buffer_analog_for_save size = %.3f GB" % (
+            print_debug("buffer_analog_for_save size = %.3f GB" % (
                         self.buffer_analog_for_save.size * self.buffer_analog_for_save.itemsize / 1024 / 1024 / 1024))
 
         self.total_photon = 0
@@ -608,7 +608,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.fingerprint[4, :, :] = 0
 
         self.autocorrelation[0, :] = correlator.get_delays() * self.time_resolution
-        print_dec("correlator:", correlator.get_delays(), self.time_resolution)
+        print_debug("correlator:", correlator.get_delays(), self.time_resolution)
         self.autocorrelation[1, :] = 0
 
         self.trace[0, :] = temporalBinner.get_x()
@@ -630,13 +630,13 @@ class AcquisitionLoopProcess(mp.Process):
             None  # This buffer is used only when the data cross two frames
         )
 
-        print_dec("expected_words_data_digital", self.expected_words_data_digital,
+        print_debug("expected_words_data_digital", self.expected_words_data_digital,
                   "\nexpected_words_data_per_frame_digital", self.expected_words_data_per_frame_digital,
                   "\nexpected_words_data_analog", self.expected_words_data_analog,
                   "\nexpected_words_data_per_frame_analog", self.expected_words_data_per_frame_analog, "\n")
 
-        print_dec("shm_activated_fifos_list", self.shm_activated_fifos_list)
-        print_dec("self.activate_show_preview", self.activate_show_preview)
+        print_debug("shm_activated_fifos_list", self.shm_activated_fifos_list)
+        print_debug("self.activate_show_preview", self.activate_show_preview)
 
         # self.data_queue["FIFO"] = self.data_queue["FIFO"]
         # self.shm_loc_acquired["FIFO"] = self.shm_loc_acquired["FIFO"]
@@ -648,7 +648,7 @@ class AcquisitionLoopProcess(mp.Process):
         channels = self.channels
         channels_y = int(sqrt(self.channels))
         channels_x = channels_y
-        print_dec("Channels ", channels, channels_x, channels_y)
+        print_debug("Channels ", channels, channels_x, channels_y)
 
         if channels == 25:
             converter = convertRawDataToCountsDirect
@@ -657,7 +657,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         clk_multiplier = self.clk_multiplier
 
-        print_dec("SHAPE before while", self.shape)
+        print_debug("SHAPE before while", self.shape)
 
         self.selected_channel = self.shared_dict["channel"]
 
@@ -674,7 +674,7 @@ class AcquisitionLoopProcess(mp.Process):
                     np.add.at(self.trace_dfd[2, :], time_bins[valid], trace_values[valid])
 
         def finalize_frame_fifo():
-            print_dec("finalize_frame_fifo()")
+            print_debug("finalize_frame_fifo()")
             try:
                 if self.activate_trace and self.DFD_Activate:
                     self.trace_dfd[2, :] = 0
@@ -689,7 +689,7 @@ class AcquisitionLoopProcess(mp.Process):
 
                 current_z_digital = (self.current_frame_digital - 1) % self.shape[2]
                 current_rep_digital = (self.current_frame_digital - 1) // self.shape[2]
-                print_dec("FRAME [FIFO] ", current_z_digital, current_rep_digital, " DONE")
+                print_debug("FRAME [FIFO] ", current_z_digital, current_rep_digital, " DONE")
 
                 self.shared_dict_proxy.update(
                     {
@@ -715,19 +715,19 @@ class AcquisitionLoopProcess(mp.Process):
                     )
                     self.buffer_for_save_digital[:] = 0
                     self.buffer_for_save_digital_extra_ch[:] = 0
-                    print_dec("done digital add_to_dataset")
-                    print_dec(self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL)
+                    print_debug("done digital add_to_dataset")
+                    print_debug(self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL)
             except Exception as e:
-                print_dec("Error in finalize_frame_fifo:", e)
+                print_debug("Error in finalize_frame_fifo:", e)
 
         def finalize_frame_fifo_analog():
-            print_dec("finalize_frame_fifo_analog()")
+            print_debug("finalize_frame_fifo_analog()")
             try:
                 frameComplete["FIFOAnalog"] = False
 
                 current_z_analog = (self.current_frame_analog - 1) % self.shape[2]
                 current_rep_analog = (self.current_frame_analog - 1) // self.shape[2]
-                print_dec("FRAME [FIFOAnalog] ", current_z_analog, current_rep_analog, " DONE")
+                print_debug("FRAME [FIFOAnalog] ", current_z_analog, current_rep_analog, " DONE")
 
                 self.shared_dict_proxy.update(
                     {
@@ -745,10 +745,10 @@ class AcquisitionLoopProcess(mp.Process):
                         current_z_analog,
                     )
                     self.buffer_analog_for_save[:] = 0
-                    print_dec("done analog add_to_dataset")
-                    print_dec(self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG, self.expected_words_data_analog)
+                    print_debug("done analog add_to_dataset")
+                    print_debug(self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG, self.expected_words_data_analog)
             except Exception as e:
-                print_dec("Error in finalize_frame_fifo_analog:", e)
+                print_debug("Error in finalize_frame_fifo_analog:", e)
 
         while not stop_event_proxy.is_set():
             selected_channel = self.selected_channel
@@ -772,7 +772,7 @@ class AcquisitionLoopProcess(mp.Process):
                             internal_buffer_digital is not None and internal_buffer_digital.size != 0
                     ):  # if the previous queue data was between two frames
 
-                        print_dec(
+                        print_debug(
                             len(internal_buffer_digital),
                             remaining_digital_in_words,
                             max_gap_frame_digital_in_words,
@@ -780,7 +780,7 @@ class AcquisitionLoopProcess(mp.Process):
                         )
                         # if remaining_digital_in_words <= 0 means we already completed the frame before consuming internal_buffer_digital
                         if remaining_digital_in_words < 0:
-                            print_dec("THIS IS DEEPLY WRONG!! remaining_digital_in_words < 0, ", remaining_digital_in_words)
+                            print_debug("THIS IS DEEPLY WRONG!! remaining_digital_in_words < 0, ", remaining_digital_in_words)
 
                         elif remaining_digital_in_words == 0:
                             frameComplete["FIFO"] = True
@@ -822,13 +822,13 @@ class AcquisitionLoopProcess(mp.Process):
                         else:
                             # normal split case: packet crosses frame boundary
                             if (self.current_pointer_in_sample_digital + self.gap_digital_in_sample) * self.DATA_WORDS_PER_SAMPLE_DIGITAL >= max_gap_frame_digital_in_words:
-                                print_dec(
+                                print_debug(
                                     f"(self.current_pointer_in_sample_digital + self.gap_digital_in_sample) * self.DATA_WORDS_PER_SAMPLE_DIGITAL = {(self.current_pointer_in_sample_digital + self.gap_digital_in_sample) * self.DATA_WORDS_PER_SAMPLE_DIGITAL}, "
                                     f"self.gap_digital_in_sample = {self.gap_digital_in_sample}, "
                                     f"max_gap_frame_digital_in_words = {max_gap_frame_digital_in_words}"
                                 )
 
-                                print_dec(
+                                print_debug(
                                     f"data_from_queue_digital.shape = {data_from_queue_digital.shape}, "
                                     f"remaining_digital_in_words = {remaining_digital_in_words}, "
                                     f"(self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL) = {(self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL)}"
@@ -849,8 +849,8 @@ class AcquisitionLoopProcess(mp.Process):
                     # safety: if we would exceed expected_words_data_digital, truncate gap
                     if self.expected_words_data_digital < (self.current_pointer_in_sample_digital + self.gap_digital_in_sample) * self.DATA_WORDS_PER_SAMPLE_DIGITAL:
                         self.gap_digital_in_sample = max_gap_frame_digital_in_words // self.DATA_WORDS_PER_SAMPLE_DIGITAL - self.current_pointer_in_sample_digital
-                        print_dec("MISTERY!!!")
-                        print_dec("New GAP", self.gap_digital_in_sample)
+                        print_debug("MISTERY!!!")
+                        print_debug("New GAP", self.gap_digital_in_sample)
 
                     # If there's no data to decode (gap==0 or data_from_queue_digital is None) skip decoding section.
                     if self.gap_digital_in_sample > 0 and data_from_queue_digital is not None:
@@ -871,9 +871,9 @@ class AcquisitionLoopProcess(mp.Process):
                         self.shared_dict_proxy["last_packet_size"] = self.gap_digital_in_sample
 
                         if self.gap_digital_in_sample == 0:
-                            print_dec("self.gap_digital_in_sample = 0")
+                            print_debug("self.gap_digital_in_sample = 0")
                         if self.gap_digital_in_sample * self.DATA_WORDS_PER_SAMPLE_DIGITAL > self.buffer_size_in_words_digital:
-                            print_dec(
+                            print_debug(
                                 "ERROR: Too many data larger than the buffer. GAP",
                                 self.gap_digital_in_sample,
                                 "buffer_size_in_words_digital",
@@ -895,7 +895,7 @@ class AcquisitionLoopProcess(mp.Process):
                                 )
                                 == -1
                         ):
-                            print_dec(
+                            print_debug(
                                 "==============DISASTER IN THE PREVIEW====================="
                             )
 
@@ -1265,14 +1265,14 @@ class AcquisitionLoopProcess(mp.Process):
                                 #     buffer_up_to_gap_digital[:, channels:],
                                 # )
 
-                                # print_dec(
+                                # print_debug(
                                 #     self.current_pointer_in_sample_digital,
                                 #     self.current_pointer_in_sample_digital + self.gap_digital_in_sample,
                                 #     self.buffer_digital.shape,
                                 #     buffer_up_to_gap_digital.shape,
                                 # )
                                 # print(self.buffer_digital.shape , buffer_up_to_gap_digital.shape, list_y_digital.shape)
-                                # print_dec(
+                                # print_debug(
                                 #     self.current_frame_digital,
                                 #     self.gap_digital_in_sample,
                                 #     list_y_digital.max(),
@@ -1290,7 +1290,7 @@ class AcquisitionLoopProcess(mp.Process):
                                     channels_x, channels_y
                                 )
                             except:
-                                print_dec("buffer_up_to_gap_digital", buffer_up_to_gap_digital)
+                                print_debug("buffer_up_to_gap_digital", buffer_up_to_gap_digital)
                                 self.fingerprint[1, :, :] = 0
 
                             if self.gap_digital_in_sample > 10000:
@@ -1301,7 +1301,7 @@ class AcquisitionLoopProcess(mp.Process):
                             self.fingerprint[4, :, :] += self.saturation[:channels].reshape(channels_x, channels_y)
                             self.current_pointer_in_sample_digital += self.gap_digital_in_sample
                             self.shm_loc_previewed["FIFO"].value = self.current_pointer_in_sample_digital
-                            # print_dec(self.current_pointer_in_sample_digital*2, self.gap_digital_in_sample*2, (self.current_pointer_in_sample_digital + self.gap_digital_in_sample)*2)
+                            # print_debug(self.current_pointer_in_sample_digital*2, self.gap_digital_in_sample*2, (self.current_pointer_in_sample_digital + self.gap_digital_in_sample)*2)
 
                             if frameComplete["FIFO"]:
                                 # we still run the same finalization here for the normal path
@@ -1321,7 +1321,7 @@ class AcquisitionLoopProcess(mp.Process):
                     ):  # if the previous queue data was between two frames
 
                         if remaining_analog_in_words < 0:
-                            print_dec("THIS IS DEEPLY WRONG!! remaining_analog_in_words < 0, ", remaining_analog_in_words)
+                            print_debug("THIS IS DEEPLY WRONG!! remaining_analog_in_words < 0, ", remaining_analog_in_words)
 
                         elif remaining_analog_in_words == 0:
                             frameComplete["FIFOAnalog"] = True
@@ -1359,13 +1359,13 @@ class AcquisitionLoopProcess(mp.Process):
                             data_from_queue_analog = None
                         else:
                             if (self.current_pointer_in_sample_analog + self.gap_analog_in_sample) * self.DATA_WORDS_PER_SAMPLE_ANALOG >= max_gap_frame_analog_in_words:
-                                print_dec(
+                                print_debug(
                                     f"(self.current_pointer_in_sample_analog + self.gap_analog_in_sample) * self.DATA_WORDS_PER_SAMPLE_ANALOG = {(self.current_pointer_in_sample_analog + self.gap_analog_in_sample) * self.DATA_WORDS_PER_SAMPLE_ANALOG}, "
                                     f"self.gap_analog_in_sample = {self.gap_analog_in_sample}, "
                                     f"max_gap_frame_analog_in_words = {max_gap_frame_analog_in_words}"
                                 )
 
-                                print_dec(
+                                print_debug(
                                     f"data_from_queue_analog.shape = {data_from_queue_analog.shape}, "
                                     f"remaining_analog_in_words = {remaining_analog_in_words}, "
                                     f"(self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG) = {(self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG)}"
@@ -1384,8 +1384,8 @@ class AcquisitionLoopProcess(mp.Process):
 
                     if self.expected_words_data_analog < (self.current_pointer_in_sample_analog + self.gap_analog_in_sample) * self.DATA_WORDS_PER_SAMPLE_ANALOG:
                         self.gap_analog_in_sample = max_gap_frame_analog_in_words // self.DATA_WORDS_PER_SAMPLE_ANALOG - self.current_pointer_in_sample_analog
-                        print_dec("MISTERY")
-                        print_dec("New GAP", self.gap_analog_in_sample)
+                        print_debug("MISTERY")
+                        print_debug("New GAP", self.gap_analog_in_sample)
 
                     # Only decode analog if we have a positive gap and data
                     if self.gap_analog_in_sample > 0 and data_from_queue_analog is not None:
@@ -1402,9 +1402,9 @@ class AcquisitionLoopProcess(mp.Process):
                         self.shared_dict_proxy["last_packet_size"] = self.gap_analog_in_sample
 
                         if self.gap_analog_in_sample == 0:
-                            print_dec("self.gap_analog_in_sample = 0")
+                            print_debug("self.gap_analog_in_sample = 0")
                         if self.gap_analog_in_sample * self.DATA_WORDS_PER_SAMPLE_ANALOG > self.buffer_size_in_words_analog:
-                            print_dec(
+                            print_debug(
                                 "Too many data larger than the buffer. GAP",
                                 self.gap_analog_in_sample,
                                 "buffer_size_in_words_analog",
@@ -1421,7 +1421,7 @@ class AcquisitionLoopProcess(mp.Process):
                                 )
                                 == -1
                         ):
-                            print_dec(
+                            print_debug(
                                 "==============DISASTER IN THE PREVIEW====================="
                             )
 
@@ -1488,7 +1488,7 @@ class AcquisitionLoopProcess(mp.Process):
                             if frameComplete["FIFOAnalog"]:
                                 # finalize analog frame on the normal path
                                 finalize_frame_fifo_analog()
-                            #print_dec("self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog:",
+                            #print_debug("self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog:",
                             #         self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG, self.expected_words_data_analog)
 
 
@@ -1504,7 +1504,7 @@ class AcquisitionLoopProcess(mp.Process):
                 stop_event_proxy.set()
 
             if trace_reset_event_proxy.is_set():
-                print_dec("trace_reset_event.is_set()")
+                print_debug("trace_reset_event.is_set()")
                 temporalBinner.reset()
                 if self.DFD_Activate:
                     self.trace_dfd[1, :] = 0
@@ -1529,24 +1529,24 @@ class AcquisitionLoopProcess(mp.Process):
             self.h5mgr.close()
             self.h5mgr.shutdown()
         self.acquisition_done.set()
-        print_dec("Acquisition done")
+        print_debug("Acquisition done")
         stop_event_proxy.clear()
 
-        print_dec("run() acquisition_loop_process stopped")
+        print_debug("run() acquisition_loop_process stopped")
 
         if VIZTRACER_ON: self.tracer.stop()
         if VIZTRACER_ON: self.tracer.save()
 
     def stop(self):
-        print_dec("AcquisitionLoopProcess STOP")
+        print_debug("AcquisitionLoopProcess STOP")
         self.stop_event.set()
 
     def trace_reset(self):
-        print_dec("Trace Reset")
+        print_debug("Trace Reset")
         self.trace_reset_event.set()
 
     def FCS_reset(self):
-        print_dec("FCS Reset")
+        print_debug("FCS Reset")
         self.FCS_reset_event.set()
 
     def update_dictionary_now(self):
@@ -1570,3 +1570,4 @@ class AcquisitionLoopProcess(mp.Process):
 
     def stop_update_dictionary_slowly(self):
         self.thread_for_dict_stop.set()
+

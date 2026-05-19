@@ -73,9 +73,9 @@ def value_eng_string(value):
 class sciSpinBox(QDoubleSpinBox):
     sgn = Signal(float)
 
-    def __init__(self, QDoubleSpinBox):
+    def __init__(self, parent=None):
         self.decimal = 1
-        super().__init__(QDoubleSpinBox)
+        super().__init__(parent)
         self.validator = QRegularExpressionValidator(
             QRegularExpression(r"\s*$[[\-\+]\d{1,9}a-zA-Z+-^,.]"), self
         )
@@ -116,7 +116,7 @@ class sciSpinBox(QDoubleSpinBox):
             valid = QValidator.Invalid
             print(repr(E), E.__traceback__)
             print(exc_type, exc_tb.tb_lineno)
-        return valid, pos
+        return valid, string, pos
 
     def valueFromText(self, text: str) -> float:
         return value_eng_string(text)

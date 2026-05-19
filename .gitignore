@@ -38,6 +38,8 @@ pip-wheel-metadata/
 # Local runtime data
 data/*
 !data/.gitkeep
+log/*
+!log/.gitkeep
 
 # Machine-specific configuration
 brighteyes_mcs/cfg/*

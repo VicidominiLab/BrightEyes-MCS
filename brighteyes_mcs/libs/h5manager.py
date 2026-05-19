@@ -1,4 +1,4 @@
-"""HDF5 writer helpers for both GUI-side metadata and worker-side bulk writes."""
+﻿"""HDF5 writer helpers for both GUI-side metadata and worker-side bulk writes."""
 
 from decimal import Decimal
 
@@ -7,7 +7,7 @@ import multiprocessing as mp
 import numpy as np
 from PySide6.QtCore import QByteArray, QBuffer, QIODevice
 
-from ..libs.print_dec import print_dec
+from ..libs.print_debug import print_debug
 
 
 
@@ -24,16 +24,16 @@ class H5Manager:
 
         if new_file:
             self.h5file = h5py.File(filenameh5, "w")
-            print_dec("w")
+            print_debug("w")
         elif not new_file:
             self.h5file = h5py.File(filenameh5, "r+")
-            print_dec("r+")
+            print_debug("r+")
 
         self.h5dset = {}
-        print_dec("Filename:", filenameh5)
+        print_debug("Filename:", filenameh5)
 
     def init_dataset(self, dataset_name, shape, timebinsPerPixel, channels, dtype):
-        print_dec("init_dataset")
+        print_debug("init_dataset")
         self.h5dset[dataset_name] = self.h5file.create_dataset(
             dataset_name,
             shape=(
@@ -54,7 +54,7 @@ class H5Manager:
             ),
             dtype=dtype,
         )
-        print_dec(dataset_name, self.h5dset[dataset_name].shape)
+        print_debug(dataset_name, self.h5dset[dataset_name].shape)
 
     def add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z):
         # Writes are already asynchronous at process level (H5ManagerProcess).
@@ -65,16 +65,16 @@ class H5Manager:
     def _add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z):
         dims = list(self.h5dset[dataset_name].shape)
         dims[0] = current_rep + 1
-        # print_dec("_add_to_dataset", dataset_name, dims)
+        # print_debug("_add_to_dataset", dataset_name, dims)
         self.h5dset[dataset_name].resize(dims)
-        # print_dec(self.h5dset[dataset_name].shape)
+        # print_debug(self.h5dset[dataset_name].shape)
         self.h5dset[dataset_name][current_rep, current_z, :] = buffer_for_save
-        # print_dec()
-        # print_dec(self.h5dset[dataset_name].shape, buffer_for_save.shape)
+        # print_debug()
+        # print_debug(self.h5dset[dataset_name].shape, buffer_for_save.shape)
 
     def close(self):
         self.update_threads_number()
-        print_dec("h5 closed")
+        print_debug("h5 closed")
         self.h5file.close()
 
     def get_number_of_threads(self):
@@ -87,7 +87,7 @@ class H5Manager:
             self.shm_number_of_threads_h5.value = self.get_number_of_threads()
 
     def metadata_add_dict(self, group_name, mydict={}):
-        print_dec("metadata_add_dict")
+        print_debug("metadata_add_dict")
         if not (group_name in self.h5file.keys()):
             group_conf = self.h5file.create_group(group_name)
         else:
@@ -100,7 +100,7 @@ class H5Manager:
                 meta_data_h5_debug+="%s (%s): %s     "  %(i, type(value_i), value_i)
                 if isinstance(value_i, list):
                     fff = np.asarray(mydict[i], dtype=np.float64)
-                    print_dec(fff, type(fff))
+                    print_debug(fff, type(fff))
                     group_conf.attrs[i] = fff
                 elif isinstance(value_i, Decimal):
                     group_conf.attrs[i] = float(mydict[i])
@@ -108,15 +108,15 @@ class H5Manager:
                     group_conf.attrs[i] = str(mydict[i])
                 else:
                     group_conf.attrs[i] = mydict[i]
-        print_dec("Metadata h5 added at %s: " % group_name, meta_data_h5_debug )
+        print_debug("Metadata h5 added at %s: " % group_name, meta_data_h5_debug )
     def metadata_add_initial(self, comment):
-        print_dec("metadata_add_initial")
+        print_debug("metadata_add_initial")
         self.h5file.attrs["default"] = "data"
         self.h5file.attrs["data_format_version"] = "0.0.1"
         self.h5file.attrs["comment"] = comment
 
     def metadata_add_thumbnail(self, image):
-        print_dec("metadata_add_thumbnail")
+        print_debug("metadata_add_thumbnail")
         try:
             # get the current projection save in JPEG inside the HDF5
             exporter = pg.exporters.ImageExporter(image)
@@ -134,8 +134,8 @@ class H5Manager:
             thumbnail[0] = np.fromstring(binary_data, dtype="uint8")
 
         except Exception as ex:
-            print_dec("Thumbnail creation ERROR")
-            print_dec(ex)
+            print_debug("Thumbnail creation ERROR")
+            print_debug(ex)
 
     def print_keys(self):
         print(self.h5file.keys())
@@ -234,7 +234,7 @@ class H5ManagerProcess(mp.Process):
                 self._update_pending_counter(in_flight=0)
 
             except Exception as ex:
-                print_dec("H5ManagerProcess error", repr(ex))
+                print_debug("H5ManagerProcess error", repr(ex))
                 if wait:
                     self._send_response(request_id, ok=False, error=repr(ex))
                 self._update_pending_counter(in_flight=0)
@@ -243,7 +243,7 @@ class H5ManagerProcess(mp.Process):
             try:
                 h5mgr.close()
             except Exception as ex:
-                print_dec("H5ManagerProcess close error", repr(ex))
+                print_debug("H5ManagerProcess close error", repr(ex))
 
 
 class H5ManagerProcessClient:
@@ -311,3 +311,4 @@ class H5ManagerProcessClient:
 
     def shutdown(self):
         self._send("shutdown", wait=True)
+

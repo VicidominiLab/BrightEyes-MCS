@@ -1,4 +1,4 @@
-from ..libs.print_dec import  print_dec
+﻿from ..libs.print_debug import  print_debug
 
 from functools import reduce
 import multiprocessing as mp
@@ -48,7 +48,7 @@ class MemorySharedNumpyArray_ShmMem:
                 f"expected {self._nbytes} bytes for dtype={self.np_dtype}, shape={self.np_shape}"
             )
 
-        print_dec("New shared array created: ", self.shm.name, "bytes ", {self._nbytes}, "bytes for dtype={self.np_dtype}, shape={self.np_shape}" )
+        print_debug("New shared array created: ", self.shm.name, "bytes ", {self._nbytes}, "bytes for dtype={self.np_dtype}, shape={self.np_shape}" )
 
     def get_numpy_handle(self, reshape=True):
         """
@@ -144,3 +144,4 @@ class MemorySharedNumpyArray_CTypes:
 
 
 MemorySharedNumpyArray = MemorySharedNumpyArray_CTypes
+
