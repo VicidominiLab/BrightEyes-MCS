@@ -10,6 +10,8 @@ renderer:
     - brighteyes_mcs.libs.*
     - brighteyes_mcs.gui.main_window
     - brighteyes_mcs.plugins.ao_system.*
+    - brighteyes_mcs.plugins.dfd.*
+    - brighteyes_mcs.plugins.channel_delay_skew.*
     - brighteyes_mcs.plugins.myplugin.*
     - brighteyes_mcs.plugins.script_launcher.*
 

@@ -9,6 +9,11 @@ plugin_manager.addTab(context["widget"], "myplugin")
 from .plugin_form import myForm
 from PySide6.QtWidgets import QWidget
 
+try:    
+    from ...libs.print_debug import print_debug
+except:
+    print_debug = print
+
 def load_plugin(plugin_manager=None, context={}):
     widget = QWidget()
     form = myForm()
@@ -29,4 +34,4 @@ def load_plugin(plugin_manager=None, context={}):
     plugin_manager.addTab(widget, "ScriptLauncher")
     plugin_manager.register_trigger("acquisitionDone", form.after_acquisition)
 
-    print("script_launcher loaded", context)
+    print_debug("script_launcher loaded", context)

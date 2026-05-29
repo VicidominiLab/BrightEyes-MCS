@@ -1,3 +1,5 @@
+﻿"""Thin process/controller wrapper around the NI FPGA reader backends."""
+
 import multiprocessing as mp
 import time
 
@@ -5,7 +7,7 @@ import psutil
 import nifpga
 import os
 from datetime import datetime
-from .print_dec import print_dec, set_debug
+from .print_debug import print_debug, set_debug
 from .processes.fpga_handle_process_fifo_new import FpgaHandleProcess
 
 class FpgaHandle(object):
@@ -15,7 +17,7 @@ class FpgaHandle(object):
         ni_address,
         mp_manager,
         timeout_fifos=10e6,
-        requested_depth=10000,
+        requested_fifo_depth=10000,
         list_fifos=[],
         initial_registers_dict={},
         debug=True,
@@ -28,11 +30,11 @@ class FpgaHandle(object):
 
         p = psutil.Process(os.getpid())
         # p.nice(psutil.REALTIME_PRIORITY_CLASS)
-        print_dec("FpgaHandle RUN - PID:", os.getpid(), p.nice())
+        print_debug("FpgaHandle RUN - PID:", os.getpid(), p.nice())
 
         p = psutil.Process(self.mp_manager._process.pid)
         p.nice(psutil.HIGH_PRIORITY_CLASS)
-        print_dec("self.mp_manager - PID:", self.mp_manager._process.pid, p.nice())
+        print_debug("self.mp_manager - PID:", self.mp_manager._process.pid, p.nice())
 
         self.nifpga_obj = None
         self.nifpga_obj2 = None
@@ -43,7 +45,7 @@ class FpgaHandle(object):
             "ni_address": ni_address,
             "bitfile2": bitfile2,
             "ni_address2": ni_address2,
-            "requested_depth": requested_depth,
+            "requested_fifo_depth": requested_fifo_depth,
             "list_fifos_to_read_continously": self.mp_manager.list(list(list_fifos)),
             "stop_event": self.mp_manager.Event(),
             "stop_done_event": self.mp_manager.Event(),
@@ -54,7 +56,7 @@ class FpgaHandle(object):
             "is_connected": self.mp_manager.Event(),
             "is_readytorun": self.mp_manager.Event(),
             "list_registers": self.mp_manager.list(),
-            "actual_depth": self.mp_manager.Value("I", 0),
+            "actual_fifo_depth": self.mp_manager.Value("I", 0),
             "fpgarunning": self.mp_manager.Event(),
             "fifo_chuck_size_digital": self.mp_manager.Value("I", 0),
             "fifo_chuck_size_analog": self.mp_manager.Value("I", 0),
@@ -74,29 +76,29 @@ class FpgaHandle(object):
     def run(self, initial_registers={}):
         self.configuration["initial_registers"].clear()
         self.configuration["initial_registers"].update(initial_registers)
-        print_dec("self.fpga_handle_process.start()")
-        print_dec("initial_registers")
-        print_dec(initial_registers)
+        print_debug("self.fpga_handle_process.start()")
+        print_debug("initial_registers")
+        print_debug(initial_registers)
         self.fpga_handle_process = FpgaHandleProcess(
             self.configuration, use_rust_fifo=self.use_rust_fifo
         )
 
         self.fpga_handle_process.daemon = True
 
-        print_dec(self.configuration["is_readytorun"].is_set())
+        print_debug(self.configuration["is_readytorun"].is_set())
         self.fpga_handle_process.start()
-        print_dec("Waiting for the ready to run")
+        print_debug("Waiting for the ready to run")
         tstart = datetime.now()
-        flag = self.configuration["is_readytorun"].wait(timeout=1000)
+        flag = self.configuration["is_readytorun"].wait(timeout=5.)
         if flag != True:
             raise ("TIMEOUT")
         tstop = datetime.now()
-        print_dec(
+        print_debug(
             "self.configuration['is_readytorun'] now is up after ",
             (tstop - tstart).microseconds * 1e-6,
             "s",
         )
-        print_dec("self.fpga_handle_process.start() done")
+        print_debug("self.fpga_handle_process.start() done")
 
         if ((self.configuration["bitfile2"] != "") and
             (self.configuration["ni_address2"] != "")):
@@ -109,7 +111,7 @@ class FpgaHandle(object):
             )
             if self.nifpga_obj2.fpga_vi_state != nifpga.FpgaViState.Running:
                 raise("FPGA2 NOT STARTED")
-            print_dec("FPGA2 started")
+            print_debug("FPGA2 started")
 
         # Session(bitfile, resource, no_run=False, reset_if_last_session_on_exit=False, **kwargs)
         self.nifpga_obj = nifpga.Session(
@@ -118,7 +120,7 @@ class FpgaHandle(object):
             no_run=True,
             reset_if_last_session_on_exit=False,
         )
-        print_dec("FPGA1 configured")
+        print_debug("FPGA1 configured")
 
 
     def fpga_handle_process_isAlive(self):
@@ -128,42 +130,42 @@ class FpgaHandle(object):
             return False
 
     def runfpga(self):
-        print_dec("nifpga_session.run()")
+        print_debug("nifpga_session.run()")
         self.configuration["fpgarunning"].set()
 
     def stop(self):
         self.configuration["stop_event"].set()
         if self.fpga_handle_process.is_alive():
             self.fpga_handle_process.terminate()
-        print_dec("self.fpga_handle_process.join() stopped")
+        print_debug("self.fpga_handle_process.join() stopped")
         self.nifpga_obj.abort()
         self.nifpga_obj.reset()
         self.nifpga_obj.close()
 
-        print_dec("nifpga_obj killed")
+        print_debug("nifpga_obj killed")
 
         if self.nifpga_obj2 is not None:
             self.nifpga_obj2.abort()
             self.nifpga_obj2.reset()
             self.nifpga_obj2.close()
 
-        print_dec("nifpga_obj2 killed")
+        print_debug("nifpga_obj2 killed")
 
     # SLOW VERSION
     # def register_read(self, register, timeout=1000):
-    #     print_dec("register_read.empty before?",self.configuration['queueRegisterReadReq'].empty())
+    #     print_debug("register_read.empty before?",self.configuration['queueRegisterReadReq'].empty())
     #     self.configuration['queueRegisterReadReq'].put((register,))
     #     ret=self.configuration['queueRegisterRead'].get(timeout=timeout)
-    #     print_dec("register_read", register, ret)
+    #     print_debug("register_read", register, ret)
     #     return ret
     #
     # def register_read_all(self, timeout=1000):
     #     mydict = {}
-    #     print_dec(self.configuration['list_registers'])
+    #     print_debug(self.configuration['list_registers'])
     #     for i in self.configuration['list_registers']:
     #         mydict.update(self.register_read(i, timeout))
     #
-    #     print_dec(mydict)
+    #     print_debug(mydict)
     #     return mydict
 
     def register_read(self, register, timeout=1000):
@@ -202,19 +204,19 @@ class FpgaHandle(object):
     #     return self.configuration["queueFifoRead"].get(timeout)
 
     def set_fifo_chuck_size_digital(self, fifo_chuck_size_digital):
-        print_dec("set_fifo_chuck_size_digital", fifo_chuck_size_digital)
+        print_debug("set_fifo_chuck_size_digital", fifo_chuck_size_digital)
         self.configuration["fifo_chuck_size_digital"].value = fifo_chuck_size_digital
 
     def set_fifo_chuck_size_analog(self, fifo_chuck_size_analog):
-        print_dec("set_fifo_chuck_size_analog", fifo_chuck_size_analog)
+        print_debug("set_fifo_chuck_size_analog", fifo_chuck_size_analog)
         self.configuration["fifo_chuck_size_analog"].value = fifo_chuck_size_analog
 
     def set_expected_words_data_digital(self, expected_words_data_digital):
-        print_dec("set_expected_words_data_digital", expected_words_data_digital)
+        print_debug("set_expected_words_data_digital", expected_words_data_digital)
         self.configuration["expected_words_data_digital"].value = expected_words_data_digital
 
     def set_expected_words_data_analog(self, expected_words_data_analog):
-        print_dec("set_expected_words_data_analog", expected_words_data_analog)
+        print_debug("set_expected_words_data_analog", expected_words_data_analog)
         self.configuration["expected_words_data_analog"].value = expected_words_data_analog
 
     def set_list_fifos_to_read_continously(
@@ -225,5 +227,9 @@ class FpgaHandle(object):
             list_fifos_to_read_continously
         )
 
+    def get_actual_fifo_depth(self):
+        return self.configuration["actual_fifo_depth"].value
+
     def get_actual_depth(self):
-        return self.configuration["actual_depth"].value
+        return self.get_actual_fifo_depth()
+

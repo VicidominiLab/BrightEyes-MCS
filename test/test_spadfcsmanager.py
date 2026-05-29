@@ -5,9 +5,26 @@ sys.path.insert(1, os.getcwd())
 
 import unittest
 from unittest.mock import MagicMock, patch
+import numpy as np
 from brighteyes_mcs.libs.spad_fcs_manager import SpadFcsManager
 
 class TestSpadFcsManager(unittest.TestCase):
+
+    def parse_dfd_metadata_from_bitfile_name_extracts_values(self):
+        cycle_mhz, dfd_nbins = SpadFcsManager.parse_dfd_metadata_from_bitfile_name(
+            "bitfiles/SingleBoard-Digital-PCIe7820R-49CH-40M91.lvbitx"
+        )
+
+        self.assertEqual(cycle_mhz, 40)
+        self.assertEqual(dfd_nbins, 91)
+
+    def parse_dfd_metadata_from_bitfile_name_falls_back_cycle(self):
+        cycle_mhz, dfd_nbins = SpadFcsManager.parse_dfd_metadata_from_bitfile_name(
+            "bfdades/SgfgsBogsfgsd-Dgsfgital-Pfeqrqe7qre0R-25CH-37M71.lvbitx"
+        )
+
+        self.assertEqual(cycle_mhz, 40)
+        self.assertEqual(dfd_nbins, 71)
 
     def acquisition_run_sets_acquisition_run_event(self):
         instance = SpadFcsManager()
@@ -135,6 +152,57 @@ class TestSpadFcsManager(unittest.TestCase):
         result = instance.getPreviewImage()
 
         self.assertTrue((result == np.array([[1, 2], [3, 4]])).all())
+
+    def getTrace_in_dfd_mode_returns_counts_per_second(self):
+        with patch("brighteyes_mcs.libs.spad_fcs_manager.mp.Manager", return_value=MagicMock()):
+            instance = SpadFcsManager()
+        instance.DFD_Activate = True
+        instance.time_resolution = 2.0
+        instance.clk_multiplier = 2
+        instance.timebins_per_pixel = 8
+        instance.trace_sample_per_bins = 5
+        instance.expected_words_data_per_frame_digital = 80
+        instance.trace_pos = MagicMock(value=0)
+        instance.loc_previewed = {"FIFO": MagicMock(value=10)}
+        instance.shared_trace = MagicMock()
+        instance.shared_trace.get_numpy_handle = MagicMock(
+            return_value=np.array(
+                [
+                    [0.0, 1.0, 2.0, 3.0],
+                    [10.0, 20.0, 30.0, 40.0],
+                ]
+            )
+        )
+        instance.shared_trace_dfd = MagicMock()
+        instance.shared_trace_dfd.get_numpy_handle = MagicMock(
+            return_value=np.array(
+                [
+                    [0.0, 1.0, 2.0, 3.0],
+                    [4.0, 8.0, 12.0, 16.0],
+                    [20.0, 40.0, 60.0, 80.0],
+                ]
+            )
+        )
+
+        trace, trace_pos = instance.getTrace()
+        dfd_trace = instance.getDfdTrace()
+
+        self.assertEqual(trace_pos, 0)
+        np.testing.assert_allclose(trace[0], np.array([0.0, 10e-6, 20e-6, 30e-6]))
+        np.testing.assert_allclose(
+            trace[1],
+            np.array([1.0e6, 2.0e6, 3.0e6, 4.0e6]),
+        )
+
+        np.testing.assert_allclose(dfd_trace[0], np.array([0.0, 1.0, 2.0, 3.0]))
+        np.testing.assert_allclose(
+            dfd_trace[1],
+            np.array([1.0e6, 2.0e6, 3.0e6, 4.0e6]),
+        )
+        np.testing.assert_allclose(
+            dfd_trace[2],
+            np.array([20.0 / (12e-6), 40.0 / (12e-6), 60.0 / (8e-6), 80.0 / (8e-6)]),
+        )
 
 
 if __name__ == '__main__':

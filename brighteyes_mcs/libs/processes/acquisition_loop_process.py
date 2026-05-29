@@ -1,3 +1,5 @@
+﻿"""Acquisition worker that converts FIFO payloads into preview images, traces, and HDF5 writes."""
+
 import multiprocessing as mp
 import os
 import threading
@@ -11,9 +13,10 @@ import psutil
 import numpy as np
 
 # from ..is_parent_alive import CheckParentAlive
-from ..h5manager import H5Manager
+from ..h5manager import H5ManagerProcessClient
 
 # import pprofile
+#TODO: NEED TO BE TESTED THE NEW ADDER
 
 try:
     from ..cython.fastconverter import (
@@ -35,7 +38,7 @@ except Exception as e:
     )
     os._exit(1)
 
-from ..print_dec import print_dec, set_debug
+from ..print_debug import print_debug, set_debug
 from numpy import sqrt
 
 import numpy as np
@@ -67,6 +70,8 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
         (list_b_digital, list_x_digital, list_y_digital, list_z_digital, list_rep_digital)
     """
 
+    # Pointer decoding expands each FIFO packet into per-sample coordinates; this
+    # scales linearly with timebins and is one of the dominant vectorized costs.
     list_pointer = np.arange(pointer_start, pointer_start + gap)
     list_pointer_shifted = list_pointer + (delay * timebinsPerPixel)
     list_pixel = list_pointer_shifted // timebinsPerPixel
@@ -90,6 +95,206 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
     return list_b_digital, list_x_digital, list_y_digital, list_z_digital, list_rep_digital
 
 
+def circular_mean_std(weights):
+    """
+    Compute circular mean and two circular std estimates for histogram weights.
+    """
+    w = np.asarray(weights, dtype=float)
+    n = w.shape[-1]
+
+    total = np.sum(w, axis=-1)
+    k = np.arange(n, dtype=float)
+    theta = 2.0 * np.pi * k / n
+
+    C = np.sum(w * np.cos(theta), axis=-1)
+    S = np.sum(w * np.sin(theta), axis=-1)
+
+    theta_mean = np.arctan2(S, C)
+    theta_mean = np.where(theta_mean < 0, theta_mean + 2.0 * np.pi, theta_mean)
+    mean_bin = n * theta_mean / (2.0 * np.pi)
+
+    R = np.zeros_like(total, dtype=float)
+    positive = total > 0
+    R[positive] = np.hypot(C[positive], S[positive]) / total[positive]
+    R = np.clip(R, 1e-15, 1.0)
+
+    std_circ = (n / (2.0 * np.pi)) * np.sqrt(-2.0 * np.log(R))
+
+    d = (k - mean_bin[..., None] + n / 2.0) % n - n / 2.0
+    var_wrap = np.zeros_like(total, dtype=float)
+    var_wrap[positive] = np.sum(w[positive] * d[positive] ** 2, axis=-1) / total[positive]
+    std_wrap = np.sqrt(var_wrap)
+
+    return mean_bin, std_circ, std_wrap, R
+
+
+def circular_mean_from_positions(weights, phases):
+    """
+    weights : (..., M)
+    phases  : (M,) in [0, 1), referred to the full T_cycle
+
+    Returns
+    -------
+    mean_phase : (...) in [0, 1)
+    std_phase  : (...) in cycle units
+    """
+    weights = np.asarray(weights, dtype=float)
+    phases = np.asarray(phases, dtype=float)
+
+    angles = 2.0 * np.pi * phases
+    z = np.sum(weights * np.exp(1j * angles), axis=-1)
+
+    wsum = np.sum(weights, axis=-1)
+    z = np.where(wsum > 0, z / wsum, np.nan + 1j * np.nan)
+
+    mean_angle = np.mod(np.angle(z), 2.0 * np.pi)
+    mean_phase = mean_angle / (2.0 * np.pi)
+
+    R = np.abs(z)
+    std_angle = np.sqrt(np.maximum(0.0, -2.0 * np.log(np.clip(R, 1e-15, 1.0))))
+    std_phase = std_angle / (2.0 * np.pi)
+
+    return mean_phase, std_phase
+
+
+def flim_parameters_from_3samples(d1, d2, d3, T_cycle, sample_idx, peak_idx=None, total_bins=None):
+    """
+    Estimate lifetime and quality metrics from three sampled points.
+
+    Tau is returned in T_cycle units, where 1.0 corresponds to one full cycle.
+    Callers that need physical time can convert it afterwards, for example to ns.
+    """
+    if total_bins is None or total_bins <= 0:
+        raise ValueError("total_bins must be provided and > 0")
+
+    weights = np.stack([d1, d2, d3], axis=-1).astype(float)
+    sample_idx = np.asarray(sample_idx, dtype=float)
+    sample_phase = np.mod(sample_idx / float(total_bins), 1.0)
+
+    phase, std_circ = circular_mean_from_positions(weights, sample_phase)
+    tau = phase
+    if peak_idx is not None:
+        peak_phase = np.mod(float(peak_idx), float(total_bins)) / float(total_bins)
+        tau = np.mod(peak_phase-phase, 1.0)
+
+    brightness = np.sum(weights, axis=-1)
+    quality = std_circ
+    valid = brightness > 0
+
+    return tau, brightness, quality, valid
+
+
+def flim_map_to_hcl(tau, brightness, quality, valid,
+                    tau_min, tau_max,
+                    log_brightness=True,
+                    alpha=1.0):
+    h = np.zeros_like(tau, dtype=float)
+    mask = valid & np.isfinite(tau)
+    if tau_max > tau_min:
+        h[mask] = (tau[mask] - tau_min) / (tau_max - tau_min)
+    h = np.clip(h, 0.0, 1.0)
+
+    c = np.zeros_like(tau, dtype=float)
+    c[valid] = np.clip(quality[valid], 0.0, 1.0)
+
+    l = brightness.astype(float)
+    l[~valid] = 0
+
+    return h, c, l
+
+
+def _lab_f_inv(t):
+    delta = 6.0 / 29.0
+    return np.where(
+        t > delta,
+        t ** 3,
+        3.0 * (delta ** 2) * (t - 4.0 / 29.0),
+    )
+
+
+def lch_to_srgb(l, c, h):
+    """
+    Convert CIE LCh(ab) values to sRGB.
+    """
+    angle = 2.0 * np.pi * h
+    a = c * np.cos(angle)
+    b = c * np.sin(angle)
+
+    fy = (l + 16.0) / 116.0
+    fx = fy + a / 500.0
+    fz = fy - b / 200.0
+
+    # D65 reference white
+    Xn = 95.047
+    Yn = 100.0
+    Zn = 108.883
+
+    X = Xn * _lab_f_inv(fx) / 100.0
+    Y = Yn * _lab_f_inv(fy) / 100.0
+    Z = Zn * _lab_f_inv(fz) / 100.0
+
+    r_lin = 3.2406 * X - 1.5372 * Y - 0.4986 * Z
+    g_lin = -0.9689 * X + 1.8758 * Y + 0.0415 * Z
+    b_lin = 0.0557 * X - 0.2040 * Y + 1.0570 * Z
+
+    rgb_lin = np.stack([r_lin, g_lin, b_lin], axis=-1)
+
+    threshold = 0.0031308
+    rgb = np.where(
+        rgb_lin <= threshold,
+        12.92 * rgb_lin,
+        1.055 * np.power(np.clip(rgb_lin, 0.0, None), 1.0 / 2.4) - 0.055,
+    )
+    return np.clip(rgb, 0.0, 1.0)
+
+
+def flim_render_hcl(tau, brightness, quality, valid,
+                    tau_min, tau_max,
+                    log_brightness=True,
+                    alpha=1.0):
+    """
+    Convert lifetime parameters into RGB visualization using HCL/LCh.
+    """
+    h, c, l = flim_map_to_hcl(
+        tau, brightness, quality, valid, tau_min, tau_max, log_brightness, alpha
+    )
+    return lch_to_srgb(l, c, h)
+
+
+def accumulate_unordered_sum_4d(dst, list_y, list_x, list_b, values):
+    """
+    Faster replacement for np.add.at(dst, (y, x, b), values) with integer-safe accumulation.
+    Works with unordered indices and repeated coordinates by grouping equal (y,x,b).
+    """
+    if values.size == 0:
+        return
+
+    # Group equal coordinates once and perform a single indexed accumulation per
+    # unique voxel; this is much cheaper than repeated np.add.at on dense data.
+    shape_x = dst.shape[1]
+    shape_b = dst.shape[2]
+
+    lin = (
+        (list_y.astype(np.int64) * shape_x + list_x.astype(np.int64)) * shape_b
+        + list_b.astype(np.int64)
+    )
+
+    order = np.argsort(lin, kind="mergesort")
+    lin_sorted = lin[order]
+    values_sorted = values[order]
+
+    group_start_mask = np.empty(lin_sorted.shape[0], dtype=bool)
+    group_start_mask[0] = True
+    group_start_mask[1:] = lin_sorted[1:] != lin_sorted[:-1]
+    group_starts = np.nonzero(group_start_mask)[0]
+
+    grouped_values = np.add.reduceat(values_sorted, group_starts, axis=0)
+    lin_unique = lin_sorted[group_starts]
+
+    flat = dst.reshape(-1, dst.shape[-1])
+    flat[lin_unique] += grouped_values
+
+
 class AcquisitionLoopProcess(mp.Process):
     def __init__(
             self,
@@ -107,20 +312,21 @@ class AcquisitionLoopProcess(mp.Process):
         self.gap_digital_in_sample = 0
         self.daemon = True
         set_debug(debug)
-        print_dec("AcquisitionLoopProcess INIT")
+        print_debug("AcquisitionLoopProcess INIT")
+        self.shared_objects = shared_objects
 
         self.DATA_WORDS_PER_SAMPLE_ANALOG = 1
 
         if channels == 25:
-            print_dec("Found 25 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
+            print_debug("Found 25 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
             self.channels = 25
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 2
         elif channels == 49:
-            print_dec("Found 49 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 8")
+            print_debug("Found 49 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 8")
             self.channels = 49
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 8
         else:
-            print_dec("Found NOT STANDARD NUMBER OF CHANNELS FALLBACK TO DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
+            print_debug("Found NOT STANDARD NUMBER OF CHANNELS FALLBACK TO DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
             self.channels = 25
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 2
 
@@ -133,6 +339,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.current_frame_analog = 0
 
         self.shm_image_xy_rgb = shared_objects["shared_image_xy_rgb"]
+        self.shm_image_xy_hcl = shared_objects["shared_image_xy_hcl"]
         self.shm_image_xy = shared_objects["shared_image_xy"]
         self.shm_image_xz = shared_objects["shared_image_xz"]
         self.shm_image_zy = shared_objects["shared_image_zy"]
@@ -141,13 +348,14 @@ class AcquisitionLoopProcess(mp.Process):
         self.shm_fingerprint_mask = shared_objects["shared_fingerprint_mask"]
 
         self.shm_trace = shared_objects["shared_trace"]
+        self.shm_trace_dfd = shared_objects["shared_trace_dfd"]
         self.shm_number_of_threads_h5 = shared_objects["number_of_threads_h5"]
 
         self.autocorrelation_maxx = shared_objects["autocorrelation_maxx"]
         self.trace_bins = shared_objects["trace_bins"]
         self.trace_sample_per_bins = shared_objects["trace_sample_per_bins"]
         self.trace_pos = shared_objects["trace_pos"]
-        self.imposed_data_shift = shared_objects["imposed_data_shift"]
+        self.compensation_delay_for_snake = shared_objects["compensation_delay_for_snake"]
 
 
         self.timebinsPerPixel = shared_dict["timebins_per_pixel"] * \
@@ -167,6 +375,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.snake_walk_z = shared_dict["snake_walk_z"]
 
         self.clk_multiplier = shared_dict["clk_multiplier"]
+        self.dfd_cycle_mhz = shared_dict["dfd_cycle_mhz"]
         self.dfd_shift = shared_dict["dfd_shift"]
 
         self.filenameh5 = shared_dict["filenameh5"]
@@ -193,11 +402,13 @@ class AcquisitionLoopProcess(mp.Process):
         self.trace_reset_event = mp.Event()
         self.FCS_reset_event = mp.Event()
 
-        self.buffer_size_in_sample_digital = shared_dict["preview_buffer_size_in_sample"]  # 15000
-        self.buffer_size_in_sample_analog = self.buffer_size_in_sample_digital
+        self.preview_buffer_capacity_samples_digital = shared_dict["preview_buffer_capacity_samples"]  # 15000
+        self.preview_buffer_capacity_samples_analog = self.preview_buffer_capacity_samples_digital
 
-        self.buffer_size_in_words_digital = self.timebinsPerPixel * self.buffer_size_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL
-        self.buffer_size_in_words_analog = self.timebinsPerPixel * self.buffer_size_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG
+        # Buffer sizes grow with both preview depth and timebins-per-pixel, so
+        # large DFD/high-sample-rate scans can multiply memory pressure quickly.
+        self.buffer_size_in_words_digital = self.timebinsPerPixel * self.preview_buffer_capacity_samples_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL
+        self.buffer_size_in_words_analog = self.timebinsPerPixel * self.preview_buffer_capacity_samples_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG
 
         if self.channels == 25:
             self.buffer_digital = np.zeros((self.buffer_size_in_words_digital, 25 + 2), dtype=np.uint64)
@@ -225,7 +436,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.channels_analog = 2
 
-        print_dec("AcquisitionLoopProcess INIT DONE")
+        print_debug("AcquisitionLoopProcess INIT DONE")
 
     def run(self):
 
@@ -261,7 +472,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         p = psutil.Process(os.getpid())
         p.nice(psutil.HIGH_PRIORITY_CLASS)
-        print_dec("AcquisitionLoopProcess RUN - PID:", os.getpid(), p.nice())
+        print_debug("AcquisitionLoopProcess RUN - PID:", os.getpid(), p.nice())
 
         stop_event_proxy.clear()
         self.current_pointer_in_sample_digital = 0  # self.timebinsPerPixel * self.DATA_WORDS_PER_SAMPLE_DIGITAL
@@ -270,8 +481,9 @@ class AcquisitionLoopProcess(mp.Process):
         self.current_frame_digital = 0
         self.current_frame_analog = 0
 
-        print_dec(stop_event_proxy.is_set())
+        print_debug(stop_event_proxy.is_set())
         self.image_xy_rgb = self.shm_image_xy_rgb.get_numpy_handle()
+        self.image_xy_hcl = self.shm_image_xy_hcl.get_numpy_handle()
         self.image_xy = self.shm_image_xy.get_numpy_handle()
         self.image_xz = self.shm_image_xz.get_numpy_handle()
         self.image_zy = self.shm_image_zy.get_numpy_handle()
@@ -279,10 +491,12 @@ class AcquisitionLoopProcess(mp.Process):
         self.fingerprint = self.shm_fingerprint.get_numpy_handle()
         self.autocorrelation = self.shm_autocorrelation.get_numpy_handle()
         self.trace = self.shm_trace.get_numpy_handle()
+        self.trace_dfd = self.shm_trace_dfd.get_numpy_handle()
 
         self.fingerprint_mask = self.shm_fingerprint_mask.get_numpy_handle()
 
         self.image_xy_rgb_lock = self.shm_image_xy_rgb.get_lock()
+        self.image_xy_hcl_lock = self.shm_image_xy_hcl.get_lock()
         self.image_xy_lock = self.shm_image_xy.get_lock()
         self.image_xz_lock = self.shm_image_xz.get_lock()
         self.image_zy_lock = self.shm_image_zy.get_lock()
@@ -308,11 +522,16 @@ class AcquisitionLoopProcess(mp.Process):
         #     self.timebinsPerPixel = self.DFD_nbins
 
         if not self.do_not_save:
-            self.h5mgr = H5Manager(
-                self.filenameh5, shm_number_of_threads_h5=self.shm_number_of_threads_h5
+            self.h5mgr = H5ManagerProcessClient(
+                self.shared_objects["h5_command_queue"],
+                self.shared_objects["h5_response_queue"],
+            )
+            self.h5mgr.init(
+                self.filenameh5,
+                new_file=True,
             )
             # self.h5file = h5py.File(self.filenameh5, "w")
-            print_dec("Filename:", self.filenameh5)
+            print_debug("Filename:", self.filenameh5)
 
             if "FIFO" in self.shm_activated_fifos_list:
                 self.h5mgr.init_dataset(
@@ -334,6 +553,7 @@ class AcquisitionLoopProcess(mp.Process):
                     np.int32,
                 )
 
+            # Save buffers hold one full frame before it is committed to HDF5.
             self.buffer_for_save_digital = np.zeros(
                 (
                     self.shape[1],
@@ -363,12 +583,12 @@ class AcquisitionLoopProcess(mp.Process):
                 ),
                 dtype="int32",
             )
-            print_dec("BUFFER SIZE")
-            print_dec("buffer_for_save size = %.3f GB" % (
+            print_debug("BUFFER SIZE")
+            print_debug("buffer_for_save size = %.3f GB" % (
                         self.buffer_for_save_digital.size * self.buffer_for_save_digital.itemsize / 1024 / 1024 / 1024))
-            print_dec("buffer_for_save_channels_extra size = %.3f GB" % (
+            print_debug("buffer_for_save_channels_extra size = %.3f GB" % (
                         self.buffer_for_save_digital_extra_ch.size * self.buffer_for_save_digital_extra_ch.itemsize / 1024 / 1024 / 1024))
-            print_dec("buffer_analog_for_save size = %.3f GB" % (
+            print_debug("buffer_analog_for_save size = %.3f GB" % (
                         self.buffer_analog_for_save.size * self.buffer_analog_for_save.itemsize / 1024 / 1024 / 1024))
 
         self.total_photon = 0
@@ -388,11 +608,14 @@ class AcquisitionLoopProcess(mp.Process):
         self.fingerprint[4, :, :] = 0
 
         self.autocorrelation[0, :] = correlator.get_delays() * self.time_resolution
-        print_dec("correlator:", correlator.get_delays(), self.time_resolution)
+        print_debug("correlator:", correlator.get_delays(), self.time_resolution)
         self.autocorrelation[1, :] = 0
 
         self.trace[0, :] = temporalBinner.get_x()
         self.trace[1, :] = 0
+        self.trace_dfd[0, :] = np.arange(self.DFD_nbins, dtype=np.int64)
+        self.trace_dfd[1, :] = 0
+        self.trace_dfd[2, :] = 0
 
         self.gap_digital_in_sample = 0
         self.gap_analog_in_sample = 0
@@ -407,13 +630,13 @@ class AcquisitionLoopProcess(mp.Process):
             None  # This buffer is used only when the data cross two frames
         )
 
-        print_dec("expected_words_data_digital", self.expected_words_data_digital,
+        print_debug("expected_words_data_digital", self.expected_words_data_digital,
                   "\nexpected_words_data_per_frame_digital", self.expected_words_data_per_frame_digital,
                   "\nexpected_words_data_analog", self.expected_words_data_analog,
                   "\nexpected_words_data_per_frame_analog", self.expected_words_data_per_frame_analog, "\n")
 
-        print_dec("shm_activated_fifos_list", self.shm_activated_fifos_list)
-        print_dec("self.activate_show_preview", self.activate_show_preview)
+        print_debug("shm_activated_fifos_list", self.shm_activated_fifos_list)
+        print_debug("self.activate_show_preview", self.activate_show_preview)
 
         # self.data_queue["FIFO"] = self.data_queue["FIFO"]
         # self.shm_loc_acquired["FIFO"] = self.shm_loc_acquired["FIFO"]
@@ -425,7 +648,7 @@ class AcquisitionLoopProcess(mp.Process):
         channels = self.channels
         channels_y = int(sqrt(self.channels))
         channels_x = channels_y
-        print_dec("Channels ", channels, channels_x, channels_y)
+        print_debug("Channels ", channels, channels_x, channels_y)
 
         if channels == 25:
             converter = convertRawDataToCountsDirect
@@ -434,13 +657,28 @@ class AcquisitionLoopProcess(mp.Process):
 
         clk_multiplier = self.clk_multiplier
 
-        print_dec("SHAPE before while", self.shape)
+        print_debug("SHAPE before while", self.shape)
 
         self.selected_channel = self.shared_dict["channel"]
 
+        def update_trace(trace_values, time_bins=None):
+            temporalBinner.add(trace_values)
+            self.trace_pos.value = temporalBinner.get_current_position_bins()
+            self.trace[1, :] = temporalBinner.get_bins()
+
+            if self.DFD_Activate and time_bins is not None:
+                valid = (time_bins >= 0) & (time_bins < self.trace_dfd.shape[1])
+                self.trace_dfd[1, :] = 0
+                if np.any(valid):
+                    np.add.at(self.trace_dfd[1, :], time_bins[valid], trace_values[valid])
+                    np.add.at(self.trace_dfd[2, :], time_bins[valid], trace_values[valid])
+
         def finalize_frame_fifo():
-            print_dec("finalize_frame_fifo()")
+            print_debug("finalize_frame_fifo()")
             try:
+                if self.activate_trace and self.DFD_Activate:
+                    self.trace_dfd[2, :] = 0
+
                 # reset and finalize fingerprints (same block as original)
                 frameComplete["FIFO"] = False
                 self.fingerprint[3, :, :] = self.fingerprint[0, :, :]
@@ -451,7 +689,7 @@ class AcquisitionLoopProcess(mp.Process):
 
                 current_z_digital = (self.current_frame_digital - 1) % self.shape[2]
                 current_rep_digital = (self.current_frame_digital - 1) // self.shape[2]
-                print_dec("FRAME [FIFO] ", current_z_digital, current_rep_digital, " DONE")
+                print_debug("FRAME [FIFO] ", current_z_digital, current_rep_digital, " DONE")
 
                 self.shared_dict_proxy.update(
                     {
@@ -477,19 +715,19 @@ class AcquisitionLoopProcess(mp.Process):
                     )
                     self.buffer_for_save_digital[:] = 0
                     self.buffer_for_save_digital_extra_ch[:] = 0
-                    print_dec("done digital add_to_dataset")
-                    print_dec(self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL)
+                    print_debug("done digital add_to_dataset")
+                    print_debug(self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL)
             except Exception as e:
-                print_dec("Error in finalize_frame_fifo:", e)
+                print_debug("Error in finalize_frame_fifo:", e)
 
         def finalize_frame_fifo_analog():
-            print_dec("finalize_frame_fifo_analog()")
+            print_debug("finalize_frame_fifo_analog()")
             try:
                 frameComplete["FIFOAnalog"] = False
 
                 current_z_analog = (self.current_frame_analog - 1) % self.shape[2]
                 current_rep_analog = (self.current_frame_analog - 1) // self.shape[2]
-                print_dec("FRAME [FIFOAnalog] ", current_z_analog, current_rep_analog, " DONE")
+                print_debug("FRAME [FIFOAnalog] ", current_z_analog, current_rep_analog, " DONE")
 
                 self.shared_dict_proxy.update(
                     {
@@ -507,10 +745,10 @@ class AcquisitionLoopProcess(mp.Process):
                         current_z_analog,
                     )
                     self.buffer_analog_for_save[:] = 0
-                    print_dec("done analog add_to_dataset")
-                    print_dec(self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG, self.expected_words_data_analog)
+                    print_debug("done analog add_to_dataset")
+                    print_debug(self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG, self.expected_words_data_analog)
             except Exception as e:
-                print_dec("Error in finalize_frame_fifo_analog:", e)
+                print_debug("Error in finalize_frame_fifo_analog:", e)
 
         while not stop_event_proxy.is_set():
             selected_channel = self.selected_channel
@@ -534,7 +772,7 @@ class AcquisitionLoopProcess(mp.Process):
                             internal_buffer_digital is not None and internal_buffer_digital.size != 0
                     ):  # if the previous queue data was between two frames
 
-                        print_dec(
+                        print_debug(
                             len(internal_buffer_digital),
                             remaining_digital_in_words,
                             max_gap_frame_digital_in_words,
@@ -542,7 +780,7 @@ class AcquisitionLoopProcess(mp.Process):
                         )
                         # if remaining_digital_in_words <= 0 means we already completed the frame before consuming internal_buffer_digital
                         if remaining_digital_in_words < 0:
-                            print_dec("THIS IS DEEPLY WRONG!! remaining_digital_in_words < 0, ", remaining_digital_in_words)
+                            print_debug("THIS IS DEEPLY WRONG!! remaining_digital_in_words < 0, ", remaining_digital_in_words)
 
                         elif remaining_digital_in_words == 0:
                             frameComplete["FIFO"] = True
@@ -584,13 +822,13 @@ class AcquisitionLoopProcess(mp.Process):
                         else:
                             # normal split case: packet crosses frame boundary
                             if (self.current_pointer_in_sample_digital + self.gap_digital_in_sample) * self.DATA_WORDS_PER_SAMPLE_DIGITAL >= max_gap_frame_digital_in_words:
-                                print_dec(
+                                print_debug(
                                     f"(self.current_pointer_in_sample_digital + self.gap_digital_in_sample) * self.DATA_WORDS_PER_SAMPLE_DIGITAL = {(self.current_pointer_in_sample_digital + self.gap_digital_in_sample) * self.DATA_WORDS_PER_SAMPLE_DIGITAL}, "
                                     f"self.gap_digital_in_sample = {self.gap_digital_in_sample}, "
                                     f"max_gap_frame_digital_in_words = {max_gap_frame_digital_in_words}"
                                 )
 
-                                print_dec(
+                                print_debug(
                                     f"data_from_queue_digital.shape = {data_from_queue_digital.shape}, "
                                     f"remaining_digital_in_words = {remaining_digital_in_words}, "
                                     f"(self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL) = {(self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL)}"
@@ -611,8 +849,8 @@ class AcquisitionLoopProcess(mp.Process):
                     # safety: if we would exceed expected_words_data_digital, truncate gap
                     if self.expected_words_data_digital < (self.current_pointer_in_sample_digital + self.gap_digital_in_sample) * self.DATA_WORDS_PER_SAMPLE_DIGITAL:
                         self.gap_digital_in_sample = max_gap_frame_digital_in_words // self.DATA_WORDS_PER_SAMPLE_DIGITAL - self.current_pointer_in_sample_digital
-                        print_dec("MISTERY!!!")
-                        print_dec("New GAP", self.gap_digital_in_sample)
+                        print_debug("MISTERY!!!")
+                        print_debug("New GAP", self.gap_digital_in_sample)
 
                     # If there's no data to decode (gap==0 or data_from_queue_digital is None) skip decoding section.
                     if self.gap_digital_in_sample > 0 and data_from_queue_digital is not None:
@@ -627,15 +865,15 @@ class AcquisitionLoopProcess(mp.Process):
                             snake_walk_xy=self.snake_walk_xy,
                             snake_walk_z=self.snake_walk_z,
                             clk_multiplier=clk_multiplier,
-                            delay=self.imposed_data_shift.value
+                            delay=self.compensation_delay_for_snake.value
                         )
 
                         self.shared_dict_proxy["last_packet_size"] = self.gap_digital_in_sample
 
                         if self.gap_digital_in_sample == 0:
-                            print_dec("self.gap_digital_in_sample = 0")
+                            print_debug("self.gap_digital_in_sample = 0")
                         if self.gap_digital_in_sample * self.DATA_WORDS_PER_SAMPLE_DIGITAL > self.buffer_size_in_words_digital:
-                            print_dec(
+                            print_debug(
                                 "ERROR: Too many data larger than the buffer. GAP",
                                 self.gap_digital_in_sample,
                                 "buffer_size_in_words_digital",
@@ -657,7 +895,7 @@ class AcquisitionLoopProcess(mp.Process):
                                 )
                                 == -1
                         ):
-                            print_dec(
+                            print_debug(
                                 "==============DISASTER IN THE PREVIEW====================="
                             )
 
@@ -706,11 +944,10 @@ class AcquisitionLoopProcess(mp.Process):
                                             1, :
                                         ] = correlator.get_correlation_normalized()
                                     if self.activate_trace:
-                                        temporalBinner.add(buffer_up_to_gap_digital[:, selected_channel])
-                                        self.trace_pos.value = (
-                                            temporalBinner.get_current_position_bins()
+                                        update_trace(
+                                            buffer_up_to_gap_digital[:, selected_channel],
+                                            list_b_digital,
                                         )
-                                        self.trace[1, :] = temporalBinner.get_bins()
 
                             elif selected_channel.startswith("Sum"):
                                 if self.activate_show_preview == True:
@@ -753,13 +990,21 @@ class AcquisitionLoopProcess(mp.Process):
                                         1, :
                                     ] = correlator.get_correlation_normalized()
                                 if self.activate_trace:
-                                    temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample])
-                                    self.trace_pos.value = (
-                                        temporalBinner.get_current_position_bins()
+                                    update_trace(
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample],
+                                        list_b_digital,
                                     )
-                                    self.trace[1, :] = temporalBinner.get_bins()
 
-                            elif selected_channel.startswith("RGB"):
+                            elif selected_channel.startswith("RGB") or selected_channel.startswith(
+                                (
+                                    "COLOR_LIFETIME",
+                                    "LIFETIME_HCL",
+                                    "LIFETIME_HSV",
+                                    "LIFETIME_HSL",
+                                    "LIFETIME",
+                                    "QUALITY",
+                                )
+                            ):
                                 if selected_channel.startswith("RGB "):
                                     if self.activate_show_preview == True:
                                         channelA = int(selected_channel.split(" ")[1])
@@ -877,25 +1122,126 @@ class AcquisitionLoopProcess(mp.Process):
 
                                     self.image_xy_rgb_lock.release()
 
+                                if selected_channel.startswith(
+                                    (
+                                        "COLOR_LIFETIME",
+                                        "LIFETIME_HCL",
+                                        "LIFETIME_HSV",
+                                        "LIFETIME_HSL",
+                                        "LIFETIME",
+                                        "QUALITY",
+                                    )
+                                ):
+                                    tparts = 3
+                                    tbins = max(self.timebinsPerPixel // max(clk_multiplier, 1), 1)
+                                    gbins = max(tbins // tparts, 1)
+
+                                    self.image_xy_rgb_lock.acquire()
+                                    self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
+                                    self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
+                                    self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
+
+                                    cond0 = list_b_digital < gbins
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 0],
+                                        (list_y_digital[cond0], list_x_digital[cond0]),
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond0],
+                                    )
+
+                                    cond0 = (list_b_digital >= gbins) & (list_b_digital < 2 * gbins)
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 1],
+                                        (list_y_digital[cond0], list_x_digital[cond0]),
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond0],
+                                    )
+
+                                    cond0 = list_b_digital >= 2 * gbins
+                                    np.add.at(
+                                        self.image_xy_rgb[:, :, 2],
+                                        (list_y_digital[cond0], list_x_digital[cond0]),
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond0],
+                                    )
+
+                                    touched_pixels = np.unique(
+                                        np.stack([list_y_digital, list_x_digital], axis=1),
+                                        axis=0,
+                                    )
+                                    yy = touched_pixels[:, 0]
+                                    xx = touched_pixels[:, 1]
+
+                                    d1 = self.image_xy_rgb[:, :, 0][yy, xx].astype(np.float64)
+                                    d2 = self.image_xy_rgb[:, :, 1][yy, xx].astype(np.float64)
+                                    d3 = self.image_xy_rgb[:, :, 2][yy, xx].astype(np.float64)
+                                    chunk_lengths = np.array(
+                                        [gbins, gbins, max(tbins - 2 * gbins, 1)],
+                                        dtype=float,
+                                    )
+                                    chunk_starts = np.array([0.0, float(gbins), float(2 * gbins)], dtype=float)
+                                    sample_idx = chunk_starts + 0.5 * np.maximum(chunk_lengths - 1.0, 0.0)
+
+                                    T_cycle = 1.0 / (
+                                        max(float(self.dfd_cycle_mhz), 1e-12)
+                                        * max(clk_multiplier, 1)
+                                    )
+                                    peak_idx = self.shared_dict.get("dfd_peak_idx", -1)
+                                    if peak_idx is not None and peak_idx < 0:
+                                        peak_idx = None
+                                    tau, brightness, quality, valid = flim_parameters_from_3samples(
+                                        d1,
+                                        d2,
+                                        d3,
+                                        T_cycle=T_cycle,
+                                        sample_idx=sample_idx,
+                                        peak_idx=peak_idx,
+                                        total_bins=self.DFD_nbins,
+                                    )
+                                    h, c, l = flim_map_to_hcl(
+                                        tau,
+                                        brightness,
+                                        quality,
+                                        valid,
+                                        tau_min=0.0,
+                                        tau_max=1.0,
+                                    )
+                                    self.image_xy_rgb[yy, xx, 0] = 0
+                                    self.image_xy_rgb[yy, xx, 1] = 0
+                                    self.image_xy_rgb[yy, xx, 2] = 0
+                                    self.image_xy_rgb_lock.release()
+
+                                    self.image_xy_hcl_lock.acquire()
+                                    self.image_xy_hcl[yy, xx, 0] = h
+                                    self.image_xy_hcl[yy, xx, 1] = c
+                                    self.image_xy_hcl[yy, xx, 2] = l
+                                    self.image_xy_hcl_lock.release()
+
                                 if self.active_autocorrelation:
                                     correlator.add(self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample])
                                     self.autocorrelation[
                                         1, :
                                     ] = correlator.get_correlation_normalized()
                                 if self.activate_trace:
-                                    temporalBinner.add(self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample])
-                                    self.trace_pos.value = (
-                                        temporalBinner.get_current_position_bins()
+                                    update_trace(
+                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample],
+                                        list_b_digital,
                                     )
-                                    self.trace[1, :] = temporalBinner.get_bins()
 
                             if not self.do_not_save:
                                 # This is for debug purpose
 
-                                np.add.at(self.buffer_for_save_digital, (list_y_digital, list_x_digital, list_b_digital),
-                                          buffer_up_to_gap_digital[:,:channels])
-                                np.add.at(self.buffer_for_save_digital_extra_ch, (list_y_digital, list_x_digital, list_b_digital),
-                                          buffer_up_to_gap_digital[:,channels:])
+                                accumulate_unordered_sum_4d(
+                                    self.buffer_for_save_digital,
+                                    list_y_digital,
+                                    list_x_digital,
+                                    list_b_digital,
+                                    buffer_up_to_gap_digital[:, :channels],
+                                )
+                                accumulate_unordered_sum_4d(
+                                    self.buffer_for_save_digital_extra_ch,
+                                    list_y_digital,
+                                    list_x_digital,
+                                    list_b_digital,
+                                    buffer_up_to_gap_digital[:, channels:],
+                                )
 
                                 # self.buffer_for_save_digital[
                                 #     list_y_digital, list_x_digital, list_b_digital, :
@@ -919,14 +1265,14 @@ class AcquisitionLoopProcess(mp.Process):
                                 #     buffer_up_to_gap_digital[:, channels:],
                                 # )
 
-                                # print_dec(
+                                # print_debug(
                                 #     self.current_pointer_in_sample_digital,
                                 #     self.current_pointer_in_sample_digital + self.gap_digital_in_sample,
                                 #     self.buffer_digital.shape,
                                 #     buffer_up_to_gap_digital.shape,
                                 # )
                                 # print(self.buffer_digital.shape , buffer_up_to_gap_digital.shape, list_y_digital.shape)
-                                # print_dec(
+                                # print_debug(
                                 #     self.current_frame_digital,
                                 #     self.gap_digital_in_sample,
                                 #     list_y_digital.max(),
@@ -944,7 +1290,7 @@ class AcquisitionLoopProcess(mp.Process):
                                     channels_x, channels_y
                                 )
                             except:
-                                print_dec("buffer_up_to_gap_digital", buffer_up_to_gap_digital)
+                                print_debug("buffer_up_to_gap_digital", buffer_up_to_gap_digital)
                                 self.fingerprint[1, :, :] = 0
 
                             if self.gap_digital_in_sample > 10000:
@@ -955,7 +1301,7 @@ class AcquisitionLoopProcess(mp.Process):
                             self.fingerprint[4, :, :] += self.saturation[:channels].reshape(channels_x, channels_y)
                             self.current_pointer_in_sample_digital += self.gap_digital_in_sample
                             self.shm_loc_previewed["FIFO"].value = self.current_pointer_in_sample_digital
-                            # print_dec(self.current_pointer_in_sample_digital*2, self.gap_digital_in_sample*2, (self.current_pointer_in_sample_digital + self.gap_digital_in_sample)*2)
+                            # print_debug(self.current_pointer_in_sample_digital*2, self.gap_digital_in_sample*2, (self.current_pointer_in_sample_digital + self.gap_digital_in_sample)*2)
 
                             if frameComplete["FIFO"]:
                                 # we still run the same finalization here for the normal path
@@ -975,7 +1321,7 @@ class AcquisitionLoopProcess(mp.Process):
                     ):  # if the previous queue data was between two frames
 
                         if remaining_analog_in_words < 0:
-                            print_dec("THIS IS DEEPLY WRONG!! remaining_analog_in_words < 0, ", remaining_analog_in_words)
+                            print_debug("THIS IS DEEPLY WRONG!! remaining_analog_in_words < 0, ", remaining_analog_in_words)
 
                         elif remaining_analog_in_words == 0:
                             frameComplete["FIFOAnalog"] = True
@@ -1013,13 +1359,13 @@ class AcquisitionLoopProcess(mp.Process):
                             data_from_queue_analog = None
                         else:
                             if (self.current_pointer_in_sample_analog + self.gap_analog_in_sample) * self.DATA_WORDS_PER_SAMPLE_ANALOG >= max_gap_frame_analog_in_words:
-                                print_dec(
+                                print_debug(
                                     f"(self.current_pointer_in_sample_analog + self.gap_analog_in_sample) * self.DATA_WORDS_PER_SAMPLE_ANALOG = {(self.current_pointer_in_sample_analog + self.gap_analog_in_sample) * self.DATA_WORDS_PER_SAMPLE_ANALOG}, "
                                     f"self.gap_analog_in_sample = {self.gap_analog_in_sample}, "
                                     f"max_gap_frame_analog_in_words = {max_gap_frame_analog_in_words}"
                                 )
 
-                                print_dec(
+                                print_debug(
                                     f"data_from_queue_analog.shape = {data_from_queue_analog.shape}, "
                                     f"remaining_analog_in_words = {remaining_analog_in_words}, "
                                     f"(self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG) = {(self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG)}"
@@ -1038,8 +1384,8 @@ class AcquisitionLoopProcess(mp.Process):
 
                     if self.expected_words_data_analog < (self.current_pointer_in_sample_analog + self.gap_analog_in_sample) * self.DATA_WORDS_PER_SAMPLE_ANALOG:
                         self.gap_analog_in_sample = max_gap_frame_analog_in_words // self.DATA_WORDS_PER_SAMPLE_ANALOG - self.current_pointer_in_sample_analog
-                        print_dec("MISTERY")
-                        print_dec("New GAP", self.gap_analog_in_sample)
+                        print_debug("MISTERY")
+                        print_debug("New GAP", self.gap_analog_in_sample)
 
                     # Only decode analog if we have a positive gap and data
                     if self.gap_analog_in_sample > 0 and data_from_queue_analog is not None:
@@ -1050,15 +1396,15 @@ class AcquisitionLoopProcess(mp.Process):
                             self.shape,
                             snake_walk_xy=self.snake_walk_xy,
                             snake_walk_z=self.snake_walk_z,
-                            delay=self.imposed_data_shift.value
+                            delay=self.compensation_delay_for_snake.value
                         )
 
                         self.shared_dict_proxy["last_packet_size"] = self.gap_analog_in_sample
 
                         if self.gap_analog_in_sample == 0:
-                            print_dec("self.gap_analog_in_sample = 0")
+                            print_debug("self.gap_analog_in_sample = 0")
                         if self.gap_analog_in_sample * self.DATA_WORDS_PER_SAMPLE_ANALOG > self.buffer_size_in_words_analog:
-                            print_dec(
+                            print_debug(
                                 "Too many data larger than the buffer. GAP",
                                 self.gap_analog_in_sample,
                                 "buffer_size_in_words_analog",
@@ -1075,7 +1421,7 @@ class AcquisitionLoopProcess(mp.Process):
                                 )
                                 == -1
                         ):
-                            print_dec(
+                            print_debug(
                                 "==============DISASTER IN THE PREVIEW====================="
                             )
 
@@ -1142,7 +1488,7 @@ class AcquisitionLoopProcess(mp.Process):
                             if frameComplete["FIFOAnalog"]:
                                 # finalize analog frame on the normal path
                                 finalize_frame_fifo_analog()
-                            #print_dec("self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog:",
+                            #print_debug("self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog:",
                             #         self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG, self.expected_words_data_analog)
 
 
@@ -1158,8 +1504,11 @@ class AcquisitionLoopProcess(mp.Process):
                 stop_event_proxy.set()
 
             if trace_reset_event_proxy.is_set():
-                print_dec("trace_reset_event.is_set()")
+                print_debug("trace_reset_event.is_set()")
                 temporalBinner.reset()
+                if self.DFD_Activate:
+                    self.trace_dfd[1, :] = 0
+                    self.trace_dfd[2, :] = 0
                 trace_reset_event_proxy.clear()
             if FCS_reset_event_proxy.is_set():
                 correlator.reset()
@@ -1178,25 +1527,26 @@ class AcquisitionLoopProcess(mp.Process):
         if not self.do_not_save:
             # self.h5file.close()
             self.h5mgr.close()
+            self.h5mgr.shutdown()
         self.acquisition_done.set()
-        print_dec("Acquisition done")
+        print_debug("Acquisition done")
         stop_event_proxy.clear()
 
-        print_dec("run() acquisition_loop_process stopped")
+        print_debug("run() acquisition_loop_process stopped")
 
         if VIZTRACER_ON: self.tracer.stop()
         if VIZTRACER_ON: self.tracer.save()
 
     def stop(self):
-        print_dec("AcquisitionLoopProcess STOP")
+        print_debug("AcquisitionLoopProcess STOP")
         self.stop_event.set()
 
     def trace_reset(self):
-        print_dec("Trace Reset")
+        print_debug("Trace Reset")
         self.trace_reset_event.set()
 
     def FCS_reset(self):
-        print_dec("FCS Reset")
+        print_debug("FCS Reset")
         self.FCS_reset_event.set()
 
     def update_dictionary_now(self):
@@ -1220,3 +1570,4 @@ class AcquisitionLoopProcess(mp.Process):
 
     def stop_update_dictionary_slowly(self):
         self.thread_for_dict_stop.set()
+

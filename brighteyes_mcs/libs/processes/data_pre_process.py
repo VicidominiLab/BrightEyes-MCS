@@ -1,6 +1,8 @@
+﻿"""FIFO preprocessing worker that batches raw queue payloads into numpy arrays."""
+
 import multiprocessing as mp
 import numpy as np
-from ..print_dec import print_dec, set_debug
+from ..print_debug import print_debug, set_debug
 
 # from ..is_parent_alive import CheckParentAlive
 import os
@@ -29,7 +31,7 @@ class DataPreProcess(mp.Process):
         """
         # def __init__(self, queue_in, buffer, loc, dict_of_queue_array_out):
         set_debug(debug)
-        print_dec("DataPreProcess INIT")
+        print_debug("DataPreProcess INIT")
         self.queue_in = queue_in
         self.dict_of_shared_loc = dict_of_shared_loc
         self.last_preprocessed_len = last_preprocessed_len
@@ -50,7 +52,7 @@ class DataPreProcess(mp.Process):
         self.timeout = 0 #0.1
 
     def run(self):
-        print_dec("DataPreProcess RUN - PID:", os.getpid())
+        print_debug("DataPreProcess RUN - PID:", os.getpid())
 
         len_buffer = self.len_buffer
         timeout = self.timeout
@@ -69,7 +71,7 @@ class DataPreProcess(mp.Process):
             # databuffer = self.shm_data.get_numpy_handle()
             if not self.queue_in.empty():
                 dict_from_queue = self.queue_in.get()
-                # print_dec(dict_from_queue.keys())
+                # print_debug(dict_from_queue.keys())
                 #fifo_name = list(dict_from_queue.keys())[0]
                 for fifo_name in dict_from_queue.keys():
                     data, len_values = dict_from_queue[fifo_name]
@@ -79,13 +81,15 @@ class DataPreProcess(mp.Process):
                         counter_total_len[fifo_name] = 0
                         time_start[fifo_name] = time.time()
                         # fifo_lists.append(fifo_name)
-                    #pre_buffer_list[fifo_name] += data #not compatible with nifpga-fast-fifo-recv-0.101.6
+                    # Rust FIFO packets currently arrive as numpy arrays, but the
+                    # local pre-buffer is still a Python list, so this conversion is
+                    # one of the hottest overhead sources at high sample rates.
                     pre_buffer_list[fifo_name] += data.tolist()
                     pre_buffer_len[fifo_name] += len_values
                     counter_total_len[fifo_name] += len_values
 
-            # print_dec("fifo_lists", fifo_lists)
-            # print_dec("pre_buffer_list", pre_buffer_list.keys())
+            # print_debug("fifo_lists", fifo_lists)
+            # print_debug("pre_buffer_list", pre_buffer_list.keys())
             for fifo_name in pre_buffer_list.keys():
                 time_stop[fifo_name] = time.time()
                 delta_time[fifo_name] = time_stop[fifo_name] - time_start[fifo_name]
@@ -95,6 +99,8 @@ class DataPreProcess(mp.Process):
                     or delta_time[fifo_name] > timeout
                 ) and (pre_buffer_len[fifo_name] > 0):
                     time_start[fifo_name] = time.time()
+                    # Convert the accumulated Python list back to a contiguous array
+                    # only when the downstream worker is ready to consume it.
                     data_as_array = np.fromiter(
                         pre_buffer_list[fifo_name],
                         dtype=np.uint64,
@@ -111,22 +117,23 @@ class DataPreProcess(mp.Process):
                     pre_buffer_list[fifo_name] = []
                     pre_buffer_len[fifo_name] = 0
 
-        print_dec("counter_total_len ", counter_total_len)
+        print_debug("counter_total_len ", counter_total_len)
         self.stop_event.clear()
         self.stop_event_done.set()
-        print_dec("DataPreProcess self.stop_event.clear() PID: ", os.getpid())
+        print_debug("DataPreProcess self.stop_event.clear() PID: ", os.getpid())
         return
 
     def stop(self):
         # databuffer = self.shm_data.get_numpy_handle()
-        print_dec("DataPreProcess STOP")
+        print_debug("DataPreProcess STOP")
         self.stop_event.set()
-        print_dec("waiting for self.stop_event_done")
+        print_debug("waiting for self.stop_event_done")
         self.stop_event_done.wait(5000)
-        print_dec("waiting for self.stop_event_done DONE")
+        print_debug("waiting for self.stop_event_done DONE")
         self.terminate()
 
     def terminate(self) -> None:
-        print_dec("DataPreProcess.terminate()")
+        print_debug("DataPreProcess.terminate()")
         time.sleep(0.1)
         super().terminate()
+

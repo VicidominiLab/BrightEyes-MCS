@@ -1,4 +1,6 @@
-from .print_dec import print_dec
+﻿"""Runtime discovery and lifecycle management for BrightEyes plug-ins."""
+
+from .print_debug import print_debug
 from os import listdir
 from os.path import isfile, join, isdir
 from PySide6.QtCore import Slot
@@ -34,8 +36,8 @@ class PluginsManager:
         Args:
             string (str): The emitted signal string.
         """
-        print("call", string)
-        print(self.trigger_register)
+        print_debug("call", string)
+        print_debug(self.trigger_register)
         string_splitted = string.split(" ")
         if len(string_splitted) > 0:
             trigger_name = string_splitted[0]
@@ -79,17 +81,17 @@ class PluginsManager:
             n = n + 1
         plugin_instance_name = plugin_name + "_%d" % n
 
-        print_dec(plugin_name, " instance: ", plugin_instance_name)
+        print_debug(plugin_name, " instance: ", plugin_instance_name)
 
         self.plugin_instances.update({plugin_instance_name: {}})
 
         m = __import__("brighteyes_mcs.plugins." + plugin_name + ".load_plugin")
         loader = getattr(getattr(getattr(m, "plugins"), plugin_name), "load_plugin")
-        print_dec(
+        print_debug(
             "loading plugin: brighteyes_mcs.plugins." + plugin_name + ".load_plugin"
         )
         loader(self, self.plugin_instances[plugin_instance_name])
-        print_dec(
+        print_debug(
             "loaded plugin: brighteyes_mcs.plugins." + plugin_name + ".load_plugin()"
         )
 
@@ -132,4 +134,5 @@ class PluginsManager:
             self.trigger_register[trigger_name].append(func)
         else:
             self.trigger_register[trigger_name] = [func]
-        print_dec(self.trigger_register)
+        print_debug(self.trigger_register)
+

@@ -1,4 +1,4 @@
-"""main_window.py: BrightEyes-MCS - MainWindow."""
+﻿"""main_window.py: BrightEyes-MCS - MainWindow."""
 __author__ = "Mattia Donato"
 __copyright__ = "Copyright (C) 2023, Istituto Italiano di Tecnologia"
 __license__ = "GPL"
@@ -6,6 +6,9 @@ __version__ = "0.0.1"
 __email__ = ["mattia.donato@iit.it", "giuseppe.vicidomini@iit.it"]
 
 # pyside6-uic main_design.ui -o main_design.py
+#
+# This module is the GUI/controller entry point: it wires the Designer UI to the
+# acquisition manager, the live preview widgets, and the background processes.
 
 from PySide6.QtWidgets import QMainWindow, QSplashScreen, QFileDialog
 from PySide6.QtWidgets import QMessageBox, QTableWidgetItem, QLabel
@@ -13,9 +16,13 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QComboBox,
     QCheckBox,
+    QPushButton,
+    QFrame,
     QWidget,
+    QHBoxLayout,
     QTextBrowser,
-    QHeaderView
+    QHeaderView,
+    QProgressDialog
 )
 from PySide6.QtGui import QScreen  # Replaces QDesktopWidget
 
@@ -37,17 +44,18 @@ from PySide6.QtGui import QPixmap, QIcon, QGuiApplication, QDesktopServices
 from datetime import datetime
 
 from .main_window_design import Ui_MainWindowDesign
+from .flim_image_view import FlimImageView
 
 from ..gui.console_widget import ConsoleWidget
 from ..libs.spad_fcs_manager import SpadFcsManager
 from ..libs.table_manager import TableManager
 
-from ..libs.print_dec import print_dec
+from ..libs.print_debug import print_debug
 from .dict_to_tree import TreeModel
 from ..libs.ttm import TtmRemoteManager
 from ..libs.plugin_loader import PluginsManager
-from ..gui.dfd_widget import DfdWidget
 from ..libs.restapi import FastAPIServerThread
+from ..libs.raw_acquisition_converter import convert_raw_acquisition
 
 import numpy as np
 import time
@@ -57,11 +65,13 @@ import requests
 
 import json
 import h5py
+import traceback
 from ..libs.h5manager import H5Manager
 
 import os, sys
 
 import socket
+from pathlib import Path
 
 import pyqtgraph as pg
 
@@ -78,6 +88,15 @@ except:
 
 pg.setConfigOption("background", "k")
 pg.setConfigOption("foreground", "w")
+
+
+class DoubleClickDoubleSpinBox(QDoubleSpinBox):
+    doubleClicked = Signal()
+
+    def mouseDoubleClickEvent(self, event):
+        self.doubleClicked.emit()
+        event.accept()
+
 
 class RectROI_noHandle(pg.RectROI):
     def __init__(self, *args, **kwargs):
@@ -134,7 +153,7 @@ class MainWindow(QMainWindow):
                 """BrightEyes-MCS (Version: %s)                  
         Author: Mattia Donato 
         License: General Public License version 3 (GPL v3)        
-        Copyright © 2023 Istituto Italiano di Tecnologia
+        Copyright Â© 2023 Istituto Italiano di Tecnologia
                         
         This program comes with ABSOLUTELY NO WARRANTY. 
         """
@@ -182,11 +201,74 @@ class MainWindow(QMainWindow):
         self.preview_run_id = 0
         self.completed_acquisition_count = 0
         self._pending_program_state_after_stop = None
+        self.raw_stream_mode = False
+        self.raw_stream_output_files = {}
         self.console_widget = None
         self.selected_channel = None
         self.webcam_capture = None
         self.ui = Ui_MainWindowDesign()
         self.ui.setupUi(self)
+        for special_channel in (
+            "RGBDFD",
+            "LIFETIME_HCL",
+            "LIFETIME_HSV",
+            "LIFETIME_HSL",
+            "LIFETIME",
+            "QUALITY",
+        ):
+            if self.ui.comboBox_plot_channel.findText(special_channel) < 0:
+                self.ui.comboBox_plot_channel.addItem(special_channel)
+        self.ui.label_delta_tau_ns = QLabel("Corr. delta_tau [ns]")
+        self.ui.doubleSpinBox_delta_tau_ns = DoubleClickDoubleSpinBox(self)
+        self.ui.doubleSpinBox_delta_tau_ns.setDecimals(4)
+        self.ui.doubleSpinBox_delta_tau_ns.setRange(0.0, 1e6)
+        self.ui.doubleSpinBox_delta_tau_ns.setSingleStep(0.1)
+        self.ui.doubleSpinBox_delta_tau_ns.setSuffix(" ns")
+        self.ui.pushButton_delta_tau_auto = QPushButton("A", self)
+        self.ui.pushButton_delta_tau_auto.setToolTip("Automatic lifetime correction from the cumulative fit")
+        self.ui.pushButton_delta_tau_auto.setFixedWidth(28)
+        self.ui.gridLayout_4.addWidget(self.ui.label_delta_tau_ns, 2, 6, 1, 1)
+        self.ui.gridLayout_4.addWidget(self.ui.doubleSpinBox_delta_tau_ns, 2, 7, 1, 1)
+        self.ui.gridLayout_4.addWidget(self.ui.pushButton_delta_tau_auto, 2, 8, 1, 1)
+        self.ui.doubleSpinBox_delta_tau_ns.valueChanged.connect(
+            self.colorLifetimeDeltaTauChanged
+        )
+        self.ui.pushButton_delta_tau_auto.clicked.connect(
+            self.colorLifetimeDeltaTauUseHistogramMean
+        )
+        self.ui.label_lifetime_hue_range = QLabel("Hue vis. [0..1]")
+        self.ui.doubleSpinBox_lifetime_hue_min = QDoubleSpinBox(self)
+        self.ui.doubleSpinBox_lifetime_hue_max = QDoubleSpinBox(self)
+        self.ui.checkBox_lifetime_force_quality_full = QCheckBox("Force S/C=1", self)
+        self.ui.checkBox_lifetime_force_quality_full.setChecked(True)
+        for spinbox, value in (
+            (self.ui.doubleSpinBox_lifetime_hue_min, 2.0 / 3.0),
+            (self.ui.doubleSpinBox_lifetime_hue_max, 0.0),
+        ):
+            spinbox.setDecimals(4)
+            spinbox.setRange(0.0, 1.0)
+            spinbox.setSingleStep(0.01)
+            spinbox.setValue(value)
+        self.ui.widget_lifetime_hue_range = QWidget(self)
+        self.ui.layout_lifetime_hue_range = QHBoxLayout(self.ui.widget_lifetime_hue_range)
+        self.ui.layout_lifetime_hue_range.setContentsMargins(0, 0, 0, 0)
+        self.ui.layout_lifetime_hue_range.setSpacing(4)
+        self.ui.layout_lifetime_hue_range.addWidget(self.ui.label_lifetime_hue_range)
+        self.ui.layout_lifetime_hue_range.addWidget(self.ui.doubleSpinBox_lifetime_hue_min)
+        self.ui.layout_lifetime_hue_range.addWidget(QLabel("to"))
+        self.ui.layout_lifetime_hue_range.addWidget(self.ui.doubleSpinBox_lifetime_hue_max)
+        self.ui.layout_lifetime_hue_range.addWidget(self.ui.checkBox_lifetime_force_quality_full)
+        self.ui.gridLayout_4.addWidget(self.ui.widget_lifetime_hue_range, 0, 6, 1, 4)
+        self.ui.doubleSpinBox_lifetime_hue_min.valueChanged.connect(self.plotSettingsChanged)
+        self.ui.doubleSpinBox_lifetime_hue_max.valueChanged.connect(self.plotSettingsChanged)
+        self.ui.checkBox_lifetime_force_quality_full.toggled.connect(self.plotSettingsChanged)
+        self.updateColorLifetimeShiftControls()
+        self.updateImageInteractionHints()
+        self.latest_dfd_tau_fit_ns = None
+        self.ui.checkBox_trace_dfd_time_axis.toggled.connect(self.plotSettingsChanged)
+        self.ui.checkBox_trace_dfd_align_peak.toggled.connect(self.plotSettingsChanged)
+        self.ui.doubleSpinBox_trace_dfd_start_percent.valueChanged.connect(self.plotSettingsChanged)
+        self.ui.doubleSpinBox_trace_dfd_end_percent.valueChanged.connect(self.plotSettingsChanged)
 
         self.configuration_helper = self.configuration_helper_init()
 
@@ -197,6 +279,7 @@ class MainWindow(QMainWindow):
         # self.thread_timerPreviewImg_tick = Runnable(self.timerPreviewImg_tick)
         # self.thread_timerConfigurationViewer_tick = Runnable(self.timerConfigurationViewer_tick)
 
+        # The preview timer is the main GUI-side refresh loop for plots and images.
         self.timerPreviewImg = QTimer(None)
         self.timerPreviewImg_tick_mutex = QMutex()
         self.timerPreviewImg.timeout.connect(self.timerPreviewImg_tick)
@@ -221,7 +304,8 @@ class MainWindow(QMainWindow):
         self.im_plugin = pg.ImageView(self, view=self.im_plugin_plot_item)
         self.ui.gridLayout_pluginImage.addWidget(self.im_plugin)
 
-        self.im_widget = pg.ImageView(self, view=self.im_widget_plot_item)
+        # Main live preview view used by the xy/xz/zy projection widgets.
+        self.im_widget = FlimImageView(self, view=self.im_widget_plot_item)
 
         self.ui.gridLayout_im.addWidget(self.im_widget, 0, 0, 1, 3)
 
@@ -243,14 +327,37 @@ class MainWindow(QMainWindow):
 
         self.im_panorama_widget.show()
 
+        # The trace/FCS widgets are updated from shared-memory data produced by the
+        # acquisition loop process.
         self.trace_widget = pg.PlotWidget(self)
         self.trace_widget.setToolTip("Double-click for reset the trace")
         self.trace_widget.setLabel("left", "Freq.", "Hz")
         self.trace_widget.setLabel("bottom", "Time", "s")
-        self.ui.gridLayout_trace.addWidget(self.trace_widget, 0, 0)
+        self.trace_widget.hideAxis("top")
+        self.trace_widget.showAxis("bottom")
+        self.ui.gridLayout_trace.setVerticalSpacing(0)
+        self.ui.gridLayout_trace.setContentsMargins(0, 0, 0, 0)
+        self.trace_separator = QFrame(self)
+        self.trace_separator.setFrameShape(QFrame.Shape.HLine)
+        self.trace_separator.setFrameShadow(QFrame.Shadow.Plain)
+        self.trace_separator.setLineWidth(2)
+        self.trace_separator.setMidLineWidth(0)
+        self.trace_separator.setStyleSheet("color: rgb(90, 90, 90);")
+        self.ui.gridLayout_trace.addWidget(self.trace_widget, 2, 0)
+        self.ui.gridLayout_trace.addWidget(self.trace_separator, 1, 0)
         self.trace_widget.show()
         self.trace_widget.setDownsampling(1, True, "mean")
         self.trace_widget.setMinimumSize(100, 130)
+        self.trace_dfd_widget = pg.PlotWidget(self)
+        self.trace_dfd_widget.setToolTip("Double-click for reset the DFD trace")
+        self.trace_dfd_widget.setLabel("left", "Freq.", "Hz")
+        self.trace_dfd_widget.setLabel("top", "DFD bin")
+        self.trace_dfd_widget.showAxis("top")
+        self.trace_dfd_widget.hideAxis("bottom")
+        self.ui.gridLayout_trace.addWidget(self.trace_dfd_widget, 0, 0)
+        self.trace_dfd_widget.setDownsampling(1, True, "mean")
+        self.trace_dfd_widget.setMinimumSize(100, 130)
+        self.trace_dfd_widget.hide()
         self.fcs_widget = pg.PlotWidget(self)
         self.fcs_widget.setLabel("left", "Autocorr. (Norm.)")
         self.fcs_widget.setLabel("bottom", "Delay", "s")
@@ -278,18 +385,25 @@ class MainWindow(QMainWindow):
 
         self.old_status_lockmovecheckbox = False
         self.lock_parameters_changed_call = False
-        print_dec("self.lock_parameters_changed_call UNSET False")
+        print_debug("self.lock_parameters_changed_call UNSET False")
 
         self.configurationFPGA_dict = {}
         self.configurationGUI_dict = {}
 
         self.spadfcsmanager_inst = SpadFcsManager()
-        print_dec("SpadFcsManager()")
+        print_debug("SpadFcsManager()")
+        self.ui.spinBox_compensation_delay.valueChanged.connect(
+            self.compensationDelayForSnakeChanged
+        )
+        self.compensationDelayForSnakeChanged(
+            self.ui.spinBox_compensation_delay.value()
+        )
+        self.apply_dfd_metadata_from_bitfile_name(self.ui.lineEdit_fpgabitfile.text())
         # self.qthread = QThread()
         # self.spadfcsmanager_inst.moveToThread(self.qthread)
-        # print_dec("spadfcsmanager_inst.moveToThread()")
+        # print_debug("spadfcsmanager_inst.moveToThread()")
 
-        self.ui.checkBoxLockRatio.setText("🔒")
+        self.ui.checkBoxLockRatio.setText('🔒')
 
         self.ui.progressBar_frame.setValue(0)
         self.ui.progressBar_repetition.setValue(0)
@@ -371,6 +485,7 @@ class MainWindow(QMainWindow):
         self.im_widget.scene.sigMouseMoved.connect(self.imageMoved)
 
         self.trace_widget.scene().sigMouseClicked.connect(self.traceClicked)
+        self.trace_dfd_widget.scene().sigMouseClicked.connect(self.traceClicked)
 
         self.rect_roi.sigRegionChanged.connect(self.roiModified)
         # self.rect_roi_panorama.sigRegionChanged.connect(self.roi_panoramaModified)
@@ -423,7 +538,7 @@ class MainWindow(QMainWindow):
         )
         # self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_PMT_adv)
         self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_laser)
-        self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_dfd)
+        self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_adv2)
 
         # self.tabifyDockWidget(self.ui.dockWidget_preview, self.ui.dockWidget_TTM)
 
@@ -503,6 +618,7 @@ class MainWindow(QMainWindow):
         self.last_saved_filename = None
 
         self.clock_base = 40 #MHz
+        self.dfd_cycle_mhz = 40
 
         self.DFD_Activate = False
         self.DFD_nbins = 81
@@ -510,14 +626,11 @@ class MainWindow(QMainWindow):
         self.snake_walk_Activate_Z = False
 
         self.setupAnalogOutputGUI()
-        self.configuration_helper.update(self.configuration_helper_analog_output_init())
-        self.configurationGUI_dict.update(self.getGUI_data())
+        # Plug-in autoload
         # Replace the terminal with ScriptLauncher
         self.plugin_manager.plugin_loader("script_launcher")
-
-        print_dec("Added DfdWidget")
-        self.dfd_page = DfdWidget(self)
-        self.ui.tabWidget.addTab(self.dfd_page, "DFD Preview")
+        #self.plugin_manager.plugin_loader("dfd")
+        self.plugin_manager.plugin_loader("channel_delay_skew")
 
         self.setStyleSheet(self.styleSheet() +
                            """
@@ -529,7 +642,7 @@ class MainWindow(QMainWindow):
                            )
         if self.guiReadyFlag == True:
             QTimer.singleShot(10, self.guiReadyEvent)
-            print_dec("call guiReadyEvent from __init__")
+            print_debug("call guiReadyEvent from __init__")
 
         self.init_ready = True
 
@@ -597,7 +710,7 @@ class MainWindow(QMainWindow):
     #     :param padding: the percentage of padding expressed between 0.0 and 1.0
     #     :return:
     #     """
-    #     print_dec("_add_padding_to_plot_widget")
+    #     print_debug("_add_padding_to_plot_widget")
     #     width = plot_widget.sceneRect().width() * (1.0 + padding)
     #     height = plot_widget.sceneRect().height() * (1.0 + padding)
     #     center = plot_widget.sceneRect().center()
@@ -621,27 +734,27 @@ class MainWindow(QMainWindow):
         """
         Starts the FastAPI HTTP server
         """
-        print_dec("httpApiServer_start()")
+        print_debug("httpApiServer_start()")
         if self.http_server_thread is None:
             self.http_server_thread = FastAPIServerThread(self, self.ui.lineEdit_httpAddr.text(), int(self.ui.lineEdit_httpPort.text()))
-            print_dec("HTTP Server FastAPIServerThread Start")
+            print_debug("HTTP Server FastAPIServerThread Start")
             self.http_server_thread.start()
             self.ui.label_httpLink.setOpenExternalLinks(True)
             self.ui.label_httpLink.setText('<a href="http://%s:%s/docs">http://%s:%s/docs</a>' %
                                            (self.ui.lineEdit_httpAddr.text(), self.ui.lineEdit_httpPort.text(),
                                             self.ui.lineEdit_httpAddr.text(), self.ui.lineEdit_httpPort.text()))
         else:
-            print_dec("HTTP Server FastAPIServerThread ALREADY RUNNING")
+            print_debug("HTTP Server FastAPIServerThread ALREADY RUNNING")
 
     def httpApiServer_stop(self):
         """
         Stops the FastAPI HTTP server
         """
-        print_dec("htttApiServer_stop()")
+        print_debug("htttApiServer_stop()")
         self.http_server_thread.stop()
-        print_dec("HTTP Server FastAPIServerThread Stop")
+        print_debug("HTTP Server FastAPIServerThread Stop")
         self.http_server_thread.join()
-        print_dec("HTTP Server FastAPIServerThread Join")
+        print_debug("HTTP Server FastAPIServerThread Join")
         self.http_server_thread=None
 
     def configuration_helper_init(self):
@@ -1086,74 +1199,12 @@ class MainWindow(QMainWindow):
             self.ui.spinBox_DFD_nbins,
             False,
         )
-        configuration_helper["DFD_laser_debug"] = (
-            "DFD Laser Debug",
-            bool,
-            self.ui.checkBox_DFD_LaserDebug,
-            False,
-        )
-        configuration_helper["clk_base_multiplier"] = (
-            "Clock Base Multiplier",
+        configuration_helper["compensation_delay_for_snake"] = (
+            "Snake Compensation Delay [px]",
             int,
-            self.ui.spinBox_clk_base_multiplier,
+            self.ui.spinBox_compensation_delay,
             False,
         )
-        configuration_helper["analog_input_a"] = (
-            "Analog Input A",
-            str,
-            self.ui.comboBox_analogSelect_A,
-            False,
-        )
-        configuration_helper["analog_input_b"] = (
-            "Analog Input B",
-            str,
-            self.ui.comboBox_analogSelect_B,
-            False,
-        )
-        configuration_helper["analog_a_differentiate"] = (
-            "Analog A Differentiate",
-            bool,
-            self.ui.checkBox_analog_in_differentiate_A,
-            False,
-        )
-        configuration_helper["analog_b_differentiate"] = (
-            "Analog B Differentiate",
-            bool,
-            self.ui.checkBox_analog_in_differentiate_B,
-            False,
-        )
-        configuration_helper["analog_integrate_ai0"] = (
-            "Analog Integrate AI0",
-            bool,
-            self.ui.checkBox_analog_in_integrate_AI0,
-            False,
-        )
-        configuration_helper["analog_integrate_ai1"] = (
-            "Analog Integrate AI1",
-            bool,
-            self.ui.checkBox_analog_in_integrate_AI1,
-            False,
-        )
-        configuration_helper["analog_integrate_ai2"] = (
-            "Analog Integrate AI2",
-            bool,
-            self.ui.checkBox_analog_in_integrate_AI2,
-            False,
-        )
-        configuration_helper["analog_integrate_ai3"] = (
-            "Analog Integrate AI3",
-            bool,
-            self.ui.checkBox_analog_in_integrate_AI3,
-            False,
-        )
-
-        for laser_idx in range(1, 13):
-            configuration_helper["laser_sequence_%d" % laser_idx] = (
-                "Laser Sequence %d" % laser_idx,
-                str,
-                getattr(self.ui, "comboLaserSeq_%d" % laser_idx),
-                False,
-            )
 
         configuration_helper["backendDataRecv"] = (
             "backendDataRecv",
@@ -1279,7 +1330,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the Analog Output changed event
         """
-        print_dec("analogOutChanged()")
+        print_debug("analogOutChanged()")
 
         mydict = {}
         for ch in range(0, 8):
@@ -1297,7 +1348,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the Laser changed event
         """
-        print_dec("laserChanged")
+        print_debug("laserChanged")
         self.setRegistersDict(
             {
                 "LaserEnable0": self.ui.checkBox_laser0.isChecked(),
@@ -1313,7 +1364,7 @@ class MainWindow(QMainWindow):
         Slot for the table key pressed
         """
         widget = self.ui.tableWidget
-        print_dec(
+        print_debug(
             "Remove from",
             widget.selectedRanges()[0].leftColumn(),
             "to",
@@ -1331,7 +1382,7 @@ class MainWindow(QMainWindow):
         Slot for the trace reset event
         It resets the time trace
         """
-        print_dec("traceReset")
+        print_debug("traceReset")
         self.spadfcsmanager_inst.trace_reset()
 
     @Slot()
@@ -1340,7 +1391,7 @@ class MainWindow(QMainWindow):
         Slot for the FCS reset event.
         """
 
-        print_dec("FCSReset")
+        print_debug("FCSReset")
         self.spadfcsmanager_inst.FCS_reset()
 
     @Slot()
@@ -1350,7 +1401,7 @@ class MainWindow(QMainWindow):
         It handles the delete key
         """
         widget = self.ui.tableWidget_markers
-        print_dec(
+        print_debug(
             "Remove from",
             widget.selectedRanges()[0].topRow(),
             "to",
@@ -1359,9 +1410,9 @@ class MainWindow(QMainWindow):
         if event.key() == Qt.Key_Delete:
             a = widget.selectedRanges()[0].topRow()
             b = widget.selectedRanges()[0].bottomRow() + 1
-            print_dec(len(self.markers_list))
+            print_debug(len(self.markers_list))
             for n, row in enumerate(range(a, b)):
-                print_dec(row)
+                print_debug(row)
                 self.markers_list.pop(row - n)
             self.markersViewTable()
             self.drawMarkers()
@@ -1383,7 +1434,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the TTM path command
         """
-        print_dec("cmd_path_ttm")
+        print_debug("cmd_path_ttm")
 
         dialog = QFileDialog(self)
         dialog.setWindowTitle("Select executable...")
@@ -1400,7 +1451,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the data destination folder command
         """
-        print_dec("cmd_path_destinationfolder")
+        print_debug("cmd_path_destinationfolder")
 
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.Directory)
@@ -1413,7 +1464,7 @@ class MainWindow(QMainWindow):
         Slot for the number of channels changed event
         """
         ch = int(self.ui.comboBox_channels.currentText())
-        print_dec("numberChannelsChanged to", self.ui.comboBox_channels.currentText())
+        print_debug("numberChannelsChanged to", self.ui.comboBox_channels.currentText())
         self.CHANNELS = ch
         self.CHANNELS_x = int(np.sqrt(ch))
         self.CHANNELS_y = self.CHANNELS_x
@@ -1425,7 +1476,7 @@ class MainWindow(QMainWindow):
         """
         Slot for selecting the filename
         """
-        print_dec("cmd_filename")
+        print_debug("cmd_filename")
 
         dialog = QFileDialog(self)
         dialog.setWindowTitle("Save as...")
@@ -1441,11 +1492,83 @@ class MainWindow(QMainWindow):
             )
 
     @Slot()
+    def cmd_convertRawAcquisition(self):
+        """
+        Convert a metadata-only RAW acquisition into a standard BrightEyes H5 file.
+        """
+        suggested_input = self.ui.lineEdit_destinationfolder.text()
+        if self.last_saved_filename:
+            last_saved_path = Path(self.last_saved_filename)
+            if last_saved_path.exists():
+                suggested_input = str(last_saved_path)
+
+        metadata_filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select RAW acquisition metadata",
+            suggested_input,
+            "HDF5 File (*.h5)",
+        )
+        if metadata_filename == "":
+            return
+
+        metadata_path = os.path.abspath(metadata_filename)
+        metadata_stem = Path(metadata_path).stem
+        if metadata_stem.endswith("_only_metadata"):
+            default_output = str(Path(metadata_path).with_name(metadata_stem[: -len("_only_metadata")] + ".h5"))
+        else:
+            default_output = os.path.splitext(metadata_path)[0] + "_converted.h5"
+        output_filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save converted acquisition as",
+            default_output,
+            "HDF5 File (*.h5)",
+        )
+        if output_filename == "":
+            return
+
+        progress_dialog = QProgressDialog("Preparing RAW conversion...", None, 0, 100, self)
+        progress_dialog.setWindowTitle("Converting RAW acquisition")
+        progress_dialog.setMinimumDuration(0)
+        progress_dialog.setAutoClose(True)
+        progress_dialog.setAutoReset(True)
+        progress_dialog.setValue(0)
+
+        def progress_callback(value, message):
+            progress_dialog.setLabelText(message)
+            progress_dialog.setValue(value)
+            QCoreApplication.processEvents()
+
+        try:
+            converted_path = convert_raw_acquisition(
+                metadata_path,
+                output_filename,
+                progress_callback=progress_callback,
+            )
+        except Exception as ex:
+            traceback.print_exc()
+            progress_dialog.close()
+            QMessageBox.critical(self, "RAW conversion failed", str(ex))
+            return
+
+        progress_dialog.setValue(100)
+        self.last_saved_filename = str(converted_path)
+        self.ui.pushButton_externalProgram.setEnabled(True)
+        self.plugin_signals.signal.emit(
+            "acquisitionDone %s" % self.last_saved_filename
+        )
+        self.ui.statusBar.showMessage(f"Converted RAW acquisition to {converted_path}", 10000)
+        QMessageBox.information(
+            self,
+            "RAW conversion completed",
+            f"Converted acquisition saved in:\n{converted_path}",
+        )
+
+    @Slot()
     def cmd_moveToSelectedRowMarker(self):
         """
         Slot for moving to the selected row marker
         """
-        print_dec("cmd_moveToSelectedRowMarker")
+        print_debug("cmd_moveToSelectedRowMarker")
         if len(self.markers_list) > 0:
             self.setGUI_data(
                 self.markers_list[
@@ -1457,7 +1580,7 @@ class MainWindow(QMainWindow):
         """
         Set the GUI configuration to the selected column in the Macro/FCS table
         """
-        print_dec("moveToSelectedColumnFCS")
+        print_debug("moveToSelectedColumnFCS")
         widget = self.ui.tableWidget
 
         invrow = {
@@ -1471,7 +1594,7 @@ class MainWindow(QMainWindow):
         }
         configuration = {}
         for n in range(widget.rowCount()):
-            print_dec(n, k)
+            print_debug(n, k)
             a = widget.verticalHeaderItem(n).text()
             if a in invrow:
                 name, mtype, ref_obj, visible = invrow[a]
@@ -1492,30 +1615,37 @@ class MainWindow(QMainWindow):
         """
         Set the GUI configuration to the current column in the Macro/FCS table
         """
-        print_dec("cmd_moveToSelectedColumnFCS")
+        print_debug("cmd_moveToSelectedColumnFCS")
         widget = self.ui.tableWidget
         k = widget.currentColumn()
         if not k:
             return
         self.moveToSelectedColumnFCS(k)
 
+    @Slot(name="copyPositionMarkers")
+    def copyPositionMarkers_legacy(self):
+        """
+        Backward-compatible alias for the legacy Designer slot typo.
+        """
+        self.copyPositionsMarkers()
+
     @Slot()
     def prova(self, ev):
         """
         dummy button
         """
-        print_dec("prova", ev)
+        print_debug("prova", ev)
 
     @Slot()
     def getTabWinMinimization(self, widget, event):
         """
         Slot for the tab window minimization event
         """
-        print_dec(widget, event, event.type())
+        print_debug(widget, event, event.type())
         if event.type() is QEvent.Type.WindowStateChange:
-            print_dec("WindowStateChange")
+            print_debug("WindowStateChange")
             if widget.isMinimized():
-                print_dec("minimize")
+                print_debug("minimize")
                 widget.setWindowFlags(Qt.Widget)
                 self.ui.tabWidget.addTab(widget, widget.windowTitle())
 
@@ -1524,7 +1654,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the tab double click event: it moves the tab to a new window
         """
-        print_dec("tabDoubleClick", number)
+        print_debug("tabDoubleClick", number)
         w = self.ui.tabWidget.widget(number)
         pos = w.mapToGlobal(w.pos())
         size = w.frameSize()
@@ -1549,11 +1679,11 @@ class MainWindow(QMainWindow):
         """
         Slot for the GUI ready event, normally called when the GUI is ready to be used
         """
-        print_dec("guiReadyEvent()")
+        print_debug("guiReadyEvent()")
         self.im_widget.show()
         default_cfg = self.checkDefaultCfg()
-        self.ui.lineEdit_configurationfile.setText(default_cfg)
-        print("loading cfg", default_cfg)
+        self.ui.lineEdit_configurationfile.setText(default_cfg)        
+        print_debug("loading cfg", default_cfg)
         self.LoadConfiguration(default_cfg)
         self.panoramaButton()
         # self.splash.close()
@@ -1565,7 +1695,7 @@ class MainWindow(QMainWindow):
             self.preset_dict[chr(ord("A") + i)] = current_conf
             self.ui.comboBox_preset.addItem(chr(ord("A") + i))
 
-        print_dec("Launch the QTimer.singleShot")
+        print_debug("Launch the QTimer.singleShot")
         QTimer.singleShot(100, self.raise_)
         QTimer.singleShot(250, self.showMaximized)
 
@@ -1574,29 +1704,29 @@ class MainWindow(QMainWindow):
         """
         Overridden showEvent method for generating the GUI ready event
         """
-        print_dec("showEvent", event.spontaneous())
+        print_debug("showEvent", event.spontaneous())
         super(MainWindow, self).showEvent(event)
 
         if not event.spontaneous():  # case when is the first paint
             self.guiReadyFlag = True
             if self.init_ready == True:
-                print_dec("call guiReadyEvent from showEvent")
+                print_debug("call guiReadyEvent from showEvent")
                 QTimer.singleShot(10, self.guiReadyEvent)
 
     # @Slot()
     # def mouseMovedOnImage(self, ev):
-    #     print_dec("self.mouseMovedOnImage", ev)
+    #     print_debug("self.mouseMovedOnImage", ev)
 
     # @Slot()
     # def pmtThresholdChanged(self, value=0):
-    #     print_dec("pmtThresholdChanged")
+    #     print_debug("pmtThresholdChanged")
     #     self.setRegistersDict({"PMT_VThreshold": self.ui.spinBox_PMT_Threshold.value(),
     #                            "PMT_VThreshold_Min": self.ui.spinBox_PMT_Threshold_Min.value(),
     #                            "PMT_VThreshold_Max": self.ui.spinBox_PMT_Threshold_Max.value()})
 
     # @Slot()
     # def cfg_file_clicked(self):
-    #     print_dec("cfg_file_clicked()")
+    #     print_debug("cfg_file_clicked()")
     #
     #
     #     file_cfg = QFileDialog.getOpenFileName(self, caption="Save Configuration",
@@ -1605,8 +1735,8 @@ class MainWindow(QMainWindow):
     #
     #     current_folder = QDir.fromNativeSeparators(os.getcwd()) + "/"
     #     if file_cfg != "":
-    #         print_dec(file_cfg)
-    #         print_dec(current_folder)
+    #         print_debug(file_cfg)
+    #         print_debug(current_folder)
     #         file_cfg_nicer = file_cfg.replace(current_folder, "")
     #         self.ui.lineEdit_configurationfile.setText(file_cfg_nicer)
     #
@@ -1630,7 +1760,7 @@ class MainWindow(QMainWindow):
             self.setNewDefaultCfg(file_cfg_nicer)
             self.ui.lineEdit_configurationfile.setText(file_cfg_nicer)
         if ret == QMessageBox.No:
-            print_dec("No")
+            print_debug("No")
     @Slot()
     def bitfile_changed(self):
         '''
@@ -1640,6 +1770,7 @@ class MainWindow(QMainWindow):
 
         bitfile=self.ui.lineEdit_fpgabitfile.text()
         bitfile2=self.ui.lineEdit_fpga2bitfile.text()
+        self.apply_dfd_metadata_from_bitfile_name(bitfile)
         if os.path.isfile(bitfile):
             try:
                 bitfile_reader = nifpga.Bitfile(bitfile)
@@ -1655,6 +1786,22 @@ class MainWindow(QMainWindow):
                 bitfile_signature = ""
             self.ui.label_bitfile_signature_2.setText(bitfile_signature)
 
+    def apply_dfd_metadata_from_bitfile_name(self, bitfile):
+        """
+        Update inferred DFD metadata from the primary FPGA bitfile name.
+        """
+        dfd_cycle_mhz, inferred_dfd_nbins = (
+            self.spadfcsmanager_inst.parse_dfd_metadata_from_bitfile_name(
+                bitfile,
+                default_cycle_mhz=40,
+            )
+        )
+        self.dfd_cycle_mhz = dfd_cycle_mhz
+        self.spadfcsmanager_inst.dfd_cycle_mhz = dfd_cycle_mhz
+        self.ui.label_120.setText(f"Clock Base {dfd_cycle_mhz}M x")
+        if inferred_dfd_nbins is not None:
+            self.ui.spinBox_DFD_nbins.setValue(inferred_dfd_nbins)
+
 
 
     @Slot()
@@ -1662,7 +1809,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the selecting the bitfile of the 1st FPGA
         """
-        print_dec("bit_file_clicked()")
+        print_debug("bit_file_clicked()")
 
         file_bit = QFileDialog.getOpenFileName(
             self,
@@ -1672,8 +1819,8 @@ class MainWindow(QMainWindow):
         )[0]
         current_folder = QDir.fromNativeSeparators(os.getcwd()) + "/"
         if file_bit != "":
-            print_dec(file_bit)
-            print_dec(current_folder)
+            print_debug(file_bit)
+            print_debug(current_folder)
             file_bit_nicer = file_bit.replace(current_folder, "")
             self.ui.lineEdit_fpgabitfile.setText(file_bit_nicer)
 
@@ -1682,7 +1829,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the selecting the bitfile of the 2nd FPGA
         """
-        print_dec("bit_file_clicked2()")
+        print_debug("bit_file_clicked2()")
 
         file_bit = QFileDialog.getOpenFileName(
             self,
@@ -1692,8 +1839,8 @@ class MainWindow(QMainWindow):
         )[0]
         current_folder = QDir.fromNativeSeparators(os.getcwd()) + "/"
         if file_bit != "":
-            print_dec(file_bit)
-            print_dec(current_folder)
+            print_debug(file_bit)
+            print_debug(current_folder)
             file_bit_nicer = file_bit.replace(current_folder, "")
             self.ui.lineEdit_fpga2bitfile.setText(file_bit_nicer)
 
@@ -1704,11 +1851,11 @@ class MainWindow(QMainWindow):
         if os.path.exists(default_name):
             with open(default_name, "r") as f:
                 a = f.read().splitlines()
-                print_dec("current_system opened:", a[1])
+                print_debug("current_system opened:", a[1])
                 return a[1]
         else:
             file = self.setNewDefaultCfg("cfg/default.cfg", "cfg/current_system")
-            print_dec("'current_system' file not found")
+            print_debug("'current_system' file not found")
             return file
         raise ("Error in checkDefaultCfg")
 
@@ -1725,7 +1872,7 @@ class MainWindow(QMainWindow):
                     ]
                 )
             )
-            print_dec(
+            print_debug(
                 "A new '"
                 + default_name
                 + "' generated in which '"
@@ -1758,7 +1905,7 @@ class MainWindow(QMainWindow):
                                 try:
                                     configuration[name] = ref_obj.toPlainText()
                                 except:
-                                    print_dec(
+                                    print_debug(
                                         "Wrong methods to read str",
                                         n,
                                         (name, (caption, mtype, ref_obj, visible)),
@@ -1767,9 +1914,9 @@ class MainWindow(QMainWindow):
                         configuration[name] = ref_obj.isChecked()
 
             except Exception as e:
-                print_dec("ERROR getGUI_data")
-                print_dec(n, (name, (caption, mtype, ref_obj, visible)))
-                print_dec(repr(e))
+                print_debug("ERROR getGUI_data")
+                print_debug(n, (name, (caption, mtype, ref_obj, visible)))
+                print_debug(repr(e))
 
         return configuration
 
@@ -1785,12 +1932,12 @@ class MainWindow(QMainWindow):
                 caption, mtype, ref_obj, visible = self.configuration_helper[name]
                 if name == "plugins":
                     self.plugin_configuration.update(configuration[name])
-                    print(
+                    print_debug(
                         "PLUGINS CONFIGURATION",
                         type(configuration[name]),
                         configuration[name],
                     )
-                    print(
+                    print_debug(
                         "PLUGINS CONFIGURATION",
                         type(self.plugin_configuration),
                         self.plugin_configuration,
@@ -1808,9 +1955,10 @@ class MainWindow(QMainWindow):
                         ref_obj.setChecked(configuration[name])
 
             except Exception as e:
-                print_dec("ERROR setGUI_data")
-                print_dec(name, (caption, mtype, ref_obj, visible))
-                print_dec(repr(e))
+                print_debug("ERROR setGUI_data")
+                print_debug(name, (caption, mtype, ref_obj, visible))
+                print_debug(repr(e))
+        self.plugin_signals.signal.emit("configurationLoaded")
         #
         # self.lock_parameters_changed_call = lock_old
         # self.positionSettingsChanged()
@@ -1818,14 +1966,14 @@ class MainWindow(QMainWindow):
 
     # @Slot()
     # def testevent(self, ev):
-    #     print_dec("testevent", ev)
+    #     print_debug("testevent", ev)
 
     @Slot()
     def delete_list_file(self):
         """
         delete the selected files in the list
         """
-        print_dec("delete_list_file()")
+        print_debug("delete_list_file()")
         sel = []
         while len(self.ui.listWidget.selectedItems()) > 0:
             for i in range(self.ui.listWidget.count()):
@@ -1838,7 +1986,7 @@ class MainWindow(QMainWindow):
         '''
         Actually is "cut" the files ready to be "paste" in some folder
         '''
-        print_dec("copy_list_file()")
+        print_debug("copy_list_file()")
         list_urls = []
         for i in self.ui.listWidget.selectedItems():
             f = i.text()
@@ -1858,7 +2006,7 @@ class MainWindow(QMainWindow):
         item = self.ui.listWidget_plugins.currentItem()
         if item is not None:
             plugin_to_be_loaded = item.text()
-            print_dec(plugin_to_be_loaded)
+            print_debug(plugin_to_be_loaded)
             self.plugin_manager.plugin_loader(plugin_to_be_loaded)
 
     @Slot()
@@ -1875,7 +2023,7 @@ class MainWindow(QMainWindow):
         """
         self.ui.listWidget_plugins.clear()
         l = self.plugin_manager.plugin_list()
-        print_dec("cmd_update_plugin_list()", l)
+        print_debug("cmd_update_plugin_list()", l)
         for i in l:
             self.ui.listWidget_plugins.addItem(i)
 
@@ -1884,7 +2032,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the axes range changed event, when the range of the axes of the Image Preview is changed
         """
-        print_dec("axesRangeChanged(...)")
+        print_debug("axesRangeChanged(...)")
         if not self.ui.checkBox_lockMove.isChecked():
             proj = self.ui.comboBox_view_projection.currentText()
             old_lock_parameters_changed_call = self.lock_parameters_changed_call
@@ -1899,9 +2047,9 @@ class MainWindow(QMainWindow):
                 bottom_gap = abs(bottom_range[1] - bottom_range[0])
                 left_gap = abs(left_range[1] - left_range[0])
 
-                print_dec("bottom_range:", bottom_range)
-                print_dec("left_range:", left_range)
-                print_dec(
+                print_debug("bottom_range:", bottom_range)
+                print_debug("left_range:", left_range)
+                print_debug(
                     "R ",
                     bottom_gap,
                     left_gap,
@@ -1911,7 +2059,7 @@ class MainWindow(QMainWindow):
                 )
 
                 self.lock_parameters_changed_call = True
-                print_dec("axesRangeChanged self.lock_parameters_changed_call SET True")
+                print_debug("axesRangeChanged self.lock_parameters_changed_call SET True")
                 self.lock_range_changing = True
 
                 self.currentImage_pixels = np.asarray(
@@ -2073,7 +2221,7 @@ class MainWindow(QMainWindow):
 
                 # self.lock_parameters_changed_call = False
                 self.lock_parameters_changed_call = old_lock_parameters_changed_call
-                print_dec(
+                print_debug(
                     "axesRangeChanged self.lock_parameters_changed_call UNSET False"
                 )
 
@@ -2091,46 +2239,46 @@ class MainWindow(QMainWindow):
         """
         Overridden closeEvent method for closing the application
         """
-        print_dec("=======================")
-        print_dec("   CLOSE EVERYTHING")
-        print_dec("=======================")
+        print_debug("=======================")
+        print_debug("   CLOSE EVERYTHING")
+        print_debug("=======================")
 
-        print_dec("self.spadfcsmanager_inst.stopPreview()")
+        print_debug("self.spadfcsmanager_inst.stopPreview()")
         try:
             self.spadfcsmanager_inst.stopPreview()
         except Exception as e:
-            print_dec("not present", repr(e))
+            print_debug("not present", repr(e))
 
-        print_dec("self.timerPreviewImg.stop()")
+        print_debug("self.timerPreviewImg.stop()")
         try:
             self.timerPreviewImg.stop()
         except Exception as e:
-            print_dec("not present", repr(e))
+            print_debug("not present", repr(e))
 
-        print_dec("self.spadfcsmanager_inst.stopAcquisition()")
+        print_debug("self.spadfcsmanager_inst.stopAcquisition()")
         try:
             self.spadfcsmanager_inst.stopAcquisition()
         except Exception as e:
-            print_dec("not present", repr(e))
+            print_debug("not present", repr(e))
 
-        print_dec("self.spadfcsmanager_inst.stopPreview()")
+        print_debug("self.spadfcsmanager_inst.stopPreview()")
         try:
             self.spadfcsmanager_inst.stopPreview()
         except Exception as e:
-            print_dec("not present", repr(e))
+            print_debug("not present", repr(e))
 
-        print_dec("self.ttm_remote_manager.close()")
+        print_debug("self.ttm_remote_manager.close()")
         try:
             if self.ttm_remote_manager is not None:
                 self.ttm_remote_manager.close()
                 self.ttm_remote_manager = None
         except Exception as e:
-            print_dec("not present", repr(e))
+            print_debug("not present", repr(e))
 
-        print_dec("Now every process should be closed.")
+        print_debug("Now every process should be closed.")
         event.accept()
 
-        print_dec(
+        print_debug(
             "Now every process should be closed,Really! \n=============\n=== CIAO! ===\n============="
         )
 
@@ -2152,7 +2300,7 @@ class MainWindow(QMainWindow):
         """
         Connect to the FPGA(s)
         """
-        print_dec("ConnectFPGA")
+        print_debug("ConnectFPGA")
 
         self.bitfile_check(self.ui.lineEdit_fpgabitfile.text())
 
@@ -2167,9 +2315,9 @@ class MainWindow(QMainWindow):
         )
 
         if self.spadfcsmanager_inst.is_connected:
-            print_dec("Already connected")
+            print_debug("Already connected")
         else:
-            print_dec("FPGA NOT CONNECTED NOW CONNECTING")
+            print_debug("FPGA NOT CONNECTED NOW CONNECTING")
             mydict = {}
             mydict.update(self.spadfcsmanager_inst.default_configuration)
             mydict.update(self.configurationFPGA_dict)
@@ -2179,7 +2327,7 @@ class MainWindow(QMainWindow):
             rust_fifo_active = self.ui.comboBox_fifobackend.currentText().startswith(
                 "Rust"
             )
-            print_dec("rust_fifo_active", rust_fifo_active)
+            print_debug("rust_fifo_active", rust_fifo_active)
             self.spadfcsmanager_inst.set_use_rust_fifo(rust_fifo_active)
 
             msg_out = self.ui.lineEdit_spad_data.text()
@@ -2215,14 +2363,14 @@ class MainWindow(QMainWindow):
                     }
                 )
 
-            # self.spadfcsmanager_inst.set(self.ui.spinBox_fifo_buffer_size.value())
-            self.spadfcsmanager_inst.set_preview_buffer_size_in_sample(
-                self.ui.spinBox_preview_buffer_size.value()
+            # self.spadfcsmanager_inst.set(self.ui.spinBox_requested_fifo_depth.value())
+            self.spadfcsmanager_inst.set_preview_buffer_capacity_samples(
+                self.ui.spinBox_preview_buffer_samples.value()
             )
-            self.ui.label_actual_preview_buffer_size.setText(
+            self.ui.label_preview_buffer_capacity_samples.setText(
                 "%d"
                 % (
-                        self.ui.spinBox_preview_buffer_size.value()
+                        self.ui.spinBox_preview_buffer_samples.value()
                         * self.ui.spinBox_time_bin_per_px.value()
                 )
             )
@@ -2233,13 +2381,32 @@ class MainWindow(QMainWindow):
             if self.ui.checkBox_fifo_digital.isChecked():
                 fifo.append("FIFO")
 
-            self.spadfcsmanager_inst.set_len_fifo_prebuffer(
-                self.ui.spinBox_fifo_prebuffer.value()
+            self.spadfcsmanager_inst.set_fifo_prebuffer_length(
+                self.ui.spinBox_fifo_prebuffer_length.value()
             )
-            self.spadfcsmanager_inst.set_requested_depth(
-                self.ui.spinBox_fifo_buffer_size.value()
+            self.spadfcsmanager_inst.set_requested_fifo_depth(
+                self.ui.spinBox_requested_fifo_depth.value()
             )
-            self.spadfcsmanager_inst.connect(mydict, list_fifos=fifo)
+
+            try:
+                self.spadfcsmanager_inst.connect(mydict, list_fifos=fifo)
+            except Exception as e:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Icon.Critical)
+                msg.setWindowTitle("Error")
+                msg.setText("FPGA initialization failed.")
+                msg.setInformativeText(
+                    "<b>Please check your configuration:</b><br><br>"
+                    "â€¢ Verify that the FPGA is <b>powered on</b> and properly <b>connected</b>.<br>"
+                    'â€¢ Verify that <b>FPGA BitFile</b> firmware matches your FPGA model.<br>'
+                    'â€¢ Verify that <b>FPGA Addr</b> is correct (usually <i>RIO0</i>, but it may change if multiple FPGAs are configured).'
+                )
+                msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+
+                msg.exec()
+
+                raise ("ERROR")
+
             # self.spadfcsmanager_inst.start()
 
     def setRegistersDict(self, myconf):
@@ -2247,9 +2414,9 @@ class MainWindow(QMainWindow):
         Set the registers dictionary which is mapped to the FPGA
         """
         self.configurationFPGA_dict.update(myconf)
-        # print_dec("setRegistersDict", self.configurationFPGA_dict)
+        # print_debug("setRegistersDict", self.configurationFPGA_dict)
         self.spadfcsmanager_inst.setRegistersDict(myconf)
-        # print_dec("Waiting setRegistersDict")
+        # print_debug("Waiting setRegistersDict")
 
     @Slot()
     def panoramaButton(self):
@@ -2297,7 +2464,7 @@ class MainWindow(QMainWindow):
         self.AutoRange_im_widget()
 
     # def roi_panoramaModified(self, event):
-    #     print_dec(event.pos().x(), event.pos().y(), event.size().x(), event.size().y())
+    #     print_debug(event.pos().x(), event.pos().y(), event.size().x(), event.size().y())
     #     if not self.rect_roi_panorama_modified_lock:
     #         try:
     #             # print(event.pos().x(), event.pos().y(), event.size().x(), event.size().y())
@@ -2355,10 +2522,10 @@ class MainWindow(QMainWindow):
     #             self.lock_range_changing = False
     #         except Exception as exc:
     #             self.rect_roi_panorama_modified_lock = False
-    #             print_dec(exc)
+    #             print_debug(exc)
     #
     #     else:
-    #         print_dec("self.rect_roi_panorama_modified_lock")
+    #         print_debug("self.rect_roi_panorama_modified_lock")
 
     def AutoRange_im_widget(self):
         """
@@ -2386,7 +2553,7 @@ class MainWindow(QMainWindow):
         """
         update the panorama ROI
         """
-        print_dec("updateRoiPanaorama")
+        print_debug("updateRoiPanaorama")
         self.rect_roi_panorama_modified_lock = True
 
         pos = (
@@ -2404,17 +2571,17 @@ class MainWindow(QMainWindow):
         """
         roiModified event - DUMMY
         """
-        print_dec("SKIP roiModified")
+        print_debug("SKIP roiModified")
         return
         # self.rect_roi_panorama.setPos(self.rect_roi.pos())
         # self.rect_roi_panorama.setSize(self.rect_roi.size())
         # print(event)
-        # print_dec(event.pos().x(), event.pos().y(), event.size().x(), event.size().y())
+        # print_debug(event.pos().x(), event.pos().y(), event.size().x(), event.size().y())
         # if not self.rect_roi_modified_lock:
         #     # print(event.pos().x(), event.pos().y(), event.size().x(), event.size().y())
         #
         #     self.lock_parameters_changed_call = True
-        #     print_dec("roiModified self.lock_parameters_changed_call SET True")
+        #     print_debug("roiModified self.lock_parameters_changed_call SET True")
         #
         #     self.ui.spinBox_off_x_um.setValue(self.rect_roi.pos().x())
         #     self.ui.spinBox_off_y_um.setValue(self.rect_roi.pos().y())
@@ -2423,23 +2590,23 @@ class MainWindow(QMainWindow):
         #     self.ui.spinBox_range_y.setValue(self.rect_roi.size().y())
         #     self.offset_um_Changed(force=True)
         #     self.lock_parameters_changed_call = False
-        #     print_dec("roiModified self.lock_parameters_changed_call UNSET False")
+        #     print_debug("roiModified self.lock_parameters_changed_call UNSET False")
         # else:
-        #     print_dec("self.rect_roi_modified_lock")
+        #     print_debug("self.rect_roi_modified_lock")
 
     def setSelectedChannel(self, ch):
         """
         set the selected channel
         """
         self.selected_channel = ch
-        print_dec("setSelectedChannel", ch)
+        print_debug("setSelectedChannel", ch)
         i = self.ui.comboBox_plot_channel.findText("%d" % ch)
-        print_dec(i)
+        print_debug(i)
         if 0 <= i < self.CHANNELS:
             self.ui.comboBox_plot_channel.setCurrentIndex(i)
         else:
             ii = self.ui.comboBox_plot_channel.findText("Sum")
-            print_dec(ii)
+            print_debug(ii)
             self.ui.comboBox_plot_channel.setCurrentIndex(ii)
 
     @Slot()
@@ -2480,8 +2647,8 @@ class MainWindow(QMainWindow):
         projection = self.ui.comboBox_view_projection.currentText()
 
         if mouse_event.double():
-            print_dec("Double click")
-            print_dec(mouse_point)
+            print_debug("Double click")
+            print_debug(mouse_point)
             pos = self.im_widget.view.vb.mapToView(mouse_point)
 
             if projection == "xy":
@@ -2497,7 +2664,7 @@ class MainWindow(QMainWindow):
             elif projection == "zx":
                 a = (pos.y(), self.ui.spinBox_off_y_um.value(), pos.x())
 
-            print_dec("event.modifiers()", event.modifiers())
+            print_debug("event.modifiers()", event.modifiers())
 
             if event.modifiers()  & Qt.ControlModifier:
                 conf = self.getGUI_data()
@@ -2510,7 +2677,7 @@ class MainWindow(QMainWindow):
                 self.drawMarkers()
                 self.markersViewTable()
             else:
-                print_dec("imageClicked() + Qt.CTRL")
+                print_debug("imageClicked() + Qt.CTRL")
                 self.ui.spinBox_off_x_um.setValue(a[0])
                 self.ui.spinBox_off_y_um.setValue(a[1])
                 self.ui.spinBox_off_z_um.setValue(a[2])
@@ -2546,7 +2713,7 @@ class MainWindow(QMainWindow):
         else:
             i = "offset_x_um"
             j = "offset_y_um"
-            print_dec("NO PROJECTION IN DRAWMARKES")
+            print_debug("NO PROJECTION IN DRAWMARKES")
 
         self.marker_plot.clear()
 
@@ -2571,18 +2738,18 @@ class MainWindow(QMainWindow):
         mouse_point = event.pos()
 
         if event.double():
-            print_dec("Double click")
+            print_debug("Double click")
 
         self.fingerprint_widget.scene.itemsBoundingRect().contains(mouse_point)
-        print_dec("x=", mouse_point.x(), " y=", mouse_point.y())
+        print_debug("x=", mouse_point.x(), " y=", mouse_point.y())
         pos = self.fingerprint_widget.view.mapSceneToView(mouse_point)
-        print_dec(pos)
-        print_dec(event)
+        print_debug(pos)
+        print_debug(event)
         selected_ch_x = int((pos.x()))
         selected_ch_y = int((pos.y()))
-        print_dec(event.modifiers())
+        print_debug(event.modifiers())
         if event.modifiers() & Qt.ControlModifier:
-            print_dec("Qt.CTRL")
+            print_debug("Qt.CTRL")
             if self.fingerprint_mask[selected_ch_y, selected_ch_x] == 1:
                 self.fingerprint_mask[selected_ch_y, selected_ch_x] = 0
             else:
@@ -2591,7 +2758,7 @@ class MainWindow(QMainWindow):
 
         else:
             self.setSelectedChannel(selected_ch_x + 5 * selected_ch_y)
-            print_dec(
+            print_debug(
                 "You clicked on the channel ",
                 self.selected_channel,
                 "(x:",
@@ -2606,7 +2773,7 @@ class MainWindow(QMainWindow):
         """
         update the fingerprint mask
         """
-        print_dec("update_fingerprint_mask")
+        print_debug("update_fingerprint_mask")
         self.fingerprint_markers_mask.clear()
         for xxx in range(self.CHANNELS_x):
             for yyy in range(self.CHANNELS_y):
@@ -2625,22 +2792,22 @@ class MainWindow(QMainWindow):
                     )
 
         if self.spadfcsmanager_inst.shared_arrays_ready:
-            print_dec("ready self.spadfcsmanager_inst.shared_arrays_ready")
+            print_debug("ready self.spadfcsmanager_inst.shared_arrays_ready")
             self.spadfcsmanager_inst.set_fingerprint_mask(
                 np.ravel(self.fingerprint_mask)
             )
         else:
-            print_dec("not ready self.spadfcsmanager_inst.shared_arrays_ready")
+            print_debug("not ready self.spadfcsmanager_inst.shared_arrays_ready")
 
     # def dragEnterEvent(self, event):
-    #     print_dec(event)
+    #     print_debug(event)
     #     if event.mimeData().hasUrls:
     #         event.accept()
     #     else:
     #         event.ignore()
 
     # def dragMoveEvent(self, event):
-    #     print_dec(event)
+    #     print_debug(event)
     #     if event.mimeData().hasUrls:
     #         event.setDropAction(Qt.CopyAction)
     #         event.accept()
@@ -2653,7 +2820,7 @@ class MainWindow(QMainWindow):
     #         event.accept()
     #         links = []
     #         for url in event.mimeData().urls():
-    #             print_dec(url.toLocalFile())
+    #             print_debug(url.toLocalFile())
     #             self.loadFile(url.toLocalFile())
     #     else:
     #         event.ignore()
@@ -2662,27 +2829,27 @@ class MainWindow(QMainWindow):
     #     self.activeFile = True
     #     hf = h5py.File(file_name, "r")
     #
-    #     print_dec(hf)
+    #     print_debug(hf)
     #
     #     if "default" in hf.attrs:
-    #         print_dec("h5.attrs default", hf.attrs["default"])
+    #         print_debug("h5.attrs default", hf.attrs["default"])
     #     else:
-    #         print_dec("h5.attrs default NOT FOUND")
+    #         print_debug("h5.attrs default NOT FOUND")
     #
     #     if "data_format_version" in hf.attrs:
-    #         print_dec("h5.attrs data_format_version", hf.attrs["data_format_version"])
+    #         print_debug("h5.attrs data_format_version", hf.attrs["data_format_version"])
     #     else:
-    #         print_dec("h5.attrs data_format_version NOT FOUND")
+    #         print_debug("h5.attrs data_format_version NOT FOUND")
     #
     #     self.currentImage = np.asarray(hf["data"])
-    #     print_dec(self.currentImage.shape)
+    #     print_debug(self.currentImage.shape)
     #
     #     if 'configuration' in hf.attrs:
     #         for i in hf['configuration'].attrs:
-    #             print_dec(i, hf['configuration'].attrs[i])
+    #             print_debug(i, hf['configuration'].attrs[i])
     #             self.configurationFPGA_dict.update({i: hf['configuration'].attrs[i]})
     #     else:
-    #         print_dec("h5.attrs configuration NOT FOUND")
+    #         print_debug("h5.attrs configuration NOT FOUND")
     #
     #     self.plotCurrentImage()
     #
@@ -2733,7 +2900,7 @@ class MainWindow(QMainWindow):
         Slot for the autoscale image checkbox
         """
         self.autoscale_image = self.ui.checkBox_autoscale_img.isChecked()
-        print_dec("selectedAutoscaleImg()", self.autoscale_image)
+        print_debug("selectedAutoscaleImg()", self.autoscale_image)
 
     @Slot()
     def selectedAutoscaleFingerprint(self):
@@ -2741,7 +2908,7 @@ class MainWindow(QMainWindow):
         Slot for the autoscale fingerprint checkbox
         """
         self.autoscale_fingerprint = self.ui.checkBox_autoscale_fingerprint.isChecked()
-        print_dec("selectedAutoscaleFingerprint", self.autoscale_fingerprint)
+        print_debug("selectedAutoscaleFingerprint", self.autoscale_fingerprint)
 
     # @Slot()
     # def selectedCumulativeFingerprint(self):
@@ -2753,7 +2920,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the microimage type selection
         """
-        print_dec("microimageType ", num)
+        print_debug("microimageType ", num)
         self.fingerprint_visualization = num
         # if num == 0:    # cumulative
         # elif num == 1:  # 10000 bins
@@ -2764,7 +2931,7 @@ class MainWindow(QMainWindow):
         self.table_manager.add_dict(self.getGUI_data())
 
     def finalizeImage(self):
-        print_dec("finalizeImage()")
+        print_debug("finalizeImage()")
         self.plotCurrentImage()
         data_finger_print = self.spadfcsmanager_inst.getFingerprint()
         if data_finger_print is None:
@@ -2856,7 +3023,7 @@ class MainWindow(QMainWindow):
         """
         dummy button clicked event for test
         """
-        print_dec("test1()")
+        print_debug("test1()")
         self.finalizeImage()
 
     @Slot()
@@ -2864,7 +3031,7 @@ class MainWindow(QMainWindow):
         """
         dummy button clicked event for test
         """
-        print_dec("test2()")
+        print_debug("test2()")
         self.webcam_capture = iio.get_reader("<video0>")
 
     @Slot()
@@ -2873,9 +3040,9 @@ class MainWindow(QMainWindow):
         dummy button clicked event for test
         """
         frame = self.webcam_capture.get_next_data()
-        print_dec(frame.shape)
+        print_debug(frame.shape)
         self.webcam_widget.setImage(np.moveaxis(frame, [0, 1, 2], [1, 0, 2]))
-        print_dec("test3()")
+        print_debug("test3()")
 
     @Slot()
     def test4(self):
@@ -2890,7 +3057,7 @@ class MainWindow(QMainWindow):
         """
         dummy button clicked event for test
         """
-        print_dec("test5()")
+        print_debug("test5()")
         import ipykernel.kernelbase
 
         class a(ipykernel.kernelbase.Kernel):
@@ -2914,7 +3081,7 @@ class MainWindow(QMainWindow):
         """
         dummy button clicked event for test
         """
-        print_dec("test7() as start but no run")
+        print_debug("test7() as start but no run")
 
         if self.ui.checkBox_ttmActivate.isChecked():
             self.ttm_activate_change_state()
@@ -2925,10 +3092,10 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_stop.setEnabled(True)
 
         if not self.spadfcsmanager_inst.is_connected:
-            print_dec("not self.spadfcsmanager_inst.is_connected")
+            print_debug("not self.spadfcsmanager_inst.is_connected")
             self.connectFPGA()
         else:
-            print_dec("FPGA Already connected!")
+            print_debug("FPGA Already connected!")
 
         self.updatePreviewConfiguration()
 
@@ -3022,7 +3189,7 @@ class MainWindow(QMainWindow):
         # else:
         #     i = "offset_x_um"
         #     j = "offset_y_um"
-        #     print_dec("NO PROJECTION IN DRAWMARKES")
+        #     print_debug("NO PROJECTION IN DRAWMARKES")
         #
         # for n, k in enumerate(self.markers_list_circular):
         #     self.marker_plot_circular_scan.addPoints(
@@ -3075,13 +3242,13 @@ class MainWindow(QMainWindow):
 
         # self.ui.spinBox_time_bin_per_px.setValue(31)
 
-        # print_dec("previewLoop CIRCULAR <======================================================")
+        # print_debug("previewLoop CIRCULAR <======================================================")
         #
         # self.nrepetition_before_run_preview = self.ui.spinBox_nrepetition.value()
         #
         # # self.myfpgainst.acquisitionThread.reset_data()
         # if not self.spadfcsmanager_inst.is_connected:
-        #     print_dec("not self.spadfcsmanager_inst.is_connected")
+        #     print_debug("not self.spadfcsmanager_inst.is_connected")
         #     self.connectFPGA()
         #
         # self.positionSettingsChanged_apply()
@@ -3109,7 +3276,7 @@ class MainWindow(QMainWindow):
             }
         )
 
-        # print_dec("Start")
+        # print_debug("Start")
         # self.currentImage = None
         # self.activeFile = False
         #
@@ -3131,7 +3298,7 @@ class MainWindow(QMainWindow):
         """
         Slot for the add current configuration to the table for macros
         """
-        print_dec("addcurrentconfmacro")
+        print_debug("addcurrentconfmacro")
         conf = self.getGUI_data()
         self.table_manager.add_dict(conf)
     @Slot()
@@ -3140,7 +3307,7 @@ class MainWindow(QMainWindow):
         Slot for the add current configuration to the table for macros
         activating FCS preview and forcing to zero the range
         """
-        print_dec("addcurrentconfmacrofcs")
+        print_debug("addcurrentconfmacrofcs")
         conf = self.getGUI_data()
         conf["range_x"] = 0.
         conf["range_y"] = 0.
@@ -3153,7 +3320,7 @@ class MainWindow(QMainWindow):
         """
         copy the markers to the table for macros
         """
-        print_dec("copyPositionMarkers")
+        print_debug("copyPositionMarkers")
         self.table_manager.add_list_of_dict(self.markers_list)
 
     @Slot()
@@ -3162,7 +3329,7 @@ class MainWindow(QMainWindow):
         copy the markers to the table for macros
         activating FCS preview and forcing to zero the range
         """
-        print_dec("copyPositionMarkersFCS")
+        print_debug("copyPositionMarkersFCS")
         self.table_manager.add_list_of_dict(self.markers_list,  fcs=True)
 
     @Slot()
@@ -3178,7 +3345,7 @@ class MainWindow(QMainWindow):
         """
         the actual loop for the batch event
         """
-        print_dec("startBatchFCS started")
+        print_debug("startBatchFCS started")
         column = self.ui.tableWidget.columnCount()
         self.ui.label_batch.setText("Starting...")
         self.ui.progressBar_batch.setValue(0)
@@ -3233,7 +3400,7 @@ class MainWindow(QMainWindow):
         self.ui.progressBar_batch.setEnabled(False)
         self.ui.tableWidget.setEnabled(True)
         self.ui.checkBox_fcs_preview.setChecked(False)
-        print_dec("startedBatch FCS ended")
+        print_debug("startedBatch FCS ended")
 
     @Slot()
     def stopBatchFCS(self):
@@ -3241,7 +3408,7 @@ class MainWindow(QMainWindow):
         stop the batch event
         """
         self.runBatchFCS = False
-        print_dec("stopBatchFCS")
+        print_debug("stopBatchFCS")
 
     @Slot()
     def timerConfigurationViewer_tick(self):
@@ -3253,24 +3420,24 @@ class MainWindow(QMainWindow):
         if self.ui.checkBox_updateStatus.isChecked():
             self.updateTables()
 
-        P = "⏹"
-        D = "⏹"
-        F = "⏹"
+        P = "â¹"
+        D = "â¹"
+        F = "â¹"
         try:
             if self.spadfcsmanager_inst.previewProcess_isAlive():
-                P = "⏩"
+                P = "â©"
         except:
             pass
 
         try:
             if self.spadfcsmanager_inst.dataProcess_isAlive():
-                D = "⏩"
+                D = "â©"
         except:
             pass
 
         try:
             if self.spadfcsmanager_inst.fpga_handle.fpga_handle_process_isAlive():
-                F = "⏩"
+                F = "â©"
         except:
             pass
         self.statusBar_cpu.setText("CPU: %d%%" % psutil.cpu_percent())
@@ -3287,8 +3454,8 @@ class MainWindow(QMainWindow):
         line = line.replace("%python", sys.executable)
         line = line.replace("%lastfilename", self.last_saved_filename)
         cmds = line.split(" ")
-        print_dec("cmd_call_external", cmds)
-        print_dec(sys.platform)
+        print_debug("cmd_call_external", cmds)
+        print_debug(sys.platform)
         if "win" in sys.platform:
             subprocess.Popen(
                 cmds,
@@ -3320,8 +3487,10 @@ class MainWindow(QMainWindow):
         timer tick event for the preview image
         continuosly update the preview image
         """
+        # This method runs frequently, so extra copies or full redraws here
+        # directly affect UI responsiveness during acquisition.
         if not self.timerPreviewImg_tick_mutex.tryLock():
-            print_dec("self.timerPreviewImg_tick_lock called but busy")
+            print_debug("self.timerPreviewImg_tick_lock called but busy")
             return
 
         time_res = self.ui.spinBox_timeresolution.value()
@@ -3337,9 +3506,9 @@ class MainWindow(QMainWindow):
             fifo_name = "FIFO"
             fifo_activated.append(fifo_name)
         if not (self.ui.checkBox_fifo_analog.isChecked() or self.ui.checkBox_fifo_digital.isChecked()):
-            print_dec("Bug: No FIFO Selected")
+            print_debug("Bug: No FIFO Selected")
 
-        #print_dec("fifo_activated", fifo_activated)
+        #print_debug("fifo_activated", fifo_activated)
         #fifo_name is the "priority" fifo when two are activated
         
         fifo_elements = { fifo : self.spadfcsmanager_inst.getCurrentAcquistionElement(fifo) for fifo in fifo_activated}
@@ -3360,6 +3529,73 @@ class MainWindow(QMainWindow):
         self.ui.label_tot_num_dat_point_val.setText(data_point_str)
 
         self.ui.progressBar_repetition.setMaximum(100.0)
+
+        if self.raw_stream_mode:
+            label_frame = ""
+            label_repetition = ""
+            for fifo in fifo_activated:
+                label_frame += "%d " % self.spadfcsmanager_inst.get_current_z(fifo)
+                label_repetition += "%d " % self.spadfcsmanager_inst.get_current_rep(fifo)
+
+            self.ui.label_current_time_val.setText("RAW")
+            self.ui.label_current_frame_val.setText(label_frame)
+            self.ui.label_current_repetition_val.setText(label_repetition)
+
+            if expected_fifo_elements[fifo_name] != 0:
+                self.ui.progressBar_repetition.setValue(
+                    100.0 * fifo_elements[fifo_name] / expected_fifo_elements[fifo_name]
+                )
+            else:
+                self.ui.progressBar_repetition.setValue(0)
+
+            if fifo_elements[fifo_name] != 0:
+                self.ui.progressBar_frame.setMaximum(100.0)
+            else:
+                self.ui.progressBar_frame.setMaximum(0)
+            self.ui.progressBar_frame.setValue(
+                100.0
+                * (fifo_elements[fifo_name] % expected_fifo_elements_per_frame[fifo_name])
+                / expected_fifo_elements_per_frame[fifo_name]
+            )
+
+            if self.spadfcsmanager_inst.acquisition_is_almost_done():
+                self.ui.pushButton_stop.setEnabled(False)
+                self.ui.pushButton_acquisitionStart.setEnabled(False)
+
+            if self.spadfcsmanager_inst.acquisition_is_done():
+                self.my_tick_counter += self.timerPreviewImg.interval()
+                self.spadfcsmanager_inst.acquisition_done_reset()
+                self.finalizeAcquisition()
+
+            fifo1, fifo2 = self.spadfcsmanager_inst.get_FIFO_status()
+            self.ui.progressBar_fifo_digital.setValue(fifo1)
+            self.ui.progressBar_fifo_analog.setValue(fifo2)
+            self.ui.progressBar_saving.setValue(0)
+            self.ui.label_preview_delay.setText("RAW")
+
+            try:
+                self.ui.label_fifo_last_pkt_size.setText(
+                    "%d" % self.spadfcsmanager_inst.shared_dict["last_packet_size"]
+                )
+            except:
+                print_debug("self.ui.last_packet_size FAIL")
+
+            try:
+                self.ui.label_last_preprocessed_size.setText(
+                    "%d" % self.spadfcsmanager_inst.last_preprocessed_len["FIFOAnalog"].value
+                )
+            except:
+                pass
+
+            try:
+                self.ui.label_last_preprocessed_size.setText(
+                    "%d" % self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value
+                )
+            except:
+                pass
+
+            self.timerPreviewImg_tick_mutex.unlock()
+            return
 
         current_time = {}
         current_frame = {}
@@ -3411,11 +3647,11 @@ class MainWindow(QMainWindow):
         clk_multiplier = self.ui.spinBox_clk_base_multiplier.value()
 
         trace, trace_pos = self.spadfcsmanager_inst.getTrace()
-
+        self.trace_widget.setLabel("bottom", "Time", "s")
         trace_x = trace[0, :trace_pos]
         trace_y = trace[1, :trace_pos]
 
-        if clk_multiplier > 1:
+        if clk_multiplier > 1 and not self.DFD_Activate:
             size = trace_x.shape[0]
             idx = np.arange(size)
             trace_x_n = trace_x[:size//clk_multiplier]
@@ -3455,6 +3691,104 @@ class MainWindow(QMainWindow):
             )
         else:
             self.trace_widget.plot(trace_x, trace_y, clear=True)
+
+        self.trace_dfd_widget.setVisible(self.DFD_Activate)
+        if self.DFD_Activate:
+            dfd_trace = self.spadfcsmanager_inst.getDfdTrace()
+            trace_dfd_x = dfd_trace[0, :]
+            trace_live = dfd_trace[1, :]
+            trace_sum = dfd_trace[2, :]
+            peak_idx = int(np.argmax(trace_sum))
+            self.spadfcsmanager_inst.update_shared_dict({"dfd_peak_idx": peak_idx})
+            trace_dfd_x_bins = np.asarray(trace_dfd_x, dtype=float)
+            tcycle_s = 1.0 / (
+                max(float(self.dfd_cycle_mhz), 1e-12) * 1e6 * max(clk_multiplier, 1)
+            )
+            trace_dfd_x_seconds = trace_dfd_x_bins / max(int(self.DFD_nbins), 1) * tcycle_s
+            axis_name = "DFD bin"
+            if self.ui.checkBox_trace_dfd_time_axis.isChecked():
+                trace_dfd_x = trace_dfd_x_seconds
+                axis_name = "Time"
+            else:
+                trace_dfd_x = trace_dfd_x_bins
+            bin_width_ns = tcycle_s * 1e9 / max(int(self.DFD_nbins), 1)
+            live_max = np.max(trace_live)
+            sum_max = np.max(trace_sum)
+
+            if live_max > 0 and sum_max > 0:
+                trace_live = (trace_live / live_max) * sum_max
+            elif live_max > 0 and sum_max <= 0:
+                trace_live = trace_live / live_max
+
+            if self.ui.checkBox_trace_dfd_align_peak.isChecked():
+                trace_live = np.roll(trace_live, -peak_idx)
+                trace_sum = np.roll(trace_sum, -peak_idx)
+                trace_dfd_x_plot = (
+                    np.roll(
+                        np.mod(trace_dfd_x_seconds - trace_dfd_x_seconds[peak_idx], tcycle_s),
+                        -peak_idx,
+                    )
+                    if self.ui.checkBox_trace_dfd_time_axis.isChecked()
+                    else np.roll(
+                        np.mod(
+                            trace_dfd_x_bins - trace_dfd_x_bins[peak_idx],
+                            float(max(int(self.DFD_nbins), 1)),
+                        ),
+                        -peak_idx,
+                    )
+                )
+            else:
+                trace_dfd_x_plot = trace_dfd_x
+
+            self.trace_dfd_widget.plot(
+                trace_dfd_x_plot,
+                trace_live,
+                clear=True,
+                pen=pg.mkPen(color=(255, 255, 255), width=1),
+            )
+            self.trace_dfd_widget.plot(
+                trace_dfd_x_plot,
+                trace_sum,
+                pen=pg.mkPen(color=(180, 180, 180), width=2),
+            )
+            tau_ns, fit_curve, peak_idx, trace_sum_peak0, trace_dfd_x_peak0_seconds = self.estimateDfdDecayLifetimeNs(
+                trace_sum,
+                trace_dfd_x_seconds,
+                bin_width_ns,
+                max(int(self.DFD_nbins), 1),
+                tcycle_s,
+                start_level=self.ui.doubleSpinBox_trace_dfd_start_percent.value() / 100.0,
+                end_level=self.ui.doubleSpinBox_trace_dfd_end_percent.value() / 100.0,
+            )
+            self.latest_dfd_tau_fit_ns = tau_ns
+            if tau_ns is not None:
+                self.trace_dfd_widget.setLabel("top", f"tau_fit={tau_ns:.3f} ns - {axis_name}", "s" if axis_name == "Time" else None)
+            else:
+                self.trace_dfd_widget.setLabel("top", axis_name, "s" if axis_name == "Time" else None)
+
+            if fit_curve is not None:
+                if self.ui.checkBox_trace_dfd_time_axis.isChecked():
+                    fit_x = fit_curve["x_fit_seconds"]
+                else:
+                    fit_x = fit_curve["x_fit_bins"]
+                fit_y = fit_curve["y_fit"]
+                order = np.argsort(fit_x)
+                fit_x = fit_x[order]
+                fit_y = fit_y[order]
+                self.trace_dfd_widget.plot(
+                    fit_x,
+                    fit_y,
+                    pen=None,
+                    symbol="o",
+                    symbolSize=3,
+                    symbolBrush=(255, 200, 0),
+                    symbolPen=pg.mkPen(color=(255, 200, 0), width=1),
+                )
+        else:
+            self.latest_dfd_tau_fit_ns = None
+            self.spadfcsmanager_inst.update_shared_dict({"dfd_peak_idx": -1})
+            self.trace_dfd_widget.clear()
+            self.trace_dfd_widget.setLabel("top", "DFD bin")
 
         # numpy random.rand also much faster than list comprehension
         # img = np.random.rand(512, 512)
@@ -3510,7 +3844,7 @@ class MainWindow(QMainWindow):
             self.draw_fingerprint(data_finger_print, saturation_data)
 
         if self.spadfcsmanager_inst.acquisition_is_almost_done():
-            print_dec(
+            print_debug(
                 "self.spadfcsmanager_inst.acquisition_is_almost_done()",
                 number_of_threads_h5,
             )
@@ -3518,7 +3852,7 @@ class MainWindow(QMainWindow):
             self.ui.pushButton_acquisitionStart.setEnabled(False)
 
         if self.spadfcsmanager_inst.acquisition_is_done():
-            print_dec(
+            print_debug(
                 "self.spadfcsmanager_inst.acquisition_is_done()",
                 self.spadfcsmanager_inst.acquisition_is_done(),
             )
@@ -3529,7 +3863,7 @@ class MainWindow(QMainWindow):
                 if (self.my_tick_counter > 5000) or (
                         current_preview_element[fifo] >= expected_fifo_elements[fifo]
                 ):
-                    print_dec(
+                    print_debug(
                         "get_fifo_elements >= get_expected_fifo_elements and 1s passed"
                     )
                     self.spadfcsmanager_inst.acquisition_done_reset()
@@ -3586,27 +3920,27 @@ class MainWindow(QMainWindow):
                 "%d" % self.spadfcsmanager_inst.shared_dict["last_packet_size"]
             )
         except:
-            print_dec("self.ui.last_packet_size FAIL")
+            print_debug("self.ui.last_packet_size FAIL")
 
         try:
             # print(self.spadfcsmanager_inst.last_preprocessed_len)
             # print(self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value)
-            self.ui.label_fifo_prebuffer_len.setText(
+            self.ui.label_last_preprocessed_size.setText(
                 "%d"
                 % self.spadfcsmanager_inst.last_preprocessed_len["FIFOAnalog"].value
             )
         except:
-            print_dec("self.ui.last_preprocessed_len FIFOAnalog FAIL")
+            print_debug("self.ui.last_preprocessed_len FIFOAnalog FAIL")
 
         try:
             # print(self.spadfcsmanager_inst.last_preprocessed_len)
             # print(self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value)
-            self.ui.label_fifo_prebuffer_len.setText(
+            self.ui.label_last_preprocessed_size.setText(
                 "%d" % self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value
             )
 
         except:
-            print_dec("self.ui.last_preprocessed_len FIFO FAIL")
+            print_debug("self.ui.last_preprocessed_len FIFO FAIL")
 
         self.timerPreviewImg_tick_mutex.unlock()
 
@@ -3676,7 +4010,7 @@ class MainWindow(QMainWindow):
         """
         open the console widget
         """
-        print_dec("Start QTConsole")
+        print_debug("Start QTConsole")
         namespace = {
             "np": np,
             "h5py": h5py,
@@ -3791,13 +4125,13 @@ Have fun!
 
         clock_duration = time_bin * time_res * 20
         Cx = time_res * self.clock_base
-        print_dec("temporalSettingsChanged")
+        print_debug("temporalSettingsChanged")
 
         waitForLaserInCycle = self.ui.spinBox_waitForLaser.value() * 40e6
         waitAfterFrame = self.ui.spinBox_waitAfterFrame.value() * 40e6
         waitOnlyFirstTime = self.ui.checkBox_waitOnlyFirstTime.isChecked()
 
-        print_dec("temporalSettingsChanged")
+        print_debug("temporalSettingsChanged")
 
         self.setRegistersDict(
             {
@@ -3842,20 +4176,20 @@ Have fun!
         """
         load the preset configuration
         """
-        print_dec("loadPreset")
+        print_debug("loadPreset")
         combo_str = self.ui.comboBox_preset.currentText()
         self.setGUI_data(self.preset_dict[combo_str])
-        print_dec("preset %d loaded" % combo_str)
+        print_debug("preset %d loaded" % combo_str)
 
     @Slot()
     def savePreset(self):
         """
         save the preset configuration
         """
-        print_dec("savePreset")
+        print_debug("savePreset")
         combo_str = self.ui.comboBox_preset.currentText()
         self.preset_dict[combo_str] = self.getGUI_data()
-        print_dec("preset %d saved" % combo_str)
+        print_debug("preset %d saved" % combo_str)
 
     # @Slot()
     # def removeMarkerCmd(self):
@@ -3892,7 +4226,7 @@ Have fun!
         """
         update the number of pixel, line, frame changed event
         """
-        print_dec("updatePixelValueChanged")
+        print_debug("updatePixelValueChanged")
 
         if self.ui.spinBox_nx.value() == 1:
             self.ui.comboBox_view_projection.setCurrentIndex(
@@ -4047,7 +4381,7 @@ Have fun!
         # self.rect_roi.setPos(0., 0.) # for some bug this must be after setSize
         self.rect_roi.update()
 
-        print_dec(self.rect_roi.state)
+        print_debug(self.rect_roi.state)
         # self.rect_roi_modified_lock = False
 
         self.rect_roi.hide()
@@ -4062,7 +4396,7 @@ Have fun!
 
         # pass
         if self.ui.checkBox_lockMove.isChecked():
-            print_dec("self.im_widget.autoRange()")
+            print_debug("self.im_widget.autoRange()")
             self.im_widget.autoRange()
 
     def updateLabelPixelSize(self):
@@ -4071,21 +4405,21 @@ Have fun!
                 "%.3f nm" % (1000 * self.ui.spinBox_range_x.value() / (self.ui.spinBox_nx.value() - 1.)))
         else:
             self.ui.label_pixelsize_x.setText(
-                "∞")
+                "âˆž")
 
         if self.ui.spinBox_ny.value() != 1:
             self.ui.label_pixelsize_y.setText(
                 "%.3f nm" % (1000 * self.ui.spinBox_range_y.value() / (self.ui.spinBox_ny.value() - 1.)))
         else:
             self.ui.label_pixelsize_y.setText(
-                "∞")
+                "âˆž")
 
         if self.ui.spinBox_nframe.value() != 1:
             self.ui.label_pixelsize_z.setText(
                 "%.3f nm" % (1000 * self.ui.spinBox_range_z.value() / (self.ui.spinBox_nframe.value() - 1.)))
         else:
             self.ui.label_pixelsize_z.setText(
-                "∞")
+                "âˆž")
 
     @Slot()
     def rangeValueChanged(self, number=None):
@@ -4111,7 +4445,7 @@ Have fun!
         oldlock_parameters_changed_call = self.lock_parameters_changed_call
         if not self.lock_parameters_changed_call or force:
             self.lock_parameters_changed_call = True
-            print_dec("offset_um_update self.lock_parameters_changed_call SET True")
+            print_debug("offset_um_update self.lock_parameters_changed_call SET True")
             self.lock_range_changing = True
             calib_xx = self.ui.spinBox_calib_x.value()
             calib_yy = self.ui.spinBox_calib_y.value()
@@ -4126,7 +4460,7 @@ Have fun!
             self.ui.spinBox_off_z_V.setValue(offset_zz_um / calib_zz)
 
             self.offset_V_Changed()
-            print_dec(self.started_normal, self.started_preview)
+            print_debug(self.started_normal, self.started_preview)
             self.currentImage_pos = np.asarray(
                 (
                     self.ui.spinBox_off_x_um.value(),  # - self.ui.spinBox_range_x.value()/2,
@@ -4167,7 +4501,7 @@ Have fun!
             if self.started_normal or self.started_preview:
                 self.axesRangeChanged()
         else:
-            print_dec("offset_um_update lock_parameters_changed_call is True")
+            print_debug("offset_um_update lock_parameters_changed_call is True")
 
         self.lock_parameters_changed_call = oldlock_parameters_changed_call
         self.lock_range_changing = oldlock_range_changing
@@ -4239,7 +4573,7 @@ Have fun!
         actuation of the position settings changed event
         """
         if not self.lock_parameters_changed_call or force:
-            print_dec("positionSettingsChanged_apply")
+            print_debug("positionSettingsChanged_apply")
             xx = self.ui.spinBox_range_x.value()
             if self.ui.checkBoxLockRatio.isChecked():
                 self.ui.spinBox_range_y.setValue(self.ui.spinBox_range_x.value())
@@ -4308,13 +4642,13 @@ Have fun!
 
             # for some bug this must be after setSize
             self.rect_roi.update()
-            print_dec(self.rect_roi.state)
+            print_debug(self.rect_roi.state)
             # self.rect_roi_modified_lock = False
 
             self.updateRectLimit() #update the rectangle in the panaorma
 
         else:
-            print_dec(
+            print_debug(
                 "positionSettingsChanged_apply lock_parameters_changed_call is True"
             )
 
@@ -4326,16 +4660,25 @@ Have fun!
         activate the DFD mode
         """
         self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
+        self.trace_dfd_widget.setVisible(self.ui.checkBox_DFD.isChecked())
         if self.ui.checkBox_DFD.isChecked():
             self.ui.spinBox_time_bin_per_px.setValue(self.DFD_nbins)
             self.ui.spinBox_timeresolution.setValue(2.0)
+
+    @Slot(int)
+    def compensationDelayForSnakeChanged(self, value):
+        """
+        Keep the snake-walk compensation delay synced with the runtime manager.
+        """
+        if hasattr(self, "spadfcsmanager_inst") and self.spadfcsmanager_inst is not None:
+            self.spadfcsmanager_inst.set_compensation_delay_for_snake(value)
 
     @Slot()
     def updateMaxMinVoltages(self):
         """
         event when the max and min voltages are changed
         """
-        print_dec("updateMaxMinVoltages")
+        print_debug("updateMaxMinVoltages")
         min_x_V = self.ui.spinBox_min_x_V.value()
         min_y_V = self.ui.spinBox_min_y_V.value()
         min_z_V = self.ui.spinBox_min_z_V.value()
@@ -4360,9 +4703,196 @@ Have fun!
         """
 
         """
-        print_dec("plotSettingsChanged")
+        print_debug("plotSettingsChanged")
+        self.updateColorLifetimeShiftControls()
         self.updatePreviewConfiguration()
         self.checkAlerts()
+
+    def estimateDfdDecayLifetimeNs(
+        self,
+        trace_sum,
+        trace_x_seconds,
+        bin_width_ns,
+        nbins,
+        tcycle_s,
+        start_level=0.95,
+        end_level=0.25,
+    ):
+        trace_sum = np.asarray(trace_sum, dtype=float)
+        trace_x_seconds = np.asarray(trace_x_seconds, dtype=float)
+        if (
+            trace_sum.size < 4
+            or trace_x_seconds.size != trace_sum.size
+            or not np.isfinite(bin_width_ns)
+            or bin_width_ns <= 0
+            or nbins <= 0
+            or not np.isfinite(tcycle_s)
+            or tcycle_s <= 0
+            or not np.isfinite(start_level)
+            or not np.isfinite(end_level)
+            or not (0.0 < end_level < start_level < 1.0)
+        ):
+            print_debug("FIT: invalid input parameters")
+            return None, None, None, None, None
+
+        peak_idx = int(np.argmax(trace_sum))
+        trace_sum_peak0 = np.roll(trace_sum, -peak_idx)
+        trace_x_peak0_seconds = np.roll(
+            np.mod(trace_x_seconds - trace_x_seconds[peak_idx], tcycle_s),
+            -peak_idx,
+        )
+
+        peak_value = float(trace_sum_peak0[0])
+        if not np.isfinite(peak_value) or peak_value <= 0:
+            #print_debug("FIT: invalid peak value")
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+        y_start = start_level * peak_value
+        idx_start_candidates = np.flatnonzero(trace_sum_peak0 <= y_start)
+        fallback_levels = [end_level, 0.30, 0.40]
+        fallback_levels = [level for level in fallback_levels if 0.0 < level < start_level]
+        fallback_levels = list(dict.fromkeys(fallback_levels))
+        selected_end_level = None
+        idx_end_candidates = np.asarray([], dtype=int)
+        y_end = None
+        for candidate_end_level in fallback_levels:
+            y_end_candidate = candidate_end_level * peak_value
+            idx_end_candidate = np.flatnonzero(trace_sum_peak0 <= y_end_candidate)
+            if idx_start_candidates.size != 0 and idx_end_candidate.size != 0:
+                selected_end_level = candidate_end_level
+                idx_end_candidates = idx_end_candidate
+                y_end = y_end_candidate
+                break
+
+        if idx_start_candidates.size == 0 or idx_end_candidates.size == 0:
+            #print_debug("FIT: y_start, y_end, idx_start_candidates, idx_end_candidates", y_start, y_end, idx_start_candidates, idx_end_candidates)
+            #print_debug("FIT: no candidates for start or end indices")
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+        #print_debug("FIT: start_level, selected_end_level", start_level, selected_end_level)
+
+        start_idx = int(idx_start_candidates[0])
+        end_idx = int(idx_end_candidates[0])
+        if end_idx <= start_idx:
+            #print_debug("FIT: end_idx <= start_idx")
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+        y_section = trace_sum_peak0[start_idx : end_idx + 1]
+        x_section_seconds = trace_x_peak0_seconds[start_idx : end_idx + 1]
+        positive = y_section > 0
+        if np.count_nonzero(positive) < 4:
+            #print_debug("FIT: np.count_nonzero(positive) < 4")
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+        x_fit_bins = np.arange(start_idx, end_idx + 1, dtype=float)[positive]
+        x_fit_seconds = x_section_seconds[positive]
+        y_fit_input = y_section[positive]
+        slope, intercept = np.polyfit(x_fit_bins, np.log(y_fit_input), 1)
+        #print_debug("FIT: slope and intercept", slope, intercept)
+        if not np.isfinite(slope) or slope >= 0:
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+        tau_ns = -float(bin_width_ns) / slope
+        if not np.isfinite(tau_ns) or tau_ns <= 0:
+            return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+        y_fit = np.exp(intercept + slope * x_fit_bins)
+        x_fit_bins_plot = np.mod(x_fit_bins + int(peak_idx), int(nbins))
+        x_fit_seconds_plot = np.mod(x_fit_seconds + int(peak_idx) * bin_width_ns * 1e-9, tcycle_s)
+
+        fit_curve = {
+            "fit_len": int(end_idx - start_idx + 1),
+            "x_fit_bins": x_fit_bins_plot,
+            "x_fit_seconds": x_fit_seconds_plot,
+            "y_fit": y_fit,
+        }
+        return float(tau_ns), fit_curve, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
+
+    def updateColorLifetimeShiftControls(self):
+        current_channel = self.ui.comboBox_plot_channel.currentText()
+        visible = self.isLifetimeColorChannel(current_channel)
+        self.ui.label_delta_tau_ns.setVisible(visible)
+        self.ui.doubleSpinBox_delta_tau_ns.setVisible(visible)
+        self.ui.pushButton_delta_tau_auto.setVisible(visible)
+        self.ui.widget_lifetime_hue_range.setVisible(visible)
+        self.updateImageInteractionHints()
+
+        clk_multiplier = 1
+        if hasattr(self, "spadfcsmanager_inst") and self.spadfcsmanager_inst is not None:
+            clk_multiplier = max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
+        dfd_cycle_mhz = max(float(getattr(self, "dfd_cycle_mhz", 40.0)), 1e-12)
+        tcycle_ns = 1e3 / (dfd_cycle_mhz * clk_multiplier)
+        self.ui.label_delta_tau_ns.setText(f"Corr. delta_tau [ns] (T={tcycle_ns:.4f})")
+
+        self.ui.doubleSpinBox_delta_tau_ns.blockSignals(True)
+        self.ui.doubleSpinBox_delta_tau_ns.setRange(0.0, max(tcycle_ns, 1e-12))
+        self.ui.doubleSpinBox_delta_tau_ns.setSingleStep(max(tcycle_ns / 100.0, 1e-4))
+        if tcycle_ns > 0.0:
+            wrapped_value = self.ui.doubleSpinBox_delta_tau_ns.value() % tcycle_ns
+            self.ui.doubleSpinBox_delta_tau_ns.setValue(wrapped_value)
+        self.ui.doubleSpinBox_delta_tau_ns.blockSignals(False)
+
+    @Slot()
+    def colorLifetimeDeltaTauChanged(self):
+        self.updateColorLifetimeShiftControls()
+        if self.isLifetimeColorChannel():
+            self.plotPreviewImage()
+
+    @Slot()
+    def colorLifetimeDeltaTauUseHistogramMean(self):
+        if not self.isLifetimeColorChannel():
+            return
+
+        tcycle_ns = 1e3 / (
+            max(float(self.dfd_cycle_mhz), 1e-12)
+            * max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
+        )
+        h_mean = self.im_widget.getDisplayedHMean()
+        tau_fit_ns = self.latest_dfd_tau_fit_ns
+        if h_mean is None or tau_fit_ns is None:
+            return
+
+        current_mean_ns = float(h_mean) * tcycle_ns
+        corrected_value = (
+            self.ui.doubleSpinBox_delta_tau_ns.value()
+            + current_mean_ns
+            - float(tau_fit_ns)
+        ) % tcycle_ns
+
+        self.ui.doubleSpinBox_delta_tau_ns.blockSignals(True)
+        self.ui.doubleSpinBox_delta_tau_ns.setValue(corrected_value)
+        self.ui.doubleSpinBox_delta_tau_ns.blockSignals(False)
+        self.plotPreviewImage()
+
+    def getLifetimeColorRenderMode(self, channel_name=None):
+        if channel_name is None:
+            channel_name = self.ui.comboBox_plot_channel.currentText()
+        render_modes = {
+            "COLOR_LIFETIME": "hcl",
+            "LIFETIME_HCL": "hcl",
+            "LIFETIME_HSV": "hsv",
+            "LIFETIME_HSL": "hsl",
+        }
+        return render_modes.get(channel_name)
+
+    def isLifetimeColorChannel(self, channel_name=None):
+        return self.getLifetimeColorRenderMode(channel_name) is not None
+
+    def getLifetimeHueDisplayRange(self):
+        return (
+            float(self.ui.doubleSpinBox_lifetime_hue_min.value()),
+            float(self.ui.doubleSpinBox_lifetime_hue_max.value()),
+        )
+
+    def getLifetimeForceQualityFull(self):
+        return bool(self.ui.checkBox_lifetime_force_quality_full.isChecked())
+
+    def updateImageInteractionHints(self):
+        visible = not self.isLifetimeColorChannel()
+        for label_name in ("label_106", "label_107"):
+            label = getattr(self.ui, label_name, None)
+            if label is not None:
+                label.setVisible(visible)
 
     @Slot()
     def previewButtonClicked(self):
@@ -4392,12 +4922,13 @@ Have fun!
     # def afterFpgaRun(self):
     #     pass
 
-    def initializeAcquisition(self, do_not_save=False, do_run=True):
+    def initializeAcquisition(self, do_not_save=False, do_run=True, raw_stream_mode=False):
         """
         Initialize and configure acquisition parameters (registers, calibration, trace settings, etc.).
         This method does NOT start the acquisition - it only prepares the system.
         """
         self.do_not_save = do_not_save
+        self.raw_stream_mode = raw_stream_mode
 
         # Initialize DFD settings BEFORE circular motion to ensure correct state
         self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
@@ -4457,7 +4988,7 @@ Have fun!
         waitAfterFrame = self.ui.spinBox_waitAfterFrame.value() * 40e6
         waitOnlyFirstTime = self.ui.checkBox_waitOnlyFirstTime.isChecked()
 
-        print_dec("temporalSettingsChanged")
+        print_debug("temporalSettingsChanged")
 
         circular_motion = self.ui.checkBox_circular.isChecked()
         dummy_data = self.ui.checkBox_DummyData.isChecked()
@@ -4549,6 +5080,13 @@ Have fun!
         laserEnable1 = self.ui.checkBox_laser1.isChecked()
         laserEnable2 = self.ui.checkBox_laser2.isChecked()
         laserEnable3 = self.ui.checkBox_laser3.isChecked()
+        self.snake_walk_Activate_XY = self.ui.checkBox_snake.isChecked()
+        self.snake_walk_Activate_Z = self.ui.checkBox_snake_z.isChecked()
+        self.spadfcsmanager_inst.set_activate_snake_walk_xy(self.snake_walk_Activate_XY)
+        self.spadfcsmanager_inst.set_activate_snake_walk_z(self.snake_walk_Activate_Z)
+        self.compensationDelayForSnakeChanged(
+            self.ui.spinBox_compensation_delay.value()
+        )
 
         start_offset = np.asarray(
             [
@@ -4597,11 +5135,6 @@ Have fun!
 
         # self.pmtThresholdChanged()
 
-        self.snake_walk_Activate_XY = self.ui.checkBox_snake.isChecked()
-        self.snake_walk_Activate_Z = self.ui.checkBox_snake_z.isChecked()
-        self.spadfcsmanager_inst.set_activate_snake_walk_xy(self.snake_walk_Activate_XY)
-        self.spadfcsmanager_inst.set_activate_snake_walk_z(self.snake_walk_Activate_Z)
-
         self.configurationFPGA_dict.update(
             self.spadfcsmanager_inst.registers_configuration
         )
@@ -4626,12 +5159,12 @@ Have fun!
         # self.rect_roi.setPos(0., 0.) # for some bug this must be after setSize
         self.rect_roi.update()
 
-        print_dec(self.rect_roi.state)
+        print_debug(self.rect_roi.state)
 
         # self.rect_roi_modified_lock = False
         self.timerPreviewImg.start()
 
-        print_dec(self.rect_roi.state)
+        print_debug(self.rect_roi.state)
         self.updateMaxMinVoltages()
 
         self.analogOutChanged()
@@ -4639,10 +5172,11 @@ Have fun!
 
         if do_run:
             self.activateFIFOflag()
-        self.activateShowPreview(self.ui.checkBox_showPreview.isChecked())
+        self.activateShowPreview(self.ui.checkBox_showPreview.isChecked() and not raw_stream_mode)
 
 
         self.spadfcsmanager_inst.set_do_not_save(do_not_save)
+        self.spadfcsmanager_inst.set_raw_stream_mode(raw_stream_mode)
 
         filename_for_ttm = self.defineFilename(with_folder=False)
         if self.ttm_remote_is_up() and not do_not_save:
@@ -4653,57 +5187,54 @@ Have fun!
                 filename_for_ttm.replace(".h5", ".ttr")
             )
 
-        filename = self.defineFilename(with_folder=True)
+        filename = (
+            self.defineMetadataFilename(with_folder=True)
+            if raw_stream_mode
+            else self.defineFilename(with_folder=True)
+        )
         self.last_requested_filename = filename
         self.spadfcsmanager_inst.set_filename_h5(filename)
+        if raw_stream_mode:
+            self.raw_stream_output_files = self.defineRawOutputFiles(filename)
+            self.spadfcsmanager_inst.set_raw_output_files(self.raw_stream_output_files)
+        else:
+            self.raw_stream_output_files = {}
         self.spadfcsmanager_inst.set_autocorrelation_maxx(
             self.ui.spinBox_FCSbins.value()
         )
 
-        if self.DFD_Activate:
-            trace_bins = self.DFD_nbins
+        trace_bins = int(
+            self.ui.doubleSpinBox_binsize.value()
+            * 1e3
+            / (self.ui.spinBox_timeresolution.value())
+        )
 
-            trace_length = self.DFD_nbins
-
-            trace_sample_per_bins = int(trace_length // trace_bins)
-
-            print_dec("trace_bins", trace_bins)
-            print_dec("trace_length", trace_length)
-            print_dec("trace_sample_per_bins", trace_sample_per_bins)
-
-            self.spadfcsmanager_inst.set_trace_bins(trace_bins=trace_bins)
-            self.spadfcsmanager_inst.set_trace_sample_per_bins(
-                trace_sample_per_bins=trace_sample_per_bins
-            )
-            self.spadfcsmanager_inst.set_clk_multiplier(self.ui.spinBox_clk_base_multiplier.value())
-        else:
-            trace_bins = int(
-                self.ui.doubleSpinBox_binsize.value()
-                * 1e3
+        trace_length = (
+                self.ui.doubleSpinBox_maxlength.value()
+                * 1e6
                 / (self.ui.spinBox_timeresolution.value())
+        )
+
+        trace_sample_per_bins = int(trace_length // trace_bins)
+
+        print_debug("trace_bins", trace_bins)
+        print_debug("trace_length", trace_length)
+        print_debug("trace_sample_per_bins", trace_sample_per_bins)
+
+        self.spadfcsmanager_inst.set_trace_bins(trace_bins=trace_bins)
+        self.spadfcsmanager_inst.set_trace_sample_per_bins(
+            trace_sample_per_bins=trace_sample_per_bins
+        )
+
+        self.ui.label_trace_total_bins.setText("%s" % trace_sample_per_bins)
+        self.ui.label_configured_fifo_depth.setText(
+            "%d" % self.spadfcsmanager_inst.fpga_handle.get_actual_fifo_depth()
+        )
+        if self.DFD_Activate:
+            self.spadfcsmanager_inst.set_clk_multiplier(
+                self.ui.spinBox_clk_base_multiplier.value()
             )
-
-            trace_length = (
-                    self.ui.doubleSpinBox_maxlength.value()
-                    * 1e6
-                    / (self.ui.spinBox_timeresolution.value())
-            )
-
-            trace_sample_per_bins = int(trace_length // trace_bins)
-
-            print_dec("trace_bins", trace_bins)
-            print_dec("trace_length", trace_length)
-            print_dec("trace_sample_per_bins", trace_sample_per_bins)
-
-            self.spadfcsmanager_inst.set_trace_bins(trace_bins=trace_bins)
-            self.spadfcsmanager_inst.set_trace_sample_per_bins(
-                trace_sample_per_bins=trace_sample_per_bins
-            )
-
-            self.ui.label_trace_total_bins.setText("%s" % trace_sample_per_bins)
-            self.ui.label_actual_buffer_size.setText(
-                "%d" % self.spadfcsmanager_inst.fpga_handle.get_actual_depth()
-            )
+        else:
             self.spadfcsmanager_inst.set_clk_multiplier(1)
 
         # self.spadfcsmanager_inst.acquistion_run()
@@ -4727,10 +5258,10 @@ Have fun!
     @Slot()
     def test_analog_digital(self):
         """experimental mixed analog and digital mode"""
-        print_dec("test_analog_digital()")
+        print_debug("test_analog_digital()")
         self.ui.checkBox_fifo_analog.setAutoExclusive(False)
         self.ui.checkBox_fifo_digital.setAutoExclusive(False)
-        print_dec("now the ratioButton can be on at the same time")
+        print_debug("now the ratioButton can be on at the same time")
 
     @Slot()
     def trace_parameters_changed(self):
@@ -4756,7 +5287,7 @@ Have fun!
         """
         configure the dictionary for the analog input
         """
-        print_dec("Configure Analog")
+        print_debug("Configure Analog")
         # ANALOG CONFIGURATION
         # self.ui.checkBox_analog_in_integrate_AI0
         # self.ui.checkBox_analog_in_integrate_AI1
@@ -4802,8 +5333,8 @@ Have fun!
         activate the FIFO flag
         """
 
-        print_dec("activateFIFOflag")
-        print_dec("DFD", self.DFD_Activate)
+        print_debug("activateFIFOflag")
+        print_debug("DFD", self.DFD_Activate)
 
         fifo = []
         if self.ui.checkBox_fifo_digital.isChecked():
@@ -4842,7 +5373,7 @@ Have fun!
 
         self.rect_roi_panorama_limit.setPos(-lim_x/2., -lim_y/2.)
 
-        # print_dec("Panorama")
+        # print_debug("Panorama")
         #
         # pos_x = 0.
         # pos_y = 0.
@@ -4865,7 +5396,7 @@ Have fun!
         #         size_y / img.shape[1],
         #     ),
         # )
-        # print_dec(pos_x, pos_y, size_x, size_y)
+        # print_debug(pos_x, pos_y, size_x, size_y)
         # self.im_widget_panorama.setItem(img)
 
 
@@ -4874,7 +5405,7 @@ Have fun!
         """
         grab the panorama image
         """
-        print_dec("Panorama")
+        print_debug("Panorama")
 
         pos_x = self.im_widget.getImageItem().x()
         pos_y = self.im_widget.getImageItem().y()
@@ -4894,14 +5425,14 @@ Have fun!
             ),
         )
         self.im_panorama_widget.show()
-        print_dec(pos_x, pos_y, size_x, size_y)
+        print_debug(pos_x, pos_y, size_x, size_y)
         # self.im_widget_panorama.setItem(img)
 
     def updatePreviewConfiguration(self):
         """
         update the preview configuration - channel selection
         """
-        print_dec("updatePreviewConfiguration")
+        print_debug("updatePreviewConfiguration")
 
         t = self.ui.comboBox_plot_channel.currentText()
         self.ui.label_plot_channel.setText("Ch. selected: %s" % t.upper())
@@ -4919,7 +5450,7 @@ Have fun!
                 "activate_trace": self.ui.checkBox_trace_on.isChecked(),
             }
         )
-        print_dec(self.spadfcsmanager_inst.read_shared_dict())
+        print_debug(self.spadfcsmanager_inst.read_shared_dict())
 
     def defineFilename(self, with_folder=True):
         """
@@ -4942,12 +5473,35 @@ Have fun!
                         + datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
                         + ".h5"
                 )
-                print_dec("FILE EXISTS")
-        print_dec(filename)
+                print_debug("FILE EXISTS")
+        print_debug(filename)
         if with_folder:
             return folder + filename
         else:
             return filename
+
+    def defineMetadataFilename(self, with_folder=True):
+        """
+        Derive the metadata-only H5 filename used by preview-less RAW acquisitions.
+        """
+        filename = self.defineFilename(with_folder=with_folder)
+        if filename.endswith(".h5") and not filename.endswith("_only_metadata.h5"):
+            filename = filename[:-3] + "_only_metadata.h5"
+        return filename
+
+    def defineRawOutputFiles(self, metadata_filename):
+        """
+        Derive raw FIFO output paths from the metadata H5 filename.
+        """
+        base_filename = metadata_filename.replace(".h5", "")
+        if base_filename.endswith("_only_metadata"):
+            base_filename = base_filename[: -len("_only_metadata")]
+        raw_files = {}
+        if self.ui.checkBox_fifo_digital.isChecked():
+            raw_files["FIFO"] = base_filename + "_FIFO.raw"
+        if self.ui.checkBox_fifo_analog.isChecked():
+            raw_files["FIFOAnalog"] = base_filename + "_FIFOAnalog.raw"
+        return raw_files
 
     @Slot()
     def start(self):
@@ -4966,7 +5520,7 @@ Have fun!
             is_preview (bool): If True, run in preview mode (limited repetitions, no saving).
                              If False, run in normal acquisition mode.
         """
-        print_dec("beginAcquisition(is_preview=%s)" % is_preview)
+        print_debug("beginAcquisition(is_preview=%s)" % is_preview)
 
         # Enable TTM if requested
         if self.ui.checkBox_ttmActivate.isChecked():
@@ -4979,10 +5533,10 @@ Have fun!
 
         # Ensure FPGA is connected
         if not self.spadfcsmanager_inst.is_connected:
-            print_dec("FPGA not connected, connecting now...")
+            print_debug("FPGA not connected, connecting now...")
             self.connectFPGA()
         else:
-            print_dec("FPGA Already connected")
+            print_debug("FPGA Already connected")
 
         # Configure preview settings
         self.updatePreviewConfiguration()
@@ -4990,11 +5544,15 @@ Have fun!
         # Reset current image state
         self.currentImage = None
         self.activeFile = False
+        self.spadfcsmanager_inst.acquisition_done_reset()
+        self.spadfcsmanager_inst.acquisition_almost_done_reset()
 
         # Set acquisition mode flags
         self.started_normal = not is_preview
         self.started_preview = is_preview
         self._pending_program_state_after_stop = None
+        raw_stream_mode = (not is_preview) and self.ui.checkBox_rawStreamAcquisition.isChecked()
+        self.raw_stream_mode = raw_stream_mode
 
         # Hide ROI and reset progress bars
         self.rect_roi.hide()
@@ -5037,7 +5595,24 @@ Have fun!
             self.ui.pushButton_externalProgram.setEnabled(False)
 
         # Initialize acquisition with appropriate mode flag
-        self.initializeAcquisition(do_not_save=is_preview, do_run=True)
+        self.initializeAcquisition(
+            do_not_save=is_preview,
+            do_run=True,
+            raw_stream_mode=raw_stream_mode,
+        )
+
+        if is_preview:
+            self.preview_run_id += 1
+            self.last_preview_started_at = self._make_status_timestamp()
+            self._set_program_state(
+                self.PROGRAM_STATE_PREVIEW, "preview_started"
+            )
+        else:
+            self.acquisition_run_id += 1
+            self.last_acquisition_started_at = self._make_status_timestamp()
+            self._set_program_state(
+                self.PROGRAM_STATE_ACQUISITION, "acquisition_started"
+            )
 
         if is_preview:
             self.preview_run_id += 1
@@ -5069,7 +5644,7 @@ Have fun!
                 self.ui.label_ttm_IP.setEnabled(False)
 
                 if self.ui.radioButton_ttm_remote.isChecked():
-                    print_dec("self.ui.radioButton_ttm_local.isChecked()==True")
+                    print_debug("self.ui.radioButton_ttm_local.isChecked()==True")
                     local_executable = ""
                 else:
                     local_executable = self.ui.lineEdit_ttm_executable_path.text()
@@ -5092,7 +5667,7 @@ Have fun!
         """
         check if the TTM is up
         """
-        print_dec("check if ttm_remote_is_up")
+        print_debug("check if ttm_remote_is_up")
         if self.ttm_remote_manager is not None:
             if self.ttm_remote_manager.is_ready():
                 return True
@@ -5100,7 +5675,7 @@ Have fun!
 
     @Slot()
     def pushButton_uttm_start_clicked(self):
-        print_dec("pushButton_uttm_start")
+        print_debug("pushButton_uttm_start")
         ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
         self.ui.label_uttm_ip.setText(ip)
         url =  "http://"+self.ui.lineEdit_uttm_addr.text()
@@ -5112,11 +5687,11 @@ Have fun!
                 self.ui.checkBox_uttm_watchdog.setChecked(True)
                 self.checkBox_uttm_watchdog_clicked()
         except:
-            print_dec("Impossible to connect: " + url+"/start")
+            print_debug("Impossible to connect: " + url+"/start")
 
     @Slot()
     def pushButton_uttm_stop_clicked(self):
-        print_dec("pushButton_uttm_stop_clicked")
+        print_debug("pushButton_uttm_stop_clicked")
         ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
         self.ui.label_uttm_ip.setText(ip)
         url =  "http://"+self.ui.lineEdit_uttm_addr.text()
@@ -5125,7 +5700,7 @@ Have fun!
             r = requests.post(url+"/stop", data=data)
             self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
         except:
-            print_dec("Impossible to connect: " + url+"/stop")
+            print_debug("Impossible to connect: " + url+"/stop")
 
     def sizeof_fmt(self, num, suffix="B"):
         #num = float(num)
@@ -5146,7 +5721,7 @@ Have fun!
         used_percent = used / total * 100 if total > 0 else 0
 
         html = f"""
-        <h2 style="color:#00aaff">📡 Acquisition Status</h2>
+        <h2 style="color:#00aaff">ðŸ“¡ Acquisition Status</h2>
         <p><b>Acquisition running:</b> {data['acquisition_running']}</p>
         <p><b>Upload running:</b> {data['upload_running']}</p>
         <p><b>PID:</b> {data['pid']}</p>
@@ -5155,17 +5730,17 @@ Have fun!
         <p><b>Free RAM:</b> {self.sizeof_fmt(data['free_ram'])}</p>
         <p><b>File size:</b> {self.sizeof_fmt(data['file_size'])}</p>
 
-        <h3 style="color:#ffaa00">💾 Disk usage</h3>
+        <h3 style="color:#ffaa00">ðŸ’¾ Disk usage</h3>
         <p><b>Total:</b> {self.sizeof_fmt(total)} | <b>Used:</b> {self.sizeof_fmt(used)} | <b>Free:</b> {self.sizeof_fmt(free)}</p>
         {self.progress_bar_html(used_percent, "#ff5555")}
         <p style="font-size:11px; color:#666;">Free space: {free_percent:.1f}%</p>
 
-        <h3 style="color:#00cc66">🚀 Uploader</h3>
+        <h3 style="color:#00cc66">ðŸš€ Uploader</h3>
         <p><b>Bytes sent:</b> {self.sizeof_fmt(uploader['bytes_sent'])} / {self.sizeof_fmt(uploader['total_bytes'])}</p>
         {self.progress_bar_html(uploader['percent'], "#00cc66")}
         <p><b>Elapsed:</b> {uploader['elapsed']} s | <b>ETA:</b> {uploader['eta']} s</p>
         <p><b>Speed:</b> {self.sizeof_fmt(int(uploader['speed']))}/s</p>
-        <p><b>Completed:</b> {"✅ Yes" if uploader['completed'] else "❌ No"}</p>
+        <p><b>Completed:</b> {"âœ… Yes" if uploader['completed'] else "âŒ No"}</p>
         """
         return html
 
@@ -5180,7 +5755,7 @@ Have fun!
 
     @Slot()
     def pushButton_uttm_status_clicked(self):
-        print_dec("pushButton_uttm_status")
+        print_debug("pushButton_uttm_status")
 
         ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
         self.ui.label_uttm_ip.setText(ip)
@@ -5196,7 +5771,7 @@ Have fun!
                 self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
         except:
             self.timerUttmWatchDog = None
-            print_dec("Failed ", url+"/status")
+            print_debug("Failed ", url+"/status")
             self.ui.checkBox_uttm_watchdog.setChecked(False)
 
         try:
@@ -5205,14 +5780,14 @@ Have fun!
             self.ui.textEdit_uttm_log.setText(r.text)
         except:
             self.timerUttmWatchDog = None
-            print_dec("Failed ", url + "/log_last")
+            print_debug("Failed ", url + "/log_last")
             self.ui.checkBox_uttm_watchdog.setChecked(False)
 
     def pushButton_uttm_test_clicked(self):
-        print_dec("pushButton_uttm_test_clicked")
+        print_debug("pushButton_uttm_test_clicked")
 
     def pushButton_uttm_check_laser_clicked(self):
-        print_dec("pushButton_uttm_check_laser_clicked")
+        print_debug("pushButton_uttm_check_laser_clicked")
 
         ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
         self.ui.label_uttm_ip.setText(ip)
@@ -5231,7 +5806,7 @@ Have fun!
             j = r.json()
             #self.ui.textEdit_uttm_status.setText(json.dumps(j, indent=4))
         except:
-            print_dec("Failed ", url + "/show_preview")
+            print_debug("Failed ", url + "/show_preview")
 
         self.ui.label_uttm_laser_freq.setText("Laser freq. found: %s MHz" % j["laser_frequency"])
 
@@ -5249,7 +5824,7 @@ Have fun!
 
     @Slot()
     def checkBox_uttm_watchdog_clicked(self):
-        print_dec("checkBox_uttm_watchdog_clicked")
+        print_debug("checkBox_uttm_watchdog_clicked")
         if self.ui.checkBox_uttm_watchdog.isChecked():
             self.timerUttmWatchDog = QTimer(None)
             self.timerUttmWatchDog_mutex = QMutex()
@@ -5271,7 +5846,7 @@ Have fun!
         """
         check the GUI alerts i.e. potential wrong parameters
         """
-        print_dec("checkAlerts")
+        print_debug("checkAlerts")
 
         current_plot_size_x_um = self.ui.spinBox_range_x.value()
         current_plot_size_y_um = self.ui.spinBox_range_y.value()
@@ -5355,16 +5930,16 @@ Have fun!
         Start acquisition in preview mode (limited repetitions, no saving).
         This is now a wrapper around beginAcquisition for backward compatibility.
         """
-        print_dec("previewLoop() - starting preview acquisition")
+        print_debug("previewLoop() - starting preview acquisition")
         self.beginAcquisition(is_preview=True)
 
     @Slot()
     def projChanged(self):
-        print_dec("projChanged()")
+        print_debug("projChanged()")
         self.plotPreviewImage()
 
         if self.ui.checkBox_lockMove.isChecked():
-            print_dec("self.im_widget.autoRange()")
+            print_debug("self.im_widget.autoRange()")
             self.im_widget.autoRange()
 
         self.drawMarkers()
@@ -5381,7 +5956,7 @@ Have fun!
         """
 
         # self.rect_roi.show()
-        print_dec("finalizeAcquisition")
+        print_debug("finalizeAcquisition")
 
         if self.started_normal:
 
@@ -5389,20 +5964,18 @@ Have fun!
             self.ui.checkBox_uttm_auto.isChecked():
                     self.pushButton_uttm_stop_clicked()
 
-            print_dec(self.spadfcsmanager_inst.shared_dict)
-            self.last_saved_filename = self.spadfcsmanager_inst.shared_dict[
-                "filenameh5"
-            ]
+            print_debug(self.spadfcsmanager_inst.shared_dict)
+            self.last_saved_filename = self.spadfcsmanager_inst.shared_dict["filenameh5"]
             self.last_completed_filename = self.last_saved_filename
             self.completed_acquisition_count += 1
             self.last_acquisition_completed_at = self._make_status_timestamp()
 
-            h5mgr = H5Manager(self.last_saved_filename, new_file=False)
+            h5mgr = H5Manager(self.last_saved_filename, new_file=self.raw_stream_mode)
 
             comment = self.ui.lineEdit_comment.toPlainText()
             self.ui.lineEdit_comment.setText("")
             self.ui.listWidget.addItem(self.last_saved_filename + "   " + comment)
-            print_dec("saveHDF()")
+            print_debug("saveHDF()")
 
             h5mgr.metadata_add_initial(comment)
 
@@ -5419,19 +5992,47 @@ Have fun!
                 "configurationGUI_beforeStart", self.configurationGUI_dict_beforeStart
             )
 
-            h5mgr.metadata_add_thumbnail(self.im_widget.imageItem)
+            if self.raw_stream_mode:
+                h5mgr.metadata_add_dict(
+                    "rawStreamAcquisition",
+                    {
+                        "enabled": True,
+                        "digital_fifo_present": "FIFO" in self.spadfcsmanager_inst.activated_fifos_list,
+                        "analog_fifo_present": "FIFOAnalog" in self.spadfcsmanager_inst.activated_fifos_list,
+                        "digital_channels": self.CHANNELS,
+                        "digital_words_per_sample": 2 if self.CHANNELS == 25 else 8,
+                        "analog_words_per_sample": 1,
+                        "effective_timebins_per_pixel": (
+                            self.spadfcsmanager_inst.registers_configuration.get("#timebinsPerPixel", 1)
+                            * self.spadfcsmanager_inst.registers_configuration.get("#circular_rep", 1)
+                            * self.spadfcsmanager_inst.registers_configuration.get("#circular_points", 1)
+                        ),
+                        "clock_base_mhz": self.clock_base,
+                        "clk_multiplier": self.spadfcsmanager_inst.clk_multiplier,
+                        "dfd_shift": self.spadfcsmanager_inst.dfd_shift,
+                        "snake_walk_xy": self.spadfcsmanager_inst.snake_walk_xy,
+                        "snake_walk_z": self.spadfcsmanager_inst.snake_walk_z,
+                        "dfd_activate": self.spadfcsmanager_inst.DFD_Activate,
+                        "digital_raw_file": self.raw_stream_output_files.get("FIFO", ""),
+                        "analog_raw_file": self.raw_stream_output_files.get("FIFOAnalog", ""),
+                        "digital_raw_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFO_bytes_written", 0),
+                        "analog_raw_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_bytes_written", 0),
+                    },
+                )
+            else:
+                h5mgr.metadata_add_thumbnail(self.im_widget.imageItem)
             h5mgr.print_keys()
 
-            print_dec("currentImage_size", self.currentImage_size)
-            print_dec("currentImage_pos", self.currentImage_pos)
-            print_dec("currentImage_pixels", self.currentImage_pixels)
+            print_debug("currentImage_size", self.currentImage_size)
+            print_debug("currentImage_pos", self.currentImage_pos)
+            print_debug("currentImage_pixels", self.currentImage_pixels)
 
             self._pending_program_state_after_stop = (
                 self.PROGRAM_STATE_ACQUISITION_DONE
             )
             self.stop()
 
-            if self.started_normal:
+            if self.started_normal and not self.raw_stream_mode:
                 self.finalizeImage()
 
             h5mgr.close()
@@ -5443,13 +6044,6 @@ Have fun!
             self.plugin_signals.signal.emit(
                 "acquisitionDone %s" % self.last_saved_filename
             )
-
-            try:
-                self.dfd_page.lineEdit_file_meas.setText(self.last_saved_filename)
-            except:
-                print_dec(
-                    "Failed to dfd_page.lineEdit_file_meas.setText(last_saved_filename) "
-                )
 
     @Slot()
     def cmd_filename_ttm(self):
@@ -5466,12 +6060,12 @@ Have fun!
         """
         set the analog output to 0V before stopping the acquisition
         """
-        print_dec("analog_before_stop()")
+        print_debug("analog_before_stop()")
 
         mydict = {}
         for ch in range(0, 8):
             if self.ui.checkBox_AnalogOut[ch].isChecked() == True:
-                print_dec("AnalogOutDC_%d set to 0V as requested" % ch)
+                print_debug("AnalogOutDC_%d set to 0V as requested" % ch)
                 mydict["AnalogOutDC_%d" % ch] = 0
 
         self.setRegistersDict(mydict)
@@ -5481,11 +6075,11 @@ Have fun!
         """
         stop the acquisition
         """
-        print_dec("stopAcquisition")
+        print_debug("stopAcquisition")
         self.sendCmdStop()
         self.spadfcsmanager_inst.stopPreview()
         self.timerPreviewImg.stop()
-        print_dec("self.timerPreviewImg.stop()")
+        print_debug("self.timerPreviewImg.stop()")
         self.spadfcsmanager_inst.stopFPGA()
         self.spadfcsmanager_inst.stopAcquisition()
         self.spadfcsmanager_inst.stopPreview()
@@ -5496,7 +6090,7 @@ Have fun!
         stop the acquisition clicked event
         """
         self.analog_before_stop()
-        print_dec("GUI.Stop")
+        print_debug("GUI.Stop")
 
         if self.ttm_remote_is_up() and not self.do_not_save:
             self.ttm_remote_manager.stop_ttm_recv()
@@ -5534,6 +6128,7 @@ Have fun!
 
         self.started_normal = False
         self.started_preview = False
+        self.raw_stream_mode = False
         next_state = self._pending_program_state_after_stop
         self._pending_program_state_after_stop = None
 
@@ -5544,7 +6139,7 @@ Have fun!
 
     # @Slot()
     # def connectCmd(self):
-    #     print_dec("Connect FPGA")
+    #     print_debug("Connect FPGA")
     #     self.connectFPGA()
 
     # @Slot()
@@ -5570,11 +6165,11 @@ Have fun!
         get the preview image
         """
         if self.spadfcsmanager_inst.shared_arrays_ready:
-            # print_dec("ready self.spadfcsmanager_inst.shared_arrays_ready")
+            # print_debug("ready self.spadfcsmanager_inst.shared_arrays_ready")
             return self.spadfcsmanager_inst.getPreviewImage(projection, rgb)
         else:
-            print_dec("not ready self.spadfcsmanager_inst.shared_arrays_ready")
-            print_dec("getPreviewImage DUMMY")
+            print_debug("not ready self.spadfcsmanager_inst.shared_arrays_ready")
+            print_debug("getPreviewImage DUMMY")
             return self.currentImage  # DUMMY
 
     def getPreviewFlatData(self):
@@ -5584,7 +6179,7 @@ Have fun!
         if not self.activeFile:
             return self.spadfcsmanager_inst.getPreviewFlatData()
         else:
-            print_dec("self.myfpgainst.getImage() TO BE WRITTEN FOR FILES")
+            print_debug("self.myfpgainst.getImage() TO BE WRITTEN FOR FILES")
 
     # def calculateAutoCorrelation(self, temporaldata):
     #     mu = np.mean(temporaldata)
@@ -5603,7 +6198,17 @@ Have fun!
         proj = self.ui.comboBox_view_projection.currentText()
         ch = self.ui.comboBox_plot_channel.currentText()
         if preview_img is None:
-            if ch.startswith("RGB"):
+            if self.isLifetimeColorChannel(ch) or ch in ("LIFETIME", "QUALITY"):
+                preview_hcl = self.spadfcsmanager_inst.getPreviewHclImage()
+                if self.isLifetimeColorChannel(ch):
+                    preview_img = preview_hcl
+                elif ch == "LIFETIME":
+                    preview_img = preview_hcl[:, :, 0]
+                else:
+                    preview_img = preview_hcl[:, :, 1]
+                if ch in ("LIFETIME", "QUALITY"):
+                    proj = "xy"
+            elif ch.startswith("RGB"):
                 preview_img = self.getPreviewImage(proj, rgb=True)
             else:
                 preview_img = self.getPreviewImage(proj)
@@ -5622,7 +6227,7 @@ Have fun!
             currentImage_size[2] = 1e-12
 
 
-        if ch.startswith("RGB"):
+        if ch.startswith("RGB") or self.isLifetimeColorChannel(ch):
             preview_img = np.moveaxis(preview_img, 0, 1)
             autoLevels = self.autoscale_image
             autoRange = False
@@ -5711,7 +6316,7 @@ Have fun!
             )
 
         else:  #
-            print_dec("NOT IMPLEMENTED BOH!!")
+            print_debug("NOT IMPLEMENTED BOH!!")
             return
 
         return (preview_img,
@@ -5725,14 +6330,41 @@ Have fun!
         """
         plot the preview image
         """
+        # Keep projection-specific transforms in the GUI layer so the worker can
+        # publish compact shared buffers without duplicating display logic.
         (preview_img,
          ch,
          autoLevels,
          autoRange,
          pos,
          scale) = self.getCurrentPreviewImage(img)
-
-        if ch.startswith("RGB"):
+        #print_debug("preview_img",preview_img)
+        if self.isLifetimeColorChannel(ch):
+            preview_hcl = preview_img
+            tcycle_ns = 1e3 / (
+                max(float(self.dfd_cycle_mhz), 1e-12)
+                * max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
+            )
+            self.updateColorLifetimeShiftControls()
+            h_shift = 0.0
+            if tcycle_ns > 0.0:
+                h_shift = (
+                    self.ui.doubleSpinBox_delta_tau_ns.value() % tcycle_ns
+                ) / tcycle_ns
+            self.im_widget.setFlimImage(
+                preview_hcl,
+                valid=preview_hcl[:, :, 2],
+                h_display_max=tcycle_ns,
+                h_shift=h_shift,
+                render_mode=self.getLifetimeColorRenderMode(ch),
+                hue_display_range=self.getLifetimeHueDisplayRange(),
+                force_quality_full=self.getLifetimeForceQualityFull(),
+                autoLevels=autoLevels,
+                autoRange=autoRange,
+                pos=pos,
+                scale=scale,
+            )
+        elif ch.startswith("RGB"):
             print(preview_img.shape)
             self.im_widget.setImage(
                 preview_img,
@@ -5765,12 +6397,12 @@ Have fun!
         """
         plot the current image
         """
-        print_dec(self.currentImage.shape)
-        print_dec("Calculating sum")
+        print_debug(self.currentImage.shape)
+        print_debug("Calculating sum")
         img = np.sum(
             self.currentImage, axis=(0, 1, 4)
         )  # sum over bin, repetition, and frame
-        print_dec(img.shape)
+        print_debug(img.shape)
         if isinstance(self.selected_channel, int):
             self.im_widget.setImage(
                 np.moveaxis(img[:, :, self.selected_channel], [0, -1], [-1, 0]),
@@ -5786,7 +6418,7 @@ Have fun!
                     self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value(),
                 ),
             )
-            print_dec(
+            print_debug(
                 "Total photon [%d]",
                 self.selected_channel,
                 img[:, :, self.selected_channel].sum(),
@@ -5806,7 +6438,7 @@ Have fun!
                     self.ui.spinBox_range_y.value() / self.ui.spinBox_ny.value(),
                 ),
             )
-            print_dec("Total photon [sum]", self.selected_channel, img[:].sum())
+            print_debug("Total photon [sum]", self.selected_channel, img[:].sum())
 
     @Slot()
     def selectChannelSum(self):
@@ -5841,7 +6473,7 @@ Have fun!
         )[0]
         if filecfg != "":
             text = json.dumps(self.getGUI_data(), cls=NumpyEncoder)
-            print_dec(text)
+            print_debug(text)
 
             with open(filecfg, "w") as file:
                 file.write(text.replace(",", ",\n"))
@@ -5849,8 +6481,8 @@ Have fun!
 
             current_folder = QDir.fromNativeSeparators(os.getcwd()) + "/"
 
-            print_dec(filecfg)
-            print_dec(current_folder)
+            print_debug(filecfg)
+            print_debug(current_folder)
 
             filecfg_nicer = filecfg.replace(current_folder, "")
             self.ui.lineEdit_configurationfile.setText(filecfg_nicer)
@@ -5870,7 +6502,7 @@ Have fun!
         load the configuration from a .cfg file
         """
         filecfg = filecfg.strip()
-        print_dec("Load_Configuration'", filecfg, "'")
+        print_debug("Load_Configuration'", filecfg, "'")
 
         if filecfg == "":
             filecfg = QFileDialog.getOpenFileName(
@@ -5881,8 +6513,8 @@ Have fun!
             )[0]
 
             current_folder = QDir.fromNativeSeparators(os.getcwd()) + "/"
-            print_dec(filecfg)
-            print_dec(current_folder)
+            print_debug(filecfg)
+            print_debug(current_folder)
 
             file_cfg_nicer = filecfg.replace(current_folder, "")
 
@@ -5890,11 +6522,11 @@ Have fun!
                 self.ask_to_save_cfg_as_permanent(file_cfg_nicer)
 
         if filecfg != "":
-            print("filecfg", filecfg)
+            print_debug("filecfg", filecfg)
             with open(filecfg, "r") as file:
                 text = file.read().replace(", \n", ",")
                 mydict = dict(json.loads(text))
-                print_dec(mydict)
+                print_debug(mydict)
                 l1 = self.lock_parameters_changed_call
                 l2 = self.lock_range_changing
 
@@ -5913,16 +6545,10 @@ Have fun!
                 )
                 self.ui.label_loadedcfg.setText(filecfg)
 
-                try:
-                    self.dfd_page.UpdateTable()
-                except:
-                    print("self.dfd_page.UpdateTable() FAILED")
-                    pass
-
     @Slot()
     def openInExplorer(self):
         folder_path = os.path.abspath((self.ui.lineEdit_destinationfolder.text().replace("/","\\")))
-        print_dec(folder_path)
+        print_debug(folder_path)
         url = QUrl.fromLocalFile(folder_path)
         QDesktopServices.openUrl(url)
 
@@ -5984,4 +6610,5 @@ class NumpyEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+
 

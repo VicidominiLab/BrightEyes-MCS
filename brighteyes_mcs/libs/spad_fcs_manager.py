@@ -1,12 +1,17 @@
+﻿"""Shared-memory orchestration for FPGA acquisition, preprocessing, and preview."""
+
 import numpy as np
 import multiprocessing as mp
+import re
 
 # from PySide6.QtCore import QObject
 
 from ..libs.processes.data_pre_process import DataPreProcess
 from ..libs.processes.acquisition_loop_process import AcquisitionLoopProcess
+from ..libs.processes.raw_stream_writer_process import RawStreamWriterProcess
 from ..libs.fpga_handle import FpgaHandle
-from ..libs.print_dec import print_dec
+from ..libs.h5manager import H5ManagerProcess
+from ..libs.print_debug import print_debug
 from ..libs.mp_shared_array import MemorySharedNumpyArray
 
 from ..libs.mp_circular_shm import CircularSharedBuffer
@@ -27,8 +32,8 @@ class SpadFcsManager():
         initial_registers_dict (dict): Dictionary for ultra configuration.
         shared_dict (dict): Shared dictionary for multiprocessing.
         default_configuration (dict): Default configuration for the registers.
-        requested_depth (int): Requested depth for acquisition.
-        actual_depth (int): Actual depth for acquisition.
+        requested_fifo_depth (int): Requested FPGA FIFO depth.
+        actual_fifo_depth (int): Configured FPGA FIFO depth reported by the driver.
         timebins_per_pixel (int): Number of time bins per pixel.
         time_resolution (float): Time resolution.
         dim_x (int): Number of pixels in x dimension.
@@ -52,16 +57,17 @@ class SpadFcsManager():
         acquisition_stop_event (multiprocessing.Event): Event for acquisition stop.
         do_not_save_event (multiprocessing.Event): Event for activating preview.
         autocorrelation_maxx (int): Maximum value for autocorrelation.
-        trace_bins (int): Number of trace bins.
-        trace_sample_per_bins (int): Number of words per trace bin.
-        preview_buffer_size_in_sample (int): Size of the preview buffer in sample.
-        len_fifo_prebuffer (int): Length of the FIFO prebuffer.
+        trace_bins (int): Number of time-trace bins.
+        trace_sample_per_bins (int): Number of words per time-trace bin.
+        preview_buffer_capacity_samples (int): Preview buffer capacity in samples.
+        fifo_prebuffer_length (int): Number of FIFO values accumulated before dispatch.
         activated_fifos_list (list): List of activated FIFOs.
         DFD_Activate (bool): Flag for DFD activation.
         snake_walk_xy (bool): Flag for snake walk mode on xy.
         snake_walk_z (bool): Flag for snake walk mode on z.
         clk_multiplier (int): DFD Laser Clk multiplier = decimation on the time dimension
         dfd_shift (int): DFD bin to shift
+        compensation_delay_for_snake (int): Pixel delay compensation used with snake walk.
         use_rust_fifo (bool): Flag for using Rust FIFO.
         debug (bool): Debug flag.
     """
@@ -136,8 +142,8 @@ class SpadFcsManager():
             "L4": 0,
             # 'LaserOffAfterMeasurement' : False,
         }
-        self.requested_depth = 100000
-        self.actual_depth = 0
+        self.requested_fifo_depth = 100000
+        self.actual_fifo_depth = 0
 
         self.timebins_per_pixel = 0
         self.time_resolution = 0
@@ -162,8 +168,10 @@ class SpadFcsManager():
 
         self.shared_memory_buffer = None
         self.shared_image_xy = None
+        self.shared_image_xy_hcl = None
         self.shared_fingerprint = None
         self.shared_fingerprint_mask = None
+        self.shared_trace_dfd = None
 
 
         self.is_connected = False
@@ -182,22 +190,31 @@ class SpadFcsManager():
         self.trace_bins = 30000
         self.trace_sample_per_bins = 10000
 
-        self.preview_buffer_size_in_sample = 15000
-        self.len_fifo_prebuffer = 0
+        self.preview_buffer_capacity_samples = 15000
+        self.fifo_prebuffer_length = 0
         self.activated_fifos_list = []
 
         self.DFD_Activate = False
         self.DFD_nbins = 0
+        self.dfd_cycle_mhz = 40
 
         self.snake_walk_xy = False
         self.snake_walk_z = False
 
         self.clk_multiplier = 1
         self.dfd_shift = 0
+        self.compensation_delay_for_snake = 0
+        self.compensation_delay_for_snake_shared = None
 
         self.use_rust_fifo = True
 
         self.debug = False
+        self.h5_manager_process = None
+        self.h5_command_queue = None
+        self.h5_response_queue = None
+        self.raw_stream_mode = False
+        self.raw_output_files = {}
+        self.raw_writer_process = None
 
 
 
@@ -205,20 +222,41 @@ class SpadFcsManager():
         """
         Destructor of the class
         """
-        print_dec("Destructor called.")
+        print_debug("Destructor called.")
 
     def set_DFD_nbins(self, DFD_nbins):
         """
         Set the number of DFD_nbins
         """
-        print_dec("DFD_nbins", DFD_nbins)
+        print_debug("DFD_nbins", DFD_nbins)
         self.DFD_nbins = DFD_nbins
+
+    @staticmethod
+    def parse_dfd_metadata_from_bitfile_name(bitfile="", default_cycle_mhz=40):
+        """
+        Infer DFD metadata from a bitfile name token like ``40M91``.
+
+        Accept any ``xxxxxMyyyyyyy`` token found in the basename, provided:
+        - 3 < xxxxx < 100
+        - 3 < yyyyyyy < 1000
+        """
+        filename = str(bitfile).replace("\\", "/").split("/")[-1]
+        match = re.search(r"(?P<cycle>\d+)M(?P<bins>\d+)", filename, re.IGNORECASE)
+        if not match:
+            return default_cycle_mhz, None
+
+        parsed_cycle_mhz = int(match.group("cycle"))
+        parsed_bins = int(match.group("bins"))
+        if not (3 < parsed_cycle_mhz < 100 and 3 < parsed_bins < 1000):
+            return default_cycle_mhz, None
+
+        return parsed_cycle_mhz, parsed_bins
 
     def set_channels(self, ch):
         """
         Set the number of channels
         """
-        print_dec("Channels", ch)
+        print_debug("Channels", ch)
         self.channels = ch
         self.dim_detector = int(np.sqrt(self.channels))
 
@@ -243,14 +281,14 @@ class SpadFcsManager():
         """
         Activate the preview flag
         """
-        print_dec("activate_show_preview", enable)
+        print_debug("activate_show_preview", enable)
         self.activate_show_preview = enable
 
     def setActivatedFifo(self, fifos_list):
         """
         Set the activated FIFOs
         """
-        print_dec("self.activated_fifos_list", fifos_list)
+        print_debug("self.activated_fifos_list", fifos_list)
         self.activated_fifos_list = fifos_list
 
     def acquisition_stop(self):
@@ -298,30 +336,30 @@ class SpadFcsManager():
         """
         if active:
             self.do_not_save_event.set()
-            print_dec("self.do_not_save_event.set()")
+            print_debug("self.do_not_save_event.set()")
         else:
             self.do_not_save_event.clear()
-            print_dec("self.do_not_save_event.clear()")
+            print_debug("self.do_not_save_event.clear()")
 
     def set_activate_DFD(self, activate=True):
         """
         Activate the DFD mode
         """
-        print_dec("set_activate_DFD() set to ", activate)
+        print_debug("set_activate_DFD() set to ", activate)
         self.DFD_Activate = activate
 
     def set_activate_snake_walk_xy(self, activate=True):
         """
         Set the snake walk (bidirectional scanning)
         """
-        print_dec("set_activate_snake_walk_xy() set to ", activate)
+        print_debug("set_activate_snake_walk_xy() set to ", activate)
         self.snake_walk_xy = activate
 
     def set_activate_snake_walk_z(self, activate=True):
         """
         Set the snake walk (bidirectional scanning)
         """
-        print_dec("set_activate_snake_walk_z() set to ", activate)
+        print_debug("set_activate_snake_walk_z() set to ", activate)
         self.snake_walk_z = activate
 
     # def set_default_destination_folder(self, folder=""):
@@ -331,67 +369,82 @@ class SpadFcsManager():
         """
         Set the bit file for the 1st FPGA
         """
-        print_dec("set_bit_file", bitfile)
+        print_debug("set_bit_file", bitfile)
         self.bitfile = bitfile
+        self.dfd_cycle_mhz, inferred_dfd_nbins = self.parse_dfd_metadata_from_bitfile_name(
+            bitfile,
+            default_cycle_mhz=self.dfd_cycle_mhz,
+        )
+        if inferred_dfd_nbins is not None:
+            self.DFD_nbins = inferred_dfd_nbins
 
     def set_ni_addr(self, niAddr=""):
         """
         Set the NI address for the 1st FPGA
         """
-        print_dec("set_ni_addr", niAddr)
+        print_debug("set_ni_addr", niAddr)
         self.niAddr = niAddr
 
     def set_bit_file_second_fpga(self, bitfile=""):
         """
         Set the bit file for the 2nd FPGA
         """
-        print_dec("set_bit_file 2nd FPGA", bitfile)
+        print_debug("set_bit_file 2nd FPGA", bitfile)
         self.bitfile2 = bitfile
 
     def set_ni_addr_second_fpga(self, niAddr=""):
         """
         Set the NI address for the 2nd FPGA
         """
-        print_dec("set_ni_addr 2nd FPGA", niAddr)
+        print_debug("set_ni_addr 2nd FPGA", niAddr)
         self.niAddr2 = niAddr
 
 
+    def set_requested_fifo_depth(self, requested_fifo_depth):
+        print_debug("requested_fifo_depth", requested_fifo_depth)
+        self.requested_fifo_depth = requested_fifo_depth
+
     def set_requested_depth(self, requested_depth):
-        print_dec("requested_depth", requested_depth)
-        self.requested_depth = requested_depth
+        self.set_requested_fifo_depth(requested_depth)
+
+    def set_preview_buffer_capacity_samples(self, preview_buffer_capacity_samples):
+        """
+        Set the preview buffer capacity in samples.
+        """
+        print_debug("preview_buffer_capacity_samples", preview_buffer_capacity_samples)
+        self.preview_buffer_capacity_samples = preview_buffer_capacity_samples
 
     def set_preview_buffer_size_in_sample(self, preview_buffer_size_in_sample):
+        self.set_preview_buffer_capacity_samples(preview_buffer_size_in_sample)
+
+    def set_fifo_prebuffer_length(self, fifo_prebuffer_length):
         """
-        Set the preview buffer size in sample
+        Set the FIFO prebuffer length.
         """
-        print_dec("preview_buffer_size_in_sample", preview_buffer_size_in_sample)
-        self.preview_buffer_size_in_sample = preview_buffer_size_in_sample
+        self.fifo_prebuffer_length = fifo_prebuffer_length
 
     def set_len_fifo_prebuffer(self, len_fifo_prebuffer):
-        """
-        Set the length of the FIFO prebuffer
-        """
-        self.len_fifo_prebuffer = len_fifo_prebuffer
+        self.set_fifo_prebuffer_length(len_fifo_prebuffer)
 
     def set_timeout_fifos(self, timeout):
         """
         Set the timeout for the FIFOs
         """
-        print_dec("set_timeout_fifos", timeout)
+        print_debug("set_timeout_fifos", timeout)
         self.timeout_fifos = timeout
 
     def connect(self, initial_registers={}, list_fifos=[]):
         """
         Connect to the FPGA using FPGA handle class
         """
-        print_dec("FPGA connect()")
+        print_debug("FPGA connect()")
         # self.nifpga_session = nifpga.Session(self.bitfile, self.niAddr)
         try:
             self.fpga_handle = FpgaHandle(
                 bitfile=self.bitfile,
                 ni_address=self.niAddr,
                 mp_manager=self.mp_manager,
-                requested_depth=self.requested_depth,
+                requested_fifo_depth=self.requested_fifo_depth,
                 list_fifos=["FIFO"],
                 initial_registers_dict=self.initial_registers_dict,
                 debug=self.debug,
@@ -401,16 +454,17 @@ class SpadFcsManager():
                 ni_address2=self.niAddr2,
             )
             self.is_connected = True
+            print_debug(".is_conneccted", self.is_connected)
+
+            self.update_chuck()
+
+            self.fpga_handle.run(initial_registers)
+            print_debug("self.fpga_handle.run()")
         except Exception as e:
             self.is_connected = False
-            print_dec("connect ERROR", repr(e))
+            print_debug("connect ERROR", repr(e))
             raise ("ERROR")
-        print_dec(".is_conneccted", self.is_connected)
 
-        self.update_chuck()
-
-        self.fpga_handle.run(initial_registers)
-        print_dec("self.fpga_handle.run()")
 
     def set_filename_h5(self, filename):
         """
@@ -430,66 +484,100 @@ class SpadFcsManager():
         """
         self.use_rust_fifo = value
 
+    def set_raw_stream_mode(self, enabled=False):
+        """
+        Enable direct FIFO-to-disk streaming without preview/conversion.
+        """
+        self.raw_stream_mode = enabled
+
+    def set_raw_output_files(self, raw_output_files=None):
+        """
+        Set the per-FIFO destination files used by raw streaming mode.
+        """
+        self.raw_output_files = dict(raw_output_files or {})
+
     def run(self):
         """
         Run the FPGA, start the data process, the preview process and run the FPGA handle class
         """
         do_not_save = self.do_not_save_event.is_set()
 
-        print_dec("spadfcsmanager.run()")
+        print_debug("spadfcsmanager.run()")
 
-        print_dec("do_not_save", do_not_save)
-        print_dec("fpga_process.runed from run")
+        print_debug("do_not_save", do_not_save)
+        print_debug("fpga_process.runed from run")
         self.readRegistersDict()
-        print_dec("spadfcsmanager.registers_configuration")
-        print_dec("spadfcsmanager.expected_words_data_digital", self.expected_words_data_digital)
+        print_debug("spadfcsmanager.registers_configuration")
+        print_debug("spadfcsmanager.expected_words_data_digital", self.expected_words_data_digital)
 
         self.fpga_handle.set_list_fifos_to_read_continously(self.activated_fifos_list)
 
-        self.shared_autocorrelation = MemorySharedNumpyArray(
-            dtype=float, shape=[2, self.autocorrelation_maxx], lock=True
-        )
+        if not self.raw_stream_mode:
+            # Preview data lives in shared memory so the GUI can inspect it without
+            # blocking the acquisition workers.
+            self.shared_autocorrelation = MemorySharedNumpyArray(
+                dtype=float, shape=[2, self.autocorrelation_maxx], lock=True
+            )
 
-        self.shared_trace = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[2, self.trace_bins], lock=True
-        )
+            self.shared_trace = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[2, self.trace_bins], lock=True
+            )
 
-        self.shared_image_xy_rgb = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_y, self.dim_x, 3], lock=True
-        )
+            self.shared_trace_dfd = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[3, self.DFD_nbins], lock=True
+            )
 
-        self.shared_image_xy = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_y, self.dim_x], lock=True
-        )
+            self.shared_image_xy_rgb = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[self.dim_y, self.dim_x, 3], lock=True
+            )
 
-        self.shared_image_xz = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_z, self.dim_x], lock=True
-        )
+            self.shared_image_xy_hcl = MemorySharedNumpyArray(
+                dtype=np.float64, shape=[self.dim_y, self.dim_x, 3], lock=True
+            )
 
-        self.shared_image_zy = MemorySharedNumpyArray(
-            dtype=np.int64, shape=[self.dim_y, self.dim_z], lock=True
-        )
+            self.shared_image_xy = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[self.dim_y, self.dim_x], lock=True
+            )
 
-        self.shared_fingerprint = MemorySharedNumpyArray(
-            dtype=np.uint64,
-            shape=[
-                6,
-                self.dim_detector,
-                self.dim_detector,
-            ],  # [x,y,0] cumulative figerprint [x,y,1] last fingerprint
-            sampling=0,
-            lock=True,
-        )
+            self.shared_image_xz = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[self.dim_z, self.dim_x], lock=True
+            )
 
-        self.shared_fingerprint_mask = MemorySharedNumpyArray(
-            dtype=np.uint8,
-            shape=[self.dim_detector * self.dim_detector],
-            sampling=0,
-            lock=True,
-        )
-        self.shared_fingerprint_mask.get_numpy_handle()[:] = np.ones(
-            self.dim_detector * self.dim_detector, dtype=np.uint8
-        )
+            self.shared_image_zy = MemorySharedNumpyArray(
+                dtype=np.int64, shape=[self.dim_y, self.dim_z], lock=True
+            )
+
+            self.shared_fingerprint = MemorySharedNumpyArray(
+                dtype=np.uint64,
+                shape=[
+                    6,
+                    self.dim_detector,
+                    self.dim_detector,
+                ],
+                sampling=0,
+                lock=True,
+            )
+
+            self.shared_fingerprint_mask = MemorySharedNumpyArray(
+                dtype=np.uint8,
+                shape=[self.dim_detector * self.dim_detector],
+                sampling=0,
+                lock=True,
+            )
+            self.shared_fingerprint_mask.get_numpy_handle()[:] = np.ones(
+                self.dim_detector * self.dim_detector, dtype=np.uint8
+            )
+        else:
+            self.shared_autocorrelation = None
+            self.shared_trace = None
+            self.shared_trace_dfd = None
+            self.shared_image_xy_rgb = None
+            self.shared_image_xy_hcl = None
+            self.shared_image_xy = None
+            self.shared_image_xz = None
+            self.shared_image_zy = None
+            self.shared_fingerprint = None
+            self.shared_fingerprint_mask = None
         # self.shared_index = mp.Value("i",0)
         # , self.dim_z
 
@@ -518,46 +606,72 @@ class SpadFcsManager():
         }
 
         self.number_of_threads_h5 = mp.Value("i", 0)
+        if not do_not_save and not self.raw_stream_mode:
+            self.h5_command_queue = mp.Queue()
+            self.h5_response_queue = mp.Queue()
+            self.h5_manager_process = H5ManagerProcess(
+                self.h5_command_queue,
+                self.h5_response_queue,
+                shm_number_of_threads_h5=self.number_of_threads_h5,
+            )
+            self.h5_manager_process.daemon = True
+            self.h5_manager_process.start()
+        else:
+            self.h5_command_queue = None
+            self.h5_response_queue = None
+            self.h5_manager_process = None
 
-        self.trace_pos = mp.Value("i", 0)
+        self.trace_pos = mp.Value("i", 0) if not self.raw_stream_mode else None
 
         # self.acquisitionThread = AcquireFIFOinBackground(self.queue,
         #                                                  self.fifo)
 
-        self.imposed_data_shift = mp.Value("i", 0)
-
-        self.dataProcess = DataPreProcess(
-            self.fpga_handle.configuration["queueFifoRead"],
-            # self.shared_memory_buffer,
-            self.loc_acquired,
-            self.last_preprocessed_len,
-            self.data_queue,
-            self.dtype_data_queue,
-            len_buffer=self.len_fifo_prebuffer,
-            debug=self.debug,
-            use_rust_fifo=self.use_rust_fifo,
+        self.compensation_delay_for_snake_shared = (
+            mp.Value("i", int(self.compensation_delay_for_snake))
+            if not self.raw_stream_mode
+            else None
         )
 
-        self.dataProcess.daemon = True
+        # The preprocessing worker repacks FIFO chunks into arrays that are
+        # cheaper for the acquisition loop to consume repeatedly.
+        if not self.raw_stream_mode:
+            self.dataProcess = DataPreProcess(
+                self.fpga_handle.configuration["queueFifoRead"],
+                self.loc_acquired,
+                self.last_preprocessed_len,
+                self.data_queue,
+                self.dtype_data_queue,
+                len_buffer=self.fifo_prebuffer_length,
+                debug=self.debug,
+                use_rust_fifo=self.use_rust_fifo,
+            )
+
+            self.dataProcess.daemon = True
+        else:
+            self.dataProcess = None
 
         self.shared_objects = {
             "activated_fifos_list": self.activated_fifos_list,
             "loc_acquired": self.loc_acquired,
             "loc_previewed": self.loc_previewed,
             "shared_image_xy_rgb": self.shared_image_xy_rgb,
+            "shared_image_xy_hcl": self.shared_image_xy_hcl,
             "shared_image_xy": self.shared_image_xy,
             "shared_image_xz": self.shared_image_xz,
             "shared_image_zy": self.shared_image_zy,
             "shared_fingerprint": self.shared_fingerprint,
             "shared_autocorrelation": self.shared_autocorrelation,
             "shared_trace": self.shared_trace,
+            "shared_trace_dfd": self.shared_trace_dfd,
             "shared_fingerprint_mask": self.shared_fingerprint_mask,
             "number_of_threads_h5": self.number_of_threads_h5,
             "autocorrelation_maxx": self.autocorrelation_maxx,
             "trace_bins": self.trace_bins,
             "trace_sample_per_bins": self.trace_sample_per_bins,
             "trace_pos": self.trace_pos,
-            "imposed_data_shift": self.imposed_data_shift,
+            "compensation_delay_for_snake": self.compensation_delay_for_snake_shared,
+            "h5_command_queue": self.h5_command_queue,
+            "h5_response_queue": self.h5_response_queue,
         }
 
         self.shared_dict["shape"] = [self.dim_x, self.dim_y, self.dim_z]
@@ -572,8 +686,10 @@ class SpadFcsManager():
         self.shared_dict["expected_words_data_per_frame_analog"] = self.expected_words_data_per_frame_analog
         self.shared_dict["filenameh5"] = self.filenameh5
         self.shared_dict["DFD_nbins"] = self.DFD_nbins
+        self.shared_dict["dfd_cycle_mhz"] = self.dfd_cycle_mhz
+        self.shared_dict["raw_output_files"] = dict(self.raw_output_files)
 
-        print_dec("self.activate_show_preview", self.activate_show_preview)
+        print_debug("self.activate_show_preview", self.activate_show_preview)
         self.shared_dict.update(
             {
                 "activate_show_preview": self.activate_show_preview,
@@ -584,37 +700,58 @@ class SpadFcsManager():
                 "total_photon": 0,
                 "FIFO_status": 0,
                 "FIFOAnalog_status": 0,
-                "preview_buffer_size_in_sample": self.preview_buffer_size_in_sample,
+                "preview_buffer_capacity_samples": self.preview_buffer_capacity_samples,
                 "last_packet_size": 0,
                 "DFD_Activate": self.DFD_Activate,
                 "DFD_nBins": self.DFD_nbins,
+                "dfd_peak_idx": -1,
                 "snake_walk_xy": self.snake_walk_xy,
                 "snake_walk_z": self.snake_walk_z,
                 "clk_multiplier": self.clk_multiplier,
-                "dfd_shift": self.dfd_shift
+                "dfd_cycle_mhz": self.dfd_cycle_mhz,
+                "dfd_shift": self.dfd_shift,
+                "raw_stream_mode": self.raw_stream_mode,
             }
         )
 
-        # if self.previewEnabled:
-        print_dec("self.previewProcess()")
-        self.previewProcess = AcquisitionLoopProcess(
-            self.channels,
-            self.shared_objects,
-            do_not_save,
-            self.data_queue,
-            self.acquisition_done_event,
-            self.acquisition_almost_done_event,
-            self.shared_dict,
-            debug=self.debug,
-        )
-        self.previewProcess.daemon = True
+        if self.raw_stream_mode:
+            print_debug("self.raw_writer_process()")
+            self.raw_writer_process = RawStreamWriterProcess(
+                self.fpga_handle.configuration["queueFifoRead"],
+                self.activated_fifos_list,
+                self.raw_output_files,
+                self.loc_acquired,
+                self.loc_previewed,
+                self.last_preprocessed_len,
+                self.acquisition_done_event,
+                self.acquisition_almost_done_event,
+                self.shared_dict,
+                debug=self.debug,
+            )
+            self.raw_writer_process.daemon = True
+            self.previewProcess = None
+        else:
+            print_debug("self.previewProcess()")
+            self.previewProcess = AcquisitionLoopProcess(
+                self.channels,
+                self.shared_objects,
+                do_not_save,
+                self.data_queue,
+                self.acquisition_done_event,
+                self.acquisition_almost_done_event,
+                self.shared_dict,
+                debug=self.debug,
+            )
+            self.previewProcess.daemon = True
 
-        self.shared_arrays_ready = True
-        print_dec("self.dataProcess.start()")
-        self.dataProcess.start()
-        # self.acquisitionThread.start()
-        # if self.previewEnabled:
-        self.previewProcess.start()
+        self.shared_arrays_ready = not self.raw_stream_mode
+        if self.dataProcess is not None:
+            print_debug("self.dataProcess.start()")
+            self.dataProcess.start()
+        if self.raw_stream_mode:
+            self.raw_writer_process.start()
+        else:
+            self.previewProcess.start()
         # self.nifpga_session.run()
         self.fpga_handle.runfpga()
 
@@ -632,7 +769,7 @@ class SpadFcsManager():
         dataProcess is alive
         """
         try:
-            return self.dataProcess.is_alive()
+            return self.dataProcess is not None and self.dataProcess.is_alive()
         except:
             return False
 
@@ -646,35 +783,35 @@ class SpadFcsManager():
         """
         Set the registers dictionary
         """
-        # print_dec("setRegistersDict")
+        # print_debug("setRegistersDict")
         register_set = "setRegistersDict: "
         temp_dict = {}
         for i in myconf:
             if myconf[i] is not None:
-                # print_dec(i, myconf[i])
+                # print_debug(i, myconf[i])
                 register_set += "%s %s " % (i, myconf[i])
                 # self.nifpga_session.registers[i].write(myconf[i])
                 if self.is_connected:
                     self.fpga_handle.register_write(i, myconf[i])
                     temp_dict[i] = myconf[i]
             else:
-                print_dec("myconf is None")
-        print_dec(register_set)
+                print_debug("myconf is None")
+        print_debug(register_set)
         self.registers_configuration.update(temp_dict)
 
     def readRegistersDict(self):
         """
         Read the registers dictionary
         """
-        print_dec("readRegistersDict()")
+        print_debug("readRegistersDict()")
         if self.is_connected:
             self.registers_configuration.update(self.fpga_handle.register_read_all())
-            print_dec(
+            print_debug(
                 "readRegistersDict self.registers_configuration:",
                 self.registers_configuration,
             )
         else:
-            print_dec("register_read_all() not called due to FPGAhandle not connected")
+            print_debug("register_read_all() not called due to FPGAhandle not connected")
 
         self.timebins_per_pixel = self.registers_configuration["#timebinsPerPixel"]
         self.circ_repetition = self.registers_configuration["#circular_rep"]
@@ -690,14 +827,14 @@ class SpadFcsManager():
         self.expected_words_data_per_frame_analog = (
                 self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
         )
-        print_dec("self.expected_words_data_per_frame_analog calculated ", self.expected_words_data_per_frame_analog)
+        print_debug("self.expected_words_data_per_frame_analog calculated ", self.expected_words_data_per_frame_analog)
 
         if self.channels == 25:
             self.expected_words_data_per_frame_digital = (
                 2 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
-            print_dec("self.expected_words_data_per_frame_digital calculated for 25 channels ",self.expected_words_data_per_frame_digital)
-            print_dec("timebins", self.timebins_per_pixel,
+            print_debug("self.expected_words_data_per_frame_digital calculated for 25 channels ",self.expected_words_data_per_frame_digital)
+            print_debug("timebins", self.timebins_per_pixel,
                        "x",self.dim_x,
                        "y",self.dim_y,
                        "z",self.dim_z,
@@ -708,10 +845,10 @@ class SpadFcsManager():
             self.expected_words_data_per_frame_digital = (
                     8 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
-            print_dec("self.expected_words_data_per_frame_digital calculated for 49 channels", self.expected_words_data_per_frame_digital)
+            print_debug("self.expected_words_data_per_frame_digital calculated for 49 channels", self.expected_words_data_per_frame_digital)
 
         else:
-            print_dec("self.expected_words_data_per_frame_digital DISASTER")
+            print_debug("self.expected_words_data_per_frame_digital DISASTER")
 
         self.expected_words_data_digital = (
             self.expected_words_data_per_frame_digital * self.dim_z * self.dim_rep
@@ -740,10 +877,10 @@ class SpadFcsManager():
         self.fifo_chuck_size_analog = self.timebins_per_pixel * self.circ_repetition * self.circ_points
         if self.channels==25:
             self.fifo_chuck_size_digital = 2 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
-            print_dec("update_chuck self.channels == 25")
+            print_debug("update_chuck self.channels == 25")
         elif self.channels == 49:
             self.fifo_chuck_size_digital = 8 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
-            print_dec("update_chuck self.channels == 49")
+            print_debug("update_chuck self.channels == 49")
 
 
         self.fpga_handle.set_fifo_chuck_size_digital(self.fifo_chuck_size_digital)
@@ -753,13 +890,13 @@ class SpadFcsManager():
 
         # self.fpga_handle.set_expected_words_data_digital(self.expected_words_data_per_frame_digital)
 
-        print_dec(
+        print_debug(
             "Updated expected_words_data_digital and fifo_chuck_size_digital",
             self.expected_words_data_digital,
             self.fifo_chuck_size_digital,
         )
 
-        print_dec(
+        print_debug(
             "Updated expected_words_data_analog and fifo_chuck_size_analog",
             self.expected_words_data_analog,
             self.fifo_chuck_size_analog,
@@ -771,7 +908,7 @@ class SpadFcsManager():
         Get the current preview element
         """
         if fifo_name==None:
-            print_dec("BUG: getCurrentPreviewElement(None)")
+            print_debug("BUG: getCurrentPreviewElement(None)")
         return self.loc_previewed[fifo_name].value * 2
 
     def getCurrentAcquistionElement(self, fifo_name=None):
@@ -779,7 +916,7 @@ class SpadFcsManager():
         Get the current acquisition element
         """
         if fifo_name==None:
-            print_dec("BUG: getCurrentAcquistionElement(None)")
+            print_debug("BUG: getCurrentAcquistionElement(None)")
         return self.loc_acquired[fifo_name].value
 
     def getLastPreprocessedLen(self, fifo_name=None):
@@ -787,7 +924,7 @@ class SpadFcsManager():
         Get the last preprocessed length
         """
         if fifo_name==None:
-            print_dec("BUG: getLastPreprocessedLen(None)")
+            print_debug("BUG: getLastPreprocessedLen(None)")
         return self.last_preprocessed_len[fifo_name]
 
     def getExpectedFifoElements(self, fifo_name=None):
@@ -799,7 +936,7 @@ class SpadFcsManager():
         elif fifo_name=="FIFOAnalog":
             return self.expected_words_data_analog
         else:
-            print_dec("BUG: getExpectedFifoElements WRONG CALL")
+            print_debug("BUG: getExpectedFifoElements WRONG CALL")
             return 0
 
     def getExpectedFifoElementsPerFrame(self, fifo_name=None):
@@ -811,33 +948,48 @@ class SpadFcsManager():
         elif fifo_name=="FIFOAnalog":
             return self.expected_words_data_per_frame_analog
         else:
-            print_dec("BUG: getExpectedFifoElements WRONG CALL")
+            print_debug("BUG: getExpectedFifoElements WRONG CALL")
             return 0
 
     def stopFPGA(self):
         """
         stop the FPGA
         """
-        print_dec("stopAcquisition.stop()")
+        print_debug("stopAcquisition.stop()")
         self.fpga_handle.stop()
 
     def stopAcquisition(self):
         """
         Stop the acquisition
         """
-        print_dec("stopAcquisition.stop()")
-        self.dataProcess.stop()
+        print_debug("stopAcquisition.stop()")
+        if self.dataProcess is not None:
+            self.dataProcess.stop()
         self.is_connected = False
 
     def stopPreview(self):
         """
         Stop the preview
         """
-        print_dec("myfpga.stopPreview()")
-        # if self.previewEnabled:
-        self.previewProcess.stop()
-        self.previewProcess.join()
-        print_dec("self.previewThread.join() done")
+        print_debug("myfpga.stopPreview()")
+        if self.raw_stream_mode:
+            if self.raw_writer_process is not None:
+                self.raw_writer_process.stop()
+                self.raw_writer_process.join(timeout=5)
+                self.raw_writer_process = None
+        elif self.previewProcess is not None:
+            self.previewProcess.stop()
+            self.previewProcess.join()
+        if self.h5_manager_process is not None:
+            self.h5_manager_process.join(timeout=2)
+            if self.h5_manager_process.is_alive():
+                print_debug("H5 manager process still alive, terminating")
+                self.h5_manager_process.terminate()
+                self.h5_manager_process.join(timeout=2)
+        self.h5_manager_process = None
+        self.h5_command_queue = None
+        self.h5_response_queue = None
+        print_debug("self.previewThread.join() done")
 
     def get_current_z(self, fifo="FIFO"):
         """
@@ -934,7 +1086,7 @@ class SpadFcsManager():
     #             self.channels,
     #         ),
     #     )
-    #     print_dec(d.shape, type(d))
+    #     print_debug(d.shape, type(d))
     #     return d
 
     def setSelectedChannel(self, ch):
@@ -947,15 +1099,21 @@ class SpadFcsManager():
         """
         Set the autocorrelation maxx
         """
-        print("set_autocorrelation_maxx", value)
+        print_debug("set_autocorrelation_maxx", value)
         self.autocorrelation_maxx = value
 
     def set_clk_multiplier(self, multiplier=1):
-        print_dec("set_clk_multiplier", multiplier)
+        print_debug("set_clk_multiplier", multiplier)
         self.clk_multiplier = multiplier
 
     def set_dfd_shift(self, shift=0):
         self.dfd_shift = shift
+
+    def set_compensation_delay_for_snake(self, delay=0):
+        delay = int(delay)
+        self.compensation_delay_for_snake = delay
+        if self.compensation_delay_for_snake_shared is not None:
+            self.compensation_delay_for_snake_shared.value = delay
 
     def set_trace_bins(self, trace_bins=30000):
         """
@@ -977,20 +1135,55 @@ class SpadFcsManager():
 
     def getTrace(self):
         """
-        Get the trace
+        Get the time trace
         """
-        if self.DFD_Activate:
-            a = self.shared_trace.get_numpy_handle() * 1.0
-            a[1, :] = a[1, :]
-            a[0, :] = a[0, :]
-            return a, self.trace_pos.value
-        else:
-            a = self.shared_trace.get_numpy_handle() * 1.0
-            a[1, :] = a[1, :] / (
-                self.trace_sample_per_bins * self.time_resolution * 1e-6
+        a = self.shared_trace.get_numpy_handle() * 1.0
+        a[1, :] = a[1, :] / (
+            self.trace_sample_per_bins * self.time_resolution * 1e-6
+        )
+        a[0, :] = a[0, :] * self.time_resolution * 1e-6 * self.trace_sample_per_bins
+        return a, self.trace_pos.value
+
+    def getDfdTrace(self):
+        """
+        Get the DFD trace curves.
+        """
+        a = self.shared_trace_dfd.get_numpy_handle() * 1.0
+        dfd_bin_width_s = (
+            self.time_resolution * 1e-6 * max(self.clk_multiplier, 1)
+        )
+        if dfd_bin_width_s > 0:
+            a[1, :] = a[1, :] / dfd_bin_width_s
+
+            bins_per_cycle = max(
+                int(self.timebins_per_pixel // max(self.clk_multiplier, 1)),
+                1,
             )
-            a[0, :] = a[0, :] * self.time_resolution * 1e-6 * self.trace_sample_per_bins
-            return a, self.trace_pos.value
+            samples_processed = int(self.loc_previewed["FIFO"].value)
+            data_words_per_sample_digital = 8 if self.channels == 49 else 2
+            if self.expected_words_data_per_frame_digital > 0:
+                samples_per_frame = max(
+                    int(
+                        self.expected_words_data_per_frame_digital
+                        // data_words_per_sample_digital
+                    ),
+                    1,
+                )
+                samples_processed = samples_processed % samples_per_frame
+            completed_cycles, partial_cycle_bins = divmod(
+                samples_processed, bins_per_cycle
+            )
+            exposure_cycles = np.full(a.shape[1], completed_cycles, dtype=np.float64)
+            exposure_cycles[: min(partial_cycle_bins, a.shape[1])] += 1.0
+            exposure_time_s = exposure_cycles * dfd_bin_width_s
+            np.divide(
+                a[2, :],
+                exposure_time_s,
+                out=a[2, :],
+                where=exposure_time_s > 0,
+            )
+            a[2, exposure_time_s <= 0] = 0
+        return a
 
     def getPreviewImage(self, projection="xy", rgb=False):
         """
@@ -1013,9 +1206,20 @@ class SpadFcsManager():
         if rgb == True:
             shared_image = self.shared_image_xy_rgb
 
+        # Return an owned array because the GUI will use it after the shared lock
+        # is released.
         shared_image.get_lock().acquire()
         array = np.copy(shared_image.get_numpy_handle()[:])
         shared_image.get_lock().release()
+        return array
+
+    def getPreviewHclImage(self):
+        """
+        Get the HCL preview image used by COLOR_LIFETIME rendering.
+        """
+        self.shared_image_xy_hcl.get_lock().acquire()
+        array = np.copy(self.shared_image_xy_hcl.get_numpy_handle()[:])
+        self.shared_image_xy_hcl.get_lock().release()
         return array
 
     def getPreviewFlatData(self, frame=0, channel=10):
@@ -1059,3 +1263,4 @@ class SpadFcsManager():
         Reset the FCS process
         """
         self.previewProcess.FCS_reset()
+

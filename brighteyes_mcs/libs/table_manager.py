@@ -1,6 +1,8 @@
+﻿"""Utility wrapper around the batch-acquisition table widget."""
+
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtCore import Qt, Signal, Slot
-from .print_dec import print_dec
+from .print_debug import print_debug
 
 
 class TableManager(object):
@@ -127,7 +129,7 @@ class TableManager(object):
         self.item_changed(self.table_widget.item(0, k))
 
     def add_list_of_dict(self, markers_list, fcs=False):
-        print_dec("copyPositionMarkers")
+        print_debug("copyPositionMarkers")
         self.table_lock = True
 
         for selected_configuration in markers_list:
@@ -177,7 +179,7 @@ class TableManager(object):
         )
 
         a = time_res * time_bin
-        print_dec(row_headers["Pixel Dwell Time (um)"], column_modified)
+        print_debug(row_headers["Pixel Dwell Time (um)"], column_modified)
 
         c = QTableWidgetItem(str(a))
         c.setFlags(c.flags() & ~Qt.ItemIsEditable & ~Qt.ItemIsEnabled)
@@ -216,3 +218,4 @@ class TableManager(object):
         else:
             value = value_string
         return value
+

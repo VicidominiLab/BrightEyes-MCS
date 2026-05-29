@@ -1,5 +1,7 @@
+﻿"""Tree-model adapter used to expose nested dictionaries in Qt views."""
+
 from PySide6.QtCore import Qt, QModelIndex, QAbstractItemModel
-from ..libs.print_dec import print_dec, set_debug
+from ..libs.print_debug import print_debug, set_debug
 
 
 
@@ -207,3 +209,4 @@ class TreeNode:
 
     def sortChildren(self):
         self.children.sort(key=lambda c: str(c.itemData[0]).lower())
+

@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QCheckBox, QCo
     QSizePolicy, QSpacerItem, QSpinBox, QTabWidget,
     QTableView, QWidget)
 
-from .scispinbox import sciSpinBox
+from brighteyes_mcs.gui.scispinbox import sciSpinBox
 
 class Ui_Form(object):
     def setupUi(self, Form):

@@ -1,3 +1,5 @@
+"""Embedded Qt console used for interactive inspection inside the main GUI."""
+
 # Inspired by https://stackoverflow.com/questions/59731016/non-blocking-ipython-qt-console-in-a-pyqt-application
 
 from qtconsole.rich_jupyter_widget import RichJupyterWidget

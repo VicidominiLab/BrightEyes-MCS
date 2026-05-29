@@ -1,4 +1,4 @@
-from ..libs.print_dec import print_dec
+﻿from ..libs.print_debug import print_debug
 import socket
 import time
 import threading
@@ -20,7 +20,7 @@ class Parameter(object):
 
 class TtmRemoteManager(object):
     def __init__(self, ip, port, local_executable):
-        print_dec("TtmRemoteManager.__init__")
+        print_debug("TtmRemoteManager.__init__")
         self.parameter = Parameter()
 
         self.parameter.is_ready_flag = False
@@ -34,7 +34,7 @@ class TtmRemoteManager(object):
         if self.local_executable == "":  # data receiver (remote)
             self.parameter.external_app = None
         else:  # data receiver (local)
-            print_dec(
+            print_debug(
                 "popen",
                 (
                     [
@@ -64,21 +64,21 @@ class TtmRemoteManager(object):
         self.parameter.thread_tcp.start()
 
     def connect(self):
-        print_dec("Try to connect")
+        print_debug("Try to connect")
         self.parameter.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.parameter.sock.bind((self.parameter.HOST, self.parameter.PORT))
         (
             self.parameter.HOST,
             self.PORT,
         ) = self.parameter.sock.getsockname()  # get the actual port
-        print_dec(self.parameter.HOST, self.parameter.PORT)
+        print_debug(self.parameter.HOST, self.parameter.PORT)
 
     def rw_loop(self):
-        print_dec("start thread")
+        print_debug("start thread")
         self.parameter.sock.listen()
         # self.sock.timeout(-1)
         self.parameter.conn, self.parameter.addr = self.parameter.sock.accept()
-        print_dec("Connected!")
+        print_debug("Connected!")
         self.parameter.conn.settimeout(0.01)
 
         while self.parameter.conn:
@@ -87,22 +87,22 @@ class TtmRemoteManager(object):
             except socket.timeout:
                 data = None
             except socket.error as error:
-                print_dec("Disconnected")
+                print_debug("Disconnected")
                 self.parameter.is_ready_flag = False
                 break
 
             if data is not None:
                 if not (data == b""):
-                    print_dec("TCP Recv:", data)
+                    print_debug("TCP Recv:", data)
                     self.parse(data)
 
             if len(self.parameter.write_list) != 0:
                 data_to_write = self.parameter.write_list.pop()
-                print_dec("TCP Send:", data_to_write)
+                print_debug("TCP Send:", data_to_write)
                 try:
                     self.parameter.conn.sendall(str.encode(data_to_write))
                 except ConnectionAbortedError:
-                    print_dec("Reconnect")
+                    print_debug("Reconnect")
                     self.connect()
                     self.parameter.conn.sendall(str.encode(data_to_write))
 
@@ -111,7 +111,7 @@ class TtmRemoteManager(object):
         if "READY!" in data:
             self.parameter.is_ready_flag = True
         elif "FILE:" in data:
-            print_dec("self.parameter.last_filename = ", data[5:-1])
+            print_debug("self.parameter.last_filename = ", data[5:-1])
             self.parameter.last_filename = data[5:-1]
         else:
             self.parameter.read_list.append(data)
@@ -143,38 +143,38 @@ class TtmRemoteManager(object):
         if self.is_ready():
             self.write("STOP!")
         else:
-            print_dec("NOT is_ready()")
+            print_debug("NOT is_ready()")
 
     def stop_and_quit_remote(self):
         if self.is_ready():
             self.write("STOPQUIT!")
         else:
-            print_dec("NOT is_ready()")
+            print_debug("NOT is_ready()")
 
     def set_file_name_remote(self, filename):
         if self.is_ready():
             self.write("SETNAME!%s" % filename)
         else:
-            print_dec("NOT is_ready()")
+            print_debug("NOT is_ready()")
 
     def set_folder_name_remote(self, folder):
         if self.is_ready():
             self.write("SETFOLDER!%s" % folder)
         else:
-            print_dec("NOT is_ready()")
+            print_debug("NOT is_ready()")
 
     def close(self):
-        print_dec("self.parameter.sock.close()")
+        print_debug("self.parameter.sock.close()")
         if self.parameter.external_app is not None:
             self.parameter.external_app.kill()
         self.parameter.sock.close()
 
     def wait_end_of_file_loop(self, handle, timeout=3):
-        print_dec("wait_end_of_file_loop")
+        print_debug("wait_end_of_file_loop")
         t = time.time()
         while (time.time() - t) < timeout:
             if self.parameter.last_filename != "":
-                print_dec("wait_end_of_file_thread", self.parameter.last_filename, t)
+                print_debug("wait_end_of_file_thread", self.parameter.last_filename, t)
                 handle("TTM: " + self.parameter.last_filename)
                 return self.parameter.last_filename
         return None
@@ -188,3 +188,4 @@ class TtmRemoteManager(object):
             ),
         )
         self.parameter.thread_wait_end_of_file_thread.start()
+
