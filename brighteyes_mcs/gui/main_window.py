@@ -403,7 +403,7 @@ class MainWindow(QMainWindow):
         # self.spadfcsmanager_inst.moveToThread(self.qthread)
         # print_debug("spadfcsmanager_inst.moveToThread()")
 
-        self.ui.checkBoxLockRatio.setText("ðŸ”’")
+        self.ui.checkBoxLockRatio.setText('🔒')
 
         self.ui.progressBar_frame.setValue(0)
         self.ui.progressBar_repetition.setValue(0)
