@@ -1199,12 +1199,74 @@ class MainWindow(QMainWindow):
             self.ui.spinBox_DFD_nbins,
             False,
         )
-        configuration_helper["compensation_delay_for_snake"] = (
-            "Snake Compensation Delay [px]",
-            int,
-            self.ui.spinBox_compensation_delay,
+        configuration_helper["DFD_laser_debug"] = (
+            "DFD Laser Debug",
+            bool,
+            self.ui.checkBox_DFD_LaserDebug,
             False,
         )
+        configuration_helper["clk_base_multiplier"] = (
+            "Clock Base Multiplier",
+            int,
+            self.ui.spinBox_clk_base_multiplier,
+            False,
+        )
+        configuration_helper["analog_input_a"] = (
+            "Analog Input A",
+            str,
+            self.ui.comboBox_analogSelect_A,
+            False,
+        )
+        configuration_helper["analog_input_b"] = (
+            "Analog Input B",
+            str,
+            self.ui.comboBox_analogSelect_B,
+            False,
+        )
+        configuration_helper["analog_a_differentiate"] = (
+            "Analog A Differentiate",
+            bool,
+            self.ui.checkBox_analog_in_differentiate_A,
+            False,
+        )
+        configuration_helper["analog_b_differentiate"] = (
+            "Analog B Differentiate",
+            bool,
+            self.ui.checkBox_analog_in_differentiate_B,
+            False,
+        )
+        configuration_helper["analog_integrate_ai0"] = (
+            "Analog Integrate AI0",
+            bool,
+            self.ui.checkBox_analog_in_integrate_AI0,
+            False,
+        )
+        configuration_helper["analog_integrate_ai1"] = (
+            "Analog Integrate AI1",
+            bool,
+            self.ui.checkBox_analog_in_integrate_AI1,
+            False,
+        )
+        configuration_helper["analog_integrate_ai2"] = (
+            "Analog Integrate AI2",
+            bool,
+            self.ui.checkBox_analog_in_integrate_AI2,
+            False,
+        )
+        configuration_helper["analog_integrate_ai3"] = (
+            "Analog Integrate AI3",
+            bool,
+            self.ui.checkBox_analog_in_integrate_AI3,
+            False,
+        )
+
+        for laser_idx in range(1, 13):
+            configuration_helper["laser_sequence_%d" % laser_idx] = (
+                "Laser Sequence %d" % laser_idx,
+                str,
+                getattr(self.ui, "comboLaserSeq_%d" % laser_idx),
+                False,
+            )
 
         configuration_helper["backendDataRecv"] = (
             "backendDataRecv",
