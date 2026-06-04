@@ -590,14 +590,14 @@ class SpadFcsManager():
                            }
 
 
-        self.loc_acquired = {"FIFO": mp.Value("i", 0), "FIFOAnalog": mp.Value("i", 0)}
+        self.loc_acquired = {"FIFO": mp.Value("q"), "FIFOAnalog": mp.Value("q")}
 
         self.last_preprocessed_len = {
-            "FIFO": mp.Value("i", 0),
-            "FIFOAnalog": mp.Value("i", 0),
+            "FIFO": mp.Value("q"),
+            "FIFOAnalog": mp.Value("q"),
         }
 
-        self.loc_previewed = {"FIFO": mp.Value("i", 0), "FIFOAnalog": mp.Value("i", 0)}
+        self.loc_previewed = {"FIFO": mp.Value("q"), "FIFOAnalog": mp.Value("q")}
 
         self.dtype_data_queue = {
             "FIFO": np.uint64,

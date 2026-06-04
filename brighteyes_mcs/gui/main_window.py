@@ -6079,6 +6079,14 @@ Have fun!
                         "analog_raw_file": self.raw_stream_output_files.get("FIFOAnalog", ""),
                         "digital_raw_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFO_bytes_written", 0),
                         "analog_raw_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_bytes_written", 0),
+                        "digital_expected_words": self.spadfcsmanager_inst.shared_dict.get("FIFO_expected_words", 0),
+                        "analog_expected_words": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_expected_words", 0),
+                        "digital_expected_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFO_expected_bytes", 0),
+                        "analog_expected_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_expected_bytes", 0),
+                        "digital_actual_bytes_on_disk": self.spadfcsmanager_inst.shared_dict.get("FIFO_actual_bytes_on_disk", 0),
+                        "analog_actual_bytes_on_disk": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_actual_bytes_on_disk", 0),
+                        "raw_writer_stop_reason": self.spadfcsmanager_inst.shared_dict.get("raw_writer_stop_reason", ""),
+                        "raw_writer_error": self.spadfcsmanager_inst.shared_dict.get("raw_writer_error", ""),
                     },
                 )
             else:
