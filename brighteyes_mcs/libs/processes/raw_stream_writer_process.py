@@ -4,6 +4,7 @@ import multiprocessing as mp
 import os
 import queue
 import time
+import traceback
 
 import numpy as np
 
@@ -51,6 +52,9 @@ class RawStreamWriterProcess(mp.Process):
         self.shape = shared_dict["shape"]
         self.received_any_packet = {fifo_name: False for fifo_name in self.active_fifos}
 
+    def _expected_bytes(self, fifo_name):
+        return int(self.expected_words[fifo_name]) * np.dtype(np.uint64).itemsize
+
     def _update_progress(self, fifo_name, packet_words, packet_bytes):
         self.loc_acquired[fifo_name].value += packet_words
         self.loc_previewed[fifo_name].value = self.loc_acquired[fifo_name].value
@@ -79,6 +83,8 @@ class RawStreamWriterProcess(mp.Process):
         print_debug("RawStreamWriterProcess RUN", os.getpid())
         self.acquisition_done.clear()
         self.acquisition_almost_done.clear()
+        self.shared_dict["raw_writer_error"] = ""
+        self.shared_dict["raw_writer_stop_reason"] = "running"
 
         handles = {}
         for fifo_name, filename in self.raw_output_files.items():
@@ -88,6 +94,8 @@ class RawStreamWriterProcess(mp.Process):
             handles[fifo_name] = open(filename, "wb", buffering=8 * 1024 * 1024)
             self.shared_dict[f"{fifo_name}_raw_filename"] = filename
             self.shared_dict[f"{fifo_name}_bytes_written"] = 0
+            self.shared_dict[f"{fifo_name}_expected_words"] = int(self.expected_words[fifo_name])
+            self.shared_dict[f"{fifo_name}_expected_bytes"] = self._expected_bytes(fifo_name)
 
         idle_after_stop = 0
         try:
@@ -111,6 +119,7 @@ class RawStreamWriterProcess(mp.Process):
                         )
                         if completed:
                             idle_after_stop += 1
+                            self.shared_dict["raw_writer_stop_reason"] = "expected_words_reached"
 
                 if dict_from_queue is not None:
                     for fifo_name, payload in dict_from_queue.items():
@@ -132,14 +141,27 @@ class RawStreamWriterProcess(mp.Process):
                 self.shared_dict["FIFOAnalog_status"] = queue_depth if "FIFOAnalog" in self.active_fifos else 0
 
                 if idle_after_stop >= 3:
+                    if self.stop_event.is_set():
+                        self.shared_dict["raw_writer_stop_reason"] = "stop_requested"
                     break
 
             for handle in handles.values():
                 handle.flush()
                 os.fsync(handle.fileno())
+        except Exception:
+            error_text = traceback.format_exc()
+            self.shared_dict["raw_writer_error"] = error_text
+            self.shared_dict["raw_writer_stop_reason"] = "error"
+            print_debug("RawStreamWriterProcess ERROR", error_text)
         finally:
             for handle in handles.values():
                 handle.close()
+
+            for fifo_name, filename in self.raw_output_files.items():
+                try:
+                    self.shared_dict[f"{fifo_name}_actual_bytes_on_disk"] = os.path.getsize(filename)
+                except OSError:
+                    self.shared_dict[f"{fifo_name}_actual_bytes_on_disk"] = 0
 
         self.acquisition_almost_done.set()
         self.acquisition_done.set()

@@ -29,10 +29,10 @@ class RustFastFifoReader:
 
             if fifo=="FIFOAnalog":
                 delay = delay_us * 20
-                chunk = chunk_digital
+                chunk = chunk_analog
             else:
                 delay = delay_us
-                chunk = chunk_analog
+                chunk = chunk_digital
 
             configuration = {
                 "bitfile" : bitfile,
@@ -59,7 +59,7 @@ class RustFastFifoReader:
                 fifo=fifo_number,
                 dma_buffer_size=dma_read_buffer_size,
                 fifo_reading_buffer=fifo_read_buffer_size,
-                min_packet=chunk_digital,
+                min_packet=chunk,
                 delay_us=delay,
                 debug=False
             )

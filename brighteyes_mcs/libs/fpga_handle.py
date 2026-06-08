@@ -60,8 +60,8 @@ class FpgaHandle(object):
             "fpgarunning": self.mp_manager.Event(),
             "fifo_chuck_size_digital": self.mp_manager.Value("I", 0),
             "fifo_chuck_size_analog": self.mp_manager.Value("I", 0),
-            "expected_words_data_digital": self.mp_manager.Value("I", 0),
-            "expected_words_data_analog": self.mp_manager.Value("I", 0),
+            "expected_words_data_digital": self.mp_manager.Value("q", 0),
+            "expected_words_data_analog": self.mp_manager.Value("q", 0),
             "initial_registers": initial_registers_dict,  # self.mp_manager.dict()
         }
 
