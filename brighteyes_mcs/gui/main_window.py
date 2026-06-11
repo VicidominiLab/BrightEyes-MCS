@@ -16,13 +16,16 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QComboBox,
     QCheckBox,
+    QDialog,
+    QDialogButtonBox,
     QPushButton,
     QFrame,
     QWidget,
     QHBoxLayout,
+    QVBoxLayout,
     QTextBrowser,
     QHeaderView,
-    QProgressDialog
+    QProgressDialog,
 )
 from PySide6.QtGui import QScreen  # Replaces QDesktopWidget
 
@@ -612,6 +615,12 @@ class MainWindow(QMainWindow):
         self.plugin_signals = PluginSignals()
         self.plugin_manager = PluginsManager(self)
         self.plugin_configuration = {}
+        self.plugin_autoload = ["script_launcher", "channel_delay_skew"]
+        self.plugin_configuration_files = {
+            "channel_delay_skew": "cfg/plugins_cfg/channel_delay_skew.cfg",
+            "dfd": "cfg/plugins_cfg/dfd.cfg",
+        }
+        self._loading_configuration_file = ""
 
         self.cmd_update_plugin_list()
 
@@ -626,11 +635,6 @@ class MainWindow(QMainWindow):
         self.snake_walk_Activate_Z = False
 
         self.setupAnalogOutputGUI()
-        # Plug-in autoload
-        # Replace the terminal with ScriptLauncher
-        self.plugin_manager.plugin_loader("script_launcher")
-        #self.plugin_manager.plugin_loader("dfd")
-        self.plugin_manager.plugin_loader("channel_delay_skew")
 
         self.setStyleSheet(self.styleSheet() +
                            """
@@ -1953,7 +1957,7 @@ class MainWindow(QMainWindow):
         ):
             try:
                 if name == "plugins":
-                    configuration[name] = self.plugin_configuration
+                    configuration[name] = self._get_plugins_configuration_section()
                 else:
                     if (mtype is int) or (mtype is float):
                         configuration[name] = ref_obj.value()
@@ -1982,6 +1986,184 @@ class MainWindow(QMainWindow):
 
         return configuration
 
+    def _default_plugin_config_path(self, plugin_name):
+        return "cfg/plugins_cfg/%s.cfg" % plugin_name
+
+    def _get_plugins_configuration_section(self):
+        """
+        Return the lightweight plugin section stored in the main .cfg file.
+        """
+        return {
+            "autoload": list(self.plugin_autoload),
+            "configs": dict(self.plugin_configuration_files),
+        }
+
+    def _normalize_plugin_names(self, plugin_names):
+        normalized = []
+        for item in plugin_names:
+            plugin_name = None
+            if isinstance(item, str):
+                plugin_name = item
+            elif isinstance(item, dict):
+                if item.get("enabled", True) is False:
+                    continue
+                plugin_name = item.get("name") or item.get("plugin")
+                config_file = item.get("config") or item.get("cfg")
+                if plugin_name and config_file:
+                    self.plugin_configuration_files[plugin_name] = config_file
+
+            if plugin_name and plugin_name not in normalized:
+                normalized.append(plugin_name)
+        return normalized
+
+    def _resolve_plugin_config_path(self, config_file, base_cfg_file=""):
+        path = Path(str(config_file))
+        if path.is_absolute():
+            return path
+
+        candidates = [
+            Path(os.getcwd()) / path,
+            Path(__file__).resolve().parents[1] / path,
+        ]
+
+        if base_cfg_file:
+            candidates.append(Path(base_cfg_file).parent / path)
+
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+
+        if path.parts and path.parts[0] == "cfg":
+            return Path(__file__).resolve().parents[1] / path
+        if base_cfg_file:
+            return Path(base_cfg_file).parent / path
+        return Path(os.getcwd()) / path
+
+    def _load_plugin_config_file(self, plugin_name, config_file, base_cfg_file=""):
+        path = self._resolve_plugin_config_path(config_file, base_cfg_file)
+        try:
+            with open(path, "r") as file:
+                payload = json.loads(file.read().replace(", \n", ","))
+        except FileNotFoundError:
+            print_debug("Plugin configuration file not found", plugin_name, str(path))
+            return
+        except Exception as error:
+            print_debug(
+                "Unable to load plugin configuration",
+                plugin_name,
+                str(path),
+                repr(error),
+            )
+            return
+
+        if isinstance(payload, dict) and isinstance(payload.get(plugin_name), dict):
+            payload = payload[plugin_name]
+
+        if isinstance(payload, dict):
+            self.plugin_configuration[plugin_name] = payload
+            print_debug("Loaded plugin configuration", plugin_name, str(path))
+
+    def _save_plugin_configuration_files(self, plugin_names=None):
+        if plugin_names is None:
+            plugin_names = list(self.plugin_configuration_files)
+        elif isinstance(plugin_names, str):
+            plugin_names = [plugin_names]
+
+        for plugin_name in plugin_names:
+            config_file = self.plugin_configuration_files.get(
+                plugin_name,
+                self._default_plugin_config_path(plugin_name),
+            )
+            self.plugin_configuration_files[plugin_name] = config_file
+            if plugin_name not in self.plugin_configuration:
+                continue
+
+            path = self._resolve_plugin_config_path(config_file)
+            try:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                text = json.dumps(
+                    self.plugin_configuration[plugin_name],
+                    cls=NumpyEncoder,
+                )
+                with open(path, "w") as file:
+                    file.write(text.replace(",", ",\n"))
+                print_debug("Saved plugin configuration", plugin_name, str(path))
+            except Exception as error:
+                print_debug(
+                    "Unable to save plugin configuration",
+                    plugin_name,
+                    str(path),
+                    repr(error),
+                )
+
+    def _apply_plugins_configuration_section(self, plugins_section, base_cfg_file=""):
+        if not isinstance(plugins_section, dict):
+            return
+
+        metadata_keys = {
+            "autoload",
+            "startup",
+            "startup_plugins",
+            "open_at_startup",
+            "configs",
+            "configuration_files",
+            "configurations",
+        }
+        has_metadata = any(key in plugins_section for key in metadata_keys)
+
+        if not has_metadata:
+            self.plugin_configuration.update(plugins_section)
+            for plugin_name in plugins_section:
+                self.plugin_configuration_files.setdefault(
+                    plugin_name,
+                    self._default_plugin_config_path(plugin_name),
+                )
+            return
+
+        for key in ("configs", "configuration_files", "configurations"):
+            configs = plugins_section.get(key, {})
+            if not isinstance(configs, dict):
+                continue
+            for plugin_name, config_file in configs.items():
+                if isinstance(config_file, dict):
+                    config_file = config_file.get("file") or config_file.get("path")
+                if config_file:
+                    self.plugin_configuration_files[plugin_name] = config_file
+
+        for key in ("autoload", "startup", "startup_plugins", "open_at_startup"):
+            if key in plugins_section:
+                self.plugin_autoload = self._normalize_plugin_names(
+                    plugins_section.get(key, [])
+                )
+                break
+
+        embedded_config = plugins_section.get("configuration", {})
+        if isinstance(embedded_config, dict):
+            self.plugin_configuration.update(embedded_config)
+
+        for plugin_name, config_file in self.plugin_configuration_files.items():
+            self._load_plugin_config_file(plugin_name, config_file, base_cfg_file)
+
+    def _load_startup_plugins(self):
+        for plugin_name in self.plugin_autoload:
+            try:
+                self.plugin_manager.plugin_loader_once(plugin_name)
+            except Exception as error:
+                print_debug("Unable to autoload plugin", plugin_name, repr(error))
+
+    def SavePluginConfiguration(self, plugin_names=None):
+        if plugin_names is None:
+            plugin_names = list(self.plugin_configuration_files)
+        elif isinstance(plugin_names, str):
+            plugin_names = [plugin_names]
+
+        if len(plugin_names) == 0:
+            QMessageBox.warning(self, "Save Plugin Configuration", "No plugin selected.")
+            return
+
+        self._save_plugin_configuration_files(plugin_names)
+        self.ui.statusBar.showMessage("Plugin configuration saved.", 5000)
+
     def setGUI_data(self, configuration={}):
         """
         Set the GUI data from a dictionary (it can be also a partial configuration)
@@ -1993,7 +2175,10 @@ class MainWindow(QMainWindow):
             try:
                 caption, mtype, ref_obj, visible = self.configuration_helper[name]
                 if name == "plugins":
-                    self.plugin_configuration.update(configuration[name])
+                    self._apply_plugins_configuration_section(
+                        configuration[name],
+                        self._loading_configuration_file,
+                    )
                     print_debug(
                         "PLUGINS CONFIGURATION",
                         type(configuration[name]),
@@ -6528,21 +6713,135 @@ Have fun!
         """
         save the configuration clicked event
         """
-        self.SaveConfiguration()
+        save_options = self._show_save_configuration_menu()
+        if save_options is None:
+            return
+
+        if not save_options["save_gui"]:
+            self.SavePluginConfiguration()
+            return
+
+        self.SaveConfiguration(
+            preserve_default_fov=save_options["preserve_default_fov"],
+            save_plugins=save_options["save_plugins"],
+            plugin_names=list(self.plugin_configuration_files),
+            make_permanent=save_options["make_permanent"],
+        )
+
+    def _show_save_configuration_menu(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Save Configuration")
+
+        layout = QVBoxLayout(dialog)
+
+        save_gui = QCheckBox("Saving GUI configuration", dialog)
+        save_gui.setChecked(True)
+        layout.addWidget(save_gui)
+
+        preserve_default_fov = QCheckBox("Preserving default FOV", dialog)
+        preserve_default_fov.setChecked(True)
+        layout.addWidget(preserve_default_fov)
+
+        save_plugins = QCheckBox("Configuration of plugins", dialog)
+        save_plugins.setChecked(True)
+        layout.addWidget(save_plugins)
+
+        make_permanent = QCheckBox("Make it permanent default configuration", dialog)
+        make_permanent.setChecked(True)
+        layout.addWidget(make_permanent)
+
+        only_plugins_label = QLabel("ONLY plugins configuration will be saved", dialog)
+        only_plugins_label.setWordWrap(True)
+        layout.addWidget(only_plugins_label)
+
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+            dialog,
+        )
+        button_box.accepted.connect(dialog.accept)
+        button_box.rejected.connect(dialog.reject)
+        layout.addWidget(button_box)
+
+        def update_enabled_options():
+            gui_enabled = save_gui.isChecked()
+            preserve_default_fov.setEnabled(gui_enabled)
+            save_plugins.setEnabled(gui_enabled)
+            make_permanent.setEnabled(gui_enabled)
+            only_plugins_label.setVisible(not gui_enabled)
+            if not gui_enabled:
+                save_plugins.setChecked(True)
+
+        save_gui.toggled.connect(lambda _checked: update_enabled_options())
+        update_enabled_options()
+
+        if dialog.exec() != QDialog.Accepted:
+            return None
+
+        return {
+            "save_gui": save_gui.isChecked(),
+            "preserve_default_fov": preserve_default_fov.isChecked(),
+            "save_plugins": save_plugins.isChecked(),
+            "make_permanent": make_permanent.isChecked(),
+        }
+
+    def _preserved_default_fov_keys(self):
+        return [
+            "default_offset_x_um",
+            "default_offset_y_um",
+            "default_offset_z_um",
+            "default_range_x",
+            "default_range_y",
+            "default_range_z",
+        ]
+
+    def _load_cfg_payload_if_exists(self, filecfg):
+        if not filecfg or not os.path.exists(filecfg):
+            return {}
+        try:
+            with open(filecfg, "r") as file:
+                return dict(json.loads(file.read().replace(", \n", ",")))
+        except Exception as error:
+            print_debug("Unable to read existing cfg for preservation", filecfg, repr(error))
+            return {}
+
+    def _preserve_default_fov_settings(self, configuration, filecfg):
+        previous_configuration = self._load_cfg_payload_if_exists(filecfg)
+        if not previous_configuration:
+            return configuration
+
+        for key in self._preserved_default_fov_keys():
+            if key in previous_configuration:
+                configuration[key] = previous_configuration[key]
+        return configuration
 
     @Slot()
-    def SaveConfiguration(self):
+    def SaveConfiguration(
+        self,
+        preserve_default_fov=False,
+        save_plugins=False,
+        plugin_names=None,
+        make_permanent=None,
+    ):
         """
         save the configuration to a .cfg file
         """
-        configuration = self.getGUI_data()
         filecfg = QFileDialog().getSaveFileName(
             caption="Save Configuration",
             filter="Config File (*.cfg)",
             dir=self.ui.lineEdit_configurationfile.text(),
         )[0]
         if filecfg != "":
-            text = json.dumps(self.getGUI_data(), cls=NumpyEncoder)
+            if save_plugins:
+                self._save_plugin_configuration_files(plugin_names)
+
+            configuration = self.getGUI_data()
+            if preserve_default_fov:
+                configuration = self._preserve_default_fov_settings(
+                    configuration,
+                    filecfg,
+                )
+
+            text = json.dumps(configuration, cls=NumpyEncoder)
             print_debug(text)
 
             with open(filecfg, "w") as file:
@@ -6557,7 +6856,10 @@ Have fun!
             filecfg_nicer = filecfg.replace(current_folder, "")
             self.ui.lineEdit_configurationfile.setText(filecfg_nicer)
 
-            self.ask_to_save_cfg_as_permanent(filecfg_nicer)
+            if make_permanent is True:
+                self.setNewDefaultCfg(filecfg_nicer)
+            elif make_permanent is None:
+                self.ask_to_save_cfg_as_permanent(filecfg_nicer)
 
     @Slot()
     def LoadConfigurationCmd(self):
@@ -6603,7 +6905,10 @@ Have fun!
                 self.lock_parameters_changed_call = True
                 self.lock_range_changing = True
 
+                self._loading_configuration_file = filecfg
                 self.setGUI_data(mydict)
+                self._loading_configuration_file = ""
+                self._load_startup_plugins()
 
                 self.lock_parameters_changed_call = l1
                 self.lock_range_changing = l2

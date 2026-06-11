@@ -21,3 +21,4 @@ def load_plugin(plugin_manager=None, context=None):
     print_debug("channel_delay_skew loaded", context)
     #plugin_manager.register_trigger("beforeRun", lambda: mycmd(context))
     plugin_manager.register_trigger("acquisitionDone", widget.acquisitionDone)
+    plugin_manager.register_trigger("configurationLoaded", widget.UpdateTable)

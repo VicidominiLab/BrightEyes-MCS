@@ -54,6 +54,9 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
         )
         self.pushButton_reset.clicked.connect(self.pushButton_reset_clicked)
         self.pushButton_estimate.clicked.connect(self.pushButton_estimate_clicked)
+        self.pushButton_save_configuration.clicked.connect(
+            self.pushButton_save_configuration_clicked
+        )
     
 
         if self.main_window is not None:
@@ -334,6 +337,15 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
         self.table_skew.set_data(table)
         self.tableView_skew.resizeColumnsToContents()
         self.tableView_skew.resizeRowsToContents()
+
+    @Slot()
+    def pushButton_save_configuration_clicked(self):
+        self.UpdateConf()
+        if self.main_window is None:
+            return
+
+        if hasattr(self.main_window, "SavePluginConfiguration"):
+            self.main_window.SavePluginConfiguration(self.CONFIG_KEY)
 
     @Slot()
     def pushButton_estimate_clicked(self):

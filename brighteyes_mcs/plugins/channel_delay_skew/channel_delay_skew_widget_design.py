@@ -109,6 +109,12 @@ class Ui_Form(object):
         self.pushButton_estimate.setObjectName("pushButton_estimate")
         self.verticalLayout_actions.addWidget(self.pushButton_estimate)
 
+        self.pushButton_save_configuration = QPushButton(self.groupBox_actions)
+        self.pushButton_save_configuration.setObjectName(
+            "pushButton_save_configuration"
+        )
+        self.verticalLayout_actions.addWidget(self.pushButton_save_configuration)
+
         self.label_status = QLabel(self.groupBox_actions)
         self.label_status.setObjectName("label_status")
         self.label_status.setWordWrap(True)
@@ -193,6 +199,9 @@ class Ui_Form(object):
             QCoreApplication.translate(
                 "Form", "Estimate Channel Delay Skew", None
             )
+        )
+        self.pushButton_save_configuration.setText(
+            QCoreApplication.translate("Form", "Save Plugin Config", None)
         )
         self.label_status.setText(
             QCoreApplication.translate("Form", "Ready", None)

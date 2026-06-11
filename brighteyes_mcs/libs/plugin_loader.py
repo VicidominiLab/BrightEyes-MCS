@@ -95,6 +95,22 @@ class PluginsManager:
             "loaded plugin: brighteyes_mcs.plugins." + plugin_name + ".load_plugin()"
         )
 
+    def is_plugin_loaded(self, plugin_name):
+        """
+        Return True when at least one instance of a plugin is already loaded.
+        """
+        plugin_prefix = plugin_name + "_"
+        return any(name.startswith(plugin_prefix) for name in self.plugin_instances)
+
+    def plugin_loader_once(self, plugin_name):
+        """
+        Load a plugin only if it does not already have an active instance.
+        """
+        if self.is_plugin_loaded(plugin_name):
+            print_debug("plugin already loaded", plugin_name)
+            return
+        self.plugin_loader(plugin_name)
+
     def instances(self):
         """
         Get the instances of loaded plugins.

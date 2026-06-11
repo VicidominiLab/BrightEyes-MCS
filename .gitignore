@@ -44,6 +44,9 @@ log/*
 # Machine-specific configuration
 brighteyes_mcs/cfg/*
 !brighteyes_mcs/cfg/default.cfg
+!brighteyes_mcs/cfg/plugins_cfg/
+!brighteyes_mcs/cfg/plugins_cfg/channel_delay_skew.cfg
+!brighteyes_mcs/cfg/plugins_cfg/dfd.cfg
 
 # Downloaded firmware assets
 brighteyes_mcs/bitfiles/

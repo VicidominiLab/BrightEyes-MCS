@@ -579,75 +579,18 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_8.setObjectName(u"dockWidgetContents_8")
         self.gridLayout_15 = QGridLayout(self.dockWidgetContents_8)
         self.gridLayout_15.setObjectName(u"gridLayout_15")
-        self.pushButton_externalProgram = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_externalProgram.setObjectName(u"pushButton_externalProgram")
-        self.pushButton_externalProgram.setEnabled(False)
+        self.verticalSpacer_21 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_15.addWidget(self.pushButton_externalProgram, 3, 0, 1, 1)
+        self.gridLayout_15.addItem(self.verticalSpacer_21, 9, 0, 1, 1)
 
         self.pushButton_14 = QPushButton(self.dockWidgetContents_8)
         self.pushButton_14.setObjectName(u"pushButton_14")
 
         self.gridLayout_15.addWidget(self.pushButton_14, 2, 0, 1, 1)
 
-        self.groupBox_11 = QGroupBox(self.dockWidgetContents_8)
-        self.groupBox_11.setObjectName(u"groupBox_11")
-        sizePolicy1.setHeightForWidth(self.groupBox_11.sizePolicy().hasHeightForWidth())
-        self.groupBox_11.setSizePolicy(sizePolicy1)
-        self.gridLayout_81 = QGridLayout(self.groupBox_11)
-        self.gridLayout_81.setObjectName(u"gridLayout_81")
-        self.pushButton_acquisitionStart = QPushButton(self.groupBox_11)
-        self.pushButton_acquisitionStart.setObjectName(u"pushButton_acquisitionStart")
-        font1 = QFont()
-        font1.setPointSize(20)
-        self.pushButton_acquisitionStart.setFont(font1)
-        self.pushButton_acquisitionStart.setStyleSheet(u"QPushButton:disabled {\n"
-"    qproperty-iconOpacity: 0.05;\n"
-"}\n"
-"")
-        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaRecord))
-        self.pushButton_acquisitionStart.setIcon(icon)
-        self.pushButton_acquisitionStart.setIconSize(QSize(32, 32))
-        self.pushButton_acquisitionStart.setFlat(True)
+        self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_81.addWidget(self.pushButton_acquisitionStart, 0, 2, 1, 1)
-
-        self.pushButton_previewStart = QPushButton(self.groupBox_11)
-        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
-        self.pushButton_previewStart.setFont(font1)
-        self.pushButton_previewStart.setStyleSheet(u"QPushButton:disabled {\n"
-"    qproperty-iconOpacity: 0.05;\n"
-"}\n"
-"")
-        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
-        self.pushButton_previewStart.setIcon(icon1)
-        self.pushButton_previewStart.setIconSize(QSize(32, 32))
-        self.pushButton_previewStart.setFlat(True)
-
-        self.gridLayout_81.addWidget(self.pushButton_previewStart, 0, 1, 1, 1)
-
-        self.pushButton_stop = QPushButton(self.groupBox_11)
-        self.pushButton_stop.setObjectName(u"pushButton_stop")
-        self.pushButton_stop.setEnabled(False)
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
-        self.pushButton_stop.setSizePolicy(sizePolicy3)
-        self.pushButton_stop.setFont(font1)
-        self.pushButton_stop.setStyleSheet(u"QPushButton:disabled {\n"
-"    qproperty-iconOpacity: 0.05;\n"
-"}\n"
-"")
-        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStop))
-        self.pushButton_stop.setIcon(icon2)
-        self.pushButton_stop.setIconSize(QSize(32, 32))
-        self.pushButton_stop.setFlat(True)
-
-        self.gridLayout_81.addWidget(self.pushButton_stop, 0, 4, 1, 1)
-
-
-        self.gridLayout_15.addWidget(self.groupBox_11, 1, 0, 1, 1)
+        self.gridLayout_15.addItem(self.verticalSpacer_17, 6, 0, 1, 1)
 
         self.checkBox_showPreview = QCheckBox(self.dockWidgetContents_8)
         self.checkBox_showPreview.setObjectName(u"checkBox_showPreview")
@@ -720,11 +663,76 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_30.addWidget(self.checkBox_fifo_digital, 1, 0, 1, 1)
 
 
-        self.gridLayout_15.addWidget(self.groupBox_9, 1, 1, 7, 1)
+        self.gridLayout_15.addWidget(self.groupBox_9, 1, 1, 9, 1)
 
-        self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.pushButton_externalProgram = QPushButton(self.dockWidgetContents_8)
+        self.pushButton_externalProgram.setObjectName(u"pushButton_externalProgram")
+        self.pushButton_externalProgram.setEnabled(False)
 
-        self.gridLayout_15.addItem(self.verticalSpacer_17, 8, 1, 1, 1)
+        self.gridLayout_15.addWidget(self.pushButton_externalProgram, 3, 0, 1, 1)
+
+        self.groupBox_11 = QGroupBox(self.dockWidgetContents_8)
+        self.groupBox_11.setObjectName(u"groupBox_11")
+        sizePolicy1.setHeightForWidth(self.groupBox_11.sizePolicy().hasHeightForWidth())
+        self.groupBox_11.setSizePolicy(sizePolicy1)
+        self.gridLayout_81 = QGridLayout(self.groupBox_11)
+        self.gridLayout_81.setObjectName(u"gridLayout_81")
+        self.pushButton_acquisitionStart = QPushButton(self.groupBox_11)
+        self.pushButton_acquisitionStart.setObjectName(u"pushButton_acquisitionStart")
+        font1 = QFont()
+        font1.setPointSize(20)
+        self.pushButton_acquisitionStart.setFont(font1)
+        self.pushButton_acquisitionStart.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaRecord))
+        self.pushButton_acquisitionStart.setIcon(icon)
+        self.pushButton_acquisitionStart.setIconSize(QSize(32, 32))
+        self.pushButton_acquisitionStart.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_acquisitionStart, 0, 2, 1, 1)
+
+        self.pushButton_previewStart = QPushButton(self.groupBox_11)
+        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
+        self.pushButton_previewStart.setFont(font1)
+        self.pushButton_previewStart.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
+        self.pushButton_previewStart.setIcon(icon1)
+        self.pushButton_previewStart.setIconSize(QSize(32, 32))
+        self.pushButton_previewStart.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_previewStart, 0, 1, 1, 1)
+
+        self.pushButton_stop = QPushButton(self.groupBox_11)
+        self.pushButton_stop.setObjectName(u"pushButton_stop")
+        self.pushButton_stop.setEnabled(False)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
+        self.pushButton_stop.setSizePolicy(sizePolicy3)
+        self.pushButton_stop.setFont(font1)
+        self.pushButton_stop.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStop))
+        self.pushButton_stop.setIcon(icon2)
+        self.pushButton_stop.setIconSize(QSize(32, 32))
+        self.pushButton_stop.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_stop, 0, 4, 1, 1)
+
+
+        self.gridLayout_15.addWidget(self.groupBox_11, 1, 0, 1, 1)
+
+        self.verticalSpacer_22 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_15.addItem(self.verticalSpacer_22, 5, 0, 1, 1)
 
         self.dockWidget_preview.setWidget(self.dockWidgetContents_8)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_preview)
@@ -3556,26 +3564,9 @@ class Ui_MainWindowDesign(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"(u)TTM", None))
         self.dockWidget_preview.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Commands", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_externalProgram.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Open the last saved file with Napari or another viewer as selected in the configuration</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"Ext. Viewer/Analysis", None))
-#if QT_CONFIG(tooltip)
         self.pushButton_14.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Add the current configuration to the Batch acquisition table</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_14.setText(QCoreApplication.translate("MainWindowDesign", u"Add to Batch", None))
-        self.groupBox_11.setTitle("")
-#if QT_CONFIG(tooltip)
-        self.pushButton_acquisitionStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning saving data</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_acquisitionStart.setText("")
-#if QT_CONFIG(tooltip)
-        self.pushButton_previewStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning without storing data</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_previewStart.setText("")
-#if QT_CONFIG(tooltip)
-        self.pushButton_stop.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Stop the scan</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_stop.setText("")
 #if QT_CONFIG(tooltip)
         self.checkBox_showPreview.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The live-preview can be disabled.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -3601,6 +3592,23 @@ class Ui_MainWindowDesign(object):
         self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
 
         self.checkBox_fifo_digital.setText(QCoreApplication.translate("MainWindowDesign", u"Digital", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_externalProgram.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Open the last saved file with Napari or another viewer as selected in the configuration</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"Ext. Viewer/Analysis", None))
+        self.groupBox_11.setTitle("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_acquisitionStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning saving data</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_acquisitionStart.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_previewStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning without storing data</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_previewStart.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_stop.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Stop the scan</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_stop.setText("")
         self.dockWidget_temporal.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Temporal settings", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_waitAfterFrame.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Delay betweent two repetition in second.</p></body></html>", None))
