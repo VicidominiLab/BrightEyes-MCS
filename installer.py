@@ -2,6 +2,8 @@ import os
 import subprocess
 import sys
 
+MSYS2_GCC_PACKAGE = "mingw-w64-ucrt-x86_64-gcc"
+
 
 def check_vs_build_tools():
     try:
@@ -50,27 +52,57 @@ def build_cython_with_vs():
     except subprocess.CalledProcessError as e:
         print(f"Error during Cython build with Visual Studio: {e}")
         sys.exit(1)
-        
-def build_cython_with_msys2(msys2_path, do_not_upgrade_msys2):
+
+
+def run_msys2_pacman(msys2_path, command, description):
+    bash_path = os.path.join(msys2_path, "usr", "bin", "bash.exe")
+    print(description)
+    subprocess.run([bash_path, "-lc", command], check=True, shell=True, env=os.environ)
+
+
+def confirm_msys2_pacman():
+    if not sys.stdin.isatty():
+        return True
+
+    prompt = (
+        "MSYS2 needs pacman to update MSYS2 and check/install the GCC package "
+        "before pip installs requirements. Continue? [Y/n]: "
+    )
+    answer = input(prompt).strip().lower()
+    return answer in {"", "y", "yes"}
+
+
+def prepare_msys2_toolchain(msys2_path, do_not_upgrade_msys2):
+    """Prepare the MSYS2 compiler packages before pip installs requirements."""
+    if not msys2_path:
+        print("MSYS2 was requested but no MSYS2 path was found.")
+        sys.exit(1)
+
+    if do_not_upgrade_msys2:
+        print("Skipping MSYS2 pacman update/install by request.")
+        return
+
+    if not confirm_msys2_pacman():
+        print("MSYS2 preparation cancelled by the user.")
+        sys.exit(1)
+
+    try:
+        run_msys2_pacman(msys2_path, "pacman --noconfirm -Syu", "Updating MSYS2...")
+        print("Now MSYS2 is updated.")
+
+        run_msys2_pacman(
+            msys2_path,
+            f"pacman --noconfirm -Sy --needed {MSYS2_GCC_PACKAGE}",
+            "Installing GCC with MSYS2.",
+        )
+        print("GCC installation done.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during MSYS2 preparation: {e}")
+        sys.exit(1)
+
+
+def build_cython_with_msys2(msys2_path):
     """Builds the Cython part of the code using MSYS2 (mingw32)."""
-    if not do_not_upgrade_msys2:
-        try:
-
-            bash_path = msys2_path + os.path.sep + "usr" + os.path.sep + "bin"  + os.path.sep + "bash.exe"
-            bash_cmd =  'pacman --noconfirm -Syu'
-            print("Updating MSYS2...")
-            subprocess.run([bash_path, '-lc', bash_cmd], check=True, shell=True, env=os.environ)
-            print("Now MSYS2 is updated.")
-
-
-            bash_path = msys2_path + os.path.sep + "usr" + os.path.sep + "bin"  + os.path.sep + "bash.exe"
-            bash_cmd =  'pacman --noconfirm -Sy --needed mingw-w64-ucrt-x86_64-gcc'
-            print("Installing GCC with MSYS2.")
-            subprocess.run([bash_path, '-lc', bash_cmd], check=True, shell=True, env=os.environ)
-            print("GCC installation done.")
-        except subprocess.CalledProcessError as e:
-            print(f"Error during installing GCC with MSYS2: {e}")
-
     try:
         env = os.environ
         path = env["PATH"]        
@@ -127,7 +159,7 @@ if __name__ == "__main__":
         print("This script help to install the requirements of BrightEyes-MCS \r\n\r\n"
               "Arguments\r\n"
               "[no arguments] = Try to compile with Visual Studio C++ if not found use MSYS2\r\n"
-              "--force_msys2  = Force compilation with MSYS2\r\n"
+              "--force-msys2  = Force compilation with MSYS2\r\n"
               "--force-vs     = Force compilation with Visual Studio C++\r\n"
               "--no--install-requirements\r\n"
               "--no--compile\r\n"
@@ -165,12 +197,15 @@ if __name__ == "__main__":
             
     elif (msys2_installed or force_msys2) and not force_vs:    
     
+        if not no_install_requirements or not no_compile:
+            print("Prepare MSYS2 before pip install/build")
+            prepare_msys2_toolchain(msys2_path, do_not_upgrade_msys2)
         if not no_install_requirements:
             print("Install requirements - MSYS2 configuration")
             install_requirements_with_msys2_path(msys2_path)
         if not no_compile:
             print("Compile Cython parts - MSYS2 configuration")
-            build_cython_with_msys2(msys2_path, do_not_upgrade_msys2)
+            build_cython_with_msys2(msys2_path)
             
     else:
         print("No compiler found!")

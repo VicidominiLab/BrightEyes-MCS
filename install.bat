@@ -62,7 +62,7 @@ echo Activate the venv
 echo:
 call .venv\Scripts\activate
 echo:
-echo Installing the pip requirements
+echo Preparing compiler tools, installing pip requirements, and building extensions
 echo:
 python installer.py
 echo: Creating links on Desktop

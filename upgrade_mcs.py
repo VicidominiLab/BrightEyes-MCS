@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
-import stat
 import subprocess
 import sys
 import tempfile
@@ -32,6 +31,7 @@ CLEAR_BEFORE_CHECKOUT = [
     Path("brighteyes_mcs/cfg"),
     Path("brighteyes_mcs/bitfiles"),
 ]
+CHECKOUT_CONFLICT_BACKUP_DIR = Path("_checkout_conflicts")
 CYTHON_WATCH_PATHS = [
     "setup.py",
     "installer.py",
@@ -347,11 +347,6 @@ def stash_local_changes(log: Callable[[str], None]) -> str | None:
     return None
 
 
-def handle_remove_readonly(func, path, exc_info) -> None:  # type: ignore[no-untyped-def]
-    os.chmod(path, stat.S_IWRITE)
-    func(path)
-
-
 def backup_preserved_paths(log: Callable[[str], None]) -> tuple[Path, list[str]]:
     backup_dir = Path(tempfile.mkdtemp(prefix="upgrade_mcs_"))
     copied: list[str] = []
@@ -371,22 +366,28 @@ def backup_preserved_paths(log: Callable[[str], None]) -> tuple[Path, list[str]]
     return backup_dir, copied
 
 
-def remove_checkout_conflicts(log: Callable[[str], None]) -> None:
+def move_checkout_conflicts_to_backup(backup_dir: Path, log: Callable[[str], None]) -> None:
     for relative in CLEAR_BEFORE_CHECKOUT:
         target = REPO_ROOT / relative
         if not target.exists():
             continue
+        destination = backup_dir / CHECKOUT_CONFLICT_BACKUP_DIR / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
         log("Temporarily moving aside: " + relative.as_posix())
-        if target.is_dir():
-            shutil.rmtree(target, onerror=handle_remove_readonly)
-        else:
-            target.unlink()
+        shutil.move(str(target), str(destination))
+
+
+def get_preserved_restore_source(backup_dir: Path, relative: Path) -> Path:
+    moved_source = backup_dir / CHECKOUT_CONFLICT_BACKUP_DIR / relative
+    if moved_source.exists():
+        return moved_source
+    return backup_dir / relative
 
 
 def restore_preserved_paths(backup_dir: Path, log: Callable[[str], None]) -> list[str]:
     restored: list[str] = []
     for relative in COPY_OVER_TARGET_PATHS:
-        source = backup_dir / relative
+        source = get_preserved_restore_source(backup_dir, relative)
         if not source.exists():
             continue
         destination = REPO_ROOT / relative
@@ -782,7 +783,7 @@ def perform_upgrade(selection: UpgradeSelection, log: Callable[[str], None]) -> 
         if worktree_state == "needs_stash":
             stash_ref = stash_local_changes(log)
 
-        remove_checkout_conflicts(log)
+        move_checkout_conflicts_to_backup(backup_dir, log)
         actual_branch, new_head = checkout_target(selection.branch, selection.commit, log)
         preserved_restored = restore_preserved_paths(backup_dir, log)
         requirements_refreshed, cython_rebuilt = run_post_install_if_needed(old_head, new_head, selection, log)
