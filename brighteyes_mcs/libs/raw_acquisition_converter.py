@@ -8,7 +8,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 
-from .cython.fastconverter import (
+from brighteyes_mcs_cylibs.fastconverter import (
     convertDataFromAnalogFIFO,
     convertRawDataToCountsDirect,
     convertRawDataToCountsDirect49,
@@ -275,7 +275,7 @@ def _convert_digital(
             start_word = sample_pointer * words_per_sample
             stop_word = start_word + process_words
 
-            # The Cython decoder expects a writable contiguous buffer; memmap
+            # The compiled decoder expects a writable contiguous buffer; memmap
             # slices opened in read-only mode can trip "buffer source array is read-only".
             chunk = np.array(raw_words[start_word:stop_word], dtype=np.uint64, copy=True)
             saturation[:] = 0

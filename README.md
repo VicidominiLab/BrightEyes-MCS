@@ -13,6 +13,13 @@ For complete documentation, please visit our [Wiki page](https://github.com/Vici
 
 To get started, refer to the detailed instructions and guidelines available on the [Wiki](https://github.com/VicidominiLab/BrightEyes-MCS/wiki).
 
+## Compiled Extensions
+
+The compiled extension modules are distributed separately as `brighteyes-mcs-cylibs`.
+BrightEyes-MCS imports them from the installed pip package and no longer compiles
+extensions from this repository during installation. The companion source package is
+expected at `C:\Users\madonato\Documents\Git\BrightEyes-MCS-cylibs`.
+
 ## Development Notice
 
 **Important:** This software is currently under active development and may contain bugs or incomplete features. Please use it with caution and report any issues you encounter to help us improve the application. 

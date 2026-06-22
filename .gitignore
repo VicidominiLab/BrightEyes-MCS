@@ -51,8 +51,3 @@ brighteyes_mcs/cfg/*
 # Downloaded firmware assets
 brighteyes_mcs/bitfiles/
 
-# Generated Cython build outputs
-brighteyes_mcs/libs/cython/*.c
-brighteyes_mcs/libs/cython/*.html
-brighteyes_mcs/libs/cython/*.pyd
-brighteyes_mcs/libs/cython/*.so

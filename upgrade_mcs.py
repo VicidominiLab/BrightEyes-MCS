@@ -32,14 +32,6 @@ CLEAR_BEFORE_CHECKOUT = [
     Path("brighteyes_mcs/cfg"),
     Path("brighteyes_mcs/bitfiles"),
 ]
-CYTHON_WATCH_PATHS = [
-    "setup.py",
-    "installer.py",
-    "brighteyes_mcs/libs/cython",
-]
-COMPILE_SCRIPT = Path("compile_cython.bat")
-
-
 class UpgradeError(RuntimeError):
     """Raised when the upgrade workflow cannot continue safely."""
 
@@ -108,7 +100,7 @@ class UpgradeResult:
     preserved_restored: list[str]
     fetch_succeeded: bool
     requirements_refreshed: bool
-    cython_rebuilt: bool
+    compiled_extensions_checked: bool
 
 
 def print_log(message: str) -> None:
@@ -141,18 +133,9 @@ def run_passthrough(command: list[str], log: Callable[[str], None]) -> None:
         raise UpgradeError(f"Command failed ({result.returncode}): {' '.join(command)}")
 
 
-def run_compile_cython(log: Callable[[str], None]) -> None:
-    compile_script = REPO_ROOT / COMPILE_SCRIPT
-    if compile_script.exists():
-        log("Running the Cython compilation script...")
-        run_passthrough(["cmd", "/c", str(COMPILE_SCRIPT)], log)
-        return
-
-    log("compile_cython.bat not found. Falling back to installer.py for Cython compilation...")
-    run_passthrough(
-        [sys.executable, "installer.py", "--no--install-requirements", "--do-not-upgrade-msys2"],
-        log,
-    )
+def check_compiled_extensions(log: Callable[[str], None]) -> None:
+    log("Checking brighteyes-mcs-cylibs imports...")
+    run_passthrough([sys.executable, "test/check_compiled_extensions.py"], log)
 
 
 def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -480,17 +463,14 @@ def run_post_install_if_needed(
         return False, False
 
     requirements_changed = bool(get_changed_files(old_head, new_head, "requirements.txt"))
-    cython_changed = bool(get_changed_files(old_head, new_head, *CYTHON_WATCH_PATHS))
 
     if requirements_changed:
         log("requirements.txt changed. Updating the active Python environment...")
         run_passthrough([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], log)
-    elif cython_changed:
-        log("Cython build files changed. Running the compilation step...")
     else:
-        log("No requirements change detected. Running the Cython compilation step after the update...")
+        log("No requirements change detected. Skipping dependency refresh.")
 
-    run_compile_cython(log)
+    check_compiled_extensions(log)
     return requirements_changed, True
 
 
@@ -785,7 +765,7 @@ def perform_upgrade(selection: UpgradeSelection, log: Callable[[str], None]) -> 
         remove_checkout_conflicts(log)
         actual_branch, new_head = checkout_target(selection.branch, selection.commit, log)
         preserved_restored = restore_preserved_paths(backup_dir, log)
-        requirements_refreshed, cython_rebuilt = run_post_install_if_needed(old_head, new_head, selection, log)
+        requirements_refreshed, compiled_extensions_checked = run_post_install_if_needed(old_head, new_head, selection, log)
     except Exception:
         try:
             restore_preserved_paths(backup_dir, log)
@@ -805,7 +785,7 @@ def perform_upgrade(selection: UpgradeSelection, log: Callable[[str], None]) -> 
             preserved_restored=preserved_restored,
             fetch_succeeded=fetch_succeeded,
             requirements_refreshed=requirements_refreshed,
-            cython_rebuilt=cython_rebuilt,
+            compiled_extensions_checked=compiled_extensions_checked,
         )
 
 
@@ -824,7 +804,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cli", action="store_true", help="Force text-mode selection instead of the GUI.")
     parser.add_argument("--gui", action="store_true", help="Force the selection GUI.")
     parser.add_argument("--stash-local", action="store_true", help="Stash unrelated local changes before upgrading.")
-    parser.add_argument("--no-post-install", action="store_true", help="Skip requirements and Cython refresh.")
+    parser.add_argument("--no-post-install", action="store_true", help="Skip requirements refresh and compiled extension import check.")
     parser.add_argument("--no-fetch", action="store_true", help="Skip git fetch before listing and upgrading.")
     return parser.parse_args()
 
@@ -920,8 +900,8 @@ def main() -> int:
         print(f"Local changes stash: {result.stash_ref}")
     if result.requirements_refreshed:
         print("requirements.txt was refreshed.")
-    if result.cython_rebuilt:
-        print("Cython extensions were rebuilt.")
+    if result.compiled_extensions_checked:
+        print("Compiled extension package imports were checked.")
     if selection.gui_used:
         show_message_box(
             "BrightEyes-MCS Upgrade",

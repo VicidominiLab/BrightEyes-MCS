@@ -19,21 +19,21 @@ from ..h5manager import H5ManagerProcessClient
 #TODO: NEED TO BE TESTED THE NEW ADDER
 
 try:
-    from ..cython.fastconverter import (
+    from brighteyes_mcs_cylibs.fastconverter import (
         convertRawDataToCountsDirect,
         convertRawDataToCountsDirect49,
         convertDataFromAnalogFIFO,
     )
-    from ..cython.autocorrelator import Autocorrelator
-    from ..cython.timeBinner import timeBinner
+    from brighteyes_mcs_cylibs.autocorrelator import Autocorrelator
+    from brighteyes_mcs_cylibs.timeBinner import timeBinner
 except Exception as e:
     print(
         "\n\n"
         "====== ERROR =========================\n"
-        "Cython modules not found!\n"
-        "Are you sure they are compiled?\n"
+        "BrightEyes-MCS compiled extension modules not found!\n"
+        "Are you sure brighteyes-mcs-cylibs is installed?\n"
         "Please run following command:\n\n"
-        "python setup.py build_ext --inplace\n"
+        "python -m pip install brighteyes-mcs-cylibs\n"
         "=====================================\n"
     )
     os._exit(1)
