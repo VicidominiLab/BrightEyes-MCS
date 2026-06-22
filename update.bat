@@ -1,11 +1,11 @@
 @echo off
-cd /d %~dp0
+setlocal
+cd /d "%~dp0"
 
-if exist .venv\Scripts\activate.bat (
-    echo Activating .venv
-    call .venv\Scripts\activate.bat
+if exist .venv\Scripts\python.exe (
+    .venv\Scripts\python.exe brighteyes_mcs_installer.py update %*
 ) else (
-    echo Warning: .venv\Scripts\activate.bat was not found. Using the current Python environment.
+    python brighteyes_mcs_installer.py update %*
 )
 
-python upgrade_mcs.py %*
+endlocal

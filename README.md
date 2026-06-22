@@ -13,6 +13,43 @@ For complete documentation, please visit our [Wiki page](https://github.com/Vici
 
 To get started, refer to the detailed instructions and guidelines available on the [Wiki](https://github.com/VicidominiLab/BrightEyes-MCS/wiki).
 
+## Installer
+
+BrightEyes-MCS now uses a single standalone stdlib installer:
+
+```bat
+python brighteyes_mcs_installer.py
+```
+
+Without arguments it opens the Tk GUI. The same file also works as a CLI:
+
+```bat
+python brighteyes_mcs_installer.py install
+python brighteyes_mcs_installer.py install --source-branch main --source-commit <commit>
+python brighteyes_mcs_installer.py update --stash-local
+python brighteyes_mcs_installer.py update --branch main --commit <commit>
+python brighteyes_mcs_installer.py firmware --firmware-branch main
+python brighteyes_mcs_installer.py links
+```
+
+The installer finds local Python installations, requires Python 3.13 for the
+project `.venv`, can download the Python 3.13.14 Windows installer from
+python.org, suggests the Git for Windows download when git is missing, creates
+shortcuts, downloads firmware from a selectable BrightEyes-MCSLL branch, and
+installs or updates from a selected BrightEyes-MCS branch or commit. In the GUI,
+the `BrightEyes-MCS source` group lists recent commits for the selected branch.
+Updates preserve local `brighteyes_mcs/cfg` and `brighteyes_mcs/bitfiles`.
+
+To build the small GUI executable:
+
+```bat
+build_installer_exe.bat
+```
+
+The build writes `brighteyes_mcs_installer.exe` in the repository root and
+removes the temporary `dist/` folder. Install/update preserves that root exe if
+it is already present.
+
 ## Compiled Extensions
 
 The compiled extension modules are distributed separately as `brighteyes-mcs-cylibs`.
