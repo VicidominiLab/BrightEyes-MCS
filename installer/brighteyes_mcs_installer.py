@@ -14,7 +14,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-import webbrowser
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,9 +23,10 @@ import tkinter as tk
 
 
 APP_NAME = "BrightEyes-MCS Installer"
+REPO_FOLDER_NAME = "BrightEyes-MCS"
 REPO_URL = "https://github.com/VicidominiLab/BrightEyes-MCS.git"
 REPO_API_URL = "https://api.github.com/repos/VicidominiLab/BrightEyes-MCS"
-GIT_FOR_WINDOWS_URL = "https://git-scm.com/download/win"
+GIT_FOR_WINDOWS_URL = "https://github.com/git-for-windows/git/releases/latest/download/Git-64-bit.exe"
 PYTHON_313_INSTALLER_URL = "https://www.python.org/ftp/python/3.13.14/python-3.13.14-amd64.exe"
 FIRMWARE_REPO = "VicidominiLab/BrightEyes-MCSLL"
 FIRMWARE_API_URL = f"https://api.github.com/repos/{FIRMWARE_REPO}"
@@ -128,6 +128,12 @@ def is_python_313(version: tuple[int, int, int] | None) -> bool:
     return bool(version and version[0] == 3 and version[1] == 13)
 
 
+def is_venv_python(command: str) -> bool:
+    path = Path(command)
+    parts = {part.lower() for part in path.parts}
+    return bool({".venv", "venv", "env", ".env"} & parts)
+
+
 def path_from_py_launcher_line(line: str) -> str | None:
     match = re.search(r"([A-Za-z]:\\.*python(?:\.exe)?)\s*$", line, re.IGNORECASE)
     if match:
@@ -163,6 +169,7 @@ def discover_python_candidates() -> list[PythonCandidate]:
         if version:
             candidates.append(PythonCandidate(str(current), str(current), version))
 
+    candidates.sort(key=lambda candidate: (not is_python_313(candidate.version), is_venv_python(candidate.command)))
     return candidates
 
 
@@ -202,9 +209,19 @@ def open_python_installer(log: Callable[[str], None]) -> None:
     subprocess.Popen([str(installer_path)], creationflags=creationflags())
 
 
+def confirm_python_download() -> bool:
+    print("Python 3.13 installer will be downloaded from:")
+    print(PYTHON_313_INSTALLER_URL)
+    answer = input("Continue with the download? [y/N]: ").strip().lower()
+    return answer in {"y", "yes"}
+
+
 def open_git_installer(log: Callable[[str], None]) -> None:
-    log("Opening Git for Windows download page.")
-    webbrowser.open(GIT_FOR_WINDOWS_URL)
+    installer_path = Path(tempfile.gettempdir()) / Path(urllib.parse.urlparse(GIT_FOR_WINDOWS_URL).path).name
+    log("Downloading Git for Windows installer from GitHub...")
+    download_file(GIT_FOR_WINDOWS_URL, installer_path, log)
+    log("Opening Git for Windows installer.")
+    subprocess.Popen([str(installer_path)], creationflags=creationflags())
 
 
 def ensure_git_available() -> None:
@@ -229,12 +246,20 @@ def create_virtual_environment(project_dir: Path, python_command: str, log: Call
     return venv_python
 
 
-def install_requirements(project_dir: Path, venv_python: Path, log: Callable[[str], None]) -> None:
+def install_requirements(
+    project_dir: Path,
+    venv_python: Path,
+    log: Callable[[str], None],
+    upgrade_requirements: bool = False,
+) -> None:
     requirements = project_dir / "requirements.txt"
     if not requirements.exists():
         raise InstallerError(f"requirements.txt was not found in {project_dir}.")
     run_logged([str(venv_python), "-m", "pip", "install", "--upgrade", "pip"], project_dir, log)
-    run_logged([str(venv_python), "-m", "pip", "install", "-r", "requirements.txt"], project_dir, log)
+    command = [str(venv_python), "-m", "pip", "install"]
+    if upgrade_requirements:
+        command.append("-U")
+    run_logged([*command, "-r", "requirements.txt"], project_dir, log)
 
 
 def check_compiled_extensions(project_dir: Path, venv_python: Path, log: Callable[[str], None]) -> None:
@@ -279,9 +304,9 @@ def create_links(project_dir: Path, venv_python: Path, log: Callable[[str], None
     icon_text = str(icon) if icon.exists() else f"{venv_python},0"
     python_icon = f"{venv_python},0"
 
-    for folder in (project_dir, desktop_path()):
-        create_shortcut(folder / "BrightEyesMCS.lnk", run_bat, icon_text, project_dir, log)
-        create_shortcut(folder / "Python (.venv BrightEyesMCS).lnk", enter_bat, python_icon, project_dir, log)
+    folder = desktop_path()
+    create_shortcut(folder / "BrightEyesMCS.lnk", run_bat, icon_text, project_dir, log)
+    create_shortcut(folder / "Python (.venv BrightEyesMCS).lnk", enter_bat, python_icon, project_dir, log)
 
 
 def github_default_branch(api_url: str, fallback: str, log: Callable[[str], None]) -> str:
@@ -481,6 +506,16 @@ def source_tree_exists(project_dir: Path) -> bool:
     return (project_dir / "requirements.txt").exists() and (project_dir / "brighteyes_mcs").exists()
 
 
+def source_or_checkout_exists(project_dir: Path) -> bool:
+    return source_tree_exists(project_dir) or (project_dir / ".git").exists()
+
+
+def project_source_dir(selected_folder: Path) -> Path:
+    if selected_folder.name.lower() == REPO_FOLDER_NAME.lower() or source_or_checkout_exists(selected_folder):
+        return selected_folder
+    return selected_folder / REPO_FOLDER_NAME
+
+
 def prepare_source(
     project_dir: Path,
     branch: str | None,
@@ -539,13 +574,14 @@ def install_project(
     source_commit: str | None,
     stash_local: bool,
     log: Callable[[str], None],
+    upgrade_requirements: bool = False,
 ) -> None:
     project_dir = project_dir.resolve()
     if source_branch is not None or source_commit is not None or not source_tree_exists(project_dir):
         prepare_source(project_dir, source_branch, source_commit, stash_local, log)
     selected_python = select_python(python_command)
     venv_python = create_virtual_environment(project_dir, selected_python, log)
-    install_requirements(project_dir, venv_python, log)
+    install_requirements(project_dir, venv_python, log, upgrade_requirements)
     check_compiled_extensions(project_dir, venv_python, log)
     if create_desktop_links:
         create_links(project_dir, venv_python, log)
@@ -578,6 +614,7 @@ def cli_update(args: argparse.Namespace) -> None:
         None,
         args.stash_local,
         log_print,
+        upgrade_requirements=True,
     )
 
 
@@ -591,6 +628,13 @@ def cli_links(args: argparse.Namespace) -> None:
 
 def cli_firmware(args: argparse.Namespace) -> None:
     download_firmware(Path(args.path).resolve(), args.firmware_branch, log_print)
+
+
+def cli_python_link(_args: argparse.Namespace) -> None:
+    if not confirm_python_download():
+        log_print("Python 3.13 download cancelled.")
+        return
+    open_python_installer(log_print)
 
 
 def cli_pythons(_args: argparse.Namespace) -> None:
@@ -617,16 +661,17 @@ class InstallerApp(tk.Tk):
         self.worker: threading.Thread | None = None
         self.python_candidates = discover_python_candidates()
         self.source_commit_items: list[CommitCandidate] = []
+        self.is_busy = False
 
-        self.project_dir_var = tk.StringVar(value=str(Path.cwd()))
+        self.project_dir_var = tk.StringVar(value=str(desktop_path() / "BrightEyes"))
         self.python_var = tk.StringVar(value=best_python_313() or "")
         self.source_branch_var = tk.StringVar(value="main")
         self.source_commit_var = tk.StringVar(value="")
         self.firmware_branch_var = tk.StringVar(value="main")
         self.create_links_var = tk.BooleanVar(value=True)
-        self.download_firmware_var = tk.BooleanVar(value=True)
         self.stash_local_var = tk.BooleanVar(value=False)
         self.status_var = tk.StringVar(value="")
+        self.project_dir_var.trace_add("write", self.on_project_dir_changed)
 
         self._build_ui()
         self.after(100, self._drain_log_queue)
@@ -641,39 +686,67 @@ class InstallerApp(tk.Tk):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         root.columnconfigure(1, weight=1)
-        root.rowconfigure(7, weight=1)
+        root.rowconfigure(4, weight=1)
 
         ttk.Label(root, text="BrightEyes-MCS installer", font=("", 14, "bold")).grid(
             row=0, column=0, columnspan=3, sticky="w", pady=(0, 12)
         )
 
-        ttk.Label(root, text="Project folder").grid(row=1, column=0, sticky="w")
+        ttk.Label(root, text="Destination Folder").grid(row=1, column=0, sticky="w")
         ttk.Entry(root, textvariable=self.project_dir_var).grid(row=1, column=1, sticky="ew", padx=(8, 8))
         ttk.Button(root, text="Browse", command=self.browse_project_dir).grid(row=1, column=2, sticky="e")
+        ttk.Label(root, textvariable=self.status_var).grid(row=2, column=0, columnspan=2, sticky="w", pady=(6, 0))
+        ttk.Button(root, text="Refresh", command=self.refresh_status).grid(row=2, column=2, sticky="e", pady=(6, 0))
 
-        ttk.Label(root, text="Python 3.13").grid(row=2, column=0, sticky="w", pady=(8, 0))
+        notebook = ttk.Notebook(root)
+        notebook.grid(row=3, column=0, columnspan=3, sticky="nsew", pady=(12, 0))
+
+        prereq = ttk.Frame(notebook, padding=12)
+        setup = ttk.Frame(notebook, padding=12)
+        firmware = ttk.Frame(notebook, padding=12)
+        notebook.add(prereq, text="Prerequisites")
+        notebook.add(setup, text="Install/Update")
+        notebook.add(firmware, text="Firmware")
+
+        prereq.columnconfigure(1, weight=1)
+        ttk.Label(prereq, text="Python 3.13").grid(row=0, column=0, sticky="w")
         values = [self._python_label(candidate) for candidate in self.python_candidates]
-        self.python_box = ttk.Combobox(root, values=values, state="normal")
-        self.python_box.grid(row=2, column=1, sticky="ew", padx=(8, 8), pady=(8, 0))
+        self.python_box = ttk.Combobox(prereq, values=values, state="normal")
+        self.python_box.grid(row=0, column=1, sticky="ew", padx=(8, 8))
         self.python_box.bind("<<ComboboxSelected>>", self.select_python_from_label)
         if self.python_var.get():
             self.python_box.set(self.python_label_for_command(self.python_var.get()))
-        ttk.Button(root, text="Install Python 3.13", command=self.install_python_button).grid(
-            row=2, column=2, sticky="e", pady=(8, 0)
+        ttk.Button(prereq, text="Check Python", command=self.refresh_python_candidates).grid(
+            row=0, column=2, sticky="e"
         )
-        ttk.Label(root, text=f"Python link: {PYTHON_313_INSTALLER_URL}").grid(
-            row=3, column=1, columnspan=2, sticky="w", padx=(8, 0), pady=(4, 0)
+        ttk.Label(prereq, text=f"Python link: {PYTHON_313_INSTALLER_URL}").grid(
+            row=1, column=1, sticky="w", padx=(8, 8), pady=(8, 0)
+        )
+        self.install_python_gui_button = ttk.Button(
+            prereq,
+            text="Install Python 3.13",
+            command=self.install_python_button,
+        )
+        self.install_python_gui_button.grid(row=1, column=2, sticky="e", pady=(8, 0))
+        ttk.Label(prereq, text="Git for Windows").grid(row=2, column=0, sticky="w", pady=(16, 0))
+        ttk.Label(prereq, text=f"Git link: {GIT_FOR_WINDOWS_URL}").grid(
+            row=2, column=1, sticky="w", padx=(8, 8), pady=(16, 0)
+        )
+        self.install_git_gui_button = ttk.Button(prereq, text="Install Git", command=self.install_git_button)
+        self.install_git_gui_button.grid(row=2, column=2, sticky="e", pady=(16, 0))
+        ttk.Button(prereq, text="Refresh checks", command=self.refresh_status).grid(
+            row=3, column=2, sticky="e", pady=(16, 0)
         )
 
-        source = ttk.LabelFrame(root, text="BrightEyes-MCS source", padding=10)
-        source.grid(row=4, column=0, columnspan=3, sticky="ew", pady=(12, 0))
+        source = ttk.LabelFrame(setup, text="BrightEyes-MCS source", padding=10)
+        source.grid(row=0, column=0, sticky="ew")
+        setup.columnconfigure(0, weight=1)
         source.columnconfigure(1, weight=1)
         ttk.Label(source, text="Branch").grid(row=0, column=0, sticky="w")
         self.source_branch_box = ttk.Combobox(source, textvariable=self.source_branch_var, state="normal", width=28)
         self.source_branch_box.grid(row=0, column=1, sticky="w", padx=(8, 8))
         self.source_branch_box.bind("<<ComboboxSelected>>", self.on_source_branch_changed)
         ttk.Button(source, text="Refresh branches", command=self.refresh_source_branches).grid(row=0, column=2, padx=(0, 8))
-        ttk.Button(source, text="Install Git", command=self.install_git_button).grid(row=0, column=3)
         ttk.Label(source, text="Commit").grid(row=1, column=0, sticky="w", pady=(8, 0))
         ttk.Entry(source, textvariable=self.source_commit_var).grid(row=1, column=1, sticky="ew", padx=(8, 8), pady=(8, 0))
         ttk.Button(source, text="Use branch head", command=self.clear_source_commit).grid(row=1, column=2, padx=(0, 8), pady=(8, 0))
@@ -688,40 +761,37 @@ class InstallerApp(tk.Tk):
         commit_scroll = ttk.Scrollbar(commit_frame, command=self.source_commit_list.yview)
         commit_scroll.grid(row=0, column=1, sticky="ns")
         self.source_commit_list.configure(yscrollcommand=commit_scroll.set)
-        ttk.Label(source, text=f"Git link: {GIT_FOR_WINDOWS_URL}").grid(
-            row=3, column=1, columnspan=3, sticky="w", padx=(8, 0), pady=(4, 0)
-        )
 
-        options = ttk.LabelFrame(root, text="Options", padding=10)
-        options.grid(row=5, column=0, columnspan=3, sticky="ew", pady=(12, 0))
-        options.columnconfigure(2, weight=1)
-        ttk.Checkbutton(options, text="Create links", variable=self.create_links_var).grid(row=0, column=0, sticky="w")
-        ttk.Checkbutton(options, text="Download firmware", variable=self.download_firmware_var).grid(
-            row=0, column=1, sticky="w", padx=(16, 0)
-        )
-        ttk.Label(options, text="Firmware branch").grid(row=0, column=2, sticky="e", padx=(16, 8))
-        self.branch_box = ttk.Combobox(options, textvariable=self.firmware_branch_var, state="normal", width=24)
-        self.branch_box.grid(row=0, column=3, sticky="w")
-        ttk.Button(options, text="Refresh branches", command=self.refresh_firmware_branches).grid(
-            row=0, column=4, padx=(8, 0)
+        options = ttk.LabelFrame(setup, text="Options", padding=10)
+        options.grid(row=1, column=0, sticky="ew", pady=(12, 0))
+        ttk.Checkbutton(options, text="Create links on desktop", variable=self.create_links_var).grid(
+            row=0, column=0, sticky="w"
         )
         ttk.Checkbutton(options, text="Stash non-cfg local changes on update", variable=self.stash_local_var).grid(
-            row=1, column=0, columnspan=3, sticky="w", pady=(8, 0)
+            row=0, column=1, sticky="w", padx=(16, 0)
         )
 
-        actions = ttk.Frame(root)
-        actions.grid(row=6, column=0, columnspan=3, sticky="ew", pady=(12, 0))
-        self.install_button = ttk.Button(actions, text="Install / repair", command=self.install_button_clicked)
+        actions = ttk.LabelFrame(setup, text="Actions", padding=10)
+        actions.grid(row=2, column=0, sticky="ew", pady=(12, 0))
+        self.install_button = ttk.Button(actions, text="Install BrightEyes-MCS", command=self.install_button_clicked)
         self.install_button.grid(row=0, column=0)
-        self.update_button = ttk.Button(actions, text="Update selected source", command=self.update_button_clicked)
+        self.update_button = ttk.Button(actions, text="Update BrightEyes-MCS", command=self.update_button_clicked)
         self.update_button.grid(row=0, column=1, padx=(8, 0))
-        self.firmware_button = ttk.Button(actions, text="Download firmware now", command=self.firmware_button_clicked)
-        self.firmware_button.grid(row=0, column=2, padx=(8, 0))
         self.links_button = ttk.Button(actions, text="Create links now", command=self.links_button_clicked)
-        self.links_button.grid(row=0, column=3, padx=(8, 0))
+        self.links_button.grid(row=0, column=2, padx=(8, 0))
+
+        firmware.columnconfigure(1, weight=1)
+        ttk.Label(firmware, text="Firmware branch").grid(row=0, column=0, sticky="w")
+        self.branch_box = ttk.Combobox(firmware, textvariable=self.firmware_branch_var, state="normal", width=28)
+        self.branch_box.grid(row=0, column=1, sticky="w", padx=(8, 8))
+        ttk.Button(firmware, text="Refresh branches", command=self.refresh_firmware_branches).grid(
+            row=0, column=2, sticky="e"
+        )
+        self.firmware_button = ttk.Button(firmware, text="Download firmware now", command=self.firmware_button_clicked)
+        self.firmware_button.grid(row=1, column=2, sticky="e", pady=(12, 0))
 
         log_frame = ttk.Frame(root)
-        log_frame.grid(row=7, column=0, columnspan=3, sticky="nsew", pady=(12, 0))
+        log_frame.grid(row=4, column=0, columnspan=3, sticky="nsew", pady=(12, 0))
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(0, weight=1)
         self.log_text = tk.Text(log_frame, height=16, wrap="word", state="disabled")
@@ -730,15 +800,10 @@ class InstallerApp(tk.Tk):
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.log_text.configure(yscrollcommand=scrollbar.set)
 
-        footer = ttk.Frame(root)
-        footer.grid(row=8, column=0, columnspan=3, sticky="ew", pady=(12, 0))
-        footer.columnconfigure(0, weight=1)
-        ttk.Label(footer, textvariable=self.status_var).grid(row=0, column=0, sticky="w")
-        ttk.Button(footer, text="Refresh", command=self.refresh_status).grid(row=0, column=1)
-
     def _python_label(self, candidate: PythonCandidate) -> str:
         version = ".".join(str(part) for part in candidate.version) if candidate.version else "unknown"
-        return f"{version}  {candidate.command}"
+        suffix = "  [venv]" if is_venv_python(candidate.command) else ""
+        return f"{version}  {candidate.command}{suffix}"
 
     def python_label_for_command(self, command: str) -> str:
         for candidate in self.python_candidates:
@@ -755,10 +820,13 @@ class InstallerApp(tk.Tk):
         self.python_var.set(text.strip())
 
     def browse_project_dir(self) -> None:
-        selected = filedialog.askdirectory(title="Choose BrightEyes-MCS folder")
+        selected = filedialog.askdirectory(title="Choose BrightEyes install folder")
         if selected:
             self.project_dir_var.set(selected)
             self.refresh_status()
+
+    def on_project_dir_changed(self, *_args: object) -> None:
+        self.refresh_status()
 
     def log(self, message: str) -> None:
         self.log_queue.put(f"[{time.strftime('%H:%M:%S')}] {message}")
@@ -776,12 +844,40 @@ class InstallerApp(tk.Tk):
         self.after(100, self._drain_log_queue)
 
     def set_busy(self, busy: bool) -> None:
+        self.is_busy = busy
         state = "disabled" if busy else "normal"
-        for button in (self.install_button, self.update_button, self.firmware_button, self.links_button):
+        for button in (
+            self.install_python_gui_button,
+            self.install_git_gui_button,
+            self.firmware_button,
+        ):
             button.configure(state=state)
+        self.update_setup_button_states()
+
+    def update_setup_button_states(self) -> None:
+        if self.is_busy:
+            self.install_button.configure(state="disabled")
+            self.update_button.configure(state="disabled")
+            self.links_button.configure(state="disabled")
+            return
+        project_dir = project_source_dir(Path(self.project_dir_var.get()).expanduser())
+        source_exists = source_or_checkout_exists(project_dir)
+        self.install_button.configure(state="disabled" if source_exists else "normal")
+        self.update_button.configure(state="normal" if source_exists else "disabled")
+        self.links_button.configure(state="normal" if source_exists else "disabled")
+
+    def refresh_python_candidates(self) -> None:
+        self.python_candidates = discover_python_candidates()
+        values = [self._python_label(candidate) for candidate in self.python_candidates]
+        self.python_box.configure(values=values)
+        selected = best_python_313()
+        if selected:
+            self.python_var.set(selected)
+            self.python_box.set(self.python_label_for_command(selected))
+        self.refresh_status()
 
     def refresh_status(self) -> None:
-        project_dir = Path(self.project_dir_var.get())
+        project_dir = project_source_dir(Path(self.project_dir_var.get()).expanduser())
         python_text = "Python 3.13 found" if best_python_313() else "Python 3.13 not found"
         if shutil.which("git"):
             git_text = "Git found"
@@ -790,6 +886,7 @@ class InstallerApp(tk.Tk):
         checkout_text = "git checkout" if (project_dir / ".git").exists() else "no .git"
         venv_text = ".venv found" if (project_dir / ".venv" / "Scripts" / "python.exe").exists() else "no .venv"
         self.status_var.set(f"{python_text}; {git_text}; {checkout_text}; {venv_text}")
+        self.update_setup_button_states()
 
     def refresh_source_branches(self) -> None:
         def work() -> None:
@@ -895,12 +992,30 @@ class InstallerApp(tk.Tk):
         return self.python_var.get().strip() or self.python_box.get().strip() or None
 
     def selected_project_dir(self) -> Path:
-        return Path(self.project_dir_var.get()).expanduser().resolve()
+        return project_source_dir(Path(self.project_dir_var.get()).expanduser()).resolve()
 
     def install_python_button(self) -> None:
+        confirmed = messagebox.askyesno(
+            APP_NAME,
+            "Python 3.13 will be downloaded from python.org.\n\n"
+            f"{PYTHON_313_INSTALLER_URL}\n\n"
+            "Do you want to continue?",
+        )
+        if not confirmed:
+            self.log("Python 3.13 download cancelled.")
+            return
         self.run_background("Install Python 3.13", lambda: open_python_installer(self.log))
 
     def install_git_button(self) -> None:
+        confirmed = messagebox.askyesno(
+            APP_NAME,
+            "Git for Windows will be downloaded from GitHub.\n\n"
+            f"{GIT_FOR_WINDOWS_URL}\n\n"
+            "Do you want to continue?",
+        )
+        if not confirmed:
+            self.log("Git for Windows download cancelled.")
+            return
         self.run_background("Install Git for Windows", lambda: open_git_installer(self.log))
 
     def install_button_clicked(self) -> None:
@@ -910,7 +1025,7 @@ class InstallerApp(tk.Tk):
                 self.selected_project_dir(),
                 self.selected_python(),
                 self.create_links_var.get(),
-                self.firmware_branch_var.get() if self.download_firmware_var.get() else None,
+                None,
                 self.source_branch_var.get(),
                 self.source_commit_var.get(),
                 self.stash_local_var.get(),
@@ -932,11 +1047,12 @@ class InstallerApp(tk.Tk):
                 project_dir,
                 self.selected_python(),
                 self.create_links_var.get(),
-                self.firmware_branch_var.get() if self.download_firmware_var.get() else None,
+                None,
                 None,
                 None,
                 self.stash_local_var.get(),
                 self.log,
+                upgrade_requirements=True,
             )
 
         self.run_background("Update BrightEyes-MCS", work)
@@ -998,7 +1114,7 @@ def build_parser() -> argparse.ArgumentParser:
     links.set_defaults(func=cli_links)
 
     python_link = subparsers.add_parser("python-link", help="Download and open the Python 3.13 installer")
-    python_link.set_defaults(func=lambda _args: open_python_installer(log_print))
+    python_link.set_defaults(func=cli_python_link)
 
     pythons = subparsers.add_parser("pythons", help="List detected Python installations")
     pythons.set_defaults(func=cli_pythons)

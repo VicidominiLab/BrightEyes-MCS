@@ -7,6 +7,7 @@ echo This opens the standalone stdlib GUI. For CLI usage run:
 echo   python brighteyes_mcs_installer.py install --help
 echo.
 
+cd /d "%~dp0\installer"
 python brighteyes_mcs_installer.py gui
 if errorlevel 1 (
     echo.
