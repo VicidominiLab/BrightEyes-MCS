@@ -69,7 +69,7 @@
         <mxCell id="HVqlwzRy5CUrB4Z_jReI-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="HVqlwzRy5CUrB4Z_jReI-20" target="HVqlwzRy5CUrB4Z_jReI-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="HVqlwzRy5CUrB4Z_jReI-20" value="&lt;code&gt;SpadFCSManager&lt;br&gt;&lt;/code&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+        <mxCell id="HVqlwzRy5CUrB4Z_jReI-20" value="&lt;code&gt;McsManager&lt;br&gt;&lt;/code&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="533.5" y="680" width="121" height="95" as="geometry" />
         </mxCell>
         <mxCell id="HVqlwzRy5CUrB4Z_jReI-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="HVqlwzRy5CUrB4Z_jReI-22" target="HVqlwzRy5CUrB4Z_jReI-20" edge="1">

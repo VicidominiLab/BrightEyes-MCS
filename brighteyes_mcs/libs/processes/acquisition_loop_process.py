@@ -1,4 +1,4 @@
-﻿"""Acquisition worker that converts FIFO payloads into preview images, traces, and HDF5 writes."""
+"""Acquisition worker that converts FIFO payloads into preview images, traces, and HDF5 writes."""
 
 import multiprocessing as mp
 import os
@@ -93,6 +93,73 @@ def decode_pointer_list(pointer_start, gap, timebinsPerPixel, shape, snake_walk_
         list_z_digital = list_z_digital % shape[2]
 
     return list_b_digital, list_x_digital, list_y_digital, list_z_digital, list_rep_digital
+
+
+def build_pointer_frame_lookup(timebinsPerPixel, shape, snake_walk_xy=False, snake_walk_z=False, clk_multiplier=1):
+    """
+    Precompute one frame worth of decoded pointer coordinates.
+    """
+    samples_per_frame = int(timebinsPerPixel) * int(shape[0]) * int(shape[1]) * int(shape[2])
+    return decode_pointer_list(
+        0,
+        samples_per_frame,
+        timebinsPerPixel,
+        shape,
+        snake_walk_xy=snake_walk_xy,
+        snake_walk_z=snake_walk_z,
+        clk_multiplier=clk_multiplier,
+    )
+
+
+def aggregate_samples_by_pixel(
+    pointer_start,
+    gap,
+    timebinsPerPixel,
+    shape,
+    values,
+    frame_lookup=None,
+    snake_walk_xy=False,
+    snake_walk_z=False,
+    clk_multiplier=1,
+    delay=0,
+    need_z=True,
+):
+    """
+    Collapse consecutive time-bin samples into per-pixel sums.
+    """
+    values = np.asarray(values)
+    if gap <= 0 or values.shape[0] == 0:
+        empty = np.empty(0, dtype=np.int32)
+        grouped_shape = (0,) + values.shape[1:]
+        return empty, empty, empty, empty, np.empty(grouped_shape, dtype=values.dtype)
+
+    list_b, list_x, list_y, list_z, list_rep = decode_pointer_list(
+        pointer_start,
+        gap,
+        timebinsPerPixel,
+        shape,
+        snake_walk_xy=snake_walk_xy,
+        snake_walk_z=snake_walk_z,
+        clk_multiplier=clk_multiplier,
+        delay=delay,
+    )
+
+    coordinates = np.stack((list_rep, list_z, list_y, list_x), axis=1)
+    group_start_mask = np.empty(gap, dtype=bool)
+    group_start_mask[0] = True
+    group_start_mask[1:] = np.any(coordinates[1:] != coordinates[:-1], axis=1)
+    group_starts = np.nonzero(group_start_mask)[0]
+
+    grouped = np.add.reduceat(values, group_starts, axis=0).astype(values.dtype, copy=False)
+    grouped_z = list_z[group_starts] if need_z else np.zeros(group_starts.shape[0], dtype=np.int32)
+
+    return (
+        list_x[group_starts].astype(np.int32, copy=False),
+        list_y[group_starts].astype(np.int32, copy=False),
+        grouped_z.astype(np.int32, copy=False),
+        list_rep[group_starts].astype(np.int32, copy=False),
+        grouped,
+    )
 
 
 def circular_mean_std(weights):
@@ -298,7 +365,7 @@ def accumulate_unordered_sum_4d(dst, list_y, list_x, list_b, values):
 class AcquisitionLoopProcess(mp.Process):
     def __init__(
             self,
-            channels,
+            spad_channels,
             shared_objects,
             do_not_save,
             data_queue,
@@ -317,17 +384,17 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.DATA_WORDS_PER_SAMPLE_ANALOG = 1
 
-        if channels == 25:
-            print_debug("Found 25 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
-            self.channels = 25
+        if spad_channels == 25:
+            print_debug("Found 25 SPAD channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
+            self.spad_channels = 25
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 2
-        elif channels == 49:
-            print_debug("Found 49 channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 8")
-            self.channels = 49
+        elif spad_channels == 49:
+            print_debug("Found 49 SPAD channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 8")
+            self.spad_channels = 49
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 8
         else:
-            print_debug("Found NOT STANDARD NUMBER OF CHANNELS FALLBACK TO DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
-            self.channels = 25
+            print_debug("Found non-standard SPAD channel count FALLBACK TO DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
+            self.spad_channels = 25
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 2
 
         self.shm_activated_fifos_list = shared_objects["activated_fifos_list"]
@@ -390,7 +457,7 @@ class AcquisitionLoopProcess(mp.Process):
         self.shared_dict = shared_dict
 
         self.shape = shared_dict["shape"]
-        self.channels = shared_dict["channels"]
+        self.spad_channels = shared_dict["spad_channels"]
         self.channels_extra = 2
 
         self.current_pointer_in_sample_digital = 0
@@ -410,15 +477,15 @@ class AcquisitionLoopProcess(mp.Process):
         self.buffer_size_in_words_digital = self.timebinsPerPixel * self.preview_buffer_capacity_samples_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL
         self.buffer_size_in_words_analog = self.timebinsPerPixel * self.preview_buffer_capacity_samples_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG
 
-        if self.channels == 25:
+        if self.spad_channels == 25:
             self.buffer_digital = np.zeros((self.buffer_size_in_words_digital, 25 + 2), dtype=np.uint64)
             self.saturation = np.zeros(25 + 2, dtype=np.uint64)
-            self.buffer_sum_SPAD_ch = np.zeros(self.buffer_size_in_words_digital, dtype=np.uint64)
+            self.spad_channel_sum_buffer = np.zeros(self.buffer_size_in_words_digital, dtype=np.uint64)
 
-        if self.channels == 49:
+        if self.spad_channels == 49:
             self.buffer_digital = np.zeros((self.buffer_size_in_words_digital, 49 + 2), dtype=np.uint64)
             self.saturation = np.zeros(49 + 2, dtype=np.uint64)
-            self.buffer_sum_SPAD_ch = np.zeros(self.buffer_size_in_words_digital, dtype=np.uint64)
+            self.spad_channel_sum_buffer = np.zeros(self.buffer_size_in_words_digital, dtype=np.uint64)
 
         self.buffer_analog = np.zeros((self.buffer_size_in_words_analog, 2), dtype=np.int32)
 
@@ -535,7 +602,7 @@ class AcquisitionLoopProcess(mp.Process):
 
             if "FIFO" in self.shm_activated_fifos_list:
                 self.h5mgr.init_dataset(
-                    "data", self.shape, self.timebinsPerPixel // self.clk_multiplier, self.channels, np.uint16
+                    "data", self.shape, self.timebinsPerPixel // self.clk_multiplier, self.spad_channels, np.uint16
                 )
                 self.h5mgr.init_dataset(
                     "data_channels_extra",
@@ -559,7 +626,7 @@ class AcquisitionLoopProcess(mp.Process):
                     self.shape[1],
                     self.shape[0],
                     self.timebinsPerPixel // self.clk_multiplier,  # clk_multiplier can be != 1 only when DFD is active
-                    self.channels,
+                    self.spad_channels,
                 ),
                 dtype="uint16",
             )
@@ -645,14 +712,14 @@ class AcquisitionLoopProcess(mp.Process):
         self.update_dictionary_slowly(0.1)
 
         # This seams redundant but it is for optimize the performances
-        channels = self.channels
-        channels_y = int(sqrt(self.channels))
-        channels_x = channels_y
-        print_debug("Channels ", channels, channels_x, channels_y)
+        spad_channels = self.spad_channels
+        spad_channels_y = int(sqrt(self.spad_channels))
+        spad_channels_x = spad_channels_y
+        print_debug("SPAD channels", spad_channels, spad_channels_x, spad_channels_y)
 
-        if channels == 25:
+        if spad_channels == 25:
             converter = convertRawDataToCountsDirect
-        if channels == 49:
+        if spad_channels == 49:
             converter = convertRawDataToCountsDirect49
 
         clk_multiplier = self.clk_multiplier
@@ -889,7 +956,7 @@ class AcquisitionLoopProcess(mp.Process):
                                     start = 0,
                                     stop = self.gap_digital_in_sample * self.DATA_WORDS_PER_SAMPLE_DIGITAL,
                                     buffer_out = self.buffer_digital,
-                                    buffer_sum = self.buffer_sum_SPAD_ch,
+                                    buffer_sum = self.spad_channel_sum_buffer,
                                     fingerprint_saturation = self.saturation,
                                     mask = self.fingerprint_mask,
                                 )
@@ -903,7 +970,7 @@ class AcquisitionLoopProcess(mp.Process):
 
                         if buffer_up_to_gap_digital.size != 0:
                             if isinstance(selected_channel, int):
-                                if (selected_channel < (channels + 2)):
+                                if (selected_channel < (spad_channels + 2)):
                                     if (self.activate_show_preview == True):
                                         self.image_xy_lock.acquire()
                                         self.image_xy[list_y_digital, list_x_digital] = 0
@@ -956,7 +1023,7 @@ class AcquisitionLoopProcess(mp.Process):
                                     np.add.at(
                                         self.image_xy,
                                         (list_y_digital, list_x_digital),
-                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample],
+                                        self.spad_channel_sum_buffer[: self.gap_digital_in_sample],
                                     )
                                     self.image_xy_lock.release()
 
@@ -968,7 +1035,7 @@ class AcquisitionLoopProcess(mp.Process):
                                     np.add.at(
                                         self.image_zy,
                                         (list_y_digital[cond_x_central], list_z_digital[cond_x_central]),
-                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond_x_central],
+                                        self.spad_channel_sum_buffer[: self.gap_digital_in_sample][cond_x_central],
                                     )
                                     self.image_zy_lock.release()
 
@@ -980,18 +1047,18 @@ class AcquisitionLoopProcess(mp.Process):
                                     np.add.at(
                                         self.image_xz,
                                         (list_z_digital[cond_y_central], list_x_digital[cond_y_central]),
-                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond_y_central],
+                                        self.spad_channel_sum_buffer[: self.gap_digital_in_sample][cond_y_central],
                                     )
                                     self.image_xz_lock.release()
 
                                 if self.active_autocorrelation:
-                                    correlator.add(self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample])
+                                    correlator.add(self.spad_channel_sum_buffer[: self.gap_digital_in_sample])
                                     self.autocorrelation[
                                         1, :
                                     ] = correlator.get_correlation_normalized()
                                 if self.activate_trace:
                                     update_trace(
-                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample],
+                                        self.spad_channel_sum_buffer[: self.gap_digital_in_sample],
                                         list_b_digital,
                                     )
 
@@ -1039,23 +1106,23 @@ class AcquisitionLoopProcess(mp.Process):
                                         self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
                                         self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
 
-                                        if self.buffer_sum_SPAD_ch.shape[0] > 2:
+                                        if self.spad_channel_sum_buffer.shape[0] > 2:
                                             np.add.at(
                                                 self.image_xy_rgb[:, :, 0],
                                                 (list_y_digital[::3], list_x_digital[::3]),
-                                                self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample:3],
+                                                self.spad_channel_sum_buffer[: self.gap_digital_in_sample:3],
                                             )
 
                                             np.add.at(
                                                 self.image_xy_rgb[:, :, 1],
                                                 (list_y_digital[1::3], list_x_digital[1::3]),
-                                                self.buffer_sum_SPAD_ch[1: self.gap_digital_in_sample:3],
+                                                self.spad_channel_sum_buffer[1: self.gap_digital_in_sample:3],
                                             )
 
                                             np.add.at(
                                                 self.image_xy_rgb[:, :, 2],
                                                 (list_y_digital[2::3], list_x_digital[2::3]),
-                                                self.buffer_sum_SPAD_ch[2: self.gap_digital_in_sample:3],
+                                                self.spad_channel_sum_buffer[2: self.gap_digital_in_sample:3],
                                             )
 
                                         self.image_xy_rgb_lock.release()
@@ -1064,23 +1131,23 @@ class AcquisitionLoopProcess(mp.Process):
                                     self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
                                     self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
                                     self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
-                                    if self.buffer_sum_SPAD_ch.shape[0] > 2:
+                                    if self.spad_channel_sum_buffer.shape[0] > 2:
                                         np.add.at(
                                             self.image_xy_rgb[:, :, 0],
                                             (list_y_digital[::3], list_x_digital[::3]),
-                                            self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample:3],
+                                            self.spad_channel_sum_buffer[: self.gap_digital_in_sample:3],
                                         )
 
                                         np.add.at(
                                             self.image_xy_rgb[:, :, 1],
                                             (list_y_digital[1::3], list_x_digital[1::3]),
-                                            self.buffer_sum_SPAD_ch[1: self.gap_digital_in_sample:3],
+                                            self.spad_channel_sum_buffer[1: self.gap_digital_in_sample:3],
                                         )
 
                                         np.add.at(
                                             self.image_xy_rgb[:, :, 2],
                                             (list_y_digital[2::3], list_x_digital[2::3]),
-                                            self.buffer_sum_SPAD_ch[2: self.gap_digital_in_sample:3],
+                                            self.spad_channel_sum_buffer[2: self.gap_digital_in_sample:3],
                                         )
 
                                     self.image_xy_rgb_lock.release()
@@ -1095,13 +1162,13 @@ class AcquisitionLoopProcess(mp.Process):
                                     tbins = self.timebinsPerPixel
                                     gbins = tbins // tparts
 
-                                    if self.buffer_sum_SPAD_ch.shape[0] > 2:
+                                    if self.spad_channel_sum_buffer.shape[0] > 2:
                                         cond0 = list_b_digital < gbins
 
                                         np.add.at(
                                             self.image_xy_rgb[:, :, 0],
                                             (list_y_digital[::][cond0], list_x_digital[::][cond0]),
-                                            self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample:][cond0],
+                                            self.spad_channel_sum_buffer[: self.gap_digital_in_sample:][cond0],
                                         )
 
                                         cond0 = (list_b_digital >= gbins) & (list_b_digital < 2 * gbins)
@@ -1109,7 +1176,7 @@ class AcquisitionLoopProcess(mp.Process):
                                         np.add.at(
                                             self.image_xy_rgb[:, :, 1],
                                             (list_y_digital[::][cond0], list_x_digital[::][cond0]),
-                                            self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample:][cond0],
+                                            self.spad_channel_sum_buffer[: self.gap_digital_in_sample:][cond0],
                                         )
 
                                         cond0 = list_b_digital >= 2 * gbins
@@ -1117,7 +1184,7 @@ class AcquisitionLoopProcess(mp.Process):
                                         np.add.at(
                                             self.image_xy_rgb[:, :, 2],
                                             (list_y_digital[::][cond0], list_x_digital[::][cond0]),
-                                            self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample:][cond0],
+                                            self.spad_channel_sum_buffer[: self.gap_digital_in_sample:][cond0],
                                         )
 
                                     self.image_xy_rgb_lock.release()
@@ -1145,21 +1212,21 @@ class AcquisitionLoopProcess(mp.Process):
                                     np.add.at(
                                         self.image_xy_rgb[:, :, 0],
                                         (list_y_digital[cond0], list_x_digital[cond0]),
-                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond0],
+                                        self.spad_channel_sum_buffer[: self.gap_digital_in_sample][cond0],
                                     )
 
                                     cond0 = (list_b_digital >= gbins) & (list_b_digital < 2 * gbins)
                                     np.add.at(
                                         self.image_xy_rgb[:, :, 1],
                                         (list_y_digital[cond0], list_x_digital[cond0]),
-                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond0],
+                                        self.spad_channel_sum_buffer[: self.gap_digital_in_sample][cond0],
                                     )
 
                                     cond0 = list_b_digital >= 2 * gbins
                                     np.add.at(
                                         self.image_xy_rgb[:, :, 2],
                                         (list_y_digital[cond0], list_x_digital[cond0]),
-                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample][cond0],
+                                        self.spad_channel_sum_buffer[: self.gap_digital_in_sample][cond0],
                                     )
 
                                     touched_pixels = np.unique(
@@ -1215,13 +1282,13 @@ class AcquisitionLoopProcess(mp.Process):
                                     self.image_xy_hcl_lock.release()
 
                                 if self.active_autocorrelation:
-                                    correlator.add(self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample])
+                                    correlator.add(self.spad_channel_sum_buffer[: self.gap_digital_in_sample])
                                     self.autocorrelation[
                                         1, :
                                     ] = correlator.get_correlation_normalized()
                                 if self.activate_trace:
                                     update_trace(
-                                        self.buffer_sum_SPAD_ch[: self.gap_digital_in_sample],
+                                        self.spad_channel_sum_buffer[: self.gap_digital_in_sample],
                                         list_b_digital,
                                     )
 
@@ -1233,36 +1300,36 @@ class AcquisitionLoopProcess(mp.Process):
                                     list_y_digital,
                                     list_x_digital,
                                     list_b_digital,
-                                    buffer_up_to_gap_digital[:, :channels],
+                                    buffer_up_to_gap_digital[:, :spad_channels],
                                 )
                                 accumulate_unordered_sum_4d(
                                     self.buffer_for_save_digital_extra_ch,
                                     list_y_digital,
                                     list_x_digital,
                                     list_b_digital,
-                                    buffer_up_to_gap_digital[:, channels:],
+                                    buffer_up_to_gap_digital[:, spad_channels:],
                                 )
 
                                 # self.buffer_for_save_digital[
                                 #     list_y_digital, list_x_digital, list_b_digital, :
-                                # ] = buffer_up_to_gap_digital[:, :channels]
+                                # ] = buffer_up_to_gap_digital[:, :spad_channels]
                                 # self.buffer_for_save_digital_extra_ch[
                                 #     list_y_digital, list_x_digital, list_b_digital, :
-                                # ] = buffer_up_to_gap_digital[:, channels:]
+                                # ] = buffer_up_to_gap_digital[:, spad_channels:]
 
-                                # self.buffer_for_save_digital[list_y_digital, list_x_digital, list_b_digital] = buffer_up_to_gap_digital[:, :channels]
-                                # self.buffer_for_save_digital_extra_ch[list_y_digital, list_x_digital, list_b_digital] = buffer_up_to_gap_digital[:, channels:]
+                                # self.buffer_for_save_digital[list_y_digital, list_x_digital, list_b_digital] = buffer_up_to_gap_digital[:, :spad_channels]
+                                # self.buffer_for_save_digital_extra_ch[list_y_digital, list_x_digital, list_b_digital] = buffer_up_to_gap_digital[:, spad_channels:]
                                 #
                                 # np.add.at(
                                 #     self.buffer_for_save_digital,
                                 #     (list_y_digital, list_x_digital, list_b_digital),
-                                #     buffer_up_to_gap_digital[:, :channels],
+                                #     buffer_up_to_gap_digital[:, :spad_channels],
                                 # )
                                 #
                                 # np.add.at(
                                 #     self.buffer_for_save_digital_extra_ch,
                                 #     (list_y_digital, list_x_digital, list_b_digital),
-                                #     buffer_up_to_gap_digital[:, channels:],
+                                #     buffer_up_to_gap_digital[:, spad_channels:],
                                 # )
 
                                 # print_debug(
@@ -1280,14 +1347,14 @@ class AcquisitionLoopProcess(mp.Process):
                                 #     list_b_digital.max(),
                                 # )
 
-                            sum_tmp = buffer_up_to_gap_digital[:, :channels].sum(axis=0).reshape(channels_x, channels_y)
+                            sum_tmp = buffer_up_to_gap_digital[:, :spad_channels].sum(axis=0).reshape(spad_channels_x, spad_channels_y)
 
                             self.total_photon = np.sum(sum_tmp)
 
                             self.fingerprint[0, :, :] += sum_tmp
                             try:
-                                self.fingerprint[1, :, :] = buffer_up_to_gap_digital[-1, :channels].reshape(
-                                    channels_x, channels_y
+                                self.fingerprint[1, :, :] = buffer_up_to_gap_digital[-1, :spad_channels].reshape(
+                                    spad_channels_x, spad_channels_y
                                 )
                             except:
                                 print_debug("buffer_up_to_gap_digital", buffer_up_to_gap_digital)
@@ -1295,10 +1362,10 @@ class AcquisitionLoopProcess(mp.Process):
 
                             if self.gap_digital_in_sample > 10000:
                                 self.fingerprint[2, :, :] = (
-                                    self.buffer_digital[:10000, :channels].sum(axis=0).reshape(channels_x, channels_y)
+                                    self.buffer_digital[:10000, :spad_channels].sum(axis=0).reshape(spad_channels_x, spad_channels_y)
                                 )
 
-                            self.fingerprint[4, :, :] += self.saturation[:channels].reshape(channels_x, channels_y)
+                            self.fingerprint[4, :, :] += self.saturation[:spad_channels].reshape(spad_channels_x, spad_channels_y)
                             self.current_pointer_in_sample_digital += self.gap_digital_in_sample
                             self.shm_loc_previewed["FIFO"].value = self.current_pointer_in_sample_digital
                             # print_debug(self.current_pointer_in_sample_digital*2, self.gap_digital_in_sample*2, (self.current_pointer_in_sample_digital + self.gap_digital_in_sample)*2)

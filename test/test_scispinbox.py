@@ -6,14 +6,16 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(1, os.getcwd())
 
 from PySide6.QtGui import QValidator
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QDoubleSpinBox
 
 from brighteyes_mcs.gui.scispinbox import eng_string, sciSpinBox, value_eng_string
+from brighteyes_mcs.gui.qt_locale import install_scientific_locale
 
 
 class TestSciSpinBox(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        install_scientific_locale()
         cls.app = QApplication.instance() or QApplication([])
 
     def test_eng_string_and_value_eng_string_support_common_formats(self):
@@ -86,6 +88,35 @@ class TestSciSpinBox(unittest.TestCase):
         self.assertAlmostEqual(box.value(), 12.445, places=9)
         self.assertEqual(box.text(), "+12.445")
 
+    def test_step_by_tracks_integer_digit_before_decimal_separator(self):
+        box = sciSpinBox()
+        box.setDecimals(3)
+        box.setValue(12.345)
+        box.lineEdit().setCursorPosition(box.text().find("."))
+
+        box.stepBy(1)
+
+        self.assertAlmostEqual(box.value(), 13.345, places=9)
+        self.assertEqual(box.text(), "+13.345")
+
+    def test_step_by_tracks_each_integer_digit_at_cursor(self):
+        box = sciSpinBox()
+        box.setDecimals(3)
+        box.setValue(12.345)
+        box.lineEdit().setCursorPosition(1)
+        box.stepBy(1)
+        self.assertAlmostEqual(box.value(), 22.345, places=9)
+
+        box.setValue(12.345)
+        box.lineEdit().setCursorPosition(2)
+        box.stepBy(1)
+        self.assertAlmostEqual(box.value(), 22.345, places=9)
+
+        box.setValue(12.345)
+        box.lineEdit().setCursorPosition(3)
+        box.stepBy(1)
+        self.assertAlmostEqual(box.value(), 13.345, places=9)
+
     def test_value_parsing_and_step_by_keep_suffix_compatibility(self):
         box = sciSpinBox()
         box.setSuffix(" ns")
@@ -99,6 +130,33 @@ class TestSciSpinBox(unittest.TestCase):
 
         self.assertAlmostEqual(box.value(), 1.35, places=9)
         self.assertEqual(box.text(), "+1.35 ns")
+
+    def test_sci_spinbox_accepts_numpad_comma_but_formats_project_separator(self):
+        box = sciSpinBox()
+        box.setDecimals(2)
+
+        self.assertEqual(box.validate("1,25", 4)[0], QValidator.Acceptable)
+        self.assertAlmostEqual(box.valueFromText("1,25"), 1.25)
+        self.assertEqual(box.fixup("1,25"), "1.25")
+
+        box.setValue(box.valueFromText("1,25"))
+        self.assertEqual(box.text(), "+1.25")
+
+    def test_project_locale_formats_qdouble_spinbox_with_dot(self):
+        box = QDoubleSpinBox()
+        box.setDecimals(2)
+        box.setValue(1.5)
+
+        self.assertEqual(box.locale().decimalPoint(), ".")
+        self.assertEqual(box.text(), "1.50")
+
+    def test_sci_spinbox_uses_character_width_cursor(self):
+        box = sciSpinBox()
+
+        self.assertEqual(
+            box.lineEdit().characterCursorWidth(),
+            max(2, box.fontMetrics().horizontalAdvance("0")),
+        )
 
 
 if __name__ == "__main__":

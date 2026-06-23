@@ -99,7 +99,7 @@ Type conversion rules:
 
 ## `/configurationSpadFCSmanager.attrs`
 
-This group is written from `spadfcsmanager_inst.registers_configuration`.
+This group is written from `mcs_manager.registers_configuration`.
 It is the live register/configuration dictionary held by the acquisition manager
 after the FPGA registers have been read or set. The RAW converter uses this group
 for dimensions and timing metadata.
@@ -261,7 +261,7 @@ fresh at finalization and contains root attrs plus the metadata groups, but no
 | `enabled` | bool | RAW stream mode enabled. |
 | `digital_fifo_present` | bool | Digital FIFO was active. |
 | `analog_fifo_present` | bool | Analog FIFO was active. |
-| `digital_channels` | int | Digital detector channel count, usually 25 or 49. |
+| `digital_channels` | int | Digital/SPAD detector channel count, usually 25 or 49. |
 | `digital_words_per_sample` | int | Number of `uint64` raw words per digital sample: `2` for 25 channels, `8` for 49 channels. |
 | `analog_words_per_sample` | int | Number of `uint64` raw words per analog sample, currently `1`. |
 | `effective_timebins_per_pixel` | int | `#timebinsPerPixel * #circular_rep * #circular_points`. |

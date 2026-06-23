@@ -2,12 +2,18 @@ import importlib
 import multiprocessing as mp
 import queue
 import sys
+import tempfile
 import types
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
+import h5py
+import numpy as np
+
+from brighteyes_mcs.libs.raw_acquisition_converter import _detect_streams, _load_metadata
 from brighteyes_mcs.libs.processes.raw_stream_writer_process import RawStreamWriterProcess
-from brighteyes_mcs.libs.spad_fcs_manager import create_i64_counter
+from brighteyes_mcs.libs.mcs_manager import create_i64_counter
 
 
 class TestRawStreamLargeCounters(unittest.TestCase):
@@ -129,6 +135,42 @@ class TestRustFifoReaderConfiguration(unittest.TestCase):
 
         min_packets = [item["min_packet"] for item in captured]
         self.assertEqual(min_packets, [16, 32])
+
+
+class TestRawMetadataCompatibility(unittest.TestCase):
+    def test_raw_converter_reads_legacy_h5_metadata_names(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            metadata_filename = folder / "acquisition_only_metadata.h5"
+            raw_filename = folder / "acquisition_FIFO.raw"
+            np.zeros(2, dtype=np.uint64).tofile(raw_filename)
+
+            with h5py.File(metadata_filename, "w") as h5file:
+                mcs_cfg = h5file.create_group("configurationSpadFCSmanager")
+                mcs_cfg.attrs["#pixels"] = 1
+                mcs_cfg.attrs["#lines"] = 1
+                mcs_cfg.attrs["#frames"] = 1
+                mcs_cfg.attrs["#repetition"] = 2
+                mcs_cfg.attrs["#timebinsPerPixel"] = 1
+                mcs_cfg.attrs["#circular_rep"] = 1
+                mcs_cfg.attrs["#circular_points"] = 1
+                mcs_cfg.attrs["Cx"] = 40
+
+                h5file.create_group("configurationFPGA")
+
+                gui_cfg = h5file.create_group("configurationGUI")
+                gui_cfg.attrs["spad_number_of_channels"] = 25
+
+                raw_cfg = h5file.create_group("rawStreamAcquisition")
+                raw_cfg.attrs["digital_raw_file"] = str(raw_filename)
+                raw_cfg.attrs["digital_channels"] = 25
+                raw_cfg.attrs["digital_words_per_sample"] = 2
+
+            meta = _load_metadata(metadata_filename)
+            streams = _detect_streams(metadata_filename, meta)
+
+            self.assertEqual(meta["spad_channels_hint"], 25)
+            self.assertEqual(streams[0]["spad_channels"], 25)
 
 
 if __name__ == "__main__":

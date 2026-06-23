@@ -59,22 +59,22 @@ class TestMyClass(unittest.TestCase):
 
     def activateShowPreview_calls_activateShowPreview(self):
         instance = MyClass()
-        instance.spadfcsmanager_inst.activateShowPreview = MagicMock()
+        instance.mcs_manager.activateShowPreview = MagicMock()
 
         instance.activateShowPreview(True)
 
-        instance.spadfcsmanager_inst.activateShowPreview.assert_called_with(True)
+        instance.mcs_manager.activateShowPreview.assert_called_with(True)
 
     def activateFIFOflag_sets_fifo_flags(self):
         instance = MyClass()
         instance.ui.checkBox_fifo_digital.isChecked = MagicMock(return_value=True)
         instance.ui.checkBox_fifo_analog.isChecked = MagicMock(return_value=False)
-        instance.spadfcsmanager_inst.setActivatedFifo = MagicMock()
+        instance.mcs_manager.setActivatedFifo = MagicMock()
         instance.setRegistersDict = MagicMock()
 
         instance.activateFIFOflag()
 
-        instance.spadfcsmanager_inst.setActivatedFifo.assert_called_with(["FIFO"])
+        instance.mcs_manager.setActivatedFifo.assert_called_with(["FIFO"])
         instance.setRegistersDict.assert_called_with({
             "DFD_Activate": False,
             "activateFIFOAnalog": False,
@@ -102,11 +102,11 @@ class TestMyClass(unittest.TestCase):
         instance.ui.comboBox_view_projection.currentText = MagicMock(return_value="xy")
         instance.ui.checkBox_fcs_preview.isChecked = MagicMock(return_value=True)
         instance.ui.checkBox_trace_on.isChecked = MagicMock(return_value=False)
-        instance.spadfcsmanager_inst.update_shared_dict = MagicMock()
+        instance.mcs_manager.update_shared_dict = MagicMock()
 
         instance.updatePreviewConfiguration()
 
-        instance.spadfcsmanager_inst.update_shared_dict.assert_called_with({
+        instance.mcs_manager.update_shared_dict.assert_called_with({
             "proj": "xy",
             "channel": 1,
             "activate_autocorrelation": True,
@@ -129,7 +129,7 @@ class TestMyClass(unittest.TestCase):
         instance.ttm_activate_change_state = MagicMock()
         instance.ui.pushButton_acquisitionStart.setEnabled = MagicMock()
         instance.ui.pushButton_stop.setEnabled = MagicMock()
-        instance.spadfcsmanager_inst.is_connected = False
+        instance.mcs_manager.is_connected = False
         instance.connectFPGA = MagicMock()
         instance.updatePreviewConfiguration = MagicMock()
         instance.startAcquisition = MagicMock()
@@ -179,7 +179,7 @@ class TestMyClass(unittest.TestCase):
         instance.ui.spinBox_ny.setEnabled = MagicMock()
         instance.ui.spinBox_nframe.setEnabled = MagicMock()
         instance.ui.spinBox_nrepetition.setEnabled = MagicMock()
-        instance.spadfcsmanager_inst.is_connected = False
+        instance.mcs_manager.is_connected = False
         instance.connectFPGA = MagicMock()
         instance.positionSettingsChanged_apply = MagicMock()
         instance.temporalSettingsChanged = MagicMock()
@@ -201,16 +201,16 @@ class TestMyClass(unittest.TestCase):
         instance.ui.checkBox_fifo_analog.setStyleSheet = MagicMock()
         instance.ui.checkBox_fifo_digital.setStyleSheet = MagicMock()
         instance.ui.label_plot_channel.setText = MagicMock()
-        instance.spadfcsmanager_inst.read_shared_dict = MagicMock()
+        instance.mcs_manager.read_shared_dict = MagicMock()
 
         instance.projChanged()
 
         instance.ui.label_plot_channel.setText.assert_called_with("Ch. selected: XY")
-        instance.spadfcsmanager_inst.read_shared_dict.assert_called()
+        instance.mcs_manager.read_shared_dict.assert_called()
 
     def finalizeAcquisition_saves_metadata(self):
         instance = MyClass()
-        instance.spadfcsmanager_inst.shared_dict = {"filenameh5": "file.h5"}
+        instance.mcs_manager.shared_dict = {"filenameh5": "file.h5"}
         instance.ui.lineEdit_comment.toPlainText = MagicMock(return_value="comment")
         instance.ui.listWidget.addItem = MagicMock()
         instance.getGUI_data = MagicMock(return_value={})
@@ -224,10 +224,10 @@ class TestMyClass(unittest.TestCase):
             instance.finalizeAcquisition()
 
             mock_h5mgr.metadata_add_initial.assert_called_with("comment")
-            mock_h5mgr.metadata_add_dict.assert_any_call("configurationSpadFCSmanager", instance.spadfcsmanager_inst.registers_configuration)
+            mock_h5mgr.metadata_add_dict.assert_any_call("configurationSpadFCSmanager", instance.mcs_manager.registers_configuration)
             mock_h5mgr.metadata_add_dict.assert_any_call("configurationFPGA", instance.configurationFPGA_dict)
-            mock_h5mgr.metadata_add_dict.assert_any_call("configurationGUI", instance.getGUI_data())
-            mock_h5mgr.metadata_add_dict.assert_any_call("configurationGUI_beforeStart", instance.configurationGUI_dict_beforeStart)
+            mock_h5mgr.metadata_add_dict.assert_any_call("configurationGUI", instance._gui_config_for_h5(instance.getGUI_data()))
+            mock_h5mgr.metadata_add_dict.assert_any_call("configurationGUI_beforeStart", instance._gui_config_for_h5(instance.configurationGUI_dict_beforeStart))
             mock_h5mgr.metadata_add_thumbnail.assert_called()
             mock_h5mgr.close.assert_called()
 
@@ -254,18 +254,18 @@ class TestMyClass(unittest.TestCase):
     def stopAcquisition_stops_fpga(self):
         instance = MyClass()
         instance.sendCmdStop = MagicMock()
-        instance.spadfcsmanager_inst.stopPreview = MagicMock()
+        instance.mcs_manager.stopPreview = MagicMock()
         instance.timerPreviewImg.stop = MagicMock()
-        instance.spadfcsmanager_inst.stopFPGA = MagicMock()
-        instance.spadfcsmanager_inst.stopAcquisition = MagicMock()
+        instance.mcs_manager.stopFPGA = MagicMock()
+        instance.mcs_manager.stopAcquisition = MagicMock()
 
         instance.stopAcquisition()
 
         instance.sendCmdStop.assert_called()
-        instance.spadfcsmanager_inst.stopPreview.assert_called()
+        instance.mcs_manager.stopPreview.assert_called()
         instance.timerPreviewImg.stop.assert_called()
-        instance.spadfcsmanager_inst.stopFPGA.assert_called()
-        instance.spadfcsmanager_inst.stopAcquisition.assert_called()
+        instance.mcs_manager.stopFPGA.assert_called()
+        instance.mcs_manager.stopAcquisition.assert_called()
 
     def stop_resets_ui_elements(self):
         instance = MyClass()
@@ -302,8 +302,8 @@ class TestMyClass(unittest.TestCase):
 
     def getPreviewImage_returns_preview_image(self):
         instance = MyClass()
-        instance.spadfcsmanager_inst.shared_arrays_ready = True
-        instance.spadfcsmanager_inst.getPreviewImage = MagicMock(return_value="image")
+        instance.mcs_manager.shared_arrays_ready = True
+        instance.mcs_manager.getPreviewImage = MagicMock(return_value="image")
 
         result = instance.getPreviewImage()
 
@@ -312,7 +312,7 @@ class TestMyClass(unittest.TestCase):
     def getPreviewFlatData_returns_flat_data(self):
         instance = MyClass()
         instance.activeFile = False
-        instance.spadfcsmanager_inst.getPreviewFlatData = MagicMock(return_value="flat_data")
+        instance.mcs_manager.getPreviewFlatData = MagicMock(return_value="flat_data")
 
         result = instance.getPreviewFlatData()
 

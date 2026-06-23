@@ -393,4 +393,4 @@ Live LIFETIME_HSV/HSL/HCL image:
 - brighteyes_mcs/gui/main_window.py
 - brighteyes_mcs/gui/flim_image_view.py
 - brighteyes_mcs/libs/processes/acquisition_loop_process.py
-- brighteyes_mcs/libs/spad_fcs_manager.py
+- brighteyes_mcs/libs/mcs_manager.py

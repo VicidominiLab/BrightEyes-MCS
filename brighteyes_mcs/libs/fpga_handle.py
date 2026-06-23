@@ -9,6 +9,7 @@ import os
 from datetime import datetime
 from .print_debug import print_debug, set_debug
 from .processes.fpga_handle_process_fifo_new import FpgaHandleProcess
+from .detector_backends import DETECTOR_SPAD_ARRAY, normalize_detector_model
 
 class FpgaHandle(object):
     def __init__(
@@ -24,6 +25,7 @@ class FpgaHandle(object):
         use_rust_fifo=True,
         bitfile2="",
         ni_address2="",
+        detector_model=DETECTOR_SPAD_ARRAY,
     ):
         set_debug(debug)
         self.mp_manager = mp_manager
@@ -63,6 +65,7 @@ class FpgaHandle(object):
             "expected_words_data_digital": self.mp_manager.Value("q", 0),
             "expected_words_data_analog": self.mp_manager.Value("q", 0),
             "initial_registers": initial_registers_dict,  # self.mp_manager.dict()
+            "detector_model": normalize_detector_model(detector_model),
         }
 
         self.use_rust_fifo = use_rust_fifo
@@ -226,6 +229,9 @@ class FpgaHandle(object):
         self.configuration["list_fifos_to_read_continously"][:] = list(
             list_fifos_to_read_continously
         )
+
+    def set_detector_model(self, detector_model=DETECTOR_SPAD_ARRAY):
+        self.configuration["detector_model"] = normalize_detector_model(detector_model)
 
     def get_actual_fifo_depth(self):
         return self.configuration["actual_fifo_depth"].value

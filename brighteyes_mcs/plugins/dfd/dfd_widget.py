@@ -41,11 +41,11 @@ except Exception as e:
 
 
 class DfdWidget(QWidget, dfd_widget_design.Ui_Form):
-    def __init__(self, main_window=None, channels=25):
+    def __init__(self, main_window=None, spad_channels=25):
         super().__init__()
         self.setupUi(self)
 
-        self.channels = channels
+        self.spad_channels = spad_channels
 
         conf = {}
 
@@ -70,8 +70,8 @@ class DfdWidget(QWidget, dfd_widget_design.Ui_Form):
                 self.main_window.plugin_configuration["dfd"]["table_meas"]
             )
         except:
-            conf["table_corr"] = np.array([[[1.0, 0.0]] * self.channels]).T.squeeze()
-            conf["table_meas"] = np.array([[[1.0, 0.0, 0.0, 0.0]] * self.channels]).T.squeeze()
+            conf["table_corr"] = np.array([[[1.0, 0.0]] * self.spad_channels]).T.squeeze()
+            conf["table_meas"] = np.array([[[1.0, 0.0, 0.0, 0.0]] * self.spad_channels]).T.squeeze()
 
         self.pushButton_meas_file.clicked.connect(self.pushButton_meas_file_clicked)
         self.pushButton_ref_file.clicked.connect(self.pushButton_ref_file_clicked)
@@ -227,7 +227,7 @@ class DfdWidget(QWidget, dfd_widget_design.Ui_Form):
             )
             self.canvas_polar.draw()
 
-            for i in range(0, self.channels):
+            for i in range(0, self.spad_channels):
                 p = phasors[:, :, :, :, i].flatten()
                 ax.plot(np.nanmean(np.real(p)), np.nanmean(np.imag(p)), ".r")
 
@@ -326,7 +326,7 @@ class DfdWidget(QWidget, dfd_widget_design.Ui_Form):
                     self.flim_ref.data_hist[:, i] / max(self.flim_ref.data_hist[:, i]),
                     ddd[i],
                 )
-                for i in range(0, self.channels)
+                for i in range(0, self.spad_channels)
             ]
         ).T
 
@@ -384,7 +384,7 @@ class DfdWidget(QWidget, dfd_widget_design.Ui_Form):
                     / max(self.flim_meas.data_hist[:, i]),
                     ddd[i],
                 )
-                for i in range(0, self.channels)
+                for i in range(0, self.spad_channels)
             ]
         ).T
 
@@ -429,7 +429,7 @@ class DfdWidget(QWidget, dfd_widget_design.Ui_Form):
 
         gph = phasor_global
 
-        for i in range(0, self.channels):
+        for i in range(0, self.spad_channels):
             ax.plot(np.nanmean(np.real(gph[i])), np.nanmean(np.imag(gph[i])), ".r")
             m, phi, tau, tau_m = brighteyes_flim.calculate_m_phi_tau_phi_tau_m(
                 gph[i], dfd_freq=self.dfd_freq

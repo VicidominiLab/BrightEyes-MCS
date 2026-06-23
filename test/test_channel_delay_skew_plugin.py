@@ -23,9 +23,9 @@ class DummyMainWindow:
     def __init__(self):
         self.plugin_configuration = {}
         self.ui = SimpleNamespace()
-        self.ui.comboBox_channels = QComboBox()
-        self.ui.comboBox_channels.addItems(["25", "49"])
-        self.ui.comboBox_channels.setCurrentText("25")
+        self.ui.comboBox_spad_channels = QComboBox()
+        self.ui.comboBox_spad_channels.addItems(["25", "49"])
+        self.ui.comboBox_spad_channels.setCurrentText("25")
 
 
 class TestChannelDelaySkewWidget(unittest.TestCase):
