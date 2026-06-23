@@ -130,13 +130,14 @@ class TestMcsManager(unittest.TestCase):
         instance.dataProcess = MagicMock()
         instance.previewProcess = MagicMock()
         instance.do_not_save_event.is_set = MagicMock(return_value=True)
+        fake_pipeline = MagicMock()
+        fake_pipeline.make_receiver_queue.return_value = MagicMock()
+        fake_pipeline.make_receiver_process.return_value = None
+        fake_pipeline.make_data_preprocess.return_value = instance.dataProcess
+        fake_pipeline.make_acquisition_loop.return_value = instance.previewProcess
+        instance.detector_pipeline = fake_pipeline
 
-        with patch("brighteyes_mcs.libs.mcs_manager.DataPreProcess") as MockDataPreProcess, patch(
-            "brighteyes_mcs.libs.mcs_manager.AcquisitionLoopProcess"
-        ) as MockAcquisitionLoopProcess:
-            MockDataPreProcess.return_value = instance.dataProcess
-            MockAcquisitionLoopProcess.return_value = instance.previewProcess
-
+        with patch("brighteyes_mcs.libs.mcs_manager.create_detector_pipeline", return_value=fake_pipeline):
             instance.run()
 
         instance.dataProcess.start.assert_called()

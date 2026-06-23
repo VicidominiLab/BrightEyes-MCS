@@ -13,7 +13,9 @@ from brighteyes_mcs_cylibs.fastconverter import (
     convertRawDataToCountsDirect,
     convertRawDataToCountsDirect49,
 )
-from .processes.acquisition_loop_process import (
+from .detector_backends import DETECTOR_PI_23, DETECTOR_SPAD_ARRAY, normalize_detector_model
+from .pi23_raw_acquisition_converter import convert_pi23_raw_acquisition
+from .processes.spad_acquisition_loop_process import (
     accumulate_unordered_sum_4d,
     decode_pointer_list,
 )
@@ -223,7 +225,12 @@ def _load_metadata(metadata_filename: Path):
     total_frames = shape[2] * repetitions
     total_samples = shape[0] * shape[1] * effective_timebins * total_frames
 
+    detector_model = normalize_detector_model(
+        raw_cfg.get("detector_model", gui_cfg.get("detector_model", DETECTOR_SPAD_ARRAY))
+    )
+
     return {
+        "detector_model": detector_model,
         "mcs_cfg": mcs_cfg,
         "fpga_cfg": fpga_cfg,
         "gui_cfg": gui_cfg,
@@ -440,6 +447,12 @@ def convert_raw_acquisition(metadata_filename: Path, output_filename: Path | Non
     """Rebuild a normal BrightEyes acquisition HDF5 from raw-stream acquisition files."""
     metadata_filename = Path(metadata_filename).resolve()
     meta = _load_metadata(metadata_filename)
+    if meta["detector_model"] == DETECTOR_PI_23:
+        return convert_pi23_raw_acquisition(
+            metadata_filename,
+            output_filename=output_filename,
+            progress_callback=progress_callback,
+        )
     streams = _detect_streams(metadata_filename, meta)
 
     if output_filename is None:

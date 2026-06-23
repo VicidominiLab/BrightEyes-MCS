@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from brighteyes_mcs.libs.processes.acquisition_loop_process import (
+from brighteyes_mcs.libs.processes.spad_acquisition_loop_process import (
     aggregate_samples_by_pixel,
     build_pointer_frame_lookup,
 )

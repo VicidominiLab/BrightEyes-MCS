@@ -6,14 +6,12 @@ import re
 
 # from PySide6.QtCore import QObject
 
-from ..libs.processes.data_pre_process import DataPreProcess
-from ..libs.processes.acquisition_loop_process import AcquisitionLoopProcess
-from ..libs.processes.raw_stream_writer_process import RawStreamWriterProcess
 from ..libs.fpga_handle import FpgaHandle
 from ..libs.h5manager import H5ManagerProcess
 from ..libs.print_debug import print_debug
 from ..libs.mp_shared_array import MemorySharedNumpyArray
 from ..libs.detector_backends import DETECTOR_SPAD_ARRAY, normalize_detector_model
+from ..libs.detectors import create_detector_pipeline
 
 from ..libs.mp_circular_shm import CircularSharedBuffer
 
@@ -223,6 +221,10 @@ class McsManager():
         self.raw_stream_mode = False
         self.raw_output_files = {}
         self.raw_writer_process = None
+        self.detector_pipeline = create_detector_pipeline(self.detector_model)
+        self.detector_receiver_queue = None
+        self.detector_receiver_process = None
+        self.detector_receiver_start_event = None
         self.filenameh5 = ""
 
 
@@ -499,6 +501,7 @@ class McsManager():
         Select which detector provides raw acquisition data.
         """
         self.detector_model = normalize_detector_model(detector_model)
+        self.detector_pipeline = create_detector_pipeline(self.detector_model)
         if self.fpga_handle is not None:
             self.fpga_handle.set_detector_model(self.detector_model)
 
@@ -528,6 +531,7 @@ class McsManager():
         print_debug("mcs_manager.registers_configuration")
         print_debug("mcs_manager.expected_words_data_digital", self.expected_words_data_digital)
 
+        self.detector_pipeline = create_detector_pipeline(self.detector_model)
         self.fpga_handle.set_list_fifos_to_read_continously(self.activated_fifos_list)
 
         if not self.raw_stream_mode:
@@ -622,6 +626,8 @@ class McsManager():
             # "FIFO": np.uint64,
             "FIFOAnalog": np.uint64,
         }
+        self.detector_receiver_start_event = mp.Event()
+        self.detector_receiver_queue = self.detector_pipeline.make_receiver_queue(self)
 
         self.number_of_threads_h5 = mp.Value("i", 0)
         if not do_not_save and not self.raw_stream_mode:
@@ -653,15 +659,9 @@ class McsManager():
         # The preprocessing worker repacks FIFO chunks into arrays that are
         # cheaper for the acquisition loop to consume repeatedly.
         if not self.raw_stream_mode:
-            self.dataProcess = DataPreProcess(
-                self.fpga_handle.configuration["queueFifoRead"],
-                self.loc_acquired,
-                self.last_preprocessed_len,
-                self.data_queue,
-                self.dtype_data_queue,
-                len_buffer=self.fifo_prebuffer_length,
-                debug=self.debug,
-                use_rust_fifo=self.use_rust_fifo,
+            self.dataProcess = self.detector_pipeline.make_data_preprocess(
+                self,
+                self.detector_receiver_queue,
             )
 
             self.dataProcess.daemon = True
@@ -735,35 +735,32 @@ class McsManager():
 
         if self.raw_stream_mode:
             print_debug("self.raw_writer_process()")
-            self.raw_writer_process = RawStreamWriterProcess(
-                self.fpga_handle.configuration["queueFifoRead"],
-                self.activated_fifos_list,
-                self.raw_output_files,
-                self.loc_acquired,
-                self.loc_previewed,
-                self.last_preprocessed_len,
-                self.acquisition_done_event,
-                self.acquisition_almost_done_event,
-                self.shared_dict,
-                debug=self.debug,
+            self.raw_writer_process = self.detector_pipeline.make_raw_stream_writer(
+                self,
+                self.detector_receiver_queue,
             )
             self.raw_writer_process.daemon = True
             self.previewProcess = None
         else:
             print_debug("self.previewProcess()")
-            self.previewProcess = AcquisitionLoopProcess(
-                self.spad_channels,
-                self.shared_objects,
+            self.previewProcess = self.detector_pipeline.make_acquisition_loop(
+                self,
                 do_not_save,
-                self.data_queue,
-                self.acquisition_done_event,
-                self.acquisition_almost_done_event,
-                self.shared_dict,
-                debug=self.debug,
             )
             self.previewProcess.daemon = True
 
+        self.detector_receiver_process = self.detector_pipeline.make_receiver_process(
+            self,
+            self.detector_receiver_queue,
+            self.detector_receiver_start_event,
+        )
+        if self.detector_receiver_process is not None:
+            self.detector_receiver_process.daemon = True
+
         self.shared_arrays_ready = not self.raw_stream_mode
+        if self.detector_receiver_process is not None:
+            print_debug("self.detector_receiver_process.start()")
+            self.detector_receiver_process.start()
         if self.dataProcess is not None:
             print_debug("self.dataProcess.start()")
             self.dataProcess.start()
@@ -773,6 +770,8 @@ class McsManager():
             self.previewProcess.start()
         # self.nifpga_session.run()
         self.fpga_handle.runfpga()
+        if self.detector_receiver_start_event is not None:
+            self.detector_receiver_start_event.set()
 
     def previewProcess_isAlive(self):
         """
@@ -977,11 +976,22 @@ class McsManager():
         print_debug("stopAcquisition.stop()")
         self.fpga_handle.stop()
 
+    def _stop_detector_receiver(self):
+        if self.detector_receiver_process is None:
+            return
+        self.detector_receiver_process.stop()
+        self.detector_receiver_process.join(timeout=5)
+        if self.detector_receiver_process.is_alive():
+            self.detector_receiver_process.terminate()
+            self.detector_receiver_process.join(timeout=2)
+        self.detector_receiver_process = None
+
     def stopAcquisition(self):
         """
         Stop the acquisition
         """
         print_debug("stopAcquisition.stop()")
+        self._stop_detector_receiver()
         if self.dataProcess is not None:
             self.dataProcess.stop()
         self.is_connected = False
@@ -999,6 +1009,7 @@ class McsManager():
         elif self.previewProcess is not None:
             self.previewProcess.stop()
             self.previewProcess.join()
+        self._stop_detector_receiver()
         if self.h5_manager_process is not None:
             self.h5_manager_process.join(timeout=2)
             if self.h5_manager_process.is_alive():

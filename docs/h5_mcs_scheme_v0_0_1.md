@@ -272,6 +272,8 @@ fresh at finalization and contains root attrs plus the metadata groups, but no
 | `dfd_activate` | bool | DFD active flag. |
 | `digital_raw_file`, `analog_raw_file` | string | RAW FIFO file paths. Defaults are derived from the metadata filename when the attrs are empty. |
 | `digital_raw_bytes`, `analog_raw_bytes` | int | [bytes] Bytes written to each RAW file. |
+| `detector_model` | string | Optional. Missing means legacy `SPAD Array`; `PI 23` dispatches to the PI23 raw converter scaffold. |
+| `pi23_raw_stream_format` | string | Optional PI23-only raw-bunch stream format marker. Not written for legacy SPAD files. |
 | `converted_to_standard_h5` | bool | Added by `convert_raw_acquisition()` after conversion. |
 | `conversion_output_h5` | string | Added by `convert_raw_acquisition()` with the output H5 path. |
 

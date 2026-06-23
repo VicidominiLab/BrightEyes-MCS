@@ -6269,39 +6269,50 @@ Have fun!
             )
 
             if self.raw_stream_mode:
+                raw_stream_metadata = {
+                    "enabled": True,
+                    "digital_fifo_present": "FIFO" in self.mcs_manager.activated_fifos_list,
+                    "analog_fifo_present": "FIFOAnalog" in self.mcs_manager.activated_fifos_list,
+                    "digital_channels": self.spad_channels,
+                    "digital_words_per_sample": 2 if self.spad_channels == 25 else 8,
+                    "analog_words_per_sample": 1,
+                    "effective_timebins_per_pixel": (
+                        self.mcs_manager.registers_configuration.get("#timebinsPerPixel", 1)
+                        * self.mcs_manager.registers_configuration.get("#circular_rep", 1)
+                        * self.mcs_manager.registers_configuration.get("#circular_points", 1)
+                    ),
+                    "clock_base_mhz": self.clock_base,
+                    "clk_multiplier": self.mcs_manager.clk_multiplier,
+                    "dfd_shift": self.mcs_manager.dfd_shift,
+                    "snake_walk_xy": self.mcs_manager.snake_walk_xy,
+                    "snake_walk_z": self.mcs_manager.snake_walk_z,
+                    "dfd_activate": self.mcs_manager.DFD_Activate,
+                    "digital_raw_file": self.raw_stream_output_files.get("FIFO", ""),
+                    "analog_raw_file": self.raw_stream_output_files.get("FIFOAnalog", ""),
+                    "digital_raw_bytes": self.mcs_manager.shared_dict.get("FIFO_bytes_written", 0),
+                    "analog_raw_bytes": self.mcs_manager.shared_dict.get("FIFOAnalog_bytes_written", 0),
+                    "digital_expected_words": self.mcs_manager.shared_dict.get("FIFO_expected_words", 0),
+                    "analog_expected_words": self.mcs_manager.shared_dict.get("FIFOAnalog_expected_words", 0),
+                    "digital_expected_bytes": self.mcs_manager.shared_dict.get("FIFO_expected_bytes", 0),
+                    "analog_expected_bytes": self.mcs_manager.shared_dict.get("FIFOAnalog_expected_bytes", 0),
+                    "digital_actual_bytes_on_disk": self.mcs_manager.shared_dict.get("FIFO_actual_bytes_on_disk", 0),
+                    "analog_actual_bytes_on_disk": self.mcs_manager.shared_dict.get("FIFOAnalog_actual_bytes_on_disk", 0),
+                    "raw_writer_stop_reason": self.mcs_manager.shared_dict.get("raw_writer_stop_reason", ""),
+                    "raw_writer_error": self.mcs_manager.shared_dict.get("raw_writer_error", ""),
+                }
+                if self.mcs_manager.detector_model == DETECTOR_PI_23:
+                    raw_stream_metadata.update(
+                        {
+                            "detector_model": DETECTOR_PI_23,
+                            "pi23_raw_stream_format": self.mcs_manager.shared_dict.get(
+                                "pi23_raw_stream_format",
+                                "",
+                            ),
+                        }
+                    )
                 h5mgr.metadata_add_dict(
                     "rawStreamAcquisition",
-                    {
-                        "enabled": True,
-                        "digital_fifo_present": "FIFO" in self.mcs_manager.activated_fifos_list,
-                        "analog_fifo_present": "FIFOAnalog" in self.mcs_manager.activated_fifos_list,
-                        "digital_channels": self.spad_channels,
-                        "digital_words_per_sample": 2 if self.spad_channels == 25 else 8,
-                        "analog_words_per_sample": 1,
-                        "effective_timebins_per_pixel": (
-                            self.mcs_manager.registers_configuration.get("#timebinsPerPixel", 1)
-                            * self.mcs_manager.registers_configuration.get("#circular_rep", 1)
-                            * self.mcs_manager.registers_configuration.get("#circular_points", 1)
-                        ),
-                        "clock_base_mhz": self.clock_base,
-                        "clk_multiplier": self.mcs_manager.clk_multiplier,
-                        "dfd_shift": self.mcs_manager.dfd_shift,
-                        "snake_walk_xy": self.mcs_manager.snake_walk_xy,
-                        "snake_walk_z": self.mcs_manager.snake_walk_z,
-                        "dfd_activate": self.mcs_manager.DFD_Activate,
-                        "digital_raw_file": self.raw_stream_output_files.get("FIFO", ""),
-                        "analog_raw_file": self.raw_stream_output_files.get("FIFOAnalog", ""),
-                        "digital_raw_bytes": self.mcs_manager.shared_dict.get("FIFO_bytes_written", 0),
-                        "analog_raw_bytes": self.mcs_manager.shared_dict.get("FIFOAnalog_bytes_written", 0),
-                        "digital_expected_words": self.mcs_manager.shared_dict.get("FIFO_expected_words", 0),
-                        "analog_expected_words": self.mcs_manager.shared_dict.get("FIFOAnalog_expected_words", 0),
-                        "digital_expected_bytes": self.mcs_manager.shared_dict.get("FIFO_expected_bytes", 0),
-                        "analog_expected_bytes": self.mcs_manager.shared_dict.get("FIFOAnalog_expected_bytes", 0),
-                        "digital_actual_bytes_on_disk": self.mcs_manager.shared_dict.get("FIFO_actual_bytes_on_disk", 0),
-                        "analog_actual_bytes_on_disk": self.mcs_manager.shared_dict.get("FIFOAnalog_actual_bytes_on_disk", 0),
-                        "raw_writer_stop_reason": self.mcs_manager.shared_dict.get("raw_writer_stop_reason", ""),
-                        "raw_writer_error": self.mcs_manager.shared_dict.get("raw_writer_error", ""),
-                    },
+                    raw_stream_metadata,
                 )
             else:
                 h5mgr.metadata_add_thumbnail(self.im_widget.imageItem)

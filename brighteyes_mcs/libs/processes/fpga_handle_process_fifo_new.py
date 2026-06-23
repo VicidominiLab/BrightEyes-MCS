@@ -5,8 +5,6 @@ from ..print_debug import print_debug
 from time import perf_counter_ns, sleep
 from ..detector_backends import (
     DETECTOR_SPAD_ARRAY,
-    DETECTOR_PI_23,
-    Pi23RandomPacketSource,
     detector_uses_nifpga_fifo,
     normalize_detector_model,
 )
@@ -70,7 +68,6 @@ class FpgaHandleProcess(mp.Process):
         self.use_rust_fifo = use_rust_fifo
         self.rust_reader_ready = mp.Event()
         self.detector_source_ready = mp.Event()
-        self.detector_packet_source = None
         
         self.fpgarunning_internal = False
         print_debug("FpgaHandleProcess INIT done")
@@ -330,52 +327,11 @@ class FpgaHandleProcess(mp.Process):
                     self.queueFifoRead.put_nowait(out_dict)
         print_debug("self.stop_event.is_set()")
 
-    def loop_detectorReadContinously_fifo(self, current_fifo):
-        self.detector_source_ready.wait()
-        while not self.stop_event.is_set():
-            if (
-                not self.fpgarunning_internal
-                or current_fifo not in list(self.list_fifos_to_read_continously)
-            ):
-                sleep(0.001)
-                continue
-
-            current_time = perf_counter_ns()
-            delta_time = current_time - self.fifo_last_read_time[current_fifo]
-            if delta_time <= self.timeout_fifos:
-                sleep(0.0001)
-                continue
-
-            read_data = self.detector_packet_source.read_data(current_fifo)
-            self.fifo_last_read_time[current_fifo] = current_time
-            length = len(read_data)
-            if length > 0:
-                self.queueFifoRead.put_nowait({current_fifo: [read_data, length]})
-        print_debug("self.stop_event.is_set()")
-
     def _uses_nifpga_fifo(self):
         return detector_uses_nifpga_fifo(self.detector_model)
 
     def _uses_rust_fifo_reader(self):
         return self._uses_nifpga_fifo() and self.use_rust_fifo == True
-
-    def _start_detector_packet_source(self):
-        if self.detector_model != DETECTOR_PI_23:
-            return
-        self.detector_packet_source = Pi23RandomPacketSource(
-            self.fifo_chuck_size_digital,
-            self.fifo_chuck_size_analog,
-            self.expected_words_data_digital,
-            self.expected_words_data_analog,
-        )
-        self.detector_packet_source.start()
-        self.detector_source_ready.set()
-
-    def _stop_detector_packet_source(self):
-        self.detector_source_ready.clear()
-        if self.detector_packet_source is not None:
-            self.detector_packet_source.stop()
-            self.detector_packet_source = None
 
     def run(self):
         # self.thread_check_parent = CheckParentAlive(self, self.stop_event, note="FpgaHandleProcess")
@@ -472,28 +428,11 @@ class FpgaHandleProcess(mp.Process):
 
             print_debug("ready to run")
 
-            if self.detector_model == DETECTOR_PI_23:
-                self._start_detector_packet_source()
-                read_fifos = [
-                    fifo for fifo in self.list_fifos if fifo in ("FIFO", "FIFOAnalog")
-                ]
-                if not read_fifos:
-                    read_fifos = ["FIFO", "FIFOAnalog"]
+            if not self._uses_nifpga_fifo():
                 threads = [
                     (Thread(target=self.loop_run_check), "loop_run_check"),
                     (Thread(target=self.loop_fifoWrite), "loop_fifoWrite"),
                 ]
-                for fifo in read_fifos:
-                    self.fifo_last_read_time.setdefault(fifo, perf_counter_ns())
-                    threads.append(
-                        (
-                            Thread(
-                                target=self.loop_detectorReadContinously_fifo,
-                                args=(fifo,),
-                            ),
-                            "loop_detectorReadContinously_fifo " + fifo,
-                        )
-                    )
             elif self.use_rust_fifo == True:
                 threads = [
                     (Thread(target=self.loop_run_check), "loop_run_check"),
@@ -532,7 +471,7 @@ class FpgaHandleProcess(mp.Process):
             print_debug("stop_event.wait DONE")
             if self._uses_rust_fifo_reader():
                 self.rust_fifo_reader.close()
-            self._stop_detector_packet_source()
+            self.detector_source_ready.clear()
 
         self.stop_event.set() #in the case fail force it
 
