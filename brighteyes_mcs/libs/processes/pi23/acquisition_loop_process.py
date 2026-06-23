@@ -1,4 +1,4 @@
-"""Acquisition worker that converts FIFO payloads into preview images, traces, and HDF5 writes."""
+"""PI23 acquisition worker that converts protocol payloads into preview images, traces, and HDF5 writes."""
 
 import multiprocessing as mp
 import os
@@ -12,8 +12,8 @@ if VIZTRACER_ON: from viztracer import VizTracer
 import psutil
 import numpy as np
 
-# from ..is_parent_alive import CheckParentAlive
-from ..h5manager import H5ManagerProcessClient
+# from ...is_parent_alive import CheckParentAlive
+from ...h5manager import H5ManagerProcessClient
 
 # import pprofile
 #TODO: NEED TO BE TESTED THE NEW ADDER
@@ -38,7 +38,11 @@ except Exception as e:
     )
     os._exit(1)
 
-from ..print_debug import print_debug, set_debug
+from ...print_debug import print_debug, set_debug
+from ...detectors.pi23.backend import (
+    Pi23RawBunch,
+    pi23_decode_raw_bunch_to_spad_preview_words,
+)
 from numpy import sqrt
 
 import numpy as np
@@ -373,27 +377,29 @@ class AcquisitionLoopProcess(mp.Process):
             acquisition_almost_done,
             shared_dict,
             debug=False,
+            process_label="SPAD acquisition loop",
     ):
         super().__init__()
+        self.process_label = process_label
         self.gap_analog_in_sample = 0
         self.gap_digital_in_sample = 0
         self.daemon = True
         set_debug(debug)
-        print_debug("AcquisitionLoopProcess INIT")
+        print_debug(self.process_label, "INIT")
         self.shared_objects = shared_objects
 
         self.DATA_WORDS_PER_SAMPLE_ANALOG = 1
 
         if spad_channels == 25:
-            print_debug("Found 25 SPAD channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
+            print_debug(self.process_label, "using 25-channel normalized preview words -> DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
             self.spad_channels = 25
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 2
         elif spad_channels == 49:
-            print_debug("Found 49 SPAD channels -> DATA_WORDS_PER_SAMPLE_DIGITAL = 8")
+            print_debug(self.process_label, "using 49-channel normalized preview words -> DATA_WORDS_PER_SAMPLE_DIGITAL = 8")
             self.spad_channels = 49
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 8
         else:
-            print_debug("Found non-standard SPAD channel count FALLBACK TO DATA_WORDS_PER_SAMPLE_DIGITAL = 2")
+            print_debug(self.process_label, "found non-standard channel count; falling back to 25-channel normalized preview words")
             self.spad_channels = 25
             self.DATA_WORDS_PER_SAMPLE_DIGITAL = 2
 
@@ -503,7 +509,41 @@ class AcquisitionLoopProcess(mp.Process):
 
         self.channels_analog = 2
 
-        print_debug("AcquisitionLoopProcess INIT DONE")
+        print_debug(self.process_label, "INIT DONE")
+
+    def _normalize_pi23_digital_payload(self, payload):
+        """
+        Return normalized 25-channel preview words for PI23 data.
+
+        The PI23 receiver can feed either already-normalized uint64 word arrays
+        through ``Pi23DataPreProcess`` or detector-native ``Pi23RawBunch``
+        objects. Supporting both shapes here keeps the PI23 acquisition loop
+        usable while the protocol boundary is still evolving.
+        """
+        if isinstance(payload, Pi23RawBunch):
+            print_debug(
+                self.process_label,
+                "decoded PI23 raw bunch",
+                payload.sample_count,
+                payload.payload.get("source"),
+            )
+            return pi23_decode_raw_bunch_to_spad_preview_words(
+                payload,
+                digital_words_per_sample=self.DATA_WORDS_PER_SAMPLE_DIGITAL,
+            ).astype(np.uint64, copy=False)
+
+        if hasattr(payload, "payload") and hasattr(payload, "sample_count"):
+            print_debug(
+                self.process_label,
+                "decoded PI23-compatible raw bunch",
+                payload.sample_count,
+            )
+            return pi23_decode_raw_bunch_to_spad_preview_words(
+                payload,
+                digital_words_per_sample=self.DATA_WORDS_PER_SAMPLE_DIGITAL,
+            ).astype(np.uint64, copy=False)
+
+        return np.asarray(payload, dtype=np.uint64)
 
     def run(self):
 
@@ -539,7 +579,7 @@ class AcquisitionLoopProcess(mp.Process):
 
         p = psutil.Process(os.getpid())
         p.nice(psutil.HIGH_PRIORITY_CLASS)
-        print_debug("AcquisitionLoopProcess RUN - PID:", os.getpid(), p.nice())
+        print_debug(self.process_label, "RUN - PID:", os.getpid(), p.nice())
 
         stop_event_proxy.clear()
         self.current_pointer_in_sample_digital = 0  # self.timebinsPerPixel * self.DATA_WORDS_PER_SAMPLE_DIGITAL
@@ -867,7 +907,9 @@ class AcquisitionLoopProcess(mp.Process):
 
                     # standard path: get a new packet from the queue
                     if  internal_buffer_digital is None:  # standard case (no previous split data)
-                        data_from_queue_digital = self.data_queue["FIFO"].get()
+                        data_from_queue_digital = self._normalize_pi23_digital_payload(
+                            self.data_queue["FIFO"].get()
+                        )
                         self.gap_digital_in_sample = data_from_queue_digital.shape[0] // self.DATA_WORDS_PER_SAMPLE_DIGITAL
 
                         # recalc remaining_digital_in_words because current_frame_digital might have changed above
@@ -1599,13 +1641,13 @@ class AcquisitionLoopProcess(mp.Process):
         print_debug("Acquisition done")
         stop_event_proxy.clear()
 
-        print_debug("run() acquisition_loop_process stopped")
+        print_debug(self.process_label, "stopped")
 
         if VIZTRACER_ON: self.tracer.stop()
         if VIZTRACER_ON: self.tracer.save()
 
     def stop(self):
-        print_debug("AcquisitionLoopProcess STOP")
+        print_debug(self.process_label, "STOP")
         self.stop_event.set()
 
     def trace_reset(self):
@@ -1637,4 +1679,16 @@ class AcquisitionLoopProcess(mp.Process):
 
     def stop_update_dictionary_slowly(self):
         self.thread_for_dict_stop.set()
+
+
+class Pi23AcquisitionLoopProcess(AcquisitionLoopProcess):
+    """PI23-named acquisition worker."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("process_label", "PI23 acquisition loop")
+        super().__init__(*args, **kwargs)
+
+
+class SpadAcquisitionLoopProcess(Pi23AcquisitionLoopProcess):
+    """Backward-compatible alias for accidental old imports."""
 

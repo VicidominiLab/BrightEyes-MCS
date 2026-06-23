@@ -6,9 +6,22 @@ sys.path.insert(1, os.getcwd())
 import unittest
 from unittest.mock import MagicMock, patch
 import numpy as np
+from brighteyes_mcs.libs.detectors.models import (
+    DETECTOR_PI_23,
+    DETECTOR_SPAD_ARRAY,
+    detector_uses_nifpga_control,
+    detector_uses_nifpga_fifo,
+)
 from brighteyes_mcs.libs.mcs_manager import McsManager
 
 class TestMcsManager(unittest.TestCase):
+
+    def test_pi23_keeps_nifpga_control_without_nifpga_fifo_data(self):
+        self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_ARRAY))
+        self.assertTrue(detector_uses_nifpga_control(DETECTOR_SPAD_ARRAY))
+
+        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PI_23))
+        self.assertTrue(detector_uses_nifpga_control(DETECTOR_PI_23))
 
     def test_parse_dfd_metadata_from_bitfile_name_extracts_values(self):
         cycle_mhz, dfd_nbins = McsManager.parse_dfd_metadata_from_bitfile_name(
@@ -114,6 +127,47 @@ class TestMcsManager(unittest.TestCase):
             instance.fpga_handle.run.assert_called()
             instance.update_chuck.assert_called()
 
+    def test_connect_pi23_disables_nifpga_fifos(self):
+        instance = McsManager()
+        instance.set_detector_model(DETECTOR_PI_23)
+        instance.update_chuck = MagicMock()
+
+        with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:
+            fpga_handle = MagicMock()
+            MockFpgaHandle.return_value = fpga_handle
+            instance.connect(
+                {
+                    "activateFIFODigital": True,
+                    "activateFIFOAnalog": True,
+                    "DFD_Activate": True,
+                },
+                list_fifos=["FIFO", "FIFOAnalog"],
+            )
+
+        self.assertEqual(MockFpgaHandle.call_args.kwargs["list_fifos"], [])
+        run_registers = fpga_handle.run.call_args.args[0]
+        self.assertFalse(run_registers["activateFIFODigital"])
+        self.assertFalse(run_registers["activateFIFOAnalog"])
+        self.assertFalse(run_registers["DFD_Activate"])
+
+    def test_set_registers_dict_pi23_forces_fifo_registers_off(self):
+        instance = McsManager()
+        instance.set_detector_model(DETECTOR_PI_23)
+        instance.is_connected = True
+        instance.fpga_handle = MagicMock()
+
+        instance.setRegistersDict(
+            {
+                "activateFIFODigital": True,
+                "activateFIFOAnalog": True,
+                "DFD_Activate": True,
+            }
+        )
+
+        instance.fpga_handle.register_write.assert_any_call("activateFIFODigital", False)
+        instance.fpga_handle.register_write.assert_any_call("activateFIFOAnalog", False)
+        instance.fpga_handle.register_write.assert_any_call("DFD_Activate", False)
+
     def test_connect_raises_exception_on_error(self):
         instance = McsManager()
         with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:
@@ -130,13 +184,14 @@ class TestMcsManager(unittest.TestCase):
         instance.dataProcess = MagicMock()
         instance.previewProcess = MagicMock()
         instance.do_not_save_event.is_set = MagicMock(return_value=True)
+        fake_pipeline = MagicMock()
+        fake_pipeline.make_receiver_queue.return_value = MagicMock()
+        fake_pipeline.make_receiver_process.return_value = None
+        fake_pipeline.make_data_preprocess.return_value = instance.dataProcess
+        fake_pipeline.make_acquisition_loop.return_value = instance.previewProcess
+        instance.detector_pipeline = fake_pipeline
 
-        with patch("brighteyes_mcs.libs.mcs_manager.DataPreProcess") as MockDataPreProcess, patch(
-            "brighteyes_mcs.libs.mcs_manager.AcquisitionLoopProcess"
-        ) as MockAcquisitionLoopProcess:
-            MockDataPreProcess.return_value = instance.dataProcess
-            MockAcquisitionLoopProcess.return_value = instance.previewProcess
-
+        with patch("brighteyes_mcs.libs.mcs_manager.create_detector_pipeline", return_value=fake_pipeline):
             instance.run()
 
         instance.dataProcess.start.assert_called()

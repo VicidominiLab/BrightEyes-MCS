@@ -2,9 +2,9 @@
 
 import multiprocessing as mp
 import numpy as np
-from ..print_debug import print_debug, set_debug
+from ...print_debug import print_debug, set_debug
 
-# from ..is_parent_alive import CheckParentAlive
+# from ...is_parent_alive import CheckParentAlive
 import os
 import time
 import psutil
@@ -136,4 +136,8 @@ class DataPreProcess(mp.Process):
         print_debug("DataPreProcess.terminate()")
         time.sleep(0.1)
         super().terminate()
+
+
+class SpadDataPreProcess(DataPreProcess):
+    """SPAD-named FIFO preprocessing worker."""
 

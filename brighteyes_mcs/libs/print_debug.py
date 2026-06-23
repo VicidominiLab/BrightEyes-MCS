@@ -5,7 +5,8 @@ from pathlib import Path
 from time import localtime, strftime, time
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-# Supported values: "stdout", "stderr", "file"
+# Supported values: "stdout", "stderr", "file", or a tuple/list of those values.
+#FLAG = "file"
 FLAG = "file"
 # Supported values: "relative", "full"
 PATH_MODE = "full"
@@ -54,22 +55,30 @@ def _now_str():
     return strftime("%H:%M:%S", localtime(current_time)) + f".{int((current_time % 1) * 1e6):06d}"
 
 
-def _get_output_stream():
+def _get_file_stream():
     global _file_stream
 
-    if FLAG == "stdout":
-        return sys.stdout
+    if _file_stream is None or _file_stream.closed:
+        DEFAULT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _file_stream = DEFAULT_LOG_PATH.open("a", encoding="utf-8")
+    return _file_stream
 
-    if FLAG == "stderr":
-        return sys.stderr
 
-    if FLAG == "file":
-        if _file_stream is None or _file_stream.closed:
-            DEFAULT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-            _file_stream = DEFAULT_LOG_PATH.open("a", encoding="utf-8")
-        return _file_stream
+def _get_output_streams():
+    flags = (FLAG,) if isinstance(FLAG, str) else tuple(FLAG)
+    streams = []
 
-    raise ValueError(f"Unsupported print_debug FLAG: {FLAG!r}")
+    for flag in flags:
+        if flag == "stdout":
+            streams.append(sys.stdout)
+        elif flag == "stderr":
+            streams.append(sys.stderr)
+        elif flag == "file":
+            streams.append(_get_file_stream())
+        else:
+            raise ValueError(f"Unsupported print_debug FLAG: {flag!r}")
+
+    return streams
 
 
 def print_debug(*objects, sep=" ", end="\n"):
@@ -85,11 +94,12 @@ def print_debug(*objects, sep=" ", end="\n"):
     timestamp = _now_str()
     message = sep.join(str(obj) for obj in objects)
 
-    stream = _get_output_stream()
+    streams = _get_output_streams()
 
     #stream.write(f"{location_padded}\t{timestamp:15}\t{message}{end}")
-    stream.write(f"{location_padded} {timestamp:15}\t{message}{end}")
-    stream.flush()
+    for stream in streams:
+        stream.write(f"{location_padded} {timestamp:15}\t{message}{end}")
+        stream.flush()
 
 
 @atexit.register

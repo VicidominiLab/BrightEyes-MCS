@@ -37,11 +37,15 @@ FIRMWARE_REPO = "VicidominiLab/BrightEyes-MCSLL"
 FIRMWARE_API_URL = f"https://api.github.com/repos/{FIRMWARE_REPO}"
 FIRMWARE_ZIP_URL = f"https://github.com/{FIRMWARE_REPO}/archive/refs/heads/{{branch}}.zip"
 MAX_LICENSE_BYTES = 256 * 1024
+GITHUB_API_CACHE_TTL_SECONDS = 10 * 60
 PRESERVED_PATHS = [
     Path("brighteyes_mcs/cfg"),
     Path("brighteyes_mcs/bitfiles"),
     Path("brighteyes_mcs_installer.exe"),
 ]
+_GITHUB_API_CACHE: dict[str, tuple[float, object]] = {}
+_GITHUB_RATE_LIMIT_WARNINGS: set[str] = set()
+_GITHUB_API_RATE_LIMITED_UNTIL = 0.0
 
 LICENSE_NOTICE = """BrightEyes-MCS
 License: GNU General Public License version 3 (GPLv3)
@@ -336,26 +340,114 @@ def create_links(project_dir: Path, venv_python: Path, log: Callable[[str], None
     create_shortcut(folder / "Python (.venv BrightEyesMCS).lnk", enter_bat, python_icon, project_dir, log)
 
 
-def github_default_branch(api_url: str, fallback: str, log: Callable[[str], None]) -> str:
-    request = urllib.request.Request(api_url, headers={"User-Agent": APP_NAME})
+def github_api_headers() -> dict[str, str]:
+    headers = {
+        "User-Agent": APP_NAME,
+        "Accept": "application/vnd.github+json",
+    }
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
+def github_rate_limit_message(exc: urllib.error.HTTPError) -> str:
+    reset_time = github_rate_limit_reset_time(exc)
+    return "GitHub API rate limit used up. " + github_rate_limit_reset_message(reset_time)
+
+
+def github_rate_limit_reset_time(exc: urllib.error.HTTPError) -> float | None:
+    reset = exc.headers.get("X-RateLimit-Reset")
+    if reset and reset.isdigit():
+        return float(reset)
+    return None
+
+
+def github_rate_limit_reset_message(reset_time: float | None) -> str:
+    if not reset_time:
+        return "Reset time is unknown."
+
+    remaining = max(0, int(reset_time - time.time()))
+    minutes, seconds = divmod(remaining, 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        duration = f"in {hours} h {minutes} min"
+    elif minutes:
+        duration = f"in {minutes} min {seconds} s"
+    else:
+        duration = f"in {seconds} s"
+
+    reset_text = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(reset_time))
+    return f"Reset {duration}, at {reset_text} local time."
+
+
+def is_github_rate_limit_error(exc: urllib.error.HTTPError) -> bool:
+    if exc.code not in {403, 429}:
+        return False
+    remaining = exc.headers.get("X-RateLimit-Remaining")
+    return remaining == "0" or "rate limit" in str(exc).lower()
+
+
+def read_github_json(url: str, log: Callable[[str], None], description: str) -> object | None:
+    global _GITHUB_API_RATE_LIMITED_UNTIL
+
+    now = time.time()
+    cached = _GITHUB_API_CACHE.get(url)
+    if cached and now - cached[0] < GITHUB_API_CACHE_TTL_SECONDS:
+        return cached[1]
+    if _GITHUB_API_RATE_LIMITED_UNTIL > now:
+        if "rate-limit" not in _GITHUB_RATE_LIMIT_WARNINGS:
+            _GITHUB_RATE_LIMIT_WARNINGS.add("rate-limit")
+            log(
+                "GitHub API rate limit already used up. "
+                f"{github_rate_limit_reset_message(_GITHUB_API_RATE_LIMITED_UNTIL)} "
+                "Using cached/default data. GITHUB_TOKEN or GH_TOKEN is optional and only increases the limit."
+            )
+        return cached[1] if cached else None
+
+    request = urllib.request.Request(url, headers=github_api_headers())
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             data = json.loads(response.read().decode("utf-8"))
-            branch = data.get("default_branch")
-            if branch:
-                return str(branch)
+    except urllib.error.HTTPError as exc:
+        if is_github_rate_limit_error(exc):
+            _GITHUB_API_RATE_LIMITED_UNTIL = github_rate_limit_reset_time(exc) or now + 60
+            fallback = "using cached data" if cached else "using built-in defaults"
+            if "rate-limit" not in _GITHUB_RATE_LIMIT_WARNINGS:
+                _GITHUB_RATE_LIMIT_WARNINGS.add("rate-limit")
+                log(
+                    f"{github_rate_limit_message(exc)} Could not read {description}; {fallback}. "
+                    "GITHUB_TOKEN or GH_TOKEN is optional and only increases the limit."
+                )
+            return cached[1] if cached else None
+        if cached:
+            log(f"Could not read {description}; using cached data: {exc}")
+            return cached[1]
+        log(f"Could not read {description}: {exc}")
+        return None
     except Exception as exc:
-        log(f"Could not read default branch, using {fallback}: {exc}")
+        if cached:
+            log(f"Could not read {description}; using cached data: {exc}")
+            return cached[1]
+        log(f"Could not read {description}: {exc}")
+        return None
+
+    _GITHUB_API_CACHE[url] = (now, data)
+    return data
+
+
+def github_default_branch(api_url: str, fallback: str, log: Callable[[str], None]) -> str:
+    data = read_github_json(api_url, log, "default branch")
+    if isinstance(data, dict):
+        branch = data.get("default_branch")
+        if branch:
+            return str(branch)
     return fallback
 
 
 def list_github_branches(api_url: str, log: Callable[[str], None]) -> list[str]:
-    request = urllib.request.Request(api_url + "/branches?per_page=100", headers={"User-Agent": APP_NAME})
-    try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except Exception as exc:
-        log(f"Could not read branch list: {exc}")
+    data = read_github_json(api_url + "/branches?per_page=100", log, "branch list")
+    if not isinstance(data, list):
         return []
     return [str(item.get("name")) for item in data if item.get("name")]
 
@@ -363,12 +455,8 @@ def list_github_branches(api_url: str, log: Callable[[str], None]) -> list[str]:
 def list_github_commits(api_url: str, branch: str, log: Callable[[str], None], limit: int = 20) -> list[CommitCandidate]:
     branch = branch.strip() or "main"
     query = urllib.parse.urlencode({"sha": branch, "per_page": str(limit)})
-    request = urllib.request.Request(api_url + "/commits?" + query, headers={"User-Agent": APP_NAME})
-    try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except Exception as exc:
-        log(f"Could not read commit list for {branch}: {exc}")
+    data = read_github_json(api_url + "/commits?" + query, log, f"commit list for {branch}")
+    if not isinstance(data, list):
         return []
 
     commits: list[CommitCandidate] = []
@@ -387,13 +475,14 @@ def read_github_text_file(api_url: str, path: str, ref: str, log: Callable[[str]
     ref = ref.strip() or "main"
     query = urllib.parse.urlencode({"ref": ref})
     quoted_path = urllib.parse.quote(path.strip("/"))
-    request = urllib.request.Request(api_url + f"/contents/{quoted_path}?" + query, headers={"User-Agent": APP_NAME})
-    try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            data = json.loads(response.read(MAX_LICENSE_BYTES).decode("utf-8"))
-    except Exception as exc:
-        log(f"Could not read {path} from {ref}: {exc}")
-        return f"Could not load {path} from {FIRMWARE_REPO} branch '{ref}'.\n\n{exc}"
+    data = read_github_json(api_url + f"/contents/{quoted_path}?" + query, log, f"{path} from {ref}")
+    if not isinstance(data, dict):
+        return (
+            f"Could not load {path} from {FIRMWARE_REPO} branch '{ref}'.\n\n"
+            "GitHub API data is unavailable. If this is due to rate limiting, wait for the limit to reset "
+            "and try refreshing later. Optionally, set GITHUB_TOKEN or GH_TOKEN before opening the installer "
+            "to use a higher authenticated limit."
+        )
 
     if data.get("encoding") != "base64" or "content" not in data:
         return f"Could not load {path} from {FIRMWARE_REPO} branch '{ref}': unexpected GitHub response."
@@ -728,9 +817,7 @@ class InstallerApp(tk.Tk):
         self._build_ui()
         self.after(100, self._drain_log_queue)
         self.after(250, self.refresh_source_branches)
-        self.after(275, self.refresh_source_commits)
         self.after(300, self.refresh_firmware_branches)
-        self.after(325, self.refresh_firmware_license)
         self.refresh_status()
 
     def _build_ui(self) -> None:
@@ -1057,10 +1144,12 @@ class InstallerApp(tk.Tk):
         self.update_setup_button_states()
 
     def refresh_source_branches(self) -> None:
+        fallback_branch = self.source_branch_var.get().strip() or "main"
+
         def work() -> None:
             branches = list_github_branches(REPO_API_URL, self.log)
             if not branches:
-                branches = [github_default_branch(REPO_API_URL, "main", self.log)]
+                branches = [fallback_branch]
 
             def apply() -> None:
                 current = self.source_branch_var.get().strip()
@@ -1118,10 +1207,12 @@ class InstallerApp(tk.Tk):
             self.source_commit_var.set(self.source_commit_items[commit_index].sha)
 
     def refresh_firmware_branches(self) -> None:
+        fallback_branch = self.firmware_branch_var.get().strip() or "main"
+
         def work() -> None:
             branches = list_github_branches(FIRMWARE_API_URL, self.log)
             if not branches:
-                branches = [github_default_branch(FIRMWARE_API_URL, "main", self.log)]
+                branches = [fallback_branch]
 
             def apply() -> None:
                 current = self.firmware_branch_var.get().strip()

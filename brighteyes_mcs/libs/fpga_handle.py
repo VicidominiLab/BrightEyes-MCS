@@ -8,8 +8,12 @@ import nifpga
 import os
 from datetime import datetime
 from .print_debug import print_debug, set_debug
-from .processes.fpga_handle_process_fifo_new import FpgaHandleProcess
-from .detector_backends import DETECTOR_SPAD_ARRAY, normalize_detector_model
+from .processes.fpga_handle_process_fifo_new import NiFpgaControlProcess
+from .detectors.models import (
+    DETECTOR_SPAD_ARRAY,
+    detector_uses_nifpga_control,
+    normalize_detector_model,
+)
 
 class FpgaHandle(object):
     def __init__(
@@ -40,6 +44,7 @@ class FpgaHandle(object):
 
         self.nifpga_obj = None
         self.nifpga_obj2 = None
+        self.fpga_handle_process = None
 
         self.configuration = {
             "timeout_fifos": timeout_fifos,
@@ -73,16 +78,25 @@ class FpgaHandle(object):
         def __del__(self):
             self.stop()
 
-        # self.fpga_handle_process = FpgaHandleProcess(self.configuration)
-        # print("FpgaHandleProcess(self.configuration)")
+        # self.fpga_handle_process = NiFpgaControlProcess(self.configuration)
+        # print("NiFpgaControlProcess(self.configuration)")
 
     def run(self, initial_registers={}):
         self.configuration["initial_registers"].clear()
         self.configuration["initial_registers"].update(initial_registers)
+        if not detector_uses_nifpga_control(self.configuration["detector_model"]):
+            print_debug("Detector selected without NI FPGA control; skipping NI FPGA session startup")
+            self.configuration["is_connected"].set()
+            self.configuration["is_readytorun"].set()
+            self.fpga_handle_process = None
+            self.nifpga_obj = None
+            self.nifpga_obj2 = None
+            return
+
         print_debug("self.fpga_handle_process.start()")
         print_debug("initial_registers")
         print_debug(initial_registers)
-        self.fpga_handle_process = FpgaHandleProcess(
+        self.fpga_handle_process = NiFpgaControlProcess(
             self.configuration, use_rust_fifo=self.use_rust_fifo
         )
 
@@ -138,12 +152,13 @@ class FpgaHandle(object):
 
     def stop(self):
         self.configuration["stop_event"].set()
-        if self.fpga_handle_process.is_alive():
+        if self.fpga_handle_process is not None and self.fpga_handle_process.is_alive():
             self.fpga_handle_process.terminate()
         print_debug("self.fpga_handle_process.join() stopped")
-        self.nifpga_obj.abort()
-        self.nifpga_obj.reset()
-        self.nifpga_obj.close()
+        if self.nifpga_obj is not None:
+            self.nifpga_obj.abort()
+            self.nifpga_obj.reset()
+            self.nifpga_obj.close()
 
         print_debug("nifpga_obj killed")
 
@@ -172,6 +187,10 @@ class FpgaHandle(object):
     #     return mydict
 
     def register_read(self, register, timeout=1000):
+        if not detector_uses_nifpga_control(self.configuration["detector_model"]):
+            initial_registers = self.configuration["initial_registers"]
+            return {name: initial_registers.get(name) for name in list(register)}
+
         register = list(register)
         ret = {}
         for i in register:
@@ -184,11 +203,18 @@ class FpgaHandle(object):
         return ret
 
     def register_read_all(self, timeout=5000):
+        if not detector_uses_nifpga_control(self.configuration["detector_model"]):
+            return dict(self.configuration["initial_registers"])
+
         mydict = {}
         mydict = self.register_read(list(self.configuration["list_registers"]), timeout)
         return mydict
 
     def register_write(self, register, data):
+        if not detector_uses_nifpga_control(self.configuration["detector_model"]):
+            self.configuration["initial_registers"][register] = data
+            return
+
         try:
             self.nifpga_obj.registers[register].write(data)
         except Exception as e:

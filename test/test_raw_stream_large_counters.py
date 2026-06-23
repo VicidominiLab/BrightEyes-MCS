@@ -11,8 +11,13 @@ from unittest.mock import patch
 import h5py
 import numpy as np
 
-from brighteyes_mcs.libs.raw_acquisition_converter import _detect_streams, _load_metadata
-from brighteyes_mcs.libs.processes.raw_stream_writer_process import RawStreamWriterProcess
+from brighteyes_mcs.libs.detector_backends import DETECTOR_PI_23
+from brighteyes_mcs.libs.raw_acquisition_converter import (
+    _detect_streams,
+    _load_metadata,
+    convert_raw_acquisition,
+)
+from brighteyes_mcs.libs.processes.spad_raw_stream_writer_process import SpadRawStreamWriterProcess
 from brighteyes_mcs.libs.mcs_manager import create_i64_counter
 
 
@@ -52,7 +57,7 @@ class TestRawStreamLargeCounters(unittest.TestCase):
             "expected_words_data_per_frame_analog": 0,
             "shape": [1, 1, 1],
         }
-        writer = RawStreamWriterProcess(
+        writer = SpadRawStreamWriterProcess(
             queue.Queue(),
             ["FIFO"],
             {"FIFO": "unused.raw"},
@@ -80,7 +85,7 @@ class TestRawStreamLargeCounters(unittest.TestCase):
             "expected_words_data_per_frame_analog": 0,
             "shape": [1, 1, 1],
         }
-        writer = RawStreamWriterProcess(
+        writer = SpadRawStreamWriterProcess(
             queue.Queue(),
             ["FIFO"],
             {"FIFO": "unused.raw"},
@@ -171,6 +176,33 @@ class TestRawMetadataCompatibility(unittest.TestCase):
 
             self.assertEqual(meta["spad_channels_hint"], 25)
             self.assertEqual(streams[0]["spad_channels"], 25)
+
+    def test_raw_converter_dispatches_pi23_metadata_to_pi23_converter(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            metadata_filename = folder / "pi23_only_metadata.h5"
+
+            with h5py.File(metadata_filename, "w") as h5file:
+                mcs_cfg = h5file.create_group("configurationSpadFCSmanager")
+                mcs_cfg.attrs["#pixels"] = 1
+                mcs_cfg.attrs["#lines"] = 1
+                mcs_cfg.attrs["#frames"] = 1
+                mcs_cfg.attrs["#repetition"] = 2
+                mcs_cfg.attrs["#timebinsPerPixel"] = 1
+                mcs_cfg.attrs["#circular_rep"] = 1
+                mcs_cfg.attrs["#circular_points"] = 1
+                mcs_cfg.attrs["Cx"] = 40
+
+                h5file.create_group("configurationFPGA")
+                h5file.create_group("configurationGUI")
+
+                raw_cfg = h5file.create_group("rawStreamAcquisition")
+                raw_cfg.attrs["detector_model"] = DETECTOR_PI_23
+
+            meta = _load_metadata(metadata_filename)
+            self.assertEqual(meta["detector_model"], DETECTOR_PI_23)
+            with self.assertRaises(NotImplementedError):
+                convert_raw_acquisition(metadata_filename)
 
 
 if __name__ == "__main__":
