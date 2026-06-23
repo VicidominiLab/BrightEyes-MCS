@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import queue
@@ -14,6 +15,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import webbrowser
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,15 +29,40 @@ REPO_FOLDER_NAME = "BrightEyes-MCS"
 REPO_URL = "https://github.com/VicidominiLab/BrightEyes-MCS.git"
 REPO_API_URL = "https://api.github.com/repos/VicidominiLab/BrightEyes-MCS"
 GIT_FOR_WINDOWS_URL = "https://github.com/git-for-windows/git/releases/latest/download/Git-64-bit.exe"
+GIT_FOR_WINDOWS_PAGE_URL = "https://git-scm.com/download/win"
 PYTHON_313_INSTALLER_URL = "https://www.python.org/ftp/python/3.13.14/python-3.13.14-amd64.exe"
+PYTHON_313_PAGE_URL = "https://www.python.org/downloads/release/python-31314/"
+NI_R_SERIES_MRIO_URL = "https://www.ni.com/en/support/downloads/drivers/download.ni-r-series-multifunction-rio.html"
 FIRMWARE_REPO = "VicidominiLab/BrightEyes-MCSLL"
 FIRMWARE_API_URL = f"https://api.github.com/repos/{FIRMWARE_REPO}"
 FIRMWARE_ZIP_URL = f"https://github.com/{FIRMWARE_REPO}/archive/refs/heads/{{branch}}.zip"
+MAX_LICENSE_BYTES = 256 * 1024
 PRESERVED_PATHS = [
     Path("brighteyes_mcs/cfg"),
     Path("brighteyes_mcs/bitfiles"),
     Path("brighteyes_mcs_installer.exe"),
 ]
+
+LICENSE_NOTICE = """BrightEyes-MCS
+License: GNU General Public License version 3 (GPLv3)
+Source and full license text: https://github.com/VicidominiLab/BrightEyes-MCS
+
+This installer is distributed with BrightEyes-MCS under the GPLv3. The GPLv3 permits
+copying, redistribution, and modification under its terms. BrightEyes-MCS is provided
+without warranty.
+
+Python runtime
+License: Python Software Foundation License
+License text: https://docs.python.org/3/license.html
+
+Tcl/Tk runtime used by tkinter
+License: Tcl/Tk license
+License text: https://www.tcl-lang.org/software/tcltk/license.html
+
+PyInstaller bootloader/runtime
+License: GPLv2-or-later with a special exception for distributing bundled programs
+License text: https://pyinstaller.org/en/stable/license.html
+"""
 
 
 @dataclass
@@ -354,6 +381,31 @@ def list_github_commits(api_url: str, branch: str, log: Callable[[str], None], l
         if sha:
             commits.append(CommitCandidate(sha=sha, short_sha=sha[:8], date=date, message=message))
     return commits
+
+
+def read_github_text_file(api_url: str, path: str, ref: str, log: Callable[[str], None]) -> str:
+    ref = ref.strip() or "main"
+    query = urllib.parse.urlencode({"ref": ref})
+    quoted_path = urllib.parse.quote(path.strip("/"))
+    request = urllib.request.Request(api_url + f"/contents/{quoted_path}?" + query, headers={"User-Agent": APP_NAME})
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            data = json.loads(response.read(MAX_LICENSE_BYTES).decode("utf-8"))
+    except Exception as exc:
+        log(f"Could not read {path} from {ref}: {exc}")
+        return f"Could not load {path} from {FIRMWARE_REPO} branch '{ref}'.\n\n{exc}"
+
+    if data.get("encoding") != "base64" or "content" not in data:
+        return f"Could not load {path} from {FIRMWARE_REPO} branch '{ref}': unexpected GitHub response."
+
+    try:
+        raw = base64.b64decode(str(data["content"]), validate=False)
+    except Exception as exc:
+        return f"Could not decode {path} from {FIRMWARE_REPO} branch '{ref}'.\n\n{exc}"
+
+    if len(raw) > MAX_LICENSE_BYTES:
+        raw = raw[:MAX_LICENSE_BYTES] + b"\n\n[license text truncated]\n"
+    return raw.decode("utf-8", errors="replace")
 
 
 def download_firmware(project_dir: Path, branch: str, log: Callable[[str], None]) -> None:
@@ -678,6 +730,7 @@ class InstallerApp(tk.Tk):
         self.after(250, self.refresh_source_branches)
         self.after(275, self.refresh_source_commits)
         self.after(300, self.refresh_firmware_branches)
+        self.after(325, self.refresh_firmware_license)
         self.refresh_status()
 
     def _build_ui(self) -> None:
@@ -704,9 +757,11 @@ class InstallerApp(tk.Tk):
         prereq = ttk.Frame(notebook, padding=12)
         setup = ttk.Frame(notebook, padding=12)
         firmware = ttk.Frame(notebook, padding=12)
+        licenses = ttk.Frame(notebook, padding=12)
         notebook.add(prereq, text="Prerequisites")
         notebook.add(setup, text="Install/Update")
         notebook.add(firmware, text="Firmware")
+        notebook.add(licenses, text="Licenses")
 
         prereq.columnconfigure(1, weight=1)
         ttk.Label(prereq, text="Python 3.13").grid(row=0, column=0, sticky="w")
@@ -719,24 +774,51 @@ class InstallerApp(tk.Tk):
         ttk.Button(prereq, text="Check Python", command=self.refresh_python_candidates).grid(
             row=0, column=2, sticky="e"
         )
-        ttk.Label(prereq, text=f"Python link: {PYTHON_313_INSTALLER_URL}").grid(
-            row=1, column=1, sticky="w", padx=(8, 8), pady=(8, 0)
+        python_link = ttk.Label(
+            prereq,
+            text=f"Python link: {PYTHON_313_PAGE_URL}",
+            foreground="blue",
+            cursor="hand2",
         )
+        python_link.grid(row=1, column=1, sticky="w", padx=(8, 8), pady=(8, 0))
+        python_link.bind("<Button-1>", lambda _event: self.open_url(PYTHON_313_PAGE_URL))
         self.install_python_gui_button = ttk.Button(
             prereq,
-            text="Install Python 3.13",
+            text="Download and Install Python 3.13",
             command=self.install_python_button,
         )
         self.install_python_gui_button.grid(row=1, column=2, sticky="e", pady=(8, 0))
         ttk.Label(prereq, text="Git for Windows").grid(row=2, column=0, sticky="w", pady=(16, 0))
-        ttk.Label(prereq, text=f"Git link: {GIT_FOR_WINDOWS_URL}").grid(
-            row=2, column=1, sticky="w", padx=(8, 8), pady=(16, 0)
+        git_link = ttk.Label(
+            prereq,
+            text=f"Git link: {GIT_FOR_WINDOWS_PAGE_URL}",
+            foreground="blue",
+            cursor="hand2",
         )
-        self.install_git_gui_button = ttk.Button(prereq, text="Install Git", command=self.install_git_button)
+        git_link.grid(row=2, column=1, sticky="w", padx=(8, 8), pady=(16, 0))
+        git_link.bind("<Button-1>", lambda _event: self.open_url(GIT_FOR_WINDOWS_PAGE_URL))
+        self.install_git_gui_button = ttk.Button(
+            prereq,
+            text="Download and Install Git",
+            command=self.install_git_button,
+        )
         self.install_git_gui_button.grid(row=2, column=2, sticky="e", pady=(16, 0))
         ttk.Button(prereq, text="Refresh checks", command=self.refresh_status).grid(
             row=3, column=2, sticky="e", pady=(16, 0)
         )
+        ttk.Label(
+            prereq,
+            text="Warning: to run BrightEyes-MCS properly, install the NI driver - NI R Series Multifunction RIO.",
+            wraplength=680,
+        ).grid(row=4, column=0, columnspan=3, sticky="w", pady=(18, 0))
+        ni_link = ttk.Label(
+            prereq,
+            text=NI_R_SERIES_MRIO_URL,
+            foreground="blue",
+            cursor="hand2",
+        )
+        ni_link.grid(row=5, column=0, columnspan=3, sticky="w", pady=(6, 0))
+        ni_link.bind("<Button-1>", lambda _event: self.open_url(NI_R_SERIES_MRIO_URL))
 
         source = ttk.LabelFrame(setup, text="BrightEyes-MCS source", padding=10)
         source.grid(row=0, column=0, sticky="ew")
@@ -781,14 +863,45 @@ class InstallerApp(tk.Tk):
         self.links_button.grid(row=0, column=2, padx=(8, 0))
 
         firmware.columnconfigure(1, weight=1)
+        firmware.rowconfigure(3, weight=1)
         ttk.Label(firmware, text="Firmware branch").grid(row=0, column=0, sticky="w")
         self.branch_box = ttk.Combobox(firmware, textvariable=self.firmware_branch_var, state="normal", width=28)
         self.branch_box.grid(row=0, column=1, sticky="w", padx=(8, 8))
+        self.branch_box.bind("<<ComboboxSelected>>", self.on_firmware_branch_changed)
         ttk.Button(firmware, text="Refresh branches", command=self.refresh_firmware_branches).grid(
             row=0, column=2, sticky="e"
         )
+        ttk.Label(
+            firmware,
+            text="By clicking Download firmware now, you confirm that you have read and accept the firmware license shown below.",
+            wraplength=680,
+        ).grid(row=1, column=0, columnspan=2, sticky="w", pady=(12, 0))
         self.firmware_button = ttk.Button(firmware, text="Download firmware now", command=self.firmware_button_clicked)
         self.firmware_button.grid(row=1, column=2, sticky="e", pady=(12, 0))
+        ttk.Label(firmware, text="Firmware LICENSE.md").grid(row=2, column=0, sticky="w", pady=(16, 0))
+        ttk.Button(firmware, text="Refresh license", command=self.refresh_firmware_license).grid(
+            row=2, column=2, sticky="e", pady=(16, 0)
+        )
+        firmware_license_frame = ttk.Frame(firmware)
+        firmware_license_frame.grid(row=3, column=0, columnspan=3, sticky="nsew", pady=(8, 0))
+        firmware_license_frame.columnconfigure(0, weight=1)
+        firmware_license_frame.rowconfigure(0, weight=1)
+        self.firmware_license_text = tk.Text(firmware_license_frame, height=10, wrap="word", state="disabled")
+        self.firmware_license_text.grid(row=0, column=0, sticky="nsew")
+        firmware_license_scrollbar = ttk.Scrollbar(firmware_license_frame, command=self.firmware_license_text.yview)
+        firmware_license_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.firmware_license_text.configure(yscrollcommand=firmware_license_scrollbar.set)
+        self.configure_markdown_text(self.firmware_license_text)
+
+        licenses.columnconfigure(0, weight=1)
+        licenses.rowconfigure(0, weight=1)
+        license_text = tk.Text(licenses, height=18, wrap="word")
+        license_text.grid(row=0, column=0, sticky="nsew")
+        license_scrollbar = ttk.Scrollbar(licenses, command=license_text.yview)
+        license_scrollbar.grid(row=0, column=1, sticky="ns")
+        license_text.configure(yscrollcommand=license_scrollbar.set)
+        license_text.insert("1.0", LICENSE_NOTICE)
+        license_text.configure(state="disabled")
 
         log_frame = ttk.Frame(root)
         log_frame.grid(row=4, column=0, columnspan=3, sticky="nsew", pady=(12, 0))
@@ -799,6 +912,61 @@ class InstallerApp(tk.Tk):
         scrollbar = ttk.Scrollbar(log_frame, command=self.log_text.yview)
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.log_text.configure(yscrollcommand=scrollbar.set)
+
+    def open_url(self, url: str) -> None:
+        webbrowser.open_new_tab(url)
+
+    def configure_markdown_text(self, widget: tk.Text) -> None:
+        widget.tag_configure("h1", font=("", 13, "bold"), spacing1=6, spacing3=4)
+        widget.tag_configure("h2", font=("", 12, "bold"), spacing1=5, spacing3=3)
+        widget.tag_configure("h3", font=("", 11, "bold"), spacing1=4, spacing3=2)
+        widget.tag_configure("bold", font=("", 10, "bold"))
+        widget.tag_configure("bullet", lmargin1=18, lmargin2=34)
+        widget.tag_configure("code", font=("Consolas", 9), background="#f2f2f2", lmargin1=8, lmargin2=8)
+
+    def insert_markdown_inline(self, widget: tk.Text, text: str, tags: tuple[str, ...] = ()) -> None:
+        position = 0
+        for match in re.finditer(r"\*\*(.+?)\*\*", text):
+            if match.start() > position:
+                widget.insert("end", text[position : match.start()], tags)
+            widget.insert("end", match.group(1), tags + ("bold",))
+            position = match.end()
+        if position < len(text):
+            widget.insert("end", text[position:], tags)
+
+    def insert_markdown_text(self, widget: tk.Text, markdown: str) -> None:
+        in_code_block = False
+        for raw_line in markdown.splitlines():
+            line = raw_line.rstrip()
+            stripped = line.strip()
+            if stripped.startswith("```"):
+                in_code_block = not in_code_block
+                continue
+            if in_code_block:
+                widget.insert("end", raw_line + "\n", ("code",))
+                continue
+
+            heading = re.match(r"^(#{1,3})\s+(.+)$", line)
+            if heading:
+                level = len(heading.group(1))
+                self.insert_markdown_inline(widget, heading.group(2).strip(), (f"h{level}",))
+                widget.insert("end", "\n", (f"h{level}",))
+                continue
+
+            bullet = re.match(r"^\s*[-*+]\s+(.+)$", line)
+            if bullet:
+                widget.insert("end", "* ", ("bullet",))
+                self.insert_markdown_inline(widget, bullet.group(1).strip(), ("bullet",))
+                widget.insert("end", "\n", ("bullet",))
+                continue
+
+            strong_line = re.match(r"^\*\*(.+)\*\*$", stripped)
+            if strong_line:
+                widget.insert("end", strong_line.group(1).strip() + "\n", ("bold",))
+                continue
+
+            self.insert_markdown_inline(widget, raw_line)
+            widget.insert("end", "\n")
 
     def _python_label(self, candidate: PythonCandidate) -> str:
         version = ".".join(str(part) for part in candidate.version) if candidate.version else "unknown"
@@ -959,6 +1127,32 @@ class InstallerApp(tk.Tk):
                 current = self.firmware_branch_var.get().strip()
                 self.branch_box.configure(values=branches)
                 self.firmware_branch_var.set(current if current in branches else branches[0])
+                self.refresh_firmware_license()
+
+            self.after(0, apply)
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def on_firmware_branch_changed(self, _event: object = None) -> None:
+        self.refresh_firmware_license()
+
+    def set_firmware_license_text(self, text: str) -> None:
+        self.firmware_license_text.configure(state="normal")
+        self.firmware_license_text.delete("1.0", "end")
+        self.insert_markdown_text(self.firmware_license_text, text)
+        self.firmware_license_text.configure(state="disabled")
+
+    def refresh_firmware_license(self) -> None:
+        branch = self.firmware_branch_var.get().strip() or "main"
+        self.set_firmware_license_text(f"Loading LICENSE.md from {FIRMWARE_REPO} branch '{branch}'...")
+
+        def work() -> None:
+            text = read_github_text_file(FIRMWARE_API_URL, "LICENSE.md", branch, self.log)
+            header = f"# {FIRMWARE_REPO} LICENSE.md ({branch})\n\n"
+
+            def apply() -> None:
+                if (self.firmware_branch_var.get().strip() or "main") == branch:
+                    self.set_firmware_license_text(header + text)
 
             self.after(0, apply)
 
@@ -1058,6 +1252,16 @@ class InstallerApp(tk.Tk):
         self.run_background("Update BrightEyes-MCS", work)
 
     def firmware_button_clicked(self) -> None:
+        confirmed = messagebox.askyesno(
+            APP_NAME,
+            "The firmware files will be downloaded from BrightEyes-MCSLL.\n\n"
+            "By downloading the firmware, you confirm that you have read and accept the firmware license shown in "
+            "this tab.\n\n"
+            "Do you want to continue?",
+        )
+        if not confirmed:
+            self.log("Firmware download cancelled.")
+            return
         self.run_background(
             "Download firmware",
             lambda: download_firmware(self.selected_project_dir(), self.firmware_branch_var.get(), self.log),
