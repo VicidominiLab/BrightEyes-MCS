@@ -1,0 +1,55 @@
+name: Build installer release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-installer:
+    name: Build Windows installer
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          architecture: "x64"
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pyinstaller
+
+      - name: Build installer executable
+        working-directory: installer
+        run: |
+          python -m PyInstaller `
+            --clean `
+            --noconfirm `
+            --onefile `
+            --windowed `
+            --name brighteyes_mcs_installer `
+            brighteyes_mcs_installer.py
+
+          if (-not (Test-Path "dist/brighteyes_mcs_installer.exe")) {
+            throw "Expected output was not found: dist/brighteyes_mcs_installer.exe"
+          }
+
+          Move-Item -Force "dist/brighteyes_mcs_installer.exe" "brighteyes_mcs_installer.exe"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: brighteyes_mcs_installer
+          path: installer/brighteyes_mcs_installer.exe
+
+      - name: Publish executable on GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/brighteyes_mcs_installer.exe
