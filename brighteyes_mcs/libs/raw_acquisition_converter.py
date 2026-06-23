@@ -33,6 +33,13 @@ def _group_attrs_to_dict(group):
     return {key: _attr_scalar(group.attrs[key]) for key in group.attrs.keys()}
 
 
+def _attrs_from_first_group(h5file, group_names):
+    for group_name in group_names:
+        if group_name in h5file:
+            return _group_attrs_to_dict(h5file[group_name])
+    raise KeyError("None of these H5 groups were found: %s" % ", ".join(group_names))
+
+
 def _as_bool(value):
     if isinstance(value, bytes):
         value = value.decode("utf-8", errors="ignore")
@@ -105,7 +112,7 @@ def _emit_progress(progress_callback, value, message):
         progress_callback(int(max(0, min(100, value))), message)
 
 
-def _infer_digital_channels(raw_words, total_samples):
+def _infer_spad_channels(raw_words, total_samples):
     if total_samples <= 0:
         return 25
 
@@ -118,8 +125,8 @@ def _infer_digital_channels(raw_words, total_samples):
         return valid_channel_counts[0]
 
     raise RuntimeError(
-        "Unable to infer whether the digital raw stream is 25- or 49-channel. "
-        "Save acquisitions with updated raw metadata or keep configurationGUI.spad_number_of_channels populated."
+        "Unable to infer whether the SPAD raw stream is 25- or 49-channel. "
+        "Save acquisitions with updated raw metadata or keep configurationGUI.spad_channels populated."
     )
 
 
@@ -137,17 +144,24 @@ def _detect_streams(metadata_filename: Path, meta):
     if digital_path is not None and digital_path.exists():
         digital_words = digital_path.stat().st_size // np.dtype(np.uint64).itemsize
         total_samples = meta["total_samples"]
-        channel_hint = int(raw_cfg.get("digital_channels", meta.get("channels_hint", 0) or 0))
-        if channel_hint not in (25, 49):
-            channel_hint = _infer_digital_channels(digital_words, total_samples)
+        spad_channels_hint = int(
+            raw_cfg.get(
+                "digital_channels",
+                raw_cfg.get("spad_channels", meta.get("spad_channels_hint", 0) or 0),
+            )
+        )
+        if spad_channels_hint not in (25, 49):
+            spad_channels_hint = _infer_spad_channels(digital_words, total_samples)
 
-        words_per_sample = int(raw_cfg.get("digital_words_per_sample", 0) or 0)
-        expected_words_per_sample = 2 if channel_hint == 25 else 8
+        words_per_sample = int(
+            raw_cfg.get("digital_words_per_sample", raw_cfg.get("spad_words_per_sample", 0)) or 0
+        )
+        expected_words_per_sample = 2 if spad_channels_hint == 25 else 8
         if words_per_sample not in (2, 8):
             words_per_sample = expected_words_per_sample
         if words_per_sample != expected_words_per_sample:
             raise RuntimeError(
-                f"Inconsistent digital stream metadata: channels={channel_hint}, "
+                f"Inconsistent SPAD stream metadata: spad_channels={spad_channels_hint}, "
                 f"words_per_sample={words_per_sample}."
             )
         if digital_words % words_per_sample != 0:
@@ -160,7 +174,7 @@ def _detect_streams(metadata_filename: Path, meta):
                 "fifo_name": "FIFO",
                 "path": digital_path,
                 "kind": "digital",
-                "channels": channel_hint,
+                "spad_channels": spad_channels_hint,
             }
         )
 
@@ -185,33 +199,36 @@ def _detect_streams(metadata_filename: Path, meta):
 
 def _load_metadata(metadata_filename: Path):
     with h5py.File(metadata_filename, "r") as h5file:
-        spad_cfg = _group_attrs_to_dict(h5file["configurationSpadFCSmanager"])
+        mcs_cfg = _attrs_from_first_group(
+            h5file,
+            ("configurationSpadFCSmanager", "configurationMcsManager"),
+        )
         fpga_cfg = _group_attrs_to_dict(h5file["configurationFPGA"])
         gui_cfg = _group_attrs_to_dict(h5file["configurationGUI"])
         raw_cfg = _group_attrs_to_dict(h5file["rawStreamAcquisition"])
 
-    channels_hint = int(gui_cfg.get("spad_number_of_channels", 25))
+    spad_channels_hint = int(gui_cfg.get("spad_number_of_channels", gui_cfg.get("spad_channels", 25)))
     shape = (
-        int(spad_cfg["#pixels"]),
-        int(spad_cfg["#lines"]),
-        int(spad_cfg["#frames"]),
+        int(mcs_cfg["#pixels"]),
+        int(mcs_cfg["#lines"]),
+        int(mcs_cfg["#frames"]),
     )
-    repetitions = int(spad_cfg["#repetition"]) - 1
-    timebins_per_pixel = int(spad_cfg["#timebinsPerPixel"])
-    circ_rep = int(spad_cfg.get("#circular_rep", 1))
-    circ_points = int(spad_cfg.get("#circular_points", 1))
+    repetitions = int(mcs_cfg["#repetition"]) - 1
+    timebins_per_pixel = int(mcs_cfg["#timebinsPerPixel"])
+    circ_rep = int(mcs_cfg.get("#circular_rep", 1))
+    circ_points = int(mcs_cfg.get("#circular_points", 1))
     effective_timebins = timebins_per_pixel * circ_rep * circ_points
     clk_base = float(raw_cfg.get("clock_base_mhz", gui_cfg.get("clock_base", 40)))
-    time_resolution = float(spad_cfg.get("Cx", 40)) / clk_base
+    time_resolution = float(mcs_cfg.get("Cx", 40)) / clk_base
     total_frames = shape[2] * repetitions
     total_samples = shape[0] * shape[1] * effective_timebins * total_frames
 
     return {
-        "spad_cfg": spad_cfg,
+        "mcs_cfg": mcs_cfg,
         "fpga_cfg": fpga_cfg,
         "gui_cfg": gui_cfg,
         "raw_cfg": raw_cfg,
-        "channels_hint": channels_hint,
+        "spad_channels_hint": spad_channels_hint,
         "shape": shape,
         "repetitions": repetitions,
         "timebins_per_pixel": timebins_per_pixel,
@@ -233,7 +250,7 @@ def _convert_digital(
     raw_filename: Path,
     output_filename: Path,
     meta,
-    channels,
+    spad_channels,
     progress_callback=None,
     progress_start=0,
     progress_span=100,
@@ -242,8 +259,8 @@ def _convert_digital(
     effective_timebins = meta["effective_timebins"]
     clk_multiplier = max(1, meta["clk_multiplier"])
     reduced_timebins = effective_timebins // clk_multiplier
-    words_per_sample = 2 if channels == 25 else 8
-    converter = convertRawDataToCountsDirect if channels == 25 else convertRawDataToCountsDirect49
+    words_per_sample = 2 if spad_channels == 25 else 8
+    converter = convertRawDataToCountsDirect if spad_channels == 25 else convertRawDataToCountsDirect49
 
     raw_words = np.memmap(raw_filename, dtype=np.uint64, mode="r")
     total_samples = raw_words.shape[0] // words_per_sample
@@ -252,18 +269,18 @@ def _convert_digital(
 
     with h5py.File(output_filename, "r+") as h5file:
         data_dset = _create_expandable_dataset(
-            h5file, "data", shape, reduced_timebins, channels, np.uint16
+            h5file, "data", shape, reduced_timebins, spad_channels, np.uint16
         )
         extra_dset = _create_expandable_dataset(
             h5file, "data_channels_extra", shape, reduced_timebins, 2, np.uint8
         )
 
-        frame_buffer = np.zeros((shape[1], shape[0], reduced_timebins, channels), dtype=np.uint16)
+        frame_buffer = np.zeros((shape[1], shape[0], reduced_timebins, spad_channels), dtype=np.uint16)
         frame_extra_buffer = np.zeros((shape[1], shape[0], reduced_timebins, 2), dtype=np.uint8)
-        decode_buffer = np.zeros((chunk_samples, channels + 2), dtype=np.uint64)
+        decode_buffer = np.zeros((chunk_samples, spad_channels + 2), dtype=np.uint64)
         buffer_sum = np.zeros(chunk_samples, dtype=np.uint64)
-        saturation = np.zeros(channels + 2, dtype=np.uint64)
-        mask = np.ones(channels, dtype=np.uint8)
+        saturation = np.zeros(spad_channels + 2, dtype=np.uint64)
+        mask = np.ones(spad_channels, dtype=np.uint8)
 
         sample_pointer = 0
         frame_index = 0
@@ -306,14 +323,14 @@ def _convert_digital(
                 list_y,
                 list_x,
                 list_b,
-                decoded[:, :channels].astype(np.uint16, copy=False),
+                decoded[:, :spad_channels].astype(np.uint16, copy=False),
             )
             accumulate_unordered_sum_4d(
                 frame_extra_buffer,
                 list_y,
                 list_x,
                 list_b,
-                decoded[:, channels:].astype(np.uint8, copy=False),
+                decoded[:, spad_channels:].astype(np.uint8, copy=False),
             )
 
             sample_pointer += process_samples
@@ -321,7 +338,7 @@ def _convert_digital(
                 _emit_progress(
                     progress_callback,
                     progress_start + progress_span * (sample_pointer / total_samples),
-                    f"Converting digital RAW ({channels} ch): {sample_pointer}/{total_samples} samples",
+                    f"Converting SPAD RAW ({spad_channels} ch): {sample_pointer}/{total_samples} samples",
                 )
             reached_frame_end = sample_pointer == (current_frame_start + samples_per_frame)
             last_chunk = sample_pointer >= total_samples
@@ -449,7 +466,7 @@ def convert_raw_acquisition(metadata_filename: Path, output_filename: Path | Non
                 stream["path"],
                 output_filename,
                 meta,
-                stream["channels"],
+                stream["spad_channels"],
                 progress_callback=progress_callback,
                 progress_start=progress_start,
                 progress_span=progress_span,

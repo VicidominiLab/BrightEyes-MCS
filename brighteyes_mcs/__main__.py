@@ -12,8 +12,9 @@ if __name__ == "__main__":
     os.chdir(path)
     print("Current Working Directory moved to ", os.getcwd())
 
-    from PySide6.QtWidgets import QApplication
     from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication
+    from .gui.qt_locale import install_scientific_locale
 
     # import qdarkstyle # fancy dark style
 
@@ -31,6 +32,7 @@ if __name__ == "__main__":
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+    install_scientific_locale()
 
     sys.argv += ['-platform', 'windows:darkmode=2']
     app = QApplication(sys.argv)

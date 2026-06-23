@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window_design.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.11.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -646,12 +646,12 @@ class Ui_MainWindowDesign(object):
         self.groupBox_13.setObjectName(u"groupBox_13")
         self.gridLayout_86 = QGridLayout(self.groupBox_13)
         self.gridLayout_86.setObjectName(u"gridLayout_86")
-        self.comboBox_channels = QComboBox(self.groupBox_13)
-        self.comboBox_channels.addItem("")
-        self.comboBox_channels.addItem("")
-        self.comboBox_channels.setObjectName(u"comboBox_channels")
+        self.comboBox_spad_channels = QComboBox(self.groupBox_13)
+        self.comboBox_spad_channels.addItem("")
+        self.comboBox_spad_channels.addItem("")
+        self.comboBox_spad_channels.setObjectName(u"comboBox_spad_channels")
 
-        self.gridLayout_86.addWidget(self.comboBox_channels, 0, 0, 1, 1)
+        self.gridLayout_86.addWidget(self.comboBox_spad_channels, 0, 0, 1, 1)
 
 
         self.gridLayout_30.addWidget(self.groupBox_13, 1, 1, 2, 1)
@@ -1910,10 +1910,22 @@ class Ui_MainWindowDesign(object):
         self.tab.setObjectName(u"tab")
         self.gridLayout_61 = QGridLayout(self.tab)
         self.gridLayout_61.setObjectName(u"gridLayout_61")
+        self.label_detector_model = QLabel(self.tab)
+        self.label_detector_model.setObjectName(u"label_detector_model")
+
+        self.gridLayout_61.addWidget(self.label_detector_model, 0, 0, 1, 1)
+
+        self.comboBox_detector_model = QComboBox(self.tab)
+        self.comboBox_detector_model.addItem("")
+        self.comboBox_detector_model.addItem("")
+        self.comboBox_detector_model.setObjectName(u"comboBox_detector_model")
+
+        self.gridLayout_61.addWidget(self.comboBox_detector_model, 0, 1, 1, 1)
+
         self.label_119 = QLabel(self.tab)
         self.label_119.setObjectName(u"label_119")
 
-        self.gridLayout_61.addWidget(self.label_119, 5, 0, 1, 1)
+        self.gridLayout_61.addWidget(self.label_119, 6, 0, 1, 1)
 
         self.gridLayout_59 = QGridLayout()
         self.gridLayout_59.setObjectName(u"gridLayout_59")
@@ -1943,26 +1955,26 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_59.addWidget(self.lineEdit_spad_length, 0, 2, 1, 2)
 
 
-        self.gridLayout_61.addLayout(self.gridLayout_59, 6, 0, 1, 1)
+        self.gridLayout_61.addLayout(self.gridLayout_59, 7, 0, 1, 1)
 
         self.checkBox_SPAD_VR0 = QCheckBox(self.tab)
         self.checkBox_SPAD_VR0.setObjectName(u"checkBox_SPAD_VR0")
 
-        self.gridLayout_61.addWidget(self.checkBox_SPAD_VR0, 1, 0, 1, 1)
+        self.gridLayout_61.addWidget(self.checkBox_SPAD_VR0, 2, 0, 1, 1)
 
         self.label_124 = QLabel(self.tab)
         self.label_124.setObjectName(u"label_124")
 
-        self.gridLayout_61.addWidget(self.label_124, 0, 0, 1, 1)
+        self.gridLayout_61.addWidget(self.label_124, 1, 0, 1, 1)
 
         self.checkBox_SPAD_VR1 = QCheckBox(self.tab)
         self.checkBox_SPAD_VR1.setObjectName(u"checkBox_SPAD_VR1")
 
-        self.gridLayout_61.addWidget(self.checkBox_SPAD_VR1, 2, 0, 1, 1)
+        self.gridLayout_61.addWidget(self.checkBox_SPAD_VR1, 3, 0, 1, 1)
 
         self.verticalSpacer_12 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_61.addItem(self.verticalSpacer_12, 3, 0, 1, 1)
+        self.gridLayout_61.addItem(self.verticalSpacer_12, 4, 0, 1, 1)
 
         self.tabWidget_2.addTab(self.tab, "")
         self.tab_6 = QWidget()
@@ -3442,7 +3454,7 @@ class Ui_MainWindowDesign(object):
         self.radioButton_ttm_local.toggled.connect(MainWindowDesign.radio_ttm_local)
         self.toolButton_ttm_filename.clicked.connect(MainWindowDesign.cmd_filename_ttm)
         self.checkBox_uttm_watchdog.clicked.connect(MainWindowDesign.checkBox_uttm_watchdog_clicked)
-        self.comboBox_channels.textActivated.connect(MainWindowDesign.numberChannelsChanged)
+        self.comboBox_spad_channels.textActivated.connect(MainWindowDesign.spadChannelsChanged)
         self.groupBox_9.clicked.connect(MainWindowDesign.checkAlerts)
         self.checkBox_fifo_analog.clicked.connect(MainWindowDesign.checkAlerts)
         self.lineEdit_fpgabitfile.textChanged.connect(MainWindowDesign.bitfile_changed)
@@ -3588,8 +3600,8 @@ class Ui_MainWindowDesign(object):
         self.checkBox_uttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
         self.checkBox_fifo_analog.setText(QCoreApplication.translate("MainWindowDesign", u"Analog", None))
         self.groupBox_13.setTitle(QCoreApplication.translate("MainWindowDesign", u"Channels", None))
-        self.comboBox_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
-        self.comboBox_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
+        self.comboBox_spad_channels.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"25", None))
+        self.comboBox_spad_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
 
         self.checkBox_fifo_digital.setText(QCoreApplication.translate("MainWindowDesign", u"Digital", None))
 #if QT_CONFIG(tooltip)
@@ -3720,13 +3732,13 @@ class Ui_MainWindowDesign(object):
         self.pushButton_15.setText(QCoreApplication.translate("MainWindowDesign", u"Move to selected row", None))
         self.pushButton_Panorama.setText(QCoreApplication.translate("MainWindowDesign", u"Move to Default FOV", None))
         ___qtablewidgetitem = self.tableWidget_markers.horizontalHeaderItem(0)
-        ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindowDesign", u"X", None));
+        ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
         ___qtablewidgetitem1 = self.tableWidget_markers.horizontalHeaderItem(1)
-        ___qtablewidgetitem1.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None));
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
         ___qtablewidgetitem2 = self.tableWidget_markers.horizontalHeaderItem(2)
-        ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None));
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
         ___qtablewidgetitem3 = self.tableWidget_markers.horizontalHeaderItem(3)
-        ___qtablewidgetitem3.setText(QCoreApplication.translate("MainWindowDesign", u"Comments", None));
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("MainWindowDesign", u"Comments", None))
 #if QT_CONFIG(tooltip)
         self.tableWidget_markers.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Table of position selected on the image. To add a point double-click on the image.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -3892,6 +3904,10 @@ class Ui_MainWindowDesign(object):
         self.label_bitfile_signature.setText("")
         self.label_bitfile_signature_2.setText("")
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_2), QCoreApplication.translate("MainWindowDesign", u"Board Configuration", None))
+        self.label_detector_model.setText(QCoreApplication.translate("MainWindowDesign", u"Detector", None))
+        self.comboBox_detector_model.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"SPAD Array", None))
+        self.comboBox_detector_model.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"PI 23", None))
+
         self.label_119.setText(QCoreApplication.translate("MainWindowDesign", u"(Legacy feature to program the old SPAD array prototype)", None))
         self.lineEdit_spad_data.setText(QCoreApplication.translate("MainWindowDesign", u"33554431", None))
         self.label_93.setText(QCoreApplication.translate("MainWindowDesign", u"Data length", None))

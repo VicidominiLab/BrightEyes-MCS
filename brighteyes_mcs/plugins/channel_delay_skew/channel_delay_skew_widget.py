@@ -21,17 +21,17 @@ TWENTY_FIVE_TO_FORTY_NINE = np.array(
 
 class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
     CONFIG_KEY = "channel_delay_skew"
-    DATA_CHANNELS_49 = 49
-    DATA_CHANNELS_25 = 25
+    SPAD_CHANNELS_49 = 49
+    SPAD_CHANNELS_25 = 25
     EXTRA_CHANNELS = 2
     DEFAULT_REFERENCE_DATA_INDEX_49 = 24
 
-    def __init__(self, main_window=None, channels=25):
+    def __init__(self, main_window=None, spad_channels=25):
         super().__init__()
         self.setupUi(self)
 
         self.main_window = main_window
-        self.channels = channels
+        self.spad_channels = spad_channels
         self.threadpool = QThreadPool()
         self.analysis_lock = False
         self.analysis_worker = None
@@ -61,7 +61,7 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
 
         if self.main_window is not None:
             try:
-                self.main_window.ui.comboBox_channels.currentTextChanged.connect(
+                self.main_window.ui.comboBox_spad_channels.currentTextChanged.connect(
                     self.channel_mode_changed
                 )
             except Exception:
@@ -83,10 +83,10 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
 
     def _default_table(self):
         table = np.full(
-            (self.DATA_CHANNELS_49 + self.EXTRA_CHANNELS, 4), np.nan, dtype=float
+            (self.SPAD_CHANNELS_49 + self.EXTRA_CHANNELS, 4), np.nan, dtype=float
         )
-        table[: self.DATA_CHANNELS_49, 0] = np.arange(self.DATA_CHANNELS_49)
-        table[TWENTY_FIVE_TO_FORTY_NINE, 1] = np.arange(self.DATA_CHANNELS_25)
+        table[: self.SPAD_CHANNELS_49, 0] = np.arange(self.SPAD_CHANNELS_49)
+        table[TWENTY_FIVE_TO_FORTY_NINE, 1] = np.arange(self.SPAD_CHANNELS_25)
         table[:, 2] = 0.0
         table[:, 3] = np.nan
         return table
@@ -117,11 +117,11 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
             configuration.get("data_channel_extra", []), dtype=float
         ).reshape(-1)
 
-        table[: min(data.size, self.DATA_CHANNELS_49), 2] = data[
-            : self.DATA_CHANNELS_49
+        table[: min(data.size, self.SPAD_CHANNELS_49), 2] = data[
+            : self.SPAD_CHANNELS_49
         ]
         table[
-            self.DATA_CHANNELS_49 : self.DATA_CHANNELS_49
+            self.SPAD_CHANNELS_49 : self.SPAD_CHANNELS_49
             + min(data_extra.size, self.EXTRA_CHANNELS),
             2,
         ] = data_extra[: self.EXTRA_CHANNELS]
@@ -162,7 +162,7 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
                     self.DEFAULT_REFERENCE_DATA_INDEX_49,
                 ),
                 0,
-                self.DATA_CHANNELS_49 - 1,
+                self.SPAD_CHANNELS_49 - 1,
             )
         )
         configuration["reference_data_channel_extra_index"] = int(
@@ -177,18 +177,18 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
         )
         return configuration
 
-    def get_current_channel_count(self):
+    def get_current_spad_channel_count(self):
         try:
-            current_channels = int(self.main_window.ui.comboBox_channels.currentText())
+            current_spad_channels = int(self.main_window.ui.comboBox_spad_channels.currentText())
         except Exception:
             try:
-                current_channels = int(self.main_window.CHANNELS)
+                current_spad_channels = int(self.main_window.spad_channels)
             except Exception:
-                current_channels = int(self.channels)
+                current_spad_channels = int(self.spad_channels)
 
-        if current_channels not in (self.DATA_CHANNELS_25, self.DATA_CHANNELS_49):
-            current_channels = self.DATA_CHANNELS_25
-        return current_channels
+        if current_spad_channels not in (self.SPAD_CHANNELS_25, self.SPAD_CHANNELS_49):
+            current_spad_channels = self.SPAD_CHANNELS_25
+        return current_spad_channels
 
     def map_49_to_25(self, channel_49):
         channel_49 = int(channel_49)
@@ -201,12 +201,12 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
         return int(TWENTY_FIVE_TO_FORTY_NINE[int(channel_25)])
 
     def refresh_reference_controls(self):
-        current_channels = self.get_current_channel_count()
-        self.label_active_mode_value.setText("%d channels" % current_channels)
+        current_spad_channels = self.get_current_spad_channel_count()
+        self.label_active_mode_value.setText("%d channels" % current_spad_channels)
 
         if (
             self.reference_source == "data"
-            and current_channels == self.DATA_CHANNELS_25
+            and current_spad_channels == self.SPAD_CHANNELS_25
             and self.map_49_to_25(self.reference_data_index_49) is None
         ):
             self.reference_data_index_49 = self.DEFAULT_REFERENCE_DATA_INDEX_49
@@ -217,8 +217,8 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
         self.comboBox_reference_source.setCurrentText(self.reference_source)
 
         if self.reference_source == "data":
-            self.spinBox_reference_channel.setMaximum(current_channels - 1)
-            if current_channels == self.DATA_CHANNELS_25:
+            self.spinBox_reference_channel.setMaximum(current_spad_channels - 1)
+            if current_spad_channels == self.SPAD_CHANNELS_25:
                 displayed_index = self.map_49_to_25(self.reference_data_index_49)
             else:
                 displayed_index = self.reference_data_index_49
@@ -255,9 +255,9 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
 
     def _row_indices_for_estimate(self, source_name, channel_count):
         if source_name == "data":
-            if channel_count == self.DATA_CHANNELS_49:
-                return np.arange(self.DATA_CHANNELS_49, dtype=int)
-            if channel_count == self.DATA_CHANNELS_25:
+            if channel_count == self.SPAD_CHANNELS_49:
+                return np.arange(self.SPAD_CHANNELS_49, dtype=int)
+            if channel_count == self.SPAD_CHANNELS_25:
                 return np.array(TWENTY_FIVE_TO_FORTY_NINE, dtype=int)
             raise ValueError("Unsupported data channel count: %d" % channel_count)
 
@@ -267,8 +267,8 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
                 % (self.EXTRA_CHANNELS, channel_count)
             )
         return np.arange(
-            self.DATA_CHANNELS_49,
-            self.DATA_CHANNELS_49 + self.EXTRA_CHANNELS,
+            self.SPAD_CHANNELS_49,
+            self.SPAD_CHANNELS_49 + self.EXTRA_CHANNELS,
             dtype=int,
         )
 
@@ -416,7 +416,7 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
     @Slot(int)
     def reference_channel_changed(self, value):
         if self.reference_source == "data":
-            if self.get_current_channel_count() == self.DATA_CHANNELS_25:
+            if self.get_current_spad_channel_count() == self.SPAD_CHANNELS_25:
                 self.reference_data_index_49 = self.map_25_to_49(value)
             else:
                 self.reference_data_index_49 = int(value)
@@ -436,34 +436,34 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
     def get_delay_skew_table_numpy(self):
         return np.array(self.table_skew.get_data(), dtype=float)
 
-    def get_channel_delay_skew_array(self, channels=None):
-        if channels is None:
-            channels = self.get_current_channel_count()
+    def get_channel_delay_skew_array(self, spad_channels=None):
+        if spad_channels is None:
+            spad_channels = self.get_current_spad_channel_count()
 
-        values = self.table_skew.get_data()[: self.DATA_CHANNELS_49, 2]
+        values = self.table_skew.get_data()[: self.SPAD_CHANNELS_49, 2]
 
-        if int(channels) == self.DATA_CHANNELS_49:
+        if int(spad_channels) == self.SPAD_CHANNELS_49:
             return np.array(values, dtype=float)
-        if int(channels) == self.DATA_CHANNELS_25:
+        if int(spad_channels) == self.SPAD_CHANNELS_25:
             return np.array(values[TWENTY_FIVE_TO_FORTY_NINE], dtype=float)
-        raise ValueError("channels must be 25 or 49")
+        raise ValueError("spad_channels must be 25 or 49")
 
-    def get_channel_delay_skew_error_array(self, channels=None):
-        if channels is None:
-            channels = self.get_current_channel_count()
+    def get_channel_delay_skew_error_array(self, spad_channels=None):
+        if spad_channels is None:
+            spad_channels = self.get_current_spad_channel_count()
 
-        values = self.table_skew.get_data()[: self.DATA_CHANNELS_49, 3]
+        values = self.table_skew.get_data()[: self.SPAD_CHANNELS_49, 3]
 
-        if int(channels) == self.DATA_CHANNELS_49:
+        if int(spad_channels) == self.SPAD_CHANNELS_49:
             return np.array(values, dtype=float)
-        if int(channels) == self.DATA_CHANNELS_25:
+        if int(spad_channels) == self.SPAD_CHANNELS_25:
             return np.array(values[TWENTY_FIVE_TO_FORTY_NINE], dtype=float)
-        raise ValueError("channels must be 25 or 49")
+        raise ValueError("spad_channels must be 25 or 49")
 
     def get_data_channel_extra_delay_skew_array(self):
         return np.array(
             self.table_skew.get_data()[
-                self.DATA_CHANNELS_49 : self.DATA_CHANNELS_49 + self.EXTRA_CHANNELS,
+                self.SPAD_CHANNELS_49 : self.SPAD_CHANNELS_49 + self.EXTRA_CHANNELS,
                 2,
             ],
             dtype=float,
@@ -472,27 +472,27 @@ class ChannelDelaySkewWidget(QWidget, channel_delay_skew_widget_design.Ui_Form):
     def get_data_channel_extra_delay_skew_error_array(self):
         return np.array(
             self.table_skew.get_data()[
-                self.DATA_CHANNELS_49 : self.DATA_CHANNELS_49 + self.EXTRA_CHANNELS,
+                self.SPAD_CHANNELS_49 : self.SPAD_CHANNELS_49 + self.EXTRA_CHANNELS,
                 3,
             ],
             dtype=float,
         )
 
-    def get_reference_channel_used_for_time_skew(self, channels=None):
-        if channels is None:
-            channels = self.get_current_channel_count()
+    def get_reference_channel_used_for_time_skew(self, spad_channels=None):
+        if spad_channels is None:
+            spad_channels = self.get_current_spad_channel_count()
 
         if self.reference_source == "data":
-            if int(channels) == self.DATA_CHANNELS_49:
+            if int(spad_channels) == self.SPAD_CHANNELS_49:
                 return {"source": "data", "index": int(self.reference_data_index_49)}
-            if int(channels) == self.DATA_CHANNELS_25:
+            if int(spad_channels) == self.SPAD_CHANNELS_25:
                 channel_25 = self.map_49_to_25(self.reference_data_index_49)
                 if channel_25 is None:
                     raise ValueError(
                         "The selected reference data channel is not available in 25-channel mode."
                     )
                 return {"source": "data", "index": int(channel_25)}
-            raise ValueError("channels must be 25 or 49")
+            raise ValueError("spad_channels must be 25 or 49")
 
         return {
             "source": "data_channel_extra",

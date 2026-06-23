@@ -6,7 +6,7 @@ PySide6_Addons>=6.10.1
 PySide6_Essentials>=6.10.1
 
 numpy
-brighteyes-mcs-cylibs>=0.1.0
+brighteyes-mcs-cylibs>=1.0.0
 setuptools
 nifpga
 h5py

@@ -1,4 +1,4 @@
-﻿"""main_window.py: BrightEyes-MCS - MainWindow."""
+"""main_window.py: BrightEyes-MCS - MainWindow."""
 __author__ = "Mattia Donato"
 __copyright__ = "Copyright (C) 2023, Istituto Italiano di Tecnologia"
 __license__ = "GPL"
@@ -48,9 +48,10 @@ from datetime import datetime
 
 from .main_window_design import Ui_MainWindowDesign
 from .flim_image_view import FlimImageView
+from .qt_locale import install_scientific_locale
 
 from ..gui.console_widget import ConsoleWidget
-from ..libs.spad_fcs_manager import SpadFcsManager
+from ..libs.mcs_manager import McsManager
 from ..libs.table_manager import TableManager
 
 from ..libs.print_debug import print_debug
@@ -59,6 +60,7 @@ from ..libs.ttm import TtmRemoteManager
 from ..libs.plugin_loader import PluginsManager
 from ..libs.restapi import FastAPIServerThread
 from ..libs.raw_acquisition_converter import convert_raw_acquisition
+from ..libs.detector_backends import DETECTOR_PI_23, DETECTOR_SPAD_ARRAY
 
 import numpy as np
 import time
@@ -138,6 +140,7 @@ class MainWindow(QMainWindow):
     )
 
     def __init__(self, args=None):
+        install_scientific_locale()
         self.http_server_thread = None
         self.guiReadyFlag = False
         self.init_ready = False
@@ -156,7 +159,7 @@ class MainWindow(QMainWindow):
                 """BrightEyes-MCS (Version: %s)                  
         Author: Mattia Donato 
         License: General Public License version 3 (GPL v3)        
-        Copyright Â© 2023 Istituto Italiano di Tecnologia
+        Copyright © 2023 Istituto Italiano di Tecnologia
                         
         This program comes with ABSOLUTELY NO WARRANTY. 
         """
@@ -186,9 +189,9 @@ class MainWindow(QMainWindow):
 
         self.preset_dict = {}
 
-        self.CHANNELS = 25
-        self.CHANNELS_x = 5
-        self.CHANNELS_y = 5
+        self.spad_channels = 25
+        self.spad_channels_x = 5
+        self.spad_channels_y = 5
         self.started_preview = False
         self.started_normal = False
         self.program_state = self.PROGRAM_STATE_IDLE
@@ -393,8 +396,13 @@ class MainWindow(QMainWindow):
         self.configurationFPGA_dict = {}
         self.configurationGUI_dict = {}
 
-        self.spadfcsmanager_inst = SpadFcsManager()
-        print_debug("SpadFcsManager()")
+        self.mcs_manager = McsManager()
+        print_debug("McsManager()")
+        if hasattr(self.ui, "comboBox_detector_model"):
+            self.ui.comboBox_detector_model.currentTextChanged.connect(
+                self.detectorModelChanged
+            )
+            self.detectorModelChanged(self.ui.comboBox_detector_model.currentText())
         self.ui.spinBox_compensation_delay.valueChanged.connect(
             self.compensationDelayForSnakeChanged
         )
@@ -403,10 +411,10 @@ class MainWindow(QMainWindow):
         )
         self.apply_dfd_metadata_from_bitfile_name(self.ui.lineEdit_fpgabitfile.text())
         # self.qthread = QThread()
-        # self.spadfcsmanager_inst.moveToThread(self.qthread)
-        # print_debug("spadfcsmanager_inst.moveToThread()")
+        # self.mcs_manager.moveToThread(self.qthread)
+        # print_debug("mcs_manager.moveToThread()")
 
-        self.ui.checkBoxLockRatio.setText('🔒')
+        self.ui.checkBoxLockRatio.setText("\U0001f512")
 
         self.ui.progressBar_frame.setValue(0)
         self.ui.progressBar_repetition.setValue(0)
@@ -1138,10 +1146,17 @@ class MainWindow(QMainWindow):
             True,
         )
 
-        configuration_helper["spad_number_of_channels"] = (
+        configuration_helper["spad_channels"] = (
             "SPAD channels",
             str,
-            self.ui.comboBox_channels,
+            self.ui.comboBox_spad_channels,
+            False,
+        )
+
+        configuration_helper["detector_model"] = (
+            "Detector",
+            str,
+            self.ui.comboBox_detector_model,
             False,
         )
 
@@ -1178,20 +1193,20 @@ class MainWindow(QMainWindow):
             False,
         )
 
-        configuration_helper["spadCmdLength"] = (
-            "Spad Comman Length",
+        configuration_helper["spad_cmd_length"] = (
+            "SPAD Command Length",
             str,
             self.ui.lineEdit_spad_length,
             False,
         )
-        configuration_helper["spadCmdData"] = (
-            "Spad Comman Data",
+        configuration_helper["spad_cmd_data"] = (
+            "SPAD Command Data",
             str,
             self.ui.lineEdit_spad_data,
             False,
         )
-        configuration_helper["spadCmdInvert"] = (
-            "Spad Comman Invert",
+        configuration_helper["spad_cmd_invert"] = (
+            "SPAD Command Invert",
             bool,
             self.ui.checkBox_spad_invert,
             False,
@@ -1324,6 +1339,13 @@ class MainWindow(QMainWindow):
 
         return configuration_helper
 
+    @Slot(str)
+    def detectorModelChanged(self, detector_model):
+        detector_model = detector_model or DETECTOR_SPAD_ARRAY
+        self.mcs_manager.set_detector_model(detector_model)
+        if hasattr(self.ui, "comboBox_fifobackend"):
+            self.ui.comboBox_fifobackend.setEnabled(detector_model != DETECTOR_PI_23)
+
     def setupAnalogOutputGUI(self):
         """
         Build the Analog Output GUI menu
@@ -1449,7 +1471,7 @@ class MainWindow(QMainWindow):
         It resets the time trace
         """
         print_debug("traceReset")
-        self.spadfcsmanager_inst.trace_reset()
+        self.mcs_manager.trace_reset()
 
     @Slot()
     def FCSReset(self):
@@ -1458,7 +1480,7 @@ class MainWindow(QMainWindow):
         """
 
         print_debug("FCSReset")
-        self.spadfcsmanager_inst.FCS_reset()
+        self.mcs_manager.FCS_reset()
 
     @Slot()
     def table_markers_keyPressEvent(self, event):
@@ -1525,17 +1547,17 @@ class MainWindow(QMainWindow):
             self.ui.lineEdit_destinationfolder.setText(dialog.selectedFiles()[0])
 
     @Slot()
-    def numberChannelsChanged(self):
+    def spadChannelsChanged(self):
         """
-        Slot for the number of channels changed event
+        Slot for the SPAD channel-count changed event.
         """
-        ch = int(self.ui.comboBox_channels.currentText())
-        print_debug("numberChannelsChanged to", self.ui.comboBox_channels.currentText())
-        self.CHANNELS = ch
-        self.CHANNELS_x = int(np.sqrt(ch))
-        self.CHANNELS_y = self.CHANNELS_x
-        self.fingerprint_mask = np.ones((self.CHANNELS_x, self.CHANNELS_y), dtype=np.uint8)
-        self.spadfcsmanager_inst.set_channels(int(self.ui.comboBox_channels.currentText()))
+        ch = int(self.ui.comboBox_spad_channels.currentText())
+        print_debug("spadChannelsChanged to", self.ui.comboBox_spad_channels.currentText())
+        self.spad_channels = ch
+        self.spad_channels_x = int(np.sqrt(ch))
+        self.spad_channels_y = self.spad_channels_x
+        self.fingerprint_mask = np.ones((self.spad_channels_x, self.spad_channels_y), dtype=np.uint8)
+        self.mcs_manager.set_spad_channels(int(self.ui.comboBox_spad_channels.currentText()))
 
     @Slot()
     def cmd_filename(self):
@@ -1857,13 +1879,13 @@ class MainWindow(QMainWindow):
         Update inferred DFD metadata from the primary FPGA bitfile name.
         """
         dfd_cycle_mhz, inferred_dfd_nbins = (
-            self.spadfcsmanager_inst.parse_dfd_metadata_from_bitfile_name(
+            self.mcs_manager.parse_dfd_metadata_from_bitfile_name(
                 bitfile,
                 default_cycle_mhz=40,
             )
         )
         self.dfd_cycle_mhz = dfd_cycle_mhz
-        self.spadfcsmanager_inst.dfd_cycle_mhz = dfd_cycle_mhz
+        self.mcs_manager.dfd_cycle_mhz = dfd_cycle_mhz
         self.ui.label_120.setText(f"Clock Base {dfd_cycle_mhz}M x")
         if inferred_dfd_nbins is not None:
             self.ui.spinBox_DFD_nbins.setValue(inferred_dfd_nbins)
@@ -2490,9 +2512,9 @@ class MainWindow(QMainWindow):
         print_debug("   CLOSE EVERYTHING")
         print_debug("=======================")
 
-        print_debug("self.spadfcsmanager_inst.stopPreview()")
+        print_debug("self.mcs_manager.stopPreview()")
         try:
-            self.spadfcsmanager_inst.stopPreview()
+            self.mcs_manager.stopPreview()
         except Exception as e:
             print_debug("not present", repr(e))
 
@@ -2502,15 +2524,15 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print_debug("not present", repr(e))
 
-        print_debug("self.spadfcsmanager_inst.stopAcquisition()")
+        print_debug("self.mcs_manager.stopAcquisition()")
         try:
-            self.spadfcsmanager_inst.stopAcquisition()
+            self.mcs_manager.stopAcquisition()
         except Exception as e:
             print_debug("not present", repr(e))
 
-        print_debug("self.spadfcsmanager_inst.stopPreview()")
+        print_debug("self.mcs_manager.stopPreview()")
         try:
-            self.spadfcsmanager_inst.stopPreview()
+            self.mcs_manager.stopPreview()
         except Exception as e:
             print_debug("not present", repr(e))
 
@@ -2551,22 +2573,22 @@ class MainWindow(QMainWindow):
 
         self.bitfile_check(self.ui.lineEdit_fpgabitfile.text())
 
-        self.spadfcsmanager_inst.set_bit_file(self.ui.lineEdit_fpgabitfile.text())
-        self.spadfcsmanager_inst.set_ni_addr(self.ui.lineEdit_ni_addr.text())
+        self.mcs_manager.set_bit_file(self.ui.lineEdit_fpgabitfile.text())
+        self.mcs_manager.set_ni_addr(self.ui.lineEdit_ni_addr.text())
 
-        self.spadfcsmanager_inst.set_bit_file_second_fpga(self.ui.lineEdit_fpga2bitfile.text())
-        self.spadfcsmanager_inst.set_ni_addr_second_fpga(self.ui.lineEdit_ni2addr.text())
+        self.mcs_manager.set_bit_file_second_fpga(self.ui.lineEdit_fpga2bitfile.text())
+        self.mcs_manager.set_ni_addr_second_fpga(self.ui.lineEdit_ni2addr.text())
 
-        self.spadfcsmanager_inst.set_timeout_fifos(
+        self.mcs_manager.set_timeout_fifos(
             self.ui.spinBox_fifo_timeout.value() * 1000
         )
 
-        if self.spadfcsmanager_inst.is_connected:
+        if self.mcs_manager.is_connected:
             print_debug("Already connected")
         else:
             print_debug("FPGA NOT CONNECTED NOW CONNECTING")
             mydict = {}
-            mydict.update(self.spadfcsmanager_inst.default_configuration)
+            mydict.update(self.mcs_manager.default_configuration)
             mydict.update(self.configurationFPGA_dict)
 
             invert_sdata = (self.ui.checkBox_spad_invert.isChecked(),)
@@ -2575,7 +2597,10 @@ class MainWindow(QMainWindow):
                 "Rust"
             )
             print_debug("rust_fifo_active", rust_fifo_active)
-            self.spadfcsmanager_inst.set_use_rust_fifo(rust_fifo_active)
+            self.mcs_manager.set_use_rust_fifo(rust_fifo_active)
+            self.mcs_manager.set_detector_model(
+                self.ui.comboBox_detector_model.currentText()
+            )
 
             msg_out = self.ui.lineEdit_spad_data.text()
             if msg_out.isdigit():
@@ -2597,7 +2622,7 @@ class MainWindow(QMainWindow):
                 }
             )
 
-            if self.CHANNELS == 49:
+            if self.spad_channels == 49:
                 mydict.update(
                     {
                         "49_enable": True
@@ -2610,8 +2635,8 @@ class MainWindow(QMainWindow):
                     }
                 )
 
-            # self.spadfcsmanager_inst.set(self.ui.spinBox_requested_fifo_depth.value())
-            self.spadfcsmanager_inst.set_preview_buffer_capacity_samples(
+            # self.mcs_manager.set(self.ui.spinBox_requested_fifo_depth.value())
+            self.mcs_manager.set_preview_buffer_capacity_samples(
                 self.ui.spinBox_preview_buffer_samples.value()
             )
             self.ui.label_preview_buffer_capacity_samples.setText(
@@ -2628,15 +2653,15 @@ class MainWindow(QMainWindow):
             if self.ui.checkBox_fifo_digital.isChecked():
                 fifo.append("FIFO")
 
-            self.spadfcsmanager_inst.set_fifo_prebuffer_length(
+            self.mcs_manager.set_fifo_prebuffer_length(
                 self.ui.spinBox_fifo_prebuffer_length.value()
             )
-            self.spadfcsmanager_inst.set_requested_fifo_depth(
+            self.mcs_manager.set_requested_fifo_depth(
                 self.ui.spinBox_requested_fifo_depth.value()
             )
 
             try:
-                self.spadfcsmanager_inst.connect(mydict, list_fifos=fifo)
+                self.mcs_manager.connect(mydict, list_fifos=fifo)
             except Exception as e:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Icon.Critical)
@@ -2644,9 +2669,9 @@ class MainWindow(QMainWindow):
                 msg.setText("FPGA initialization failed.")
                 msg.setInformativeText(
                     "<b>Please check your configuration:</b><br><br>"
-                    "â€¢ Verify that the FPGA is <b>powered on</b> and properly <b>connected</b>.<br>"
-                    'â€¢ Verify that <b>FPGA BitFile</b> firmware matches your FPGA model.<br>'
-                    'â€¢ Verify that <b>FPGA Addr</b> is correct (usually <i>RIO0</i>, but it may change if multiple FPGAs are configured).'
+                    "• Verify that the FPGA is <b>powered on</b> and properly <b>connected</b>.<br>"
+                    '• Verify that <b>FPGA BitFile</b> firmware matches your FPGA model.<br>'
+                    '• Verify that <b>FPGA Addr</b> is correct (usually <i>RIO0</i>, but it may change if multiple FPGAs are configured).'
                 )
                 msg.setStandardButtons(QMessageBox.StandardButton.Ok)
 
@@ -2654,7 +2679,7 @@ class MainWindow(QMainWindow):
 
                 raise ("ERROR")
 
-            # self.spadfcsmanager_inst.start()
+            # self.mcs_manager.start()
 
     def setRegistersDict(self, myconf):
         """
@@ -2662,7 +2687,7 @@ class MainWindow(QMainWindow):
         """
         self.configurationFPGA_dict.update(myconf)
         # print_debug("setRegistersDict", self.configurationFPGA_dict)
-        self.spadfcsmanager_inst.setRegistersDict(myconf)
+        self.mcs_manager.setRegistersDict(myconf)
         # print_debug("Waiting setRegistersDict")
 
     @Slot()
@@ -2849,7 +2874,7 @@ class MainWindow(QMainWindow):
         print_debug("setSelectedChannel", ch)
         i = self.ui.comboBox_plot_channel.findText("%d" % ch)
         print_debug(i)
-        if 0 <= i < self.CHANNELS:
+        if 0 <= i < self.spad_channels:
             self.ui.comboBox_plot_channel.setCurrentIndex(i)
         else:
             ii = self.ui.comboBox_plot_channel.findText("Sum")
@@ -3022,8 +3047,8 @@ class MainWindow(QMainWindow):
         """
         print_debug("update_fingerprint_mask")
         self.fingerprint_markers_mask.clear()
-        for xxx in range(self.CHANNELS_x):
-            for yyy in range(self.CHANNELS_y):
+        for xxx in range(self.spad_channels_x):
+            for yyy in range(self.spad_channels_y):
                 if self.fingerprint_mask[yyy, xxx] != 1:
                     self.fingerprint_markers_mask.addPoints(
                         x=[
@@ -3038,13 +3063,13 @@ class MainWindow(QMainWindow):
                         symbol="o",
                     )
 
-        if self.spadfcsmanager_inst.shared_arrays_ready:
-            print_debug("ready self.spadfcsmanager_inst.shared_arrays_ready")
-            self.spadfcsmanager_inst.set_fingerprint_mask(
+        if self.mcs_manager.shared_arrays_ready:
+            print_debug("ready self.mcs_manager.shared_arrays_ready")
+            self.mcs_manager.set_fingerprint_mask(
                 np.ravel(self.fingerprint_mask)
             )
         else:
-            print_debug("not ready self.spadfcsmanager_inst.shared_arrays_ready")
+            print_debug("not ready self.mcs_manager.shared_arrays_ready")
 
     # def dragEnterEvent(self, event):
     #     print_debug(event)
@@ -3180,7 +3205,7 @@ class MainWindow(QMainWindow):
     def finalizeImage(self):
         print_debug("finalizeImage()")
         self.plotCurrentImage()
-        data_finger_print = self.spadfcsmanager_inst.getFingerprint()
+        data_finger_print = self.mcs_manager.getFingerprint()
         if data_finger_print is None:
             pass
         else:
@@ -3204,10 +3229,10 @@ class MainWindow(QMainWindow):
         """
         Update the Status tables
         """
-        if self.spadfcsmanager_inst.is_connected == True:
-            fff = self.spadfcsmanager_inst.fpga_handle.register_read_all()
+        if self.mcs_manager.is_connected == True:
+            fff = self.mcs_manager.fpga_handle.register_read_all()
         else:
-            fff = self.spadfcsmanager_inst.get_registers_configuration()
+            fff = self.mcs_manager.get_registers_configuration()
 
         try:
             t = [
@@ -3338,8 +3363,8 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_externalProgram.setEnabled(False)
         self.ui.pushButton_stop.setEnabled(True)
 
-        if not self.spadfcsmanager_inst.is_connected:
-            print_debug("not self.spadfcsmanager_inst.is_connected")
+        if not self.mcs_manager.is_connected:
+            print_debug("not self.mcs_manager.is_connected")
             self.connectFPGA()
         else:
             print_debug("FPGA Already connected!")
@@ -3494,8 +3519,8 @@ class MainWindow(QMainWindow):
         # self.nrepetition_before_run_preview = self.ui.spinBox_nrepetition.value()
         #
         # # self.myfpgainst.acquisitionThread.reset_data()
-        # if not self.spadfcsmanager_inst.is_connected:
-        #     print_debug("not self.spadfcsmanager_inst.is_connected")
+        # if not self.mcs_manager.is_connected:
+        #     print_debug("not self.mcs_manager.is_connected")
         #     self.connectFPGA()
         #
         # self.positionSettingsChanged_apply()
@@ -3667,24 +3692,24 @@ class MainWindow(QMainWindow):
         if self.ui.checkBox_updateStatus.isChecked():
             self.updateTables()
 
-        P = "â¹"
-        D = "â¹"
-        F = "â¹"
+        P = "⏹"
+        D = "⏹"
+        F = "⏹"
         try:
-            if self.spadfcsmanager_inst.previewProcess_isAlive():
-                P = "â©"
+            if self.mcs_manager.previewProcess_isAlive():
+                P = "⏩"
         except:
             pass
 
         try:
-            if self.spadfcsmanager_inst.dataProcess_isAlive():
-                D = "â©"
+            if self.mcs_manager.dataProcess_isAlive():
+                D = "⏩"
         except:
             pass
 
         try:
-            if self.spadfcsmanager_inst.fpga_handle.fpga_handle_process_isAlive():
-                F = "â©"
+            if self.mcs_manager.fpga_handle.fpga_handle_process_isAlive():
+                F = "⏩"
         except:
             pass
         self.statusBar_cpu.setText("CPU: %d%%" % psutil.cpu_percent())
@@ -3758,11 +3783,11 @@ class MainWindow(QMainWindow):
         #print_debug("fifo_activated", fifo_activated)
         #fifo_name is the "priority" fifo when two are activated
         
-        fifo_elements = { fifo : self.spadfcsmanager_inst.getCurrentAcquistionElement(fifo) for fifo in fifo_activated}
-        expected_fifo_elements = { fifo : self.spadfcsmanager_inst.getExpectedFifoElements(fifo) for fifo in fifo_activated}
-        expected_fifo_elements_per_frame = { fifo : self.spadfcsmanager_inst.getExpectedFifoElementsPerFrame(fifo) for fifo in fifo_activated}
-        current_preview_element = { fifo : self.spadfcsmanager_inst.getCurrentPreviewElement(fifo) for fifo in fifo_activated}
-        number_of_threads_h5 = self.spadfcsmanager_inst.get_number_of_threads_h5()
+        fifo_elements = { fifo : self.mcs_manager.getCurrentAcquistionElement(fifo) for fifo in fifo_activated}
+        expected_fifo_elements = { fifo : self.mcs_manager.getExpectedFifoElements(fifo) for fifo in fifo_activated}
+        expected_fifo_elements_per_frame = { fifo : self.mcs_manager.getExpectedFifoElementsPerFrame(fifo) for fifo in fifo_activated}
+        current_preview_element = { fifo : self.mcs_manager.getCurrentPreviewElement(fifo) for fifo in fifo_activated}
+        number_of_threads_h5 = self.mcs_manager.get_number_of_threads_h5()
 
         data_point_str = ""
 
@@ -3781,8 +3806,8 @@ class MainWindow(QMainWindow):
             label_frame = ""
             label_repetition = ""
             for fifo in fifo_activated:
-                label_frame += "%d " % self.spadfcsmanager_inst.get_current_z(fifo)
-                label_repetition += "%d " % self.spadfcsmanager_inst.get_current_rep(fifo)
+                label_frame += "%d " % self.mcs_manager.get_current_z(fifo)
+                label_repetition += "%d " % self.mcs_manager.get_current_rep(fifo)
 
             self.ui.label_current_time_val.setText("RAW")
             self.ui.label_current_frame_val.setText(label_frame)
@@ -3805,16 +3830,16 @@ class MainWindow(QMainWindow):
                 / expected_fifo_elements_per_frame[fifo_name]
             )
 
-            if self.spadfcsmanager_inst.acquisition_is_almost_done():
+            if self.mcs_manager.acquisition_is_almost_done():
                 self.ui.pushButton_stop.setEnabled(False)
                 self.ui.pushButton_acquisitionStart.setEnabled(False)
 
-            if self.spadfcsmanager_inst.acquisition_is_done():
+            if self.mcs_manager.acquisition_is_done():
                 self.my_tick_counter += self.timerPreviewImg.interval()
-                self.spadfcsmanager_inst.acquisition_done_reset()
+                self.mcs_manager.acquisition_done_reset()
                 self.finalizeAcquisition()
 
-            fifo1, fifo2 = self.spadfcsmanager_inst.get_FIFO_status()
+            fifo1, fifo2 = self.mcs_manager.get_FIFO_status()
             self.ui.progressBar_fifo_digital.setValue(fifo1)
             self.ui.progressBar_fifo_analog.setValue(fifo2)
             self.ui.progressBar_saving.setValue(0)
@@ -3822,21 +3847,21 @@ class MainWindow(QMainWindow):
 
             try:
                 self.ui.label_fifo_last_pkt_size.setText(
-                    "%d" % self.spadfcsmanager_inst.shared_dict["last_packet_size"]
+                    "%d" % self.mcs_manager.shared_dict["last_packet_size"]
                 )
             except:
                 print_debug("self.ui.last_packet_size FAIL")
 
             try:
                 self.ui.label_last_preprocessed_size.setText(
-                    "%d" % self.spadfcsmanager_inst.last_preprocessed_len["FIFOAnalog"].value
+                    "%d" % self.mcs_manager.last_preprocessed_len["FIFOAnalog"].value
                 )
             except:
                 pass
 
             try:
                 self.ui.label_last_preprocessed_size.setText(
-                    "%d" % self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value
+                    "%d" % self.mcs_manager.last_preprocessed_len["FIFO"].value
                 )
             except:
                 pass
@@ -3853,9 +3878,9 @@ class MainWindow(QMainWindow):
         label_repetition = ""
 
         for fifo in fifo_activated:
-            current_time[fifo] = current_preview_element[fifo] * (time_res * time_bin * 1e-6) / self.CHANNELS
-            current_frame[fifo] = self.spadfcsmanager_inst.get_current_z(fifo)
-            current_rep[fifo] = self.spadfcsmanager_inst.get_current_rep(fifo)
+            current_time[fifo] = current_preview_element[fifo] * (time_res * time_bin * 1e-6) / self.spad_channels
+            current_frame[fifo] = self.mcs_manager.get_current_z(fifo)
+            current_rep[fifo] = self.mcs_manager.get_current_rep(fifo)
             label_time += "%0.2f " % current_time[fifo]
             label_frame += "%d " % current_frame[fifo]
             label_repetition += "%d " % current_rep[fifo]
@@ -3883,7 +3908,7 @@ class MainWindow(QMainWindow):
             / expected_fifo_elements_per_frame[fifo_name]
         )
 
-        corralation = self.spadfcsmanager_inst.getAutocorrelation()
+        corralation = self.mcs_manager.getAutocorrelation()
         self.fcs_widget.plot(
             corralation[0, :] * time_res * 1e-6,
             corralation[1, :],
@@ -3893,7 +3918,7 @@ class MainWindow(QMainWindow):
 
         clk_multiplier = self.ui.spinBox_clk_base_multiplier.value()
 
-        trace, trace_pos = self.spadfcsmanager_inst.getTrace()
+        trace, trace_pos = self.mcs_manager.getTrace()
         self.trace_widget.setLabel("bottom", "Time", "s")
         trace_x = trace[0, :trace_pos]
         trace_y = trace[1, :trace_pos]
@@ -3941,12 +3966,12 @@ class MainWindow(QMainWindow):
 
         self.trace_dfd_widget.setVisible(self.DFD_Activate)
         if self.DFD_Activate:
-            dfd_trace = self.spadfcsmanager_inst.getDfdTrace()
+            dfd_trace = self.mcs_manager.getDfdTrace()
             trace_dfd_x = dfd_trace[0, :]
             trace_live = dfd_trace[1, :]
             trace_sum = dfd_trace[2, :]
             peak_idx = int(np.argmax(trace_sum))
-            self.spadfcsmanager_inst.update_shared_dict({"dfd_peak_idx": peak_idx})
+            self.mcs_manager.update_shared_dict({"dfd_peak_idx": peak_idx})
             trace_dfd_x_bins = np.asarray(trace_dfd_x, dtype=float)
             tcycle_s = 1.0 / (
                 max(float(self.dfd_cycle_mhz), 1e-12) * 1e6 * max(clk_multiplier, 1)
@@ -4033,7 +4058,7 @@ class MainWindow(QMainWindow):
                 )
         else:
             self.latest_dfd_tau_fit_ns = None
-            self.spadfcsmanager_inst.update_shared_dict({"dfd_peak_idx": -1})
+            self.mcs_manager.update_shared_dict({"dfd_peak_idx": -1})
             self.trace_dfd_widget.clear()
             self.trace_dfd_widget.setLabel("top", "DFD bin")
 
@@ -4055,7 +4080,7 @@ class MainWindow(QMainWindow):
         if self.fingerprint_visualization == 0:
             if ( fifo_elements[fifo_name] % expected_fifo_elements_per_frame[fifo_name] ) != 0:
                 data_finger_print = (
-                        self.spadfcsmanager_inst.getFingerprintCumulative()
+                        self.mcs_manager.getFingerprintCumulative()
                         / (
                                 (
                                         (
@@ -4071,16 +4096,16 @@ class MainWindow(QMainWindow):
                 )
         elif self.fingerprint_visualization == 1:
             data_finger_print = (
-                    self.spadfcsmanager_inst.getFingerprintCumulativeLast10000()
+                    self.mcs_manager.getFingerprintCumulativeLast10000()
                     / (10000 * time_res * 1e-6)
             )
         elif self.fingerprint_visualization == 2:
             data_finger_print = (
-                    self.spadfcsmanager_inst.getFingerprintCumulativeLastFrame()
+                    self.mcs_manager.getFingerprintCumulativeLastFrame()
                     / (expected_fifo_elements_per_frame[fifo_name] / 2 * time_res * 1e-6)
             )
 
-        saturation_data = self.spadfcsmanager_inst.getFingerprintSaturation()
+        saturation_data = self.mcs_manager.getFingerprintSaturation()
 
         if data_finger_print is not None:
             data_finger_print = data_finger_print * self.fingerprint_mask
@@ -4090,18 +4115,18 @@ class MainWindow(QMainWindow):
 
             self.draw_fingerprint(data_finger_print, saturation_data)
 
-        if self.spadfcsmanager_inst.acquisition_is_almost_done():
+        if self.mcs_manager.acquisition_is_almost_done():
             print_debug(
-                "self.spadfcsmanager_inst.acquisition_is_almost_done()",
+                "self.mcs_manager.acquisition_is_almost_done()",
                 number_of_threads_h5,
             )
             self.ui.pushButton_stop.setEnabled(False)
             self.ui.pushButton_acquisitionStart.setEnabled(False)
 
-        if self.spadfcsmanager_inst.acquisition_is_done():
+        if self.mcs_manager.acquisition_is_done():
             print_debug(
-                "self.spadfcsmanager_inst.acquisition_is_done()",
-                self.spadfcsmanager_inst.acquisition_is_done(),
+                "self.mcs_manager.acquisition_is_done()",
+                self.mcs_manager.acquisition_is_done(),
             )
             self.my_tick_counter += self.timerPreviewImg.interval()
 
@@ -4113,10 +4138,10 @@ class MainWindow(QMainWindow):
                     print_debug(
                         "get_fifo_elements >= get_expected_fifo_elements and 1s passed"
                     )
-                    self.spadfcsmanager_inst.acquisition_done_reset()
+                    self.mcs_manager.acquisition_done_reset()
                     self.finalizeAcquisition()
 
-        fifo1, fifo2 = self.spadfcsmanager_inst.get_FIFO_status()
+        fifo1, fifo2 = self.mcs_manager.get_FIFO_status()
 
         if fifo1 > 0.9 * self.ui.progressBar_fifo_digital.maximum():
             self.ui.progressBar_fifo_digital.setMaximum(fifo1 * 1.2)
@@ -4131,7 +4156,7 @@ class MainWindow(QMainWindow):
             "%0.3f"
             % (
                     fifo1
-                    * self.spadfcsmanager_inst.shared_dict["last_packet_size"]
+                    * self.mcs_manager.shared_dict["last_packet_size"]
                     * self.ui.spinBox_timeresolution.value()
                     / 2e6
             )
@@ -4164,26 +4189,26 @@ class MainWindow(QMainWindow):
 
         try:
             self.ui.label_fifo_last_pkt_size.setText(
-                "%d" % self.spadfcsmanager_inst.shared_dict["last_packet_size"]
+                "%d" % self.mcs_manager.shared_dict["last_packet_size"]
             )
         except:
             print_debug("self.ui.last_packet_size FAIL")
 
         try:
-            # print(self.spadfcsmanager_inst.last_preprocessed_len)
-            # print(self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value)
+            # print(self.mcs_manager.last_preprocessed_len)
+            # print(self.mcs_manager.last_preprocessed_len["FIFO"].value)
             self.ui.label_last_preprocessed_size.setText(
                 "%d"
-                % self.spadfcsmanager_inst.last_preprocessed_len["FIFOAnalog"].value
+                % self.mcs_manager.last_preprocessed_len["FIFOAnalog"].value
             )
         except:
             print_debug("self.ui.last_preprocessed_len FIFOAnalog FAIL")
 
         try:
-            # print(self.spadfcsmanager_inst.last_preprocessed_len)
-            # print(self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value)
+            # print(self.mcs_manager.last_preprocessed_len)
+            # print(self.mcs_manager.last_preprocessed_len["FIFO"].value)
             self.ui.label_last_preprocessed_size.setText(
-                "%d" % self.spadfcsmanager_inst.last_preprocessed_len["FIFO"].value
+                "%d" % self.mcs_manager.last_preprocessed_len["FIFO"].value
             )
 
         except:
@@ -4230,12 +4255,12 @@ class MainWindow(QMainWindow):
 
         self.fingerprint_saturation_mask.clear()
 
-        coeff = 25. / self.CHANNELS
+        coeff = 25. / self.spad_channels
 
-        for xxx in range(self.CHANNELS_x):
-            for yyy in range(self.CHANNELS_y):
+        for xxx in range(self.spad_channels_x):
+            for yyy in range(self.spad_channels_y):
                 if saturation_data[yyy, xxx] > 0:
-                    v = self.spadfcsmanager_inst.getFingerprintCumulative() * 1.
+                    v = self.mcs_manager.getFingerprintCumulative() * 1.
                     ratio = saturation_data[yyy, xxx] / v[yyy, xxx]
                     # print(ratio)
                     size = 1 + min(ratio * 8 * 100, 8)
@@ -4263,7 +4288,7 @@ class MainWindow(QMainWindow):
             "h5py": h5py,
             "pg": pg,
             "main_window": self,
-            "spadfcsmanager": self.spadfcsmanager_inst,
+            "mcs_manager": self.mcs_manager,
             "filename": None
             # 'list_plugins': plugin_list,
             # 'load_plugin': lambda x: plugin_loader(x, self)
@@ -4281,7 +4306,7 @@ In the current namespace to the following objects:
 'plt' includes matplotlib.pyplot (i.e. plt.plot(x,y), plt.imshow(img) etc etc... )\n
 
 'main_window' for the current QT window instantiation
-'spadfcsmanager' for the current spadfcsmanager instantiation\n\n
+'mcs_manager' for the current mcs_manager instantiation\n\n
 'filename' contains the last h5 file saved or the last file selected
 
 Have fun!
@@ -4652,21 +4677,21 @@ Have fun!
                 "%.3f nm" % (1000 * self.ui.spinBox_range_x.value() / (self.ui.spinBox_nx.value() - 1.)))
         else:
             self.ui.label_pixelsize_x.setText(
-                "âˆž")
+                "∞")
 
         if self.ui.spinBox_ny.value() != 1:
             self.ui.label_pixelsize_y.setText(
                 "%.3f nm" % (1000 * self.ui.spinBox_range_y.value() / (self.ui.spinBox_ny.value() - 1.)))
         else:
             self.ui.label_pixelsize_y.setText(
-                "âˆž")
+                "∞")
 
         if self.ui.spinBox_nframe.value() != 1:
             self.ui.label_pixelsize_z.setText(
                 "%.3f nm" % (1000 * self.ui.spinBox_range_z.value() / (self.ui.spinBox_nframe.value() - 1.)))
         else:
             self.ui.label_pixelsize_z.setText(
-                "âˆž")
+                "∞")
 
     @Slot()
     def rangeValueChanged(self, number=None):
@@ -4917,8 +4942,8 @@ Have fun!
         """
         Keep the snake-walk compensation delay synced with the runtime manager.
         """
-        if hasattr(self, "spadfcsmanager_inst") and self.spadfcsmanager_inst is not None:
-            self.spadfcsmanager_inst.set_compensation_delay_for_snake(value)
+        if hasattr(self, "mcs_manager") and self.mcs_manager is not None:
+            self.mcs_manager.set_compensation_delay_for_snake(value)
 
     @Slot()
     def updateMaxMinVoltages(self):
@@ -5065,8 +5090,8 @@ Have fun!
         self.updateImageInteractionHints()
 
         clk_multiplier = 1
-        if hasattr(self, "spadfcsmanager_inst") and self.spadfcsmanager_inst is not None:
-            clk_multiplier = max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
+        if hasattr(self, "mcs_manager") and self.mcs_manager is not None:
+            clk_multiplier = max(int(self.mcs_manager.clk_multiplier), 1)
         dfd_cycle_mhz = max(float(getattr(self, "dfd_cycle_mhz", 40.0)), 1e-12)
         tcycle_ns = 1e3 / (dfd_cycle_mhz * clk_multiplier)
         self.ui.label_delta_tau_ns.setText(f"Corr. delta_tau [ns] (T={tcycle_ns:.4f})")
@@ -5092,7 +5117,7 @@ Have fun!
 
         tcycle_ns = 1e3 / (
             max(float(self.dfd_cycle_mhz), 1e-12)
-            * max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
+            * max(int(self.mcs_manager.clk_multiplier), 1)
         )
         h_mean = self.im_widget.getDisplayedHMean()
         tau_fit_ns = self.latest_dfd_tau_fit_ns
@@ -5184,11 +5209,11 @@ Have fun!
         # Now initialize circular motion with correct DFD state
         self.circularMotionActivateChanged()
 
-        self.numberChannelsChanged()
-        self.spadfcsmanager_inst.set_channels(int(self.ui.comboBox_channels.currentText()))
+        self.spadChannelsChanged()
+        self.mcs_manager.set_spad_channels(int(self.ui.comboBox_spad_channels.currentText()))
 
-        self.spadfcsmanager_inst.set_activate_DFD(self.DFD_Activate)
-        self.spadfcsmanager_inst.set_DFD_nbins(self.DFD_nbins)
+        self.mcs_manager.set_activate_DFD(self.DFD_Activate)
+        self.mcs_manager.set_DFD_nbins(self.DFD_nbins)
 
         self.ui.progressBar_fifo_digital.setMaximum(5)
         self.ui.progressBar_fifo_analog.setMaximum(5)
@@ -5283,7 +5308,7 @@ Have fun!
         calib_yy = self.ui.spinBox_calib_y.value()
         calib_zz = self.ui.spinBox_calib_z.value()
 
-        if self.CHANNELS == 49:
+        if self.spad_channels == 49:
             self.setRegistersDict(
                 {
                     "49_enable": True
@@ -5329,8 +5354,8 @@ Have fun!
         laserEnable3 = self.ui.checkBox_laser3.isChecked()
         self.snake_walk_Activate_XY = self.ui.checkBox_snake.isChecked()
         self.snake_walk_Activate_Z = self.ui.checkBox_snake_z.isChecked()
-        self.spadfcsmanager_inst.set_activate_snake_walk_xy(self.snake_walk_Activate_XY)
-        self.spadfcsmanager_inst.set_activate_snake_walk_z(self.snake_walk_Activate_Z)
+        self.mcs_manager.set_activate_snake_walk_xy(self.snake_walk_Activate_XY)
+        self.mcs_manager.set_activate_snake_walk_z(self.snake_walk_Activate_Z)
         self.compensationDelayForSnakeChanged(
             self.ui.spinBox_compensation_delay.value()
         )
@@ -5383,7 +5408,7 @@ Have fun!
         # self.pmtThresholdChanged()
 
         self.configurationFPGA_dict.update(
-            self.spadfcsmanager_inst.registers_configuration
+            self.mcs_manager.registers_configuration
         )
         self.current_plot_size_x_um = self.ui.spinBox_range_x.value()
         self.current_plot_size_y_um = self.ui.spinBox_range_y.value()
@@ -5422,8 +5447,8 @@ Have fun!
         self.activateShowPreview(self.ui.checkBox_showPreview.isChecked() and not raw_stream_mode)
 
 
-        self.spadfcsmanager_inst.set_do_not_save(do_not_save)
-        self.spadfcsmanager_inst.set_raw_stream_mode(raw_stream_mode)
+        self.mcs_manager.set_do_not_save(do_not_save)
+        self.mcs_manager.set_raw_stream_mode(raw_stream_mode)
 
         filename_for_ttm = self.defineFilename(with_folder=False)
         if self.ttm_remote_is_up() and not do_not_save:
@@ -5440,13 +5465,13 @@ Have fun!
             else self.defineFilename(with_folder=True)
         )
         self.last_requested_filename = filename
-        self.spadfcsmanager_inst.set_filename_h5(filename)
+        self.mcs_manager.set_filename_h5(filename)
         if raw_stream_mode:
             self.raw_stream_output_files = self.defineRawOutputFiles(filename)
-            self.spadfcsmanager_inst.set_raw_output_files(self.raw_stream_output_files)
+            self.mcs_manager.set_raw_output_files(self.raw_stream_output_files)
         else:
             self.raw_stream_output_files = {}
-        self.spadfcsmanager_inst.set_autocorrelation_maxx(
+        self.mcs_manager.set_autocorrelation_maxx(
             self.ui.spinBox_FCSbins.value()
         )
 
@@ -5468,23 +5493,23 @@ Have fun!
         print_debug("trace_length", trace_length)
         print_debug("trace_sample_per_bins", trace_sample_per_bins)
 
-        self.spadfcsmanager_inst.set_trace_bins(trace_bins=trace_bins)
-        self.spadfcsmanager_inst.set_trace_sample_per_bins(
+        self.mcs_manager.set_trace_bins(trace_bins=trace_bins)
+        self.mcs_manager.set_trace_sample_per_bins(
             trace_sample_per_bins=trace_sample_per_bins
         )
 
         self.ui.label_trace_total_bins.setText("%s" % trace_sample_per_bins)
         self.ui.label_configured_fifo_depth.setText(
-            "%d" % self.spadfcsmanager_inst.fpga_handle.get_actual_fifo_depth()
+            "%d" % self.mcs_manager.fpga_handle.get_actual_fifo_depth()
         )
         if self.DFD_Activate:
-            self.spadfcsmanager_inst.set_clk_multiplier(
+            self.mcs_manager.set_clk_multiplier(
                 self.ui.spinBox_clk_base_multiplier.value()
             )
         else:
-            self.spadfcsmanager_inst.set_clk_multiplier(1)
+            self.mcs_manager.set_clk_multiplier(1)
 
-        # self.spadfcsmanager_inst.acquistion_run()
+        # self.mcs_manager.acquistion_run()
         if self.ttm_remote_is_up() and not do_not_save:
             self.ttm_remote_manager.start_ttm_recv()
 
@@ -5493,7 +5518,7 @@ Have fun!
            not do_not_save :
                self.pushButton_uttm_start_clicked()
 
-        self.spadfcsmanager_inst.run()
+        self.mcs_manager.run()
 
         self.plugin_signals.signal.emit("beforeRun")
 
@@ -5573,7 +5598,7 @@ Have fun!
         """
         activate the preview mode
         """
-        self.spadfcsmanager_inst.activateShowPreview(enable)
+        self.mcs_manager.activateShowPreview(enable)
 
     def activateFIFOflag(self):
         """
@@ -5589,7 +5614,7 @@ Have fun!
         if self.ui.checkBox_fifo_analog.isChecked():
             fifo.append("FIFOAnalog")
 
-        self.spadfcsmanager_inst.setActivatedFifo(fifo)
+        self.mcs_manager.setActivatedFifo(fifo)
 
         if self.DFD_Activate:
             self.setRegistersDict(
@@ -5689,7 +5714,7 @@ Have fun!
         else:
             self.selected_channel = t
 
-        self.spadfcsmanager_inst.update_shared_dict(
+        self.mcs_manager.update_shared_dict(
             {
                 "proj": self.ui.comboBox_view_projection.currentText(),
                 "channel": self.selected_channel,
@@ -5697,7 +5722,7 @@ Have fun!
                 "activate_trace": self.ui.checkBox_trace_on.isChecked(),
             }
         )
-        print_debug(self.spadfcsmanager_inst.read_shared_dict())
+        print_debug(self.mcs_manager.read_shared_dict())
 
     def defineFilename(self, with_folder=True):
         """
@@ -5779,7 +5804,7 @@ Have fun!
         self.ui.pushButton_stop.setEnabled(True)
 
         # Ensure FPGA is connected
-        if not self.spadfcsmanager_inst.is_connected:
+        if not self.mcs_manager.is_connected:
             print_debug("FPGA not connected, connecting now...")
             self.connectFPGA()
         else:
@@ -5791,8 +5816,8 @@ Have fun!
         # Reset current image state
         self.currentImage = None
         self.activeFile = False
-        self.spadfcsmanager_inst.acquisition_done_reset()
-        self.spadfcsmanager_inst.acquisition_almost_done_reset()
+        self.mcs_manager.acquisition_done_reset()
+        self.mcs_manager.acquisition_almost_done_reset()
 
         # Set acquisition mode flags
         self.started_normal = not is_preview
@@ -5968,7 +5993,7 @@ Have fun!
         used_percent = used / total * 100 if total > 0 else 0
 
         html = f"""
-        <h2 style="color:#00aaff">ðŸ“¡ Acquisition Status</h2>
+        <h2 style="color:#00aaff">📡 Acquisition Status</h2>
         <p><b>Acquisition running:</b> {data['acquisition_running']}</p>
         <p><b>Upload running:</b> {data['upload_running']}</p>
         <p><b>PID:</b> {data['pid']}</p>
@@ -5977,17 +6002,17 @@ Have fun!
         <p><b>Free RAM:</b> {self.sizeof_fmt(data['free_ram'])}</p>
         <p><b>File size:</b> {self.sizeof_fmt(data['file_size'])}</p>
 
-        <h3 style="color:#ffaa00">ðŸ’¾ Disk usage</h3>
+        <h3 style="color:#ffaa00">💾 Disk usage</h3>
         <p><b>Total:</b> {self.sizeof_fmt(total)} | <b>Used:</b> {self.sizeof_fmt(used)} | <b>Free:</b> {self.sizeof_fmt(free)}</p>
         {self.progress_bar_html(used_percent, "#ff5555")}
         <p style="font-size:11px; color:#666;">Free space: {free_percent:.1f}%</p>
 
-        <h3 style="color:#00cc66">ðŸš€ Uploader</h3>
+        <h3 style="color:#00cc66">🚀 Uploader</h3>
         <p><b>Bytes sent:</b> {self.sizeof_fmt(uploader['bytes_sent'])} / {self.sizeof_fmt(uploader['total_bytes'])}</p>
         {self.progress_bar_html(uploader['percent'], "#00cc66")}
         <p><b>Elapsed:</b> {uploader['elapsed']} s | <b>ETA:</b> {uploader['eta']} s</p>
         <p><b>Speed:</b> {self.sizeof_fmt(int(uploader['speed']))}/s</p>
-        <p><b>Completed:</b> {"âœ… Yes" if uploader['completed'] else "âŒ No"}</p>
+        <p><b>Completed:</b> {"✅ Yes" if uploader['completed'] else "❌ No"}</p>
         """
         return html
 
@@ -6211,8 +6236,8 @@ Have fun!
             self.ui.checkBox_uttm_auto.isChecked():
                     self.pushButton_uttm_stop_clicked()
 
-            print_debug(self.spadfcsmanager_inst.shared_dict)
-            self.last_saved_filename = self.spadfcsmanager_inst.shared_dict["filenameh5"]
+            print_debug(self.mcs_manager.shared_dict)
+            self.last_saved_filename = self.mcs_manager.shared_dict["filenameh5"]
             self.last_completed_filename = self.last_saved_filename
             self.completed_acquisition_count += 1
             self.last_acquisition_completed_at = self._make_status_timestamp()
@@ -6228,15 +6253,19 @@ Have fun!
 
             h5mgr.metadata_add_dict(
                 "configurationSpadFCSmanager",
-                self.spadfcsmanager_inst.registers_configuration,
+                self.mcs_manager.registers_configuration,
             )
 
             h5mgr.metadata_add_dict("configurationFPGA", self.configurationFPGA_dict)
 
-            h5mgr.metadata_add_dict("configurationGUI", self.getGUI_data())
+            h5mgr.metadata_add_dict(
+                "configurationGUI",
+                self._gui_config_for_h5(self.getGUI_data()),
+            )
 
             h5mgr.metadata_add_dict(
-                "configurationGUI_beforeStart", self.configurationGUI_dict_beforeStart
+                "configurationGUI_beforeStart",
+                self._gui_config_for_h5(self.configurationGUI_dict_beforeStart),
             )
 
             if self.raw_stream_mode:
@@ -6244,34 +6273,34 @@ Have fun!
                     "rawStreamAcquisition",
                     {
                         "enabled": True,
-                        "digital_fifo_present": "FIFO" in self.spadfcsmanager_inst.activated_fifos_list,
-                        "analog_fifo_present": "FIFOAnalog" in self.spadfcsmanager_inst.activated_fifos_list,
-                        "digital_channels": self.CHANNELS,
-                        "digital_words_per_sample": 2 if self.CHANNELS == 25 else 8,
+                        "digital_fifo_present": "FIFO" in self.mcs_manager.activated_fifos_list,
+                        "analog_fifo_present": "FIFOAnalog" in self.mcs_manager.activated_fifos_list,
+                        "digital_channels": self.spad_channels,
+                        "digital_words_per_sample": 2 if self.spad_channels == 25 else 8,
                         "analog_words_per_sample": 1,
                         "effective_timebins_per_pixel": (
-                            self.spadfcsmanager_inst.registers_configuration.get("#timebinsPerPixel", 1)
-                            * self.spadfcsmanager_inst.registers_configuration.get("#circular_rep", 1)
-                            * self.spadfcsmanager_inst.registers_configuration.get("#circular_points", 1)
+                            self.mcs_manager.registers_configuration.get("#timebinsPerPixel", 1)
+                            * self.mcs_manager.registers_configuration.get("#circular_rep", 1)
+                            * self.mcs_manager.registers_configuration.get("#circular_points", 1)
                         ),
                         "clock_base_mhz": self.clock_base,
-                        "clk_multiplier": self.spadfcsmanager_inst.clk_multiplier,
-                        "dfd_shift": self.spadfcsmanager_inst.dfd_shift,
-                        "snake_walk_xy": self.spadfcsmanager_inst.snake_walk_xy,
-                        "snake_walk_z": self.spadfcsmanager_inst.snake_walk_z,
-                        "dfd_activate": self.spadfcsmanager_inst.DFD_Activate,
+                        "clk_multiplier": self.mcs_manager.clk_multiplier,
+                        "dfd_shift": self.mcs_manager.dfd_shift,
+                        "snake_walk_xy": self.mcs_manager.snake_walk_xy,
+                        "snake_walk_z": self.mcs_manager.snake_walk_z,
+                        "dfd_activate": self.mcs_manager.DFD_Activate,
                         "digital_raw_file": self.raw_stream_output_files.get("FIFO", ""),
                         "analog_raw_file": self.raw_stream_output_files.get("FIFOAnalog", ""),
-                        "digital_raw_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFO_bytes_written", 0),
-                        "analog_raw_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_bytes_written", 0),
-                        "digital_expected_words": self.spadfcsmanager_inst.shared_dict.get("FIFO_expected_words", 0),
-                        "analog_expected_words": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_expected_words", 0),
-                        "digital_expected_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFO_expected_bytes", 0),
-                        "analog_expected_bytes": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_expected_bytes", 0),
-                        "digital_actual_bytes_on_disk": self.spadfcsmanager_inst.shared_dict.get("FIFO_actual_bytes_on_disk", 0),
-                        "analog_actual_bytes_on_disk": self.spadfcsmanager_inst.shared_dict.get("FIFOAnalog_actual_bytes_on_disk", 0),
-                        "raw_writer_stop_reason": self.spadfcsmanager_inst.shared_dict.get("raw_writer_stop_reason", ""),
-                        "raw_writer_error": self.spadfcsmanager_inst.shared_dict.get("raw_writer_error", ""),
+                        "digital_raw_bytes": self.mcs_manager.shared_dict.get("FIFO_bytes_written", 0),
+                        "analog_raw_bytes": self.mcs_manager.shared_dict.get("FIFOAnalog_bytes_written", 0),
+                        "digital_expected_words": self.mcs_manager.shared_dict.get("FIFO_expected_words", 0),
+                        "analog_expected_words": self.mcs_manager.shared_dict.get("FIFOAnalog_expected_words", 0),
+                        "digital_expected_bytes": self.mcs_manager.shared_dict.get("FIFO_expected_bytes", 0),
+                        "analog_expected_bytes": self.mcs_manager.shared_dict.get("FIFOAnalog_expected_bytes", 0),
+                        "digital_actual_bytes_on_disk": self.mcs_manager.shared_dict.get("FIFO_actual_bytes_on_disk", 0),
+                        "analog_actual_bytes_on_disk": self.mcs_manager.shared_dict.get("FIFOAnalog_actual_bytes_on_disk", 0),
+                        "raw_writer_stop_reason": self.mcs_manager.shared_dict.get("raw_writer_stop_reason", ""),
+                        "raw_writer_error": self.mcs_manager.shared_dict.get("raw_writer_error", ""),
                     },
                 )
             else:
@@ -6299,6 +6328,28 @@ Have fun!
             self.plugin_signals.signal.emit(
                 "acquisitionDone %s" % self.last_saved_filename
             )
+
+    @staticmethod
+    def _gui_config_for_h5(configuration):
+        """
+        Write GUI metadata with the legacy public H5 keys.
+
+        Python-side names now distinguish SPAD-specific settings from the MCS
+        manager, but existing H5 readers expect these original attribute names.
+        """
+        h5_configuration = dict(configuration or {})
+        legacy_key_map = {
+            "spad_channels": "spad_number_of_channels",
+            "spad_cmd_length": "spadCmdLength",
+            "spad_cmd_data": "spadCmdData",
+            "spad_cmd_invert": "spadCmdInvert",
+        }
+        for new_key, legacy_key in legacy_key_map.items():
+            if new_key in h5_configuration:
+                h5_configuration[legacy_key] = h5_configuration.pop(new_key)
+        if h5_configuration.get("detector_model") == DETECTOR_SPAD_ARRAY:
+            h5_configuration.pop("detector_model")
+        return h5_configuration
 
     @Slot()
     def cmd_filename_ttm(self):
@@ -6332,12 +6383,12 @@ Have fun!
         """
         print_debug("stopAcquisition")
         self.sendCmdStop()
-        self.spadfcsmanager_inst.stopPreview()
+        self.mcs_manager.stopPreview()
         self.timerPreviewImg.stop()
         print_debug("self.timerPreviewImg.stop()")
-        self.spadfcsmanager_inst.stopFPGA()
-        self.spadfcsmanager_inst.stopAcquisition()
-        self.spadfcsmanager_inst.stopPreview()
+        self.mcs_manager.stopFPGA()
+        self.mcs_manager.stopAcquisition()
+        self.mcs_manager.stopPreview()
 
     @Slot()
     def stop(self):
@@ -6419,11 +6470,11 @@ Have fun!
         """
         get the preview image
         """
-        if self.spadfcsmanager_inst.shared_arrays_ready:
-            # print_debug("ready self.spadfcsmanager_inst.shared_arrays_ready")
-            return self.spadfcsmanager_inst.getPreviewImage(projection, rgb)
+        if self.mcs_manager.shared_arrays_ready:
+            # print_debug("ready self.mcs_manager.shared_arrays_ready")
+            return self.mcs_manager.getPreviewImage(projection, rgb)
         else:
-            print_debug("not ready self.spadfcsmanager_inst.shared_arrays_ready")
+            print_debug("not ready self.mcs_manager.shared_arrays_ready")
             print_debug("getPreviewImage DUMMY")
             return self.currentImage  # DUMMY
 
@@ -6432,7 +6483,7 @@ Have fun!
         get the preview flat data
         """
         if not self.activeFile:
-            return self.spadfcsmanager_inst.getPreviewFlatData()
+            return self.mcs_manager.getPreviewFlatData()
         else:
             print_debug("self.myfpgainst.getImage() TO BE WRITTEN FOR FILES")
 
@@ -6454,7 +6505,7 @@ Have fun!
         ch = self.ui.comboBox_plot_channel.currentText()
         if preview_img is None:
             if self.isLifetimeColorChannel(ch) or ch in ("LIFETIME", "QUALITY"):
-                preview_hcl = self.spadfcsmanager_inst.getPreviewHclImage()
+                preview_hcl = self.mcs_manager.getPreviewHclImage()
                 if self.isLifetimeColorChannel(ch):
                     preview_img = preview_hcl
                 elif ch == "LIFETIME":
@@ -6598,7 +6649,7 @@ Have fun!
             preview_hcl = preview_img
             tcycle_ns = 1e3 / (
                 max(float(self.dfd_cycle_mhz), 1e-12)
-                * max(int(self.spadfcsmanager_inst.clk_multiplier), 1)
+                * max(int(self.mcs_manager.clk_multiplier), 1)
             )
             self.updateColorLifetimeShiftControls()
             h_shift = 0.0

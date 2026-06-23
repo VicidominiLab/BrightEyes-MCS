@@ -1,4 +1,4 @@
-﻿"""Shared-memory orchestration for FPGA acquisition, preprocessing, and preview."""
+"""Shared-memory orchestration for FPGA acquisition, preprocessing, and preview."""
 
 import numpy as np
 import multiprocessing as mp
@@ -13,16 +13,22 @@ from ..libs.fpga_handle import FpgaHandle
 from ..libs.h5manager import H5ManagerProcess
 from ..libs.print_debug import print_debug
 from ..libs.mp_shared_array import MemorySharedNumpyArray
+from ..libs.detector_backends import DETECTOR_SPAD_ARRAY, normalize_detector_model
 
 from ..libs.mp_circular_shm import CircularSharedBuffer
 
-class SpadFcsManager():
+
+def create_i64_counter(initial_value=0):
+    return mp.Value("q", int(initial_value))
+
+
+class McsManager():
     """
-    Manages the SPAD FCS (Single-Photon Avalanche Diode Fluorescence Correlation Spectroscopy) operations, including FPGA connections, data acquisition, and processing.
+    Manages BrightEyes-MCS detector control, data acquisition, and processing.
 
     Attributes:
-        channels (int): Number of channels.
-        dim_detector (int): Dimension of the detector.
+        spad_channels (int): Number of SPAD channels.
+        spad_detector_dim (int): Dimension of the SPAD detector.
         niAddr (str): NI address.
         bitfile (str): Path to the bitfile.
         timeout_fifos (float): Timeout for the FIFOs.
@@ -71,26 +77,26 @@ class SpadFcsManager():
         use_rust_fifo (bool): Flag for using Rust FIFO.
         debug (bool): Debug flag.
     """
-    def __init__(self, filename="bitfiles/MyBitfileUSB.lvbitx", address="RIO0", channels=25, clock_base=40):
+    def __init__(self, filename="bitfiles/MyBitfileUSB.lvbitx", address="RIO0", spad_channels=25, clock_base=40):
         """
-        Constructor of the class of SpaFCSManager
+        Constructor of the class of McsManager
         """
         super().__init__()
         # def __init__(self, filename="C:/Users/madonato/PycharmProjects/pyspad-fcs/bitfiles/laser_wait4.lvbitx", address="RIO0"):
-        self.channels = channels
-        self.dim_detector = int(np.sqrt(self.channels))
+        self.spad_channels = spad_channels
+        self.spad_detector_dim = int(np.sqrt(self.spad_channels))
         # self.activate_rgb = False
 
         self.niAddr = address
         self.bitfile = filename
+        self.niAddr2 = ""
+        self.bitfile2 = ""
         self.clock_base = clock_base
         self.timeout_fifos = 0.5e6
         # self.fifo = None
         # self.nifpga_session = None
         self.fpga_handle = None
         self.shared_arrays_ready = False
-
-        self.channels = 25
 
         self.mp_manager = mp.Manager()
 
@@ -193,6 +199,7 @@ class SpadFcsManager():
         self.preview_buffer_capacity_samples = 15000
         self.fifo_prebuffer_length = 0
         self.activated_fifos_list = []
+        self.activate_show_preview = False
 
         self.DFD_Activate = False
         self.DFD_nbins = 0
@@ -207,6 +214,7 @@ class SpadFcsManager():
         self.compensation_delay_for_snake_shared = None
 
         self.use_rust_fifo = True
+        self.detector_model = DETECTOR_SPAD_ARRAY
 
         self.debug = False
         self.h5_manager_process = None
@@ -215,6 +223,7 @@ class SpadFcsManager():
         self.raw_stream_mode = False
         self.raw_output_files = {}
         self.raw_writer_process = None
+        self.filenameh5 = ""
 
 
 
@@ -252,13 +261,13 @@ class SpadFcsManager():
 
         return parsed_cycle_mhz, parsed_bins
 
-    def set_channels(self, ch):
+    def set_spad_channels(self, ch):
         """
-        Set the number of channels
+        Set the number of SPAD channels
         """
-        print_debug("Channels", ch)
-        self.channels = ch
-        self.dim_detector = int(np.sqrt(self.channels))
+        print_debug("SPAD channels", ch)
+        self.spad_channels = ch
+        self.spad_detector_dim = int(np.sqrt(self.spad_channels))
 
         mydict = {}
 
@@ -452,6 +461,7 @@ class SpadFcsManager():
                 timeout_fifos=self.timeout_fifos,
                 bitfile2=self.bitfile2,
                 ni_address2=self.niAddr2,
+                detector_model=self.detector_model,
             )
             self.is_connected = True
             print_debug(".is_conneccted", self.is_connected)
@@ -463,7 +473,7 @@ class SpadFcsManager():
         except Exception as e:
             self.is_connected = False
             print_debug("connect ERROR", repr(e))
-            raise ("ERROR")
+            raise RuntimeError("ERROR") from e
 
 
     def set_filename_h5(self, filename):
@@ -484,6 +494,14 @@ class SpadFcsManager():
         """
         self.use_rust_fifo = value
 
+    def set_detector_model(self, detector_model=DETECTOR_SPAD_ARRAY):
+        """
+        Select which detector provides raw acquisition data.
+        """
+        self.detector_model = normalize_detector_model(detector_model)
+        if self.fpga_handle is not None:
+            self.fpga_handle.set_detector_model(self.detector_model)
+
     def set_raw_stream_mode(self, enabled=False):
         """
         Enable direct FIFO-to-disk streaming without preview/conversion.
@@ -502,13 +520,13 @@ class SpadFcsManager():
         """
         do_not_save = self.do_not_save_event.is_set()
 
-        print_debug("spadfcsmanager.run()")
+        print_debug("mcs_manager.run()")
 
         print_debug("do_not_save", do_not_save)
         print_debug("fpga_process.runed from run")
         self.readRegistersDict()
-        print_debug("spadfcsmanager.registers_configuration")
-        print_debug("spadfcsmanager.expected_words_data_digital", self.expected_words_data_digital)
+        print_debug("mcs_manager.registers_configuration")
+        print_debug("mcs_manager.expected_words_data_digital", self.expected_words_data_digital)
 
         self.fpga_handle.set_list_fifos_to_read_continously(self.activated_fifos_list)
 
@@ -551,8 +569,8 @@ class SpadFcsManager():
                 dtype=np.uint64,
                 shape=[
                     6,
-                    self.dim_detector,
-                    self.dim_detector,
+                    self.spad_detector_dim,
+                    self.spad_detector_dim,
                 ],
                 sampling=0,
                 lock=True,
@@ -560,12 +578,12 @@ class SpadFcsManager():
 
             self.shared_fingerprint_mask = MemorySharedNumpyArray(
                 dtype=np.uint8,
-                shape=[self.dim_detector * self.dim_detector],
+                shape=[self.spad_detector_dim * self.spad_detector_dim],
                 sampling=0,
                 lock=True,
             )
             self.shared_fingerprint_mask.get_numpy_handle()[:] = np.ones(
-                self.dim_detector * self.dim_detector, dtype=np.uint8
+                self.spad_detector_dim * self.spad_detector_dim, dtype=np.uint8
             )
         else:
             self.shared_autocorrelation = None
@@ -675,7 +693,7 @@ class SpadFcsManager():
         }
 
         self.shared_dict["shape"] = [self.dim_x, self.dim_y, self.dim_z]
-        self.shared_dict["channels"] = self.channels
+        self.shared_dict["spad_channels"] = self.spad_channels
         self.shared_dict["timebins_per_pixel"] = self.timebins_per_pixel
         self.shared_dict["circ_repetition"] = self.circ_repetition
         self.shared_dict["circ_points"] = self.circ_points
@@ -688,6 +706,7 @@ class SpadFcsManager():
         self.shared_dict["DFD_nbins"] = self.DFD_nbins
         self.shared_dict["dfd_cycle_mhz"] = self.dfd_cycle_mhz
         self.shared_dict["raw_output_files"] = dict(self.raw_output_files)
+        self.shared_dict["detector_model"] = self.detector_model
 
         print_debug("self.activate_show_preview", self.activate_show_preview)
         self.shared_dict.update(
@@ -733,7 +752,7 @@ class SpadFcsManager():
         else:
             print_debug("self.previewProcess()")
             self.previewProcess = AcquisitionLoopProcess(
-                self.channels,
+                self.spad_channels,
                 self.shared_objects,
                 do_not_save,
                 self.data_queue,
@@ -829,11 +848,11 @@ class SpadFcsManager():
         )
         print_debug("self.expected_words_data_per_frame_analog calculated ", self.expected_words_data_per_frame_analog)
 
-        if self.channels == 25:
+        if self.spad_channels == 25:
             self.expected_words_data_per_frame_digital = (
                 2 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
-            print_debug("self.expected_words_data_per_frame_digital calculated for 25 channels ",self.expected_words_data_per_frame_digital)
+            print_debug("self.expected_words_data_per_frame_digital calculated for 25 SPAD channels ",self.expected_words_data_per_frame_digital)
             print_debug("timebins", self.timebins_per_pixel,
                        "x",self.dim_x,
                        "y",self.dim_y,
@@ -841,11 +860,11 @@ class SpadFcsManager():
                        "rep",self.dim_rep,
                        "circ_rep",self.circ_repetition,
                        "circ_points",self.circ_points)
-        elif self.channels == 49:
+        elif self.spad_channels == 49:
             self.expected_words_data_per_frame_digital = (
                     8 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
-            print_debug("self.expected_words_data_per_frame_digital calculated for 49 channels", self.expected_words_data_per_frame_digital)
+            print_debug("self.expected_words_data_per_frame_digital calculated for 49 SPAD channels", self.expected_words_data_per_frame_digital)
 
         else:
             print_debug("self.expected_words_data_per_frame_digital DISASTER")
@@ -875,12 +894,12 @@ class SpadFcsManager():
 
 
         self.fifo_chuck_size_analog = self.timebins_per_pixel * self.circ_repetition * self.circ_points
-        if self.channels==25:
+        if self.spad_channels==25:
             self.fifo_chuck_size_digital = 2 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
-            print_debug("update_chuck self.channels == 25")
-        elif self.channels == 49:
+            print_debug("update_chuck self.spad_channels == 25")
+        elif self.spad_channels == 49:
             self.fifo_chuck_size_digital = 8 * self.timebins_per_pixel * self.circ_repetition * self.circ_points
-            print_debug("update_chuck self.channels == 49")
+            print_debug("update_chuck self.spad_channels == 49")
 
 
         self.fpga_handle.set_fifo_chuck_size_digital(self.fifo_chuck_size_digital)
@@ -1062,7 +1081,7 @@ class SpadFcsManager():
     #     """
     #     Get the image
     #     """
-    #     # self.dataCounts = np.zeros((self.dim_x*self.dim_y*self.dim_z*self.timebins_per_pixel, self.channels),
+    #     # self.dataCounts = np.zeros((self.dim_x*self.dim_y*self.dim_z*self.timebins_per_pixel, self.spad_channels),
     #     #                           dtype = np.uint64)
     #     # #print(id(self.shared_memory_buffer))
     #     # #print(self.shared_memory_buffer.get_numpy_handle())
@@ -1073,7 +1092,7 @@ class SpadFcsManager():
     #     #                             self.dim_y,
     #     #                             self.dim_x,
     #     #                             self.timebins_per_pixel,
-    #     #                             self.channels)
+    #     #                             self.spad_channels)
     #     d = np.memmap(
     #         "test.raw",
     #         dtype="uint16",
@@ -1083,7 +1102,7 @@ class SpadFcsManager():
     #             self.dim_y,
     #             self.dim_x,
     #             self.timebins_per_pixel,
-    #             self.channels,
+    #             self.spad_channels,
     #         ),
     #     )
     #     print_debug(d.shape, type(d))
@@ -1160,7 +1179,7 @@ class SpadFcsManager():
                 1,
             )
             samples_processed = int(self.loc_previewed["FIFO"].value)
-            data_words_per_sample_digital = 8 if self.channels == 49 else 2
+            data_words_per_sample_digital = 8 if self.spad_channels == 49 else 2
             if self.expected_words_data_per_frame_digital > 0:
                 samples_per_frame = max(
                     int(

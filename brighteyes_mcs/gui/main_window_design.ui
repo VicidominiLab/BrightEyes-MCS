@@ -1044,7 +1044,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_86">
            <item row="0" column="0">
-            <widget class="QComboBox" name="comboBox_channels">
+            <widget class="QComboBox" name="comboBox_spad_channels">
              <item>
               <property name="text">
                <string>25</string>
@@ -3415,14 +3415,35 @@
              <string>SPAD</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_61">
-             <item row="5" column="0">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_detector_model">
+               <property name="text">
+                <string>Detector</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="comboBox_detector_model">
+               <item>
+                <property name="text">
+                 <string>SPAD Array</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>PI 23</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="6" column="0">
               <widget class="QLabel" name="label_119">
                <property name="text">
                 <string>(Legacy feature to program the old SPAD array prototype)</string>
                </property>
               </widget>
              </item>
-             <item row="6" column="0">
+             <item row="7" column="0">
               <layout class="QGridLayout" name="gridLayout_59">
                <item row="1" column="2">
                 <widget class="QLineEdit" name="lineEdit_spad_data">
@@ -3461,28 +3482,28 @@
                </item>
               </layout>
              </item>
-             <item row="1" column="0">
+             <item row="2" column="0">
               <widget class="QCheckBox" name="checkBox_SPAD_VR0">
                <property name="text">
                 <string>VR0</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
+             <item row="1" column="0">
               <widget class="QLabel" name="label_124">
                <property name="text">
                 <string>SPAD 7x7 hold-off configuration:</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
+             <item row="3" column="0">
               <widget class="QCheckBox" name="checkBox_SPAD_VR1">
                <property name="text">
                 <string>VR1</string>
                </property>
               </widget>
              </item>
-             <item row="3" column="0">
+             <item row="4" column="0">
               <spacer name="verticalSpacer_12">
                <property name="orientation">
                 <enum>Qt::Orientation::Vertical</enum>
@@ -7358,10 +7379,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>comboBox_channels</sender>
+   <sender>comboBox_spad_channels</sender>
    <signal>textActivated(QString)</signal>
    <receiver>MainWindowDesign</receiver>
-   <slot>numberChannelsChanged()</slot>
+   <slot>spadChannelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>418</x>
@@ -7500,7 +7521,7 @@
   <slot>loadPreset()</slot>
   <slot>savePreset()</slot>
   <slot>about()</slot>
-  <slot>numberChannelsChanged()</slot>
+  <slot>spadChannelsChanged()</slot>
   <slot>circularMotionActivateChanged()</slot>
   <slot>test_analog_digital()</slot>
   <slot>httpServerCheckBoxChanged()</slot>
