@@ -1,7 +1,6 @@
 """PI23 acquisition pipeline scaffold."""
 
 import multiprocessing as mp
-<<<<<<< HEAD
 import os
 
 from ...processes.pi23.acquisition_loop_process import Pi23AcquisitionLoopProcess
@@ -31,17 +30,6 @@ def _pi23_dwell_us(mcs_manager):
         mcs_manager.default_configuration.get("ClockDur", 2000),
     )
     return max(0.0, float(clock_dur_ns) / 1000.0)
-=======
-
-from ...processes.pi23_acquisition_loop_process import Pi23AcquisitionLoopProcess
-from ...processes.pi23_data_pre_process import Pi23DataPreProcess
-from ...processes.pi23_raw_stream_writer_process import Pi23RawStreamWriterProcess
-from ...processes.pi23_receiver_process import Pi23ReceiverProcess
-
-
-def pi23_words_per_sample(spad_channels):
-    return 8 if int(spad_channels) == 49 else 2
->>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
 
 
 class Pi23DetectorPipeline:
@@ -51,23 +39,16 @@ class Pi23DetectorPipeline:
         return mp.Queue()
 
     def make_receiver_process(self, mcs_manager, receiver_queue, start_event):
-<<<<<<< HEAD
         active_fifos = _pi23_active_fifos(mcs_manager.activated_fifos_list)
         return Pi23ReceiverProcess(
             receiver_queue,
             active_fifos,
-=======
-        return Pi23ReceiverProcess(
-            receiver_queue,
-            mcs_manager.activated_fifos_list,
->>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
             start_event,
             mcs_manager.fpga_handle.configuration["fifo_chuck_size_digital"],
             mcs_manager.fpga_handle.configuration["fifo_chuck_size_analog"],
             mcs_manager.fpga_handle.configuration["expected_words_data_digital"],
             mcs_manager.fpga_handle.configuration["expected_words_data_analog"],
             digital_words_per_sample=pi23_words_per_sample(mcs_manager.spad_channels),
-<<<<<<< HEAD
             digital_output_channels=25,
             scan_x=mcs_manager.dim_x,
             scan_y=mcs_manager.dim_y,
@@ -79,9 +60,6 @@ class Pi23DetectorPipeline:
             ),
             dwell_us=_pi23_dwell_us(mcs_manager),
             external_frame=int(os.environ.get("PI23_EXTERNAL_FRAME", "0")),
-=======
-            digital_output_channels=mcs_manager.spad_channels,
->>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
             debug=mcs_manager.debug,
         )
 
@@ -97,17 +75,12 @@ class Pi23DetectorPipeline:
         )
 
     def make_acquisition_loop(self, mcs_manager, do_not_save):
-<<<<<<< HEAD
         mcs_manager.shared_objects["activated_fifos_list"] = _pi23_active_fifos(
             mcs_manager.activated_fifos_list
         )
         mcs_manager.shared_dict["spad_channels"] = 25
         return Pi23AcquisitionLoopProcess(
             25,
-=======
-        return Pi23AcquisitionLoopProcess(
-            mcs_manager.spad_channels,
->>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
             mcs_manager.shared_objects,
             do_not_save,
             mcs_manager.data_queue,
@@ -118,16 +91,10 @@ class Pi23DetectorPipeline:
         )
 
     def make_raw_stream_writer(self, mcs_manager, receiver_queue):
-<<<<<<< HEAD
         active_fifos = _pi23_active_fifos(mcs_manager.activated_fifos_list)
         return Pi23RawStreamWriterProcess(
             receiver_queue,
             active_fifos,
-=======
-        return Pi23RawStreamWriterProcess(
-            receiver_queue,
-            mcs_manager.activated_fifos_list,
->>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
             mcs_manager.raw_output_files,
             mcs_manager.loc_acquired,
             mcs_manager.loc_previewed,

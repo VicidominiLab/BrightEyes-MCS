@@ -12,12 +12,14 @@ import h5py
 import numpy as np
 
 from brighteyes_mcs.libs.detector_backends import DETECTOR_PI_23
-from brighteyes_mcs.libs.raw_acquisition_converter import (
+from brighteyes_mcs.libs.spad_raw_acquisition_converter import (
     _detect_streams,
     _load_metadata,
     convert_raw_acquisition,
 )
-from brighteyes_mcs.libs.processes.spad_raw_stream_writer_process import SpadRawStreamWriterProcess
+from brighteyes_mcs.libs.processes.spad.raw_stream_writer_process import (
+    SpadRawStreamWriterProcess,
+)
 from brighteyes_mcs.libs.mcs_manager import create_i64_counter
 
 

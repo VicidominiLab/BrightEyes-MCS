@@ -59,7 +59,7 @@ from .dict_to_tree import TreeModel
 from ..libs.ttm import TtmRemoteManager
 from ..libs.plugin_loader import PluginsManager
 from ..libs.restapi import FastAPIServerThread
-from ..libs.raw_acquisition_converter import convert_raw_acquisition
+from ..libs.spad_raw_acquisition_converter import convert_raw_acquisition
 from ..libs.detectors.models import DETECTOR_PI_23, DETECTOR_SPAD_ARRAY
 
 import numpy as np
