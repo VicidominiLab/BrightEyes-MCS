@@ -13,9 +13,15 @@ from brighteyes_mcs_cylibs.fastconverter import (
     convertRawDataToCountsDirect,
     convertRawDataToCountsDirect49,
 )
+<<<<<<< HEAD
 from .detectors.models import DETECTOR_PI_23, DETECTOR_SPAD_ARRAY, normalize_detector_model
 from .pi23_raw_acquisition_converter import convert_pi23_raw_acquisition
 from .processes.spad.acquisition_loop_process import (
+=======
+from .detector_backends import DETECTOR_PI_23, DETECTOR_SPAD_ARRAY, normalize_detector_model
+from .pi23_raw_acquisition_converter import convert_pi23_raw_acquisition
+from .processes.spad_acquisition_loop_process import (
+>>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
     accumulate_unordered_sum_4d,
     decode_pointer_list,
 )

@@ -8,12 +8,17 @@ import nifpga
 import os
 from datetime import datetime
 from .print_debug import print_debug, set_debug
+<<<<<<< HEAD
 from .processes.fpga_handle_process_fifo_new import NiFpgaControlProcess
 from .detectors.models import (
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_control,
     normalize_detector_model,
 )
+=======
+from .processes.spad_fpga_fifo_reader_process import SpadFpgaFifoReaderProcess
+from .detector_backends import DETECTOR_SPAD_ARRAY, normalize_detector_model
+>>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
 
 class FpgaHandle(object):
     def __init__(
@@ -78,8 +83,13 @@ class FpgaHandle(object):
         def __del__(self):
             self.stop()
 
+<<<<<<< HEAD
         # self.fpga_handle_process = NiFpgaControlProcess(self.configuration)
         # print("NiFpgaControlProcess(self.configuration)")
+=======
+        # self.fpga_handle_process = SpadFpgaFifoReaderProcess(self.configuration)
+        # print("SpadFpgaFifoReaderProcess(self.configuration)")
+>>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
 
     def run(self, initial_registers={}):
         self.configuration["initial_registers"].clear()
@@ -96,7 +106,11 @@ class FpgaHandle(object):
         print_debug("self.fpga_handle_process.start()")
         print_debug("initial_registers")
         print_debug(initial_registers)
+<<<<<<< HEAD
         self.fpga_handle_process = NiFpgaControlProcess(
+=======
+        self.fpga_handle_process = SpadFpgaFifoReaderProcess(
+>>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
             self.configuration, use_rust_fifo=self.use_rust_fifo
         )
 

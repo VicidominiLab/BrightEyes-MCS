@@ -10,11 +10,15 @@ from ..libs.fpga_handle import FpgaHandle
 from ..libs.h5manager import H5ManagerProcess
 from ..libs.print_debug import print_debug
 from ..libs.mp_shared_array import MemorySharedNumpyArray
+<<<<<<< HEAD
 from ..libs.detectors.models import (
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_fifo,
     normalize_detector_model,
 )
+=======
+from ..libs.detector_backends import DETECTOR_SPAD_ARRAY, normalize_detector_model
+>>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
 from ..libs.detectors import create_detector_pipeline
 
 from ..libs.mp_circular_shm import CircularSharedBuffer
@@ -516,7 +520,10 @@ class McsManager():
         Select which detector provides raw acquisition data.
         """
         self.detector_model = normalize_detector_model(detector_model)
+<<<<<<< HEAD
         self.shared_dict["detector_model"] = self.detector_model
+=======
+>>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
         self.detector_pipeline = create_detector_pipeline(self.detector_model)
         if self.fpga_handle is not None:
             self.fpga_handle.set_detector_model(self.detector_model)
@@ -548,12 +555,16 @@ class McsManager():
         print_debug("mcs_manager.expected_words_data_digital", self.expected_words_data_digital)
 
         self.detector_pipeline = create_detector_pipeline(self.detector_model)
+<<<<<<< HEAD
         nifpga_fifos = (
             self.activated_fifos_list
             if detector_uses_nifpga_fifo(self.detector_model)
             else []
         )
         self.fpga_handle.set_list_fifos_to_read_continously(nifpga_fifos)
+=======
+        self.fpga_handle.set_list_fifos_to_read_continously(self.activated_fifos_list)
+>>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
 
         if not self.raw_stream_mode:
             # Preview data lives in shared memory so the GUI can inspect it without

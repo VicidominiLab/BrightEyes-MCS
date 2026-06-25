@@ -1,8 +1,14 @@
 """SPAD Array acquisition pipeline."""
 
+<<<<<<< HEAD
 from ...processes.spad.acquisition_loop_process import SpadAcquisitionLoopProcess
 from ...processes.spad.data_pre_process import SpadDataPreProcess
 from ...processes.spad.raw_stream_writer_process import SpadRawStreamWriterProcess
+=======
+from ...processes.spad_acquisition_loop_process import SpadAcquisitionLoopProcess
+from ...processes.spad_data_pre_process import SpadDataPreProcess
+from ...processes.spad_raw_stream_writer_process import SpadRawStreamWriterProcess
+>>>>>>> 619fdf7fdf53bf0ecff498d62b7597014e19b4f1
 
 
 class SpadDetectorPipeline:
