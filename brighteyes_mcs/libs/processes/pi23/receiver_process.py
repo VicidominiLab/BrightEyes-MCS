@@ -37,8 +37,6 @@ class Pi23ReceiverProcess(mp.Process):
         external_frame=0,
         host=None,
         port=None,
-        command_scan_x_extra=None,
-        command_scan_y_extra=None,
         debug=False,
     ):
         super().__init__()
@@ -63,8 +61,6 @@ class Pi23ReceiverProcess(mp.Process):
             external_frame=external_frame,
             host=host,
             port=port,
-            command_scan_x_extra=command_scan_x_extra,
-            command_scan_y_extra=command_scan_y_extra,
             debug=debug,
         )
         self.debug = bool(debug)

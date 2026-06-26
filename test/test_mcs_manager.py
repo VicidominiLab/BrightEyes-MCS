@@ -150,6 +150,27 @@ class TestMcsManager(unittest.TestCase):
         self.assertFalse(run_registers["activateFIFOAnalog"])
         self.assertFalse(run_registers["DFD_Activate"])
 
+    def test_connect_pi23_offsets_nifpga_scan_dimensions(self):
+        instance = McsManager()
+        instance.set_detector_model(DETECTOR_PI_23)
+        instance.update_chuck = MagicMock()
+
+        with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:
+            fpga_handle = MagicMock()
+            MockFpgaHandle.return_value = fpga_handle
+            instance.connect(
+                {
+                    "#pixels": 100,
+                    "#lines": 200,
+                    "#frames": 3,
+                }
+            )
+
+        run_registers = fpga_handle.run.call_args.args[0]
+        self.assertEqual(run_registers["#pixels"], 101)
+        self.assertEqual(run_registers["#lines"], 201)
+        self.assertEqual(run_registers["#frames"], 4)
+
     def test_set_registers_dict_pi23_forces_fifo_registers_off(self):
         instance = McsManager()
         instance.set_detector_model(DETECTOR_PI_23)
@@ -167,6 +188,52 @@ class TestMcsManager(unittest.TestCase):
         instance.fpga_handle.register_write.assert_any_call("activateFIFODigital", False)
         instance.fpga_handle.register_write.assert_any_call("activateFIFOAnalog", False)
         instance.fpga_handle.register_write.assert_any_call("DFD_Activate", False)
+
+    def test_set_registers_dict_pi23_offsets_nifpga_scan_dimensions_only(self):
+        instance = McsManager()
+        instance.set_detector_model(DETECTOR_PI_23)
+        instance.is_connected = True
+        instance.fpga_handle = MagicMock()
+
+        instance.setRegistersDict(
+            {
+                "#pixels": 100,
+                "#lines": 200,
+                "#frames": 3,
+            }
+        )
+
+        instance.fpga_handle.register_write.assert_any_call("#pixels", 101)
+        instance.fpga_handle.register_write.assert_any_call("#lines", 201)
+        instance.fpga_handle.register_write.assert_any_call("#frames", 4)
+        self.assertEqual(instance.registers_configuration["#pixels"], 100)
+        self.assertEqual(instance.registers_configuration["#lines"], 200)
+        self.assertEqual(instance.registers_configuration["#frames"], 3)
+
+    def test_read_registers_dict_pi23_restores_logical_scan_dimensions(self):
+        instance = McsManager()
+        instance.set_detector_model(DETECTOR_PI_23)
+        instance.is_connected = True
+        instance.fpga_handle = MagicMock()
+        instance.fpga_handle.register_read_all.return_value = {
+            "#timebinsPerPixel": 10,
+            "#circular_rep": 1,
+            "#circular_points": 1,
+            "Cx": 40,
+            "#pixels": 101,
+            "#lines": 201,
+            "#frames": 4,
+            "#repetition": 2,
+        }
+
+        instance.readRegistersDict()
+
+        self.assertEqual(instance.dim_x, 100)
+        self.assertEqual(instance.dim_y, 200)
+        self.assertEqual(instance.dim_z, 3)
+        self.assertEqual(instance.registers_configuration["#pixels"], 100)
+        self.assertEqual(instance.registers_configuration["#lines"], 200)
+        self.assertEqual(instance.registers_configuration["#frames"], 3)
 
     def test_connect_raises_exception_on_error(self):
         instance = McsManager()

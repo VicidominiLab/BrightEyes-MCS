@@ -11,6 +11,7 @@ from ..libs.h5manager import H5ManagerProcess
 from ..libs.print_debug import print_debug
 from ..libs.mp_shared_array import MemorySharedNumpyArray
 from ..libs.detectors.models import (
+    DETECTOR_PI_23,
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_fifo,
     normalize_detector_model,
@@ -20,8 +21,26 @@ from ..libs.detectors import create_detector_pipeline
 from ..libs.mp_circular_shm import CircularSharedBuffer
 
 
+PI23_NIFPGA_DIMENSION_OFFSETS = {
+    "#pixels": 1,
+    "#lines": 1,
+    "#frames": 1,
+}
+
+
 def create_i64_counter(initial_value=0):
     return mp.Value("q", int(initial_value))
+
+
+def _pi23_nifpga_dimension_registers(registers, detector_model, direction=1):
+    registers = dict(registers)
+    if normalize_detector_model(detector_model) != DETECTOR_PI_23:
+        return registers
+
+    for register, offset in PI23_NIFPGA_DIMENSION_OFFSETS.items():
+        if register in registers and registers[register] is not None:
+            registers[register] = max(1, int(registers[register]) + (direction * offset))
+    return registers
 
 
 class McsManager():
@@ -463,6 +482,10 @@ class McsManager():
                 "activateFIFODigital": False,
                 "DFD_Activate": False,
             }
+        nifpga_initial_registers = _pi23_nifpga_dimension_registers(
+            initial_registers_for_detector,
+            self.detector_model,
+        )
         nifpga_fifos = list_fifos if detector_uses_nifpga_fifo(self.detector_model) else []
         # self.nifpga_session = nifpga.Session(self.bitfile, self.niAddr)
         try:
@@ -485,7 +508,7 @@ class McsManager():
 
             self.update_chuck()
 
-            self.fpga_handle.run(initial_registers_for_detector)
+            self.fpga_handle.run(nifpga_initial_registers)
             print_debug("self.fpga_handle.run()")
         except Exception as e:
             self.is_connected = False
@@ -827,6 +850,7 @@ class McsManager():
             for register in ("activateFIFOAnalog", "activateFIFODigital", "DFD_Activate"):
                 if register in myconf:
                     myconf[register] = False
+        nifpga_conf = _pi23_nifpga_dimension_registers(myconf, self.detector_model)
         # print_debug("setRegistersDict")
         register_set = "setRegistersDict: "
         temp_dict = {}
@@ -836,7 +860,7 @@ class McsManager():
                 register_set += "%s %s " % (i, myconf[i])
                 # self.nifpga_session.registers[i].write(myconf[i])
                 if self.is_connected:
-                    self.fpga_handle.register_write(i, myconf[i])
+                    self.fpga_handle.register_write(i, nifpga_conf[i])
                     temp_dict[i] = myconf[i]
             else:
                 print_debug("myconf is None")
@@ -849,7 +873,13 @@ class McsManager():
         """
         print_debug("readRegistersDict()")
         if self.is_connected:
-            self.registers_configuration.update(self.fpga_handle.register_read_all())
+            self.registers_configuration.update(
+                _pi23_nifpga_dimension_registers(
+                    self.fpga_handle.register_read_all(),
+                    self.detector_model,
+                    direction=-1,
+                )
+            )
             print_debug(
                 "readRegistersDict self.registers_configuration:",
                 self.registers_configuration,

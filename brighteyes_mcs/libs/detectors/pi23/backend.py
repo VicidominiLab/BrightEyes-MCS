@@ -17,8 +17,6 @@ ERROR_SENTINEL = b"ERROR"
 DEFAULT_PI23_HOST = "127.0.0.1"
 DEFAULT_PI23_PORT = 9997
 DEFAULT_PI23_CHANNELS = 23
-DEFAULT_PI23_COMMAND_X_EXTRA = 1
-DEFAULT_PI23_COMMAND_Y_EXTRA = 1
 
 
 def pi23_debug_enabled(default=False):
@@ -31,12 +29,6 @@ def pi23_debug_enabled(default=False):
 def pi23_debug(*objects, enabled=False):
     if pi23_debug_enabled(enabled):
         print("[PI23]", *objects, flush=True)
-
-
-def _pi23_setting(env_name, explicit_value, default_value):
-    if explicit_value is not None:
-        return explicit_value
-    return os.environ.get(env_name, default_value)
 
 
 @dataclass
@@ -85,8 +77,6 @@ class Pi23TcpBunchSource:
         read_chunk_size=32768,
         packet_samples=65536,
         detector_channels=None,
-        command_scan_x_extra=None,
-        command_scan_y_extra=None,
         debug=False,
     ):
         self.fifo_chuck_size_digital = fifo_chuck_size_digital
@@ -97,22 +87,6 @@ class Pi23TcpBunchSource:
         self.digital_output_channels = max(1, int(digital_output_channels))
         self.scan_x = max(1, int(scan_x))
         self.scan_y = max(1, int(scan_y))
-        self.command_scan_x_extra = max(
-            0,
-            int(_pi23_setting(
-                "PI23_COMMAND_X_EXTRA",
-                command_scan_x_extra,
-                DEFAULT_PI23_COMMAND_X_EXTRA,
-            )),
-        )
-        self.command_scan_y_extra = max(
-            0,
-            int(_pi23_setting(
-                "PI23_COMMAND_Y_EXTRA",
-                command_scan_y_extra,
-                DEFAULT_PI23_COMMAND_Y_EXTRA,
-            )),
-        )
         self.scan_frames = max(1, int(scan_frames))
         self.timebins_per_pixel = max(1, int(timebins_per_pixel))
         self.dwell_us = float(dwell_us)
@@ -140,7 +114,6 @@ class Pi23TcpBunchSource:
             "PI23 source start",
             f"{self.host}:{self.port}",
             f"scan={self.scan_x}x{self.scan_y}x{self.scan_frames}",
-            f"command_scan={self.command_scan_x}x{self.command_scan_y}",
             f"timebins={self.timebins_per_pixel}",
             f"dwell_us={self.dwell_us}",
         )
@@ -148,7 +121,6 @@ class Pi23TcpBunchSource:
             "source start",
             f"{self.host}:{self.port}",
             f"scan={self.scan_x}x{self.scan_y}x{self.scan_frames}",
-            f"command_scan={self.command_scan_x}x{self.command_scan_y}",
             f"timebins={self.timebins_per_pixel}",
             f"dwell_us={self.dwell_us}",
             enabled=self.debug,
@@ -239,7 +211,10 @@ class Pi23TcpBunchSource:
         return counts
 
     def _receive_cs_binary_payload(self):
-        command = self._format_cs_command()
+        command = (
+            f"CS,{self.dwell_us},{self.scan_frames},"
+            f"{self.scan_x},{self.scan_y},{self.external_frame}\n"
+        )
         pi23_debug("connect", f"{self.host}:{self.port}", enabled=self.debug)
         print_debug("PI23 TCP connect", f"{self.host}:{self.port}")
         data = bytearray()
@@ -282,25 +257,15 @@ class Pi23TcpBunchSource:
         print_debug("PI23 TCP payload bytes", len(data))
         return bytes(data)
 
-    @property
-    def command_scan_x(self):
-        return self.scan_x + self.command_scan_x_extra
-
-    @property
-    def command_scan_y(self):
-        return self.scan_y + self.command_scan_y_extra
-
-    def _format_cs_command(self):
-        return (
-            f"CS,{self.dwell_us},{self.scan_frames},"
-            f"{self.command_scan_x},{self.command_scan_y},{self.external_frame}\n"
-        )
-
     def _payload_to_planes(self, payload):
-        payload_scan_x, payload_scan_y = self._payload_dimensions_for_length(len(payload))
-        pixels_per_frame = payload_scan_x * payload_scan_y
+        pixels_per_frame = self.scan_x * self.scan_y
         if pixels_per_frame <= 0:
             raise RuntimeError("PI23 invalid scan dimensions")
+        if len(payload) % pixels_per_frame != 0:
+            raise RuntimeError(
+                "PI23 payload length is not aligned to scan pixels: "
+                f"bytes={len(payload)} pixels_per_frame={pixels_per_frame}"
+            )
 
         total_planes = len(payload) // pixels_per_frame
         if total_planes % self.scan_frames == 0:
@@ -324,63 +289,23 @@ class Pi23TcpBunchSource:
             self.detector_channels = detector_planes
 
         array = np.frombuffer(payload, dtype=np.uint8)
-        expected = self.scan_frames * detector_planes * payload_scan_y * payload_scan_x
+        expected = self.scan_frames * detector_planes * self.scan_y * self.scan_x
         if array.size != expected:
             raise RuntimeError(
                 "PI23 payload size mismatch after inference: "
                 f"got={array.size} expected={expected}"
             )
-        planes = array.reshape(self.scan_frames, detector_planes, payload_scan_y, payload_scan_x)
-        if payload_scan_x > self.scan_x or payload_scan_y > self.scan_y:
-            planes = planes[:, :, : self.scan_y, : self.scan_x]
-        return planes
-
-    def _payload_dimensions_for_length(self, payload_len):
-        exact_candidates = []
-        aligned_candidates = []
-        candidates = [
-            (self.command_scan_x, self.command_scan_y),
-            (self.scan_x, self.scan_y),
-        ]
-        seen = set()
-        for candidate_scan_x, candidate_scan_y in candidates:
-            if (candidate_scan_x, candidate_scan_y) in seen:
-                continue
-            seen.add((candidate_scan_x, candidate_scan_y))
-            pixels_per_frame = candidate_scan_x * candidate_scan_y
-            if pixels_per_frame <= 0 or payload_len % pixels_per_frame != 0:
-                continue
-
-            total_planes = payload_len // pixels_per_frame
-            if total_planes == self.scan_frames * self.detector_channels:
-                exact_candidates.append((candidate_scan_x, candidate_scan_y))
-            elif (
-                total_planes % self.scan_frames == 0
-                or total_planes % self.detector_channels == 0
-            ):
-                aligned_candidates.append((candidate_scan_x, candidate_scan_y))
-
-        if exact_candidates:
-            return exact_candidates[0]
-        if aligned_candidates:
-            return aligned_candidates[0]
-
-        raise RuntimeError(
-            "PI23 payload length is not aligned to scan pixels: "
-            f"bytes={payload_len} "
-            f"command_pixels_per_frame={self.command_scan_x * self.command_scan_y} "
-            f"requested_pixels_per_frame={self.scan_x * self.scan_y}"
-        )
+        return array.reshape(self.scan_frames, detector_planes, self.scan_y, self.scan_x)
 
     def _planes_to_sample_counts(self, planes):
-        frames, detector_planes, scan_y, scan_x = planes.shape
+        frames, detector_planes, _scan_y, _scan_x = planes.shape
         output_channels = self.digital_output_channels
-        sample_count = frames * scan_y * scan_x * self.timebins_per_pixel
+        sample_count = frames * self.scan_y * self.scan_x * self.timebins_per_pixel
         counts = np.zeros((sample_count, output_channels), dtype=np.uint16)
 
         usable_channels = min(detector_planes, output_channels)
         pixel_major = planes[:, :usable_channels, :, :].transpose(0, 2, 3, 1)
-        pixel_major = pixel_major.reshape(frames * scan_y * scan_x, usable_channels)
+        pixel_major = pixel_major.reshape(frames * self.scan_y * self.scan_x, usable_channels)
         counts[0:: self.timebins_per_pixel, :usable_channels] = pixel_major
         return counts
 
