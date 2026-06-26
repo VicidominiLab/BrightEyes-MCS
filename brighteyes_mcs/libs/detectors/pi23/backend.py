@@ -89,7 +89,7 @@ class Pi23TcpBunchSource:
         self.scan_y = max(1, int(scan_y))
         self.scan_frames = max(1, int(scan_frames))
         self.timebins_per_pixel = max(1, int(timebins_per_pixel))
-        self.dwell_us = float(dwell_us)
+        self.dwell_us = 0 if float(dwell_us) == 0.0 else float(dwell_us)
         self.external_frame = int(external_frame)
         self.host = host or os.environ.get("PI23_HOST", DEFAULT_PI23_HOST)
         self.port = int(port or os.environ.get("PI23_PORT", DEFAULT_PI23_PORT))
