@@ -22,14 +22,13 @@ def _pi23_total_scan_frames(mcs_manager):
 
 
 def _pi23_dwell_us(mcs_manager):
-    override = os.environ.get("PI23_DWELL_US")
+    override = os.environ.get("PI23_FORCE_DWELLTIME")
     if override is not None:
-        return float(override)
-    clock_dur_ns = mcs_manager.registers_configuration.get(
-        "ClockDur",
-        mcs_manager.default_configuration.get("ClockDur", 2000),
-    )
-    return max(0.0, float(clock_dur_ns) / 1000.0)
+        clock_dur_ns = mcs_manager.registers_configuration.get(
+            "ClockDur",
+            mcs_manager.default_configuration.get("ClockDur", 2000),
+        )
+    return 0 #max(0.0, float(clock_dur_ns) / 1000.0)
 
 
 class Pi23DetectorPipeline:
@@ -59,7 +58,7 @@ class Pi23DetectorPipeline:
                 * mcs_manager.circ_points
             ),
             dwell_us=_pi23_dwell_us(mcs_manager),
-            external_frame=int(os.environ.get("PI23_EXTERNAL_FRAME", "0")),
+            external_frame=int(os.environ.get("PI23_IGNOREEXTERNAL_FRAME", "1")),
             debug=mcs_manager.debug,
         )
 
