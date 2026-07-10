@@ -7,8 +7,10 @@ import unittest
 from unittest.mock import MagicMock, patch
 import numpy as np
 from brighteyes_mcs.libs.detectors.models import (
+    DETECTOR_PI23_TT,
     DETECTOR_PI_23,
     DETECTOR_SPAD_ARRAY,
+    DETECTOR_SPAD_TTM,
     detector_uses_nifpga_control,
     detector_uses_nifpga_fifo,
 )
@@ -19,9 +21,13 @@ class TestMcsManager(unittest.TestCase):
     def test_pi23_keeps_nifpga_control_without_nifpga_fifo_data(self):
         self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_ARRAY))
         self.assertTrue(detector_uses_nifpga_control(DETECTOR_SPAD_ARRAY))
+        self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_TTM))
+        self.assertTrue(detector_uses_nifpga_control(DETECTOR_SPAD_TTM))
 
         self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PI_23))
         self.assertTrue(detector_uses_nifpga_control(DETECTOR_PI_23))
+        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PI23_TT))
+        self.assertTrue(detector_uses_nifpga_control(DETECTOR_PI23_TT))
 
     def test_parse_dfd_metadata_from_bitfile_name_extracts_values(self):
         cycle_mhz, dfd_nbins = McsManager.parse_dfd_metadata_from_bitfile_name(
@@ -153,6 +159,27 @@ class TestMcsManager(unittest.TestCase):
     def test_connect_pi23_offsets_nifpga_scan_dimensions(self):
         instance = McsManager()
         instance.set_detector_model(DETECTOR_PI_23)
+        instance.update_chuck = MagicMock()
+
+        with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:
+            fpga_handle = MagicMock()
+            MockFpgaHandle.return_value = fpga_handle
+            instance.connect(
+                {
+                    "#pixels": 100,
+                    "#lines": 200,
+                    "#frames": 3,
+                }
+            )
+
+        run_registers = fpga_handle.run.call_args.args[0]
+        self.assertEqual(run_registers["#pixels"], 101)
+        self.assertEqual(run_registers["#lines"], 201)
+        self.assertEqual(run_registers["#frames"], 4)
+
+    def test_connect_pi23tt_offsets_nifpga_scan_dimensions(self):
+        instance = McsManager()
+        instance.set_detector_model(DETECTOR_PI23_TT)
         instance.update_chuck = MagicMock()
 
         with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:

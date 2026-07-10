@@ -8,6 +8,10 @@ from ...processes.spad.raw_stream_writer_process import SpadRawStreamWriterProce
 class SpadDetectorPipeline:
     detector_model = "SPAD Array"
 
+    def __init__(self, detector_model=None):
+        if detector_model is not None:
+            self.detector_model = detector_model
+
     def make_receiver_queue(self, mcs_manager):
         return mcs_manager.fpga_handle.configuration["queueFifoRead"]
 

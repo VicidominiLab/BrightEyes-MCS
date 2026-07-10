@@ -11,9 +11,9 @@ from ..libs.h5manager import H5ManagerProcess
 from ..libs.print_debug import print_debug
 from ..libs.mp_shared_array import MemorySharedNumpyArray
 from ..libs.detectors.models import (
-    DETECTOR_PI_23,
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_fifo,
+    detector_uses_pi23_pipeline,
     normalize_detector_model,
 )
 from ..libs.detectors import create_detector_pipeline
@@ -34,7 +34,7 @@ def create_i64_counter(initial_value=0):
 
 def _pi23_nifpga_dimension_registers(registers, detector_model, direction=1):
     registers = dict(registers)
-    if normalize_detector_model(detector_model) != DETECTOR_PI_23:
+    if not detector_uses_pi23_pipeline(detector_model):
         return registers
 
     for register, offset in PI23_NIFPGA_DIMENSION_OFFSETS.items():
@@ -236,6 +236,8 @@ class McsManager():
 
         self.use_rust_fifo = True
         self.detector_model = DETECTOR_SPAD_ARRAY
+        self.pi23_host = "127.0.0.1"
+        self.pi23_port = 9997
 
         self.debug = False
         self.h5_manager_process = None
@@ -543,6 +545,14 @@ class McsManager():
         self.detector_pipeline = create_detector_pipeline(self.detector_model)
         if self.fpga_handle is not None:
             self.fpga_handle.set_detector_model(self.detector_model)
+
+    def set_pi23_connection(self, host="127.0.0.1", port=9997):
+        self.pi23_host = str(host or "127.0.0.1")
+        self.pi23_port = int(port or 9997)
+        self.shared_dict["pi23_host"] = self.pi23_host
+        self.shared_dict["pi23_port"] = self.pi23_port
+        self.shared_dict["pi23_greeting_raw"] = ""
+        self.shared_dict["pi23_greeting_decoded"] = ""
 
     def set_raw_stream_mode(self, enabled=False):
         """

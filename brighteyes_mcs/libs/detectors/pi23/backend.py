@@ -77,8 +77,11 @@ class Pi23TcpBunchSource:
         read_chunk_size=32768,
         packet_samples=65536,
         detector_channels=None,
+        shared_dict=None,
         debug=False,
     ):
+        read_chunk_size = 8192 #hard-coded to avoid too large reads
+
         self.fifo_chuck_size_digital = fifo_chuck_size_digital
         self.fifo_chuck_size_analog = fifo_chuck_size_analog
         self.expected_words_data_digital = expected_words_data_digital
@@ -99,6 +102,7 @@ class Pi23TcpBunchSource:
         self.detector_channels = int(
             detector_channels or os.environ.get("PI23_CHANNELS", DEFAULT_PI23_CHANNELS)
         )
+        self.shared_dict = shared_dict
         self.debug = bool(debug)
         self.generated_words = {"FIFO": 0, "FIFOAnalog": 0}
         self.started_at_ns = None
@@ -228,13 +232,17 @@ class Pi23TcpBunchSource:
             except socket.timeout:
                 greeting = b""
             if greeting:
+                greeting_decoded = greeting.decode("utf-8", errors="replace").strip()
+                if self.shared_dict is not None:
+                    self.shared_dict["pi23_greeting_raw"] = greeting.hex(" ")
+                    self.shared_dict["pi23_greeting_decoded"] = greeting_decoded
                 print_debug(
                     "PI23 TCP greeting",
-                    greeting.decode("utf-8", errors="replace").strip(),
+                    greeting_decoded,
                 )
                 pi23_debug(
                     "greeting",
-                    greeting.decode("utf-8", errors="replace").strip(),
+                    greeting_decoded,
                     enabled=self.debug,
                 )
             pi23_debug("send", command.strip(), enabled=self.debug)

@@ -34,6 +34,10 @@ def _pi23_dwell_us(mcs_manager):
 class Pi23DetectorPipeline:
     detector_model = "PI 23"
 
+    def __init__(self, detector_model=None):
+        if detector_model is not None:
+            self.detector_model = detector_model
+
     def make_receiver_queue(self, mcs_manager):
         return mp.Queue()
 
@@ -59,6 +63,9 @@ class Pi23DetectorPipeline:
             ),
             dwell_us=_pi23_dwell_us(mcs_manager),
             external_frame=int(os.environ.get("PI23_IGNOREEXTERNAL_FRAME", "1")),
+            host=mcs_manager.pi23_host,
+            port=mcs_manager.pi23_port,
+            shared_dict=mcs_manager.shared_dict,
             debug=mcs_manager.debug,
         )
 

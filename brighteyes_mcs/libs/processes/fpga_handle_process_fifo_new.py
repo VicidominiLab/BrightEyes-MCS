@@ -57,7 +57,7 @@ class FpgaHandleProcess(mp.Process):
             self.configuration.get("detector_model", DETECTOR_SPAD_ARRAY)
         )
         if self._uses_nifpga_fifo():
-            self.process_label = "NI FPGA control + FIFO reader (SPAD Array)"
+            self.process_label = f"NI FPGA control + FIFO reader ({self.detector_model})"
         else:
             self.process_label = f"NI FPGA control only ({self.detector_model})"
         print_debug(self.configuration)

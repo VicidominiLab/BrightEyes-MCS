@@ -556,1222 +556,25 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_83.addWidget(self.pushButton_uttm_check_laser, 3, 1, 1, 1)
 
         self.tabWidget_3.addTab(self.tab_16, "")
+        self.tab_pi_timetagging = QWidget()
+        self.tab_pi_timetagging.setObjectName(u"tab_pi_timetagging")
+        self.gridLayout_pi_timetagging = QGridLayout(self.tab_pi_timetagging)
+        self.gridLayout_pi_timetagging.setObjectName(u"gridLayout_pi_timetagging")
+        self.tabWidget_3.addTab(self.tab_pi_timetagging, "")
 
         self.gridLayout_76.addWidget(self.tabWidget_3, 2, 0, 1, 2)
 
         self.tabWidget.addTab(self.tab_14, "")
-
-        self.gridLayout_11.addWidget(self.tabWidget, 0, 0, 1, 1)
-
-
-        self.gridLayout_2.addLayout(self.gridLayout_11, 0, 0, 1, 1)
-
-        MainWindowDesign.setCentralWidget(self.centralwidget)
-        self.dockWidget_preview = QDockWidget(MainWindowDesign)
-        self.dockWidget_preview.setObjectName(u"dockWidget_preview")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.dockWidget_preview.sizePolicy().hasHeightForWidth())
-        self.dockWidget_preview.setSizePolicy(sizePolicy2)
-        self.dockWidget_preview.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.dockWidgetContents_8 = QWidget()
-        self.dockWidgetContents_8.setObjectName(u"dockWidgetContents_8")
-        self.gridLayout_15 = QGridLayout(self.dockWidgetContents_8)
-        self.gridLayout_15.setObjectName(u"gridLayout_15")
-        self.verticalSpacer_21 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_15.addItem(self.verticalSpacer_21, 9, 0, 1, 1)
-
-        self.pushButton_14 = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_14.setObjectName(u"pushButton_14")
-
-        self.gridLayout_15.addWidget(self.pushButton_14, 2, 0, 1, 1)
-
-        self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_15.addItem(self.verticalSpacer_17, 6, 0, 1, 1)
-
-        self.checkBox_showPreview = QCheckBox(self.dockWidgetContents_8)
-        self.checkBox_showPreview.setObjectName(u"checkBox_showPreview")
-        self.checkBox_showPreview.setChecked(True)
-
-        self.gridLayout_15.addWidget(self.checkBox_showPreview, 4, 0, 1, 1)
-
-        self.groupBox_9 = QGroupBox(self.dockWidgetContents_8)
-        self.groupBox_9.setObjectName(u"groupBox_9")
-        self.gridLayout_30 = QGridLayout(self.groupBox_9)
-        self.gridLayout_30.setObjectName(u"gridLayout_30")
-        self.groupBox_12 = QGroupBox(self.groupBox_9)
-        self.groupBox_12.setObjectName(u"groupBox_12")
-        self.gridLayout_85 = QGridLayout(self.groupBox_12)
-        self.gridLayout_85.setObjectName(u"gridLayout_85")
-        self.checkBox_DFD = QCheckBox(self.groupBox_12)
-        self.checkBox_DFD.setObjectName(u"checkBox_DFD")
-        sizePolicy.setHeightForWidth(self.checkBox_DFD.sizePolicy().hasHeightForWidth())
-        self.checkBox_DFD.setSizePolicy(sizePolicy)
-
-        self.gridLayout_85.addWidget(self.checkBox_DFD, 0, 0, 1, 1)
-
-
-        self.gridLayout_30.addWidget(self.groupBox_12, 3, 1, 1, 1)
-
-        self.groupBox_10 = QGroupBox(self.groupBox_9)
-        self.groupBox_10.setObjectName(u"groupBox_10")
-        self.gridLayout_80 = QGridLayout(self.groupBox_10)
-        self.gridLayout_80.setObjectName(u"gridLayout_80")
-        self.checkBox_ttmActivate = QCheckBox(self.groupBox_10)
-        self.checkBox_ttmActivate.setObjectName(u"checkBox_ttmActivate")
-        sizePolicy.setHeightForWidth(self.checkBox_ttmActivate.sizePolicy().hasHeightForWidth())
-        self.checkBox_ttmActivate.setSizePolicy(sizePolicy)
-
-        self.gridLayout_80.addWidget(self.checkBox_ttmActivate, 0, 0, 1, 1)
-
-        self.checkBox_uttmActivate = QCheckBox(self.groupBox_10)
-        self.checkBox_uttmActivate.setObjectName(u"checkBox_uttmActivate")
-        sizePolicy.setHeightForWidth(self.checkBox_uttmActivate.sizePolicy().hasHeightForWidth())
-        self.checkBox_uttmActivate.setSizePolicy(sizePolicy)
-
-        self.gridLayout_80.addWidget(self.checkBox_uttmActivate, 0, 1, 1, 1)
-
-
-        self.gridLayout_30.addWidget(self.groupBox_10, 3, 0, 1, 1)
-
-        self.checkBox_fifo_analog = QCheckBox(self.groupBox_9)
-        self.checkBox_fifo_analog.setObjectName(u"checkBox_fifo_analog")
-
-        self.gridLayout_30.addWidget(self.checkBox_fifo_analog, 2, 0, 1, 1)
-
-        self.groupBox_13 = QGroupBox(self.groupBox_9)
-        self.groupBox_13.setObjectName(u"groupBox_13")
-        self.gridLayout_86 = QGridLayout(self.groupBox_13)
-        self.gridLayout_86.setObjectName(u"gridLayout_86")
-        self.comboBox_spad_channels = QComboBox(self.groupBox_13)
-        self.comboBox_spad_channels.addItem("")
-        self.comboBox_spad_channels.addItem("")
-        self.comboBox_spad_channels.setObjectName(u"comboBox_spad_channels")
-
-        self.gridLayout_86.addWidget(self.comboBox_spad_channels, 0, 0, 1, 1)
-
-
-        self.gridLayout_30.addWidget(self.groupBox_13, 1, 1, 2, 1)
-
-        self.checkBox_fifo_digital = QCheckBox(self.groupBox_9)
-        self.checkBox_fifo_digital.setObjectName(u"checkBox_fifo_digital")
-        self.checkBox_fifo_digital.setChecked(True)
-
-        self.gridLayout_30.addWidget(self.checkBox_fifo_digital, 1, 0, 1, 1)
-
-
-        self.gridLayout_15.addWidget(self.groupBox_9, 1, 1, 9, 1)
-
-        self.pushButton_externalProgram = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_externalProgram.setObjectName(u"pushButton_externalProgram")
-        self.pushButton_externalProgram.setEnabled(False)
-
-        self.gridLayout_15.addWidget(self.pushButton_externalProgram, 3, 0, 1, 1)
-
-        self.groupBox_11 = QGroupBox(self.dockWidgetContents_8)
-        self.groupBox_11.setObjectName(u"groupBox_11")
-        sizePolicy1.setHeightForWidth(self.groupBox_11.sizePolicy().hasHeightForWidth())
-        self.groupBox_11.setSizePolicy(sizePolicy1)
-        self.gridLayout_81 = QGridLayout(self.groupBox_11)
-        self.gridLayout_81.setObjectName(u"gridLayout_81")
-        self.pushButton_acquisitionStart = QPushButton(self.groupBox_11)
-        self.pushButton_acquisitionStart.setObjectName(u"pushButton_acquisitionStart")
-        font1 = QFont()
-        font1.setPointSize(20)
-        self.pushButton_acquisitionStart.setFont(font1)
-        self.pushButton_acquisitionStart.setStyleSheet(u"QPushButton:disabled {\n"
-"    qproperty-iconOpacity: 0.05;\n"
-"}\n"
-"")
-        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaRecord))
-        self.pushButton_acquisitionStart.setIcon(icon)
-        self.pushButton_acquisitionStart.setIconSize(QSize(32, 32))
-        self.pushButton_acquisitionStart.setFlat(True)
-
-        self.gridLayout_81.addWidget(self.pushButton_acquisitionStart, 0, 2, 1, 1)
-
-        self.pushButton_previewStart = QPushButton(self.groupBox_11)
-        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
-        self.pushButton_previewStart.setFont(font1)
-        self.pushButton_previewStart.setStyleSheet(u"QPushButton:disabled {\n"
-"    qproperty-iconOpacity: 0.05;\n"
-"}\n"
-"")
-        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
-        self.pushButton_previewStart.setIcon(icon1)
-        self.pushButton_previewStart.setIconSize(QSize(32, 32))
-        self.pushButton_previewStart.setFlat(True)
-
-        self.gridLayout_81.addWidget(self.pushButton_previewStart, 0, 1, 1, 1)
-
-        self.pushButton_stop = QPushButton(self.groupBox_11)
-        self.pushButton_stop.setObjectName(u"pushButton_stop")
-        self.pushButton_stop.setEnabled(False)
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
-        self.pushButton_stop.setSizePolicy(sizePolicy3)
-        self.pushButton_stop.setFont(font1)
-        self.pushButton_stop.setStyleSheet(u"QPushButton:disabled {\n"
-"    qproperty-iconOpacity: 0.05;\n"
-"}\n"
-"")
-        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStop))
-        self.pushButton_stop.setIcon(icon2)
-        self.pushButton_stop.setIconSize(QSize(32, 32))
-        self.pushButton_stop.setFlat(True)
-
-        self.gridLayout_81.addWidget(self.pushButton_stop, 0, 4, 1, 1)
-
-
-        self.gridLayout_15.addWidget(self.groupBox_11, 1, 0, 1, 1)
-
-        self.verticalSpacer_22 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_15.addItem(self.verticalSpacer_22, 5, 0, 1, 1)
-
-        self.dockWidget_preview.setWidget(self.dockWidgetContents_8)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_preview)
-        self.dockWidget_temporal = QDockWidget(MainWindowDesign)
-        self.dockWidget_temporal.setObjectName(u"dockWidget_temporal")
-        self.dockWidget_temporal.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.dockWidgetContents_3 = QWidget()
-        self.dockWidgetContents_3.setObjectName(u"dockWidgetContents_3")
-        self.gridLayout_9 = QGridLayout(self.dockWidgetContents_3)
-        self.gridLayout_9.setObjectName(u"gridLayout_9")
-        self.gridLayout_8 = QGridLayout()
-        self.gridLayout_8.setObjectName(u"gridLayout_8")
-        self.spinBox_waitAfterFrame = QDoubleSpinBox(self.dockWidgetContents_3)
-        self.spinBox_waitAfterFrame.setObjectName(u"spinBox_waitAfterFrame")
-        self.spinBox_waitAfterFrame.setKeyboardTracking(False)
-        self.spinBox_waitAfterFrame.setMaximum(3600000.000000000000000)
-
-        self.gridLayout_8.addWidget(self.spinBox_waitAfterFrame, 4, 1, 1, 1)
-
-        self.spinBox_timeresolution = QDoubleSpinBox(self.dockWidgetContents_3)
-        self.spinBox_timeresolution.setObjectName(u"spinBox_timeresolution")
-        self.spinBox_timeresolution.setKeyboardTracking(False)
-        self.spinBox_timeresolution.setDecimals(4)
-        self.spinBox_timeresolution.setMaximum(10000000000000.000000000000000)
-        self.spinBox_timeresolution.setValue(1.000000000000000)
-
-        self.gridLayout_8.addWidget(self.spinBox_timeresolution, 1, 1, 1, 1)
-
-        self.label_frame_time = QLabel(self.dockWidgetContents_3)
-        self.label_frame_time.setObjectName(u"label_frame_time")
-
-        self.gridLayout_8.addWidget(self.label_frame_time, 3, 0, 1, 1)
-
-        self.label_29 = QLabel(self.dockWidgetContents_3)
-        self.label_29.setObjectName(u"label_29")
-
-        self.gridLayout_8.addWidget(self.label_29, 4, 2, 1, 1)
-
-        self.spinBox_time_bin_per_px = QSpinBox(self.dockWidgetContents_3)
-        self.spinBox_time_bin_per_px.setObjectName(u"spinBox_time_bin_per_px")
-        self.spinBox_time_bin_per_px.setKeyboardTracking(False)
-        self.spinBox_time_bin_per_px.setMaximum(100000)
-        self.spinBox_time_bin_per_px.setValue(10)
-
-        self.gridLayout_8.addWidget(self.spinBox_time_bin_per_px, 2, 1, 1, 1)
-
-        self.label_time_bin_per_px = QLabel(self.dockWidgetContents_3)
-        self.label_time_bin_per_px.setObjectName(u"label_time_bin_per_px")
-
-        self.gridLayout_8.addWidget(self.label_time_bin_per_px, 2, 0, 1, 1)
-
-        self.label_dwell_time_2 = QLabel(self.dockWidgetContents_3)
-        self.label_dwell_time_2.setObjectName(u"label_dwell_time_2")
-
-        self.gridLayout_8.addWidget(self.label_dwell_time_2, 1, 2, 2, 1)
-
-        self.spinBox_waitForLaser = QDoubleSpinBox(self.dockWidgetContents_3)
-        self.spinBox_waitForLaser.setObjectName(u"spinBox_waitForLaser")
-        self.spinBox_waitForLaser.setKeyboardTracking(False)
-        self.spinBox_waitForLaser.setMaximum(3600000.000000000000000)
-
-        self.gridLayout_8.addWidget(self.spinBox_waitForLaser, 3, 1, 1, 1)
-
-        self.label_dwell_time_val = QLabel(self.dockWidgetContents_3)
-        self.label_dwell_time_val.setObjectName(u"label_dwell_time_val")
-
-        self.gridLayout_8.addWidget(self.label_dwell_time_val, 1, 3, 2, 1)
-
-        self.checkBox_laserOffAfterMeas = QCheckBox(self.dockWidgetContents_3)
-        self.checkBox_laserOffAfterMeas.setObjectName(u"checkBox_laserOffAfterMeas")
-        self.checkBox_laserOffAfterMeas.setChecked(True)
-
-        self.gridLayout_8.addWidget(self.checkBox_laserOffAfterMeas, 4, 3, 1, 1)
-
-        self.checkBox_waitOnlyFirstTime = QCheckBox(self.dockWidgetContents_3)
-        self.checkBox_waitOnlyFirstTime.setObjectName(u"checkBox_waitOnlyFirstTime")
-
-        self.gridLayout_8.addWidget(self.checkBox_waitOnlyFirstTime, 3, 2, 1, 1)
-
-        self.label_timeresolution = QLabel(self.dockWidgetContents_3)
-        self.label_timeresolution.setObjectName(u"label_timeresolution")
-
-        self.gridLayout_8.addWidget(self.label_timeresolution, 1, 0, 1, 1)
-
-        self.label_frame_time_2 = QLabel(self.dockWidgetContents_3)
-        self.label_frame_time_2.setObjectName(u"label_frame_time_2")
-
-        self.gridLayout_8.addWidget(self.label_frame_time_2, 4, 0, 1, 1)
-
-
-        self.gridLayout_9.addLayout(self.gridLayout_8, 1, 0, 1, 1)
-
-        self.dockWidget_temporal.setWidget(self.dockWidgetContents_3)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_temporal)
-        self.dockWidget_2 = QDockWidget(MainWindowDesign)
-        self.dockWidget_2.setObjectName(u"dockWidget_2")
-        self.dockWidget_2.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.dockWidgetContents_2 = QWidget()
-        self.dockWidgetContents_2.setObjectName(u"dockWidgetContents_2")
-        self.gridLayout_6 = QGridLayout(self.dockWidgetContents_2)
-        self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.gridLayout_5 = QGridLayout()
-        self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.gridLayout_5.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
-        self.spinBox_nrepetition = QSpinBox(self.dockWidgetContents_2)
-        self.spinBox_nrepetition.setObjectName(u"spinBox_nrepetition")
-        self.spinBox_nrepetition.setMinimum(1)
-        self.spinBox_nrepetition.setMaximum(200000)
-        self.spinBox_nrepetition.setValue(1)
-
-        self.gridLayout_5.addWidget(self.spinBox_nrepetition, 3, 1, 1, 1)
-
-        self.spinBox_ny = QSpinBox(self.dockWidgetContents_2)
-        self.spinBox_ny.setObjectName(u"spinBox_ny")
-        self.spinBox_ny.setMinimum(1)
-        self.spinBox_ny.setMaximum(999999999)
-        self.spinBox_ny.setValue(512)
-
-        self.gridLayout_5.addWidget(self.spinBox_ny, 1, 1, 1, 1)
-
-        self.label_104 = QLabel(self.dockWidgetContents_2)
-        self.label_104.setObjectName(u"label_104")
-
-        self.gridLayout_5.addWidget(self.label_104, 1, 2, 1, 1)
-
-        self.label_nframe = QLabel(self.dockWidgetContents_2)
-        self.label_nframe.setObjectName(u"label_nframe")
-
-        self.gridLayout_5.addWidget(self.label_nframe, 2, 0, 1, 1)
-
-        self.spinBox_nframe = QSpinBox(self.dockWidgetContents_2)
-        self.spinBox_nframe.setObjectName(u"spinBox_nframe")
-        self.spinBox_nframe.setMinimum(1)
-        self.spinBox_nframe.setMaximum(999999999)
-        self.spinBox_nframe.setValue(1)
-
-        self.gridLayout_5.addWidget(self.spinBox_nframe, 2, 1, 1, 1)
-
-        self.label_ny = QLabel(self.dockWidgetContents_2)
-        self.label_ny.setObjectName(u"label_ny")
-
-        self.gridLayout_5.addWidget(self.label_ny, 1, 0, 1, 1)
-
-        self.label_nx = QLabel(self.dockWidgetContents_2)
-        self.label_nx.setObjectName(u"label_nx")
-
-        self.gridLayout_5.addWidget(self.label_nx, 0, 0, 1, 1)
-
-        self.label_105 = QLabel(self.dockWidgetContents_2)
-        self.label_105.setObjectName(u"label_105")
-
-        self.gridLayout_5.addWidget(self.label_105, 0, 2, 1, 1)
-
-        self.label_pixelsize_z = QLabel(self.dockWidgetContents_2)
-        self.label_pixelsize_z.setObjectName(u"label_pixelsize_z")
-
-        self.gridLayout_5.addWidget(self.label_pixelsize_z, 2, 3, 1, 1)
-
-        self.label_pixelsize_x = QLabel(self.dockWidgetContents_2)
-        self.label_pixelsize_x.setObjectName(u"label_pixelsize_x")
-
-        self.gridLayout_5.addWidget(self.label_pixelsize_x, 0, 3, 1, 1)
-
-        self.label_nrepetition = QLabel(self.dockWidgetContents_2)
-        self.label_nrepetition.setObjectName(u"label_nrepetition")
-
-        self.gridLayout_5.addWidget(self.label_nrepetition, 3, 0, 1, 1)
-
-        self.label_101 = QLabel(self.dockWidgetContents_2)
-        self.label_101.setObjectName(u"label_101")
-
-        self.gridLayout_5.addWidget(self.label_101, 2, 2, 1, 1)
-
-        self.spinBox_nx = QSpinBox(self.dockWidgetContents_2)
-        self.spinBox_nx.setObjectName(u"spinBox_nx")
-        self.spinBox_nx.setMinimum(1)
-        self.spinBox_nx.setMaximum(999999999)
-        self.spinBox_nx.setValue(512)
-
-        self.gridLayout_5.addWidget(self.spinBox_nx, 0, 1, 1, 1)
-
-        self.label_pixelsize_y = QLabel(self.dockWidgetContents_2)
-        self.label_pixelsize_y.setObjectName(u"label_pixelsize_y")
-
-        self.gridLayout_5.addWidget(self.label_pixelsize_y, 1, 3, 1, 1)
-
-        self.pushButton_18 = QPushButton(self.dockWidgetContents_2)
-        self.pushButton_18.setObjectName(u"pushButton_18")
-
-        self.gridLayout_5.addWidget(self.pushButton_18, 3, 2, 1, 2)
-
-
-        self.gridLayout_6.addLayout(self.gridLayout_5, 0, 0, 1, 1)
-
-        self.dockWidget_2.setWidget(self.dockWidgetContents_2)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_2)
-        self.dockWidget_fingerprint = QDockWidget(MainWindowDesign)
-        self.dockWidget_fingerprint.setObjectName(u"dockWidget_fingerprint")
-        self.dockWidget_fingerprint.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.dockWidgetContents_5 = QWidget()
-        self.dockWidgetContents_5.setObjectName(u"dockWidgetContents_5")
-        self.gridLayout_12 = QGridLayout(self.dockWidgetContents_5)
-        self.gridLayout_12.setObjectName(u"gridLayout_12")
-        self.scrollArea_6 = QScrollArea(self.dockWidgetContents_5)
-        self.scrollArea_6.setObjectName(u"scrollArea_6")
-        self.scrollArea_6.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_4 = QWidget()
-        self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 436, 108))
-        self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
-        self.gridLayout_68.setObjectName(u"gridLayout_68")
-        self.gridLayout_3434 = QGridLayout()
-        self.gridLayout_3434.setObjectName(u"gridLayout_3434")
-        self.gridLayout_3434.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
-        self.gridLayout_47 = QGridLayout()
-        self.gridLayout_47.setObjectName(u"gridLayout_47")
-        self.gridLayout_microimage = QGridLayout()
-        self.gridLayout_microimage.setObjectName(u"gridLayout_microimage")
-
-        self.gridLayout_47.addLayout(self.gridLayout_microimage, 0, 0, 4, 4)
-
-        self.label_microimage = QLabel(self.scrollAreaWidgetContents_4)
-        self.label_microimage.setObjectName(u"label_microimage")
-
-        self.gridLayout_47.addWidget(self.label_microimage, 0, 4, 1, 1)
-
-        self.comboBox_fingerprint = QComboBox(self.scrollAreaWidgetContents_4)
-        self.comboBox_fingerprint.addItem("")
-        self.comboBox_fingerprint.addItem("")
-        self.comboBox_fingerprint.addItem("")
-        self.comboBox_fingerprint.setObjectName(u"comboBox_fingerprint")
-        sizePolicy3.setHeightForWidth(self.comboBox_fingerprint.sizePolicy().hasHeightForWidth())
-        self.comboBox_fingerprint.setSizePolicy(sizePolicy3)
-        self.comboBox_fingerprint.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-
-        self.gridLayout_47.addWidget(self.comboBox_fingerprint, 0, 5, 1, 1)
-
-        self.pushButton_4 = QPushButton(self.scrollAreaWidgetContents_4)
-        self.pushButton_4.setObjectName(u"pushButton_4")
-
-        self.gridLayout_47.addWidget(self.pushButton_4, 1, 4, 1, 2)
-
-        self.checkBox_autoscale_fingerprint = QCheckBox(self.scrollAreaWidgetContents_4)
-        self.checkBox_autoscale_fingerprint.setObjectName(u"checkBox_autoscale_fingerprint")
-        self.checkBox_autoscale_fingerprint.setChecked(True)
-
-        self.gridLayout_47.addWidget(self.checkBox_autoscale_fingerprint, 2, 4, 1, 2)
-
-        self.verticalSpacer_15 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_47.addItem(self.verticalSpacer_15, 3, 4, 1, 1)
-
-
-        self.gridLayout_3434.addLayout(self.gridLayout_47, 0, 0, 1, 1)
-
-
-        self.gridLayout_68.addLayout(self.gridLayout_3434, 0, 0, 1, 1)
-
-        self.scrollArea_6.setWidget(self.scrollAreaWidgetContents_4)
-
-        self.gridLayout_12.addWidget(self.scrollArea_6, 0, 0, 1, 1)
-
-        self.dockWidget_fingerprint.setWidget(self.dockWidgetContents_5)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_fingerprint)
-        self.dockWidget_trace = QDockWidget(MainWindowDesign)
-        self.dockWidget_trace.setObjectName(u"dockWidget_trace")
-        self.dockWidget_trace.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.dockWidgetContents_19 = QWidget()
-        self.dockWidgetContents_19.setObjectName(u"dockWidgetContents_19")
-        self.gridLayout_19 = QGridLayout(self.dockWidgetContents_19)
-        self.gridLayout_19.setObjectName(u"gridLayout_19")
-        self.gridLayout_trace = QGridLayout()
-        self.gridLayout_trace.setObjectName(u"gridLayout_trace")
-
-        self.gridLayout_19.addLayout(self.gridLayout_trace, 0, 0, 1, 1)
-
-        self.dockWidget_trace.setWidget(self.dockWidgetContents_19)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_trace)
-        self.dockWidget_statistics = QDockWidget(MainWindowDesign)
-        self.dockWidget_statistics.setObjectName(u"dockWidget_statistics")
-        self.dockWidget_statistics.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.dockWidgetContents_6 = QWidget()
-        self.dockWidgetContents_6.setObjectName(u"dockWidgetContents_6")
-        self.gridLayout_14 = QGridLayout(self.dockWidgetContents_6)
-        self.gridLayout_14.setObjectName(u"gridLayout_14")
-        self.gridLayout_13 = QGridLayout()
-        self.gridLayout_13.setObjectName(u"gridLayout_13")
-        self.gridLayout_13.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
-        self.progressBar_repetition = QProgressBar(self.dockWidgetContents_6)
-        self.progressBar_repetition.setObjectName(u"progressBar_repetition")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.progressBar_repetition.sizePolicy().hasHeightForWidth())
-        self.progressBar_repetition.setSizePolicy(sizePolicy4)
-        self.progressBar_repetition.setStyleSheet(u"height: 8px;")
-        self.progressBar_repetition.setValue(24)
-
-        self.gridLayout_13.addWidget(self.progressBar_repetition, 9, 2, 1, 10)
-
-        self.label_70 = QLabel(self.dockWidgetContents_6)
-        self.label_70.setObjectName(u"label_70")
-
-        self.gridLayout_13.addWidget(self.label_70, 8, 0, 1, 1)
-
-        self.label_current_repetition_val = QLabel(self.dockWidgetContents_6)
-        self.label_current_repetition_val.setObjectName(u"label_current_repetition_val")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.label_current_repetition_val.sizePolicy().hasHeightForWidth())
-        self.label_current_repetition_val.setSizePolicy(sizePolicy5)
-        self.label_current_repetition_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_current_repetition_val, 9, 1, 1, 1)
-
-        self.label_expected_dur = QLabel(self.dockWidgetContents_6)
-        self.label_expected_dur.setObjectName(u"label_expected_dur")
-        self.label_expected_dur.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_expected_dur, 4, 0, 1, 1)
-
-        self.label_71 = QLabel(self.dockWidgetContents_6)
-        self.label_71.setObjectName(u"label_71")
-
-        self.gridLayout_13.addWidget(self.label_71, 9, 0, 1, 1)
-
-        self.label_expected_dur_val = QLabel(self.dockWidgetContents_6)
-        self.label_expected_dur_val.setObjectName(u"label_expected_dur_val")
-        self.label_expected_dur_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_expected_dur_val, 3, 9, 1, 3)
-
-        self.progressBar_saving = QProgressBar(self.dockWidgetContents_6)
-        self.progressBar_saving.setObjectName(u"progressBar_saving")
-        sizePolicy4.setHeightForWidth(self.progressBar_saving.sizePolicy().hasHeightForWidth())
-        self.progressBar_saving.setSizePolicy(sizePolicy4)
-        self.progressBar_saving.setStyleSheet(u"height: 8px;")
-        self.progressBar_saving.setValue(0)
-
-        self.gridLayout_13.addWidget(self.progressBar_saving, 5, 2, 1, 10)
-
-        self.progressBar_fifo_digital = QProgressBar(self.dockWidgetContents_6)
-        self.progressBar_fifo_digital.setObjectName(u"progressBar_fifo_digital")
-        sizePolicy4.setHeightForWidth(self.progressBar_fifo_digital.sizePolicy().hasHeightForWidth())
-        self.progressBar_fifo_digital.setSizePolicy(sizePolicy4)
-        self.progressBar_fifo_digital.setStyleSheet(u"height: 8px;")
-        self.progressBar_fifo_digital.setValue(24)
-        self.progressBar_fifo_digital.setTextVisible(True)
-
-        self.gridLayout_13.addWidget(self.progressBar_fifo_digital, 6, 2, 1, 10)
-
-        self.label_current_frame_val = QLabel(self.dockWidgetContents_6)
-        self.label_current_frame_val.setObjectName(u"label_current_frame_val")
-        sizePolicy5.setHeightForWidth(self.label_current_frame_val.sizePolicy().hasHeightForWidth())
-        self.label_current_frame_val.setSizePolicy(sizePolicy5)
-        self.label_current_frame_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_current_frame_val, 8, 1, 1, 1)
-
-        self.progressBar_frame = QProgressBar(self.dockWidgetContents_6)
-        self.progressBar_frame.setObjectName(u"progressBar_frame")
-        sizePolicy4.setHeightForWidth(self.progressBar_frame.sizePolicy().hasHeightForWidth())
-        self.progressBar_frame.setSizePolicy(sizePolicy4)
-        self.progressBar_frame.setStyleSheet(u"height: 8px;")
-        self.progressBar_frame.setValue(24)
-
-        self.gridLayout_13.addWidget(self.progressBar_frame, 8, 2, 1, 10)
-
-        self.label_preview_delay = QLabel(self.dockWidgetContents_6)
-        self.label_preview_delay.setObjectName(u"label_preview_delay")
-        self.label_preview_delay.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_preview_delay, 4, 9, 1, 3)
-
-        self.label_72 = QLabel(self.dockWidgetContents_6)
-        self.label_72.setObjectName(u"label_72")
-
-        self.gridLayout_13.addWidget(self.label_72, 6, 0, 1, 1)
-
-        self.label_current_time_3 = QLabel(self.dockWidgetContents_6)
-        self.label_current_time_3.setObjectName(u"label_current_time_3")
-        self.label_current_time_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_current_time_3, 3, 6, 1, 3)
-
-        self.progressBar_fifo_analog = QProgressBar(self.dockWidgetContents_6)
-        self.progressBar_fifo_analog.setObjectName(u"progressBar_fifo_analog")
-        sizePolicy4.setHeightForWidth(self.progressBar_fifo_analog.sizePolicy().hasHeightForWidth())
-        self.progressBar_fifo_analog.setSizePolicy(sizePolicy4)
-        self.progressBar_fifo_analog.setStyleSheet(u"height: 8px;")
-        self.progressBar_fifo_analog.setValue(24)
-
-        self.gridLayout_13.addWidget(self.progressBar_fifo_analog, 7, 2, 1, 10)
-
-        self.label_85 = QLabel(self.dockWidgetContents_6)
-        self.label_85.setObjectName(u"label_85")
-
-        self.gridLayout_13.addWidget(self.label_85, 7, 0, 1, 1)
-
-        self.label_87 = QLabel(self.dockWidgetContents_6)
-        self.label_87.setObjectName(u"label_87")
-
-        self.gridLayout_13.addWidget(self.label_87, 5, 0, 1, 1)
-
-        self.label_preview_delay_label = QLabel(self.dockWidgetContents_6)
-        self.label_preview_delay_label.setObjectName(u"label_preview_delay_label")
-        self.label_preview_delay_label.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_preview_delay_label, 4, 6, 1, 3)
-
-        self.label_tot_num_dat_point = QLabel(self.dockWidgetContents_6)
-        self.label_tot_num_dat_point.setObjectName(u"label_tot_num_dat_point")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
-        sizePolicy6.setHorizontalStretch(0)
-        sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.label_tot_num_dat_point.sizePolicy().hasHeightForWidth())
-        self.label_tot_num_dat_point.setSizePolicy(sizePolicy6)
-        self.label_tot_num_dat_point.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_tot_num_dat_point, 2, 0, 1, 1)
-
-        self.label_current_time = QLabel(self.dockWidgetContents_6)
-        self.label_current_time.setObjectName(u"label_current_time")
-        self.label_current_time.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_current_time, 3, 0, 1, 1)
-
-        self.label_current_time_val = QLabel(self.dockWidgetContents_6)
-        self.label_current_time_val.setObjectName(u"label_current_time_val")
-        self.label_current_time_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_current_time_val, 3, 1, 1, 3)
-
-        self.label_frame_time_val = QLabel(self.dockWidgetContents_6)
-        self.label_frame_time_val.setObjectName(u"label_frame_time_val")
-        self.label_frame_time_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_frame_time_val, 4, 1, 1, 3)
-
-        self.label_tot_num_dat_point_val = QLabel(self.dockWidgetContents_6)
-        self.label_tot_num_dat_point_val.setObjectName(u"label_tot_num_dat_point_val")
-        sizePolicy.setHeightForWidth(self.label_tot_num_dat_point_val.sizePolicy().hasHeightForWidth())
-        self.label_tot_num_dat_point_val.setSizePolicy(sizePolicy)
-        self.label_tot_num_dat_point_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_tot_num_dat_point_val, 2, 1, 1, 11)
-
-
-        self.gridLayout_14.addLayout(self.gridLayout_13, 4, 0, 1, 1)
-
-        self.verticalSpacer_13 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_14.addItem(self.verticalSpacer_13, 5, 0, 1, 1)
-
-        self.dockWidget_statistics.setWidget(self.dockWidgetContents_6)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_statistics)
-        self.statusBar = QStatusBar(MainWindowDesign)
-        self.statusBar.setObjectName(u"statusBar")
-        MainWindowDesign.setStatusBar(self.statusBar)
-        self.dockWidget_pos = QDockWidget(MainWindowDesign)
-        self.dockWidget_pos.setObjectName(u"dockWidget_pos")
-        self.dockWidget_pos.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.dockWidgetContents_9 = QWidget()
-        self.dockWidgetContents_9.setObjectName(u"dockWidgetContents_9")
-        self.gridLayout_17 = QGridLayout(self.dockWidgetContents_9)
-        self.gridLayout_17.setObjectName(u"gridLayout_17")
-        self.scrollArea_7 = QScrollArea(self.dockWidgetContents_9)
-        self.scrollArea_7.setObjectName(u"scrollArea_7")
-        sizePolicy7 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
-        sizePolicy7.setHorizontalStretch(0)
-        sizePolicy7.setVerticalStretch(0)
-        sizePolicy7.setHeightForWidth(self.scrollArea_7.sizePolicy().hasHeightForWidth())
-        self.scrollArea_7.setSizePolicy(sizePolicy7)
-        self.scrollArea_7.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_7 = QWidget()
-        self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
-        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 439, 140))
-        self.gridLayout_74 = QGridLayout(self.scrollAreaWidgetContents_7)
-        self.gridLayout_74.setObjectName(u"gridLayout_74")
-        self.groupBox = QGroupBox(self.scrollAreaWidgetContents_7)
-        self.groupBox.setObjectName(u"groupBox")
-        self.gridLayout_69 = QGridLayout(self.groupBox)
-        self.gridLayout_69.setObjectName(u"gridLayout_69")
-        self.pushButton_loadPreset = QPushButton(self.groupBox)
-        self.pushButton_loadPreset.setObjectName(u"pushButton_loadPreset")
-
-        self.gridLayout_69.addWidget(self.pushButton_loadPreset, 0, 1, 1, 1)
-
-        self.pushButton_savePreset = QPushButton(self.groupBox)
-        self.pushButton_savePreset.setObjectName(u"pushButton_savePreset")
-
-        self.gridLayout_69.addWidget(self.pushButton_savePreset, 0, 2, 1, 1)
-
-        self.comboBox_preset = QComboBox(self.groupBox)
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.addItem("")
-        self.comboBox_preset.setObjectName(u"comboBox_preset")
-
-        self.gridLayout_69.addWidget(self.comboBox_preset, 0, 0, 1, 1)
-
-
-        self.gridLayout_74.addWidget(self.groupBox, 0, 0, 2, 1)
-
-        self.pushButton_15 = QPushButton(self.scrollAreaWidgetContents_7)
-        self.pushButton_15.setObjectName(u"pushButton_15")
-
-        self.gridLayout_74.addWidget(self.pushButton_15, 1, 1, 1, 1)
-
-        self.pushButton_Panorama = QPushButton(self.scrollAreaWidgetContents_7)
-        self.pushButton_Panorama.setObjectName(u"pushButton_Panorama")
-
-        self.gridLayout_74.addWidget(self.pushButton_Panorama, 0, 1, 1, 1)
-
-        self.tableWidget_markers = QTableWidget(self.scrollAreaWidgetContents_7)
-        if (self.tableWidget_markers.columnCount() < 4):
-            self.tableWidget_markers.setColumnCount(4)
-        __qtablewidgetitem = QTableWidgetItem()
-        self.tableWidget_markers.setHorizontalHeaderItem(0, __qtablewidgetitem)
-        __qtablewidgetitem1 = QTableWidgetItem()
-        self.tableWidget_markers.setHorizontalHeaderItem(1, __qtablewidgetitem1)
-        __qtablewidgetitem2 = QTableWidgetItem()
-        self.tableWidget_markers.setHorizontalHeaderItem(2, __qtablewidgetitem2)
-        __qtablewidgetitem3 = QTableWidgetItem()
-        self.tableWidget_markers.setHorizontalHeaderItem(3, __qtablewidgetitem3)
-        self.tableWidget_markers.setObjectName(u"tableWidget_markers")
-        self.tableWidget_markers.setFont(font)
-        self.tableWidget_markers.setColumnCount(4)
-        self.tableWidget_markers.horizontalHeader().setMinimumSectionSize(10)
-        self.tableWidget_markers.verticalHeader().setMinimumSectionSize(10)
-        self.tableWidget_markers.verticalHeader().setDefaultSectionSize(10)
-
-        self.gridLayout_74.addWidget(self.tableWidget_markers, 2, 0, 1, 2)
-
-        self.scrollArea_7.setWidget(self.scrollAreaWidgetContents_7)
-
-        self.gridLayout_17.addWidget(self.scrollArea_7, 2, 0, 1, 4)
-
-        self.gridLayout_18 = QGridLayout()
-        self.gridLayout_18.setObjectName(u"gridLayout_18")
-        self.label = QLabel(self.dockWidgetContents_9)
-        self.label.setObjectName(u"label")
-
-        self.gridLayout_18.addWidget(self.label, 1, 0, 1, 1)
-
-        self.label_3 = QLabel(self.dockWidgetContents_9)
-        self.label_3.setObjectName(u"label_3")
-
-        self.gridLayout_18.addWidget(self.label_3, 2, 0, 1, 1)
-
-        self.label_13 = QLabel(self.dockWidgetContents_9)
-        self.label_13.setObjectName(u"label_13")
-
-        self.gridLayout_18.addWidget(self.label_13, 1, 4, 1, 1)
-
-        self.label_27 = QLabel(self.dockWidgetContents_9)
-        self.label_27.setObjectName(u"label_27")
-
-        self.gridLayout_18.addWidget(self.label_27, 2, 8, 1, 1)
-
-        self.spinBox_range_z = sciSpinBox(self.dockWidgetContents_9)
-        self.spinBox_range_z.setObjectName(u"spinBox_range_z")
-        self.spinBox_range_z.setKeyboardTracking(False)
-        self.spinBox_range_z.setDecimals(3)
-        self.spinBox_range_z.setMinimum(0.000000000000000)
-        self.spinBox_range_z.setMaximum(150.000000000000000)
-
-        self.gridLayout_18.addWidget(self.spinBox_range_z, 3, 7, 1, 1)
-
-        self.spinBox_range_x = sciSpinBox(self.dockWidgetContents_9)
-        self.spinBox_range_x.setObjectName(u"spinBox_range_x")
-        self.spinBox_range_x.setKeyboardTracking(False)
-        self.spinBox_range_x.setDecimals(3)
-        self.spinBox_range_x.setMinimum(0.000000000000000)
-        self.spinBox_range_x.setMaximum(1000.000000000000000)
-        self.spinBox_range_x.setValue(200.000000000000000)
-
-        self.gridLayout_18.addWidget(self.spinBox_range_x, 1, 7, 1, 1)
-
-        self.label_26 = QLabel(self.dockWidgetContents_9)
-        self.label_26.setObjectName(u"label_26")
-
-        self.gridLayout_18.addWidget(self.label_26, 1, 8, 1, 1)
-
-        self.spinBox_off_y_um = sciSpinBox(self.dockWidgetContents_9)
-        self.spinBox_off_y_um.setObjectName(u"spinBox_off_y_um")
-        self.spinBox_off_y_um.setKeyboardTracking(False)
-        self.spinBox_off_y_um.setDecimals(3)
-        self.spinBox_off_y_um.setMinimum(-120.000000000000000)
-        self.spinBox_off_y_um.setMaximum(120.000000000000000)
-        self.spinBox_off_y_um.setValue(0.000000000000000)
-
-        self.gridLayout_18.addWidget(self.spinBox_off_y_um, 2, 3, 1, 1)
-
-        self.label_23 = QLabel(self.dockWidgetContents_9)
-        self.label_23.setObjectName(u"label_23")
-
-        self.gridLayout_18.addWidget(self.label_23, 3, 6, 1, 1)
-
-        self.spinBox_off_z_um = sciSpinBox(self.dockWidgetContents_9)
-        self.spinBox_off_z_um.setObjectName(u"spinBox_off_z_um")
-        self.spinBox_off_z_um.setKeyboardTracking(False)
-        self.spinBox_off_z_um.setDecimals(3)
-        self.spinBox_off_z_um.setMinimum(-200.000000000000000)
-        self.spinBox_off_z_um.setMaximum(200.000000000000000)
-
-        self.gridLayout_18.addWidget(self.spinBox_off_z_um, 3, 3, 1, 1)
-
-        self.label_14 = QLabel(self.dockWidgetContents_9)
-        self.label_14.setObjectName(u"label_14")
-
-        self.gridLayout_18.addWidget(self.label_14, 2, 4, 1, 1)
-
-        self.label_24 = QLabel(self.dockWidgetContents_9)
-        self.label_24.setObjectName(u"label_24")
-
-        self.gridLayout_18.addWidget(self.label_24, 0, 3, 1, 1)
-
-        self.label_15 = QLabel(self.dockWidgetContents_9)
-        self.label_15.setObjectName(u"label_15")
-
-        self.gridLayout_18.addWidget(self.label_15, 3, 4, 1, 1)
-
-        self.spinBox_off_x_um = sciSpinBox(self.dockWidgetContents_9)
-        self.spinBox_off_x_um.setObjectName(u"spinBox_off_x_um")
-        self.spinBox_off_x_um.setKeyboardTracking(False)
-        self.spinBox_off_x_um.setDecimals(3)
-        self.spinBox_off_x_um.setMinimum(-200.000000000000000)
-        self.spinBox_off_x_um.setMaximum(200.000000000000000)
-        self.spinBox_off_x_um.setValue(0.000000000000000)
-
-        self.gridLayout_18.addWidget(self.spinBox_off_x_um, 1, 3, 1, 1)
-
-        self.label_21 = QLabel(self.dockWidgetContents_9)
-        self.label_21.setObjectName(u"label_21")
-
-        self.gridLayout_18.addWidget(self.label_21, 1, 6, 1, 1)
-
-        self.label_28 = QLabel(self.dockWidgetContents_9)
-        self.label_28.setObjectName(u"label_28")
-
-        self.gridLayout_18.addWidget(self.label_28, 3, 8, 1, 1)
-
-        self.label_4 = QLabel(self.dockWidgetContents_9)
-        self.label_4.setObjectName(u"label_4")
-
-        self.gridLayout_18.addWidget(self.label_4, 3, 0, 1, 1)
-
-        self.spinBox_range_y = sciSpinBox(self.dockWidgetContents_9)
-        self.spinBox_range_y.setObjectName(u"spinBox_range_y")
-        self.spinBox_range_y.setKeyboardTracking(False)
-        self.spinBox_range_y.setDecimals(3)
-        self.spinBox_range_y.setMinimum(0.000000000000000)
-        self.spinBox_range_y.setMaximum(1000.000000000000000)
-        self.spinBox_range_y.setValue(10.000000000000000)
-
-        self.gridLayout_18.addWidget(self.spinBox_range_y, 2, 7, 1, 1)
-
-        self.label_25 = QLabel(self.dockWidgetContents_9)
-        self.label_25.setObjectName(u"label_25")
-
-        self.gridLayout_18.addWidget(self.label_25, 0, 7, 1, 1)
-
-        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_18.addItem(self.horizontalSpacer_7, 1, 5, 1, 1)
-
-        self.label_22 = QLabel(self.dockWidgetContents_9)
-        self.label_22.setObjectName(u"label_22")
-
-        self.gridLayout_18.addWidget(self.label_22, 2, 6, 1, 1)
-
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_18.addItem(self.horizontalSpacer_4, 0, 9, 1, 1)
-
-        self.checkBoxLockRatio = QCheckBox(self.dockWidgetContents_9)
-        self.checkBoxLockRatio.setObjectName(u"checkBoxLockRatio")
-
-        self.gridLayout_18.addWidget(self.checkBoxLockRatio, 1, 9, 2, 1)
-
-
-        self.gridLayout_17.addLayout(self.gridLayout_18, 1, 0, 1, 4)
-
-        self.dockWidget_pos.setWidget(self.dockWidgetContents_9)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_pos)
-        self.dockWidget_activatefifo = QDockWidget(MainWindowDesign)
-        self.dockWidget_activatefifo.setObjectName(u"dockWidget_activatefifo")
-        sizePolicy2.setHeightForWidth(self.dockWidget_activatefifo.sizePolicy().hasHeightForWidth())
-        self.dockWidget_activatefifo.setSizePolicy(sizePolicy2)
-        self.dockWidget_activatefifo.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.dockWidgetContents_4 = QWidget()
-        self.dockWidgetContents_4.setObjectName(u"dockWidgetContents_4")
-        self.gridLayout_27 = QGridLayout(self.dockWidgetContents_4)
-        self.gridLayout_27.setObjectName(u"gridLayout_27")
-        self.groupBox_2 = QGroupBox(self.dockWidgetContents_4)
-        self.groupBox_2.setObjectName(u"groupBox_2")
-        self.gridLayout_20 = QGridLayout(self.groupBox_2)
-        self.gridLayout_20.setObjectName(u"gridLayout_20")
-        self.label_108 = QLabel(self.groupBox_2)
-        self.label_108.setObjectName(u"label_108")
-
-        self.gridLayout_20.addWidget(self.label_108, 4, 0, 1, 1)
-
-        self.label_109 = QLabel(self.groupBox_2)
-        self.label_109.setObjectName(u"label_109")
-
-        self.gridLayout_20.addWidget(self.label_109, 4, 2, 1, 1)
-
-        self.label_43 = QLabel(self.groupBox_2)
-        self.label_43.setObjectName(u"label_43")
-
-        self.gridLayout_20.addWidget(self.label_43, 2, 0, 1, 1)
-
-        self.spinBox_circular_radius_nm = sciSpinBox(self.groupBox_2)
-        self.spinBox_circular_radius_nm.setObjectName(u"spinBox_circular_radius_nm")
-        self.spinBox_circular_radius_nm.setKeyboardTracking(False)
-        self.spinBox_circular_radius_nm.setDecimals(3)
-        self.spinBox_circular_radius_nm.setMinimum(-1000000.000000000000000)
-        self.spinBox_circular_radius_nm.setMaximum(1000000.000000000000000)
-        self.spinBox_circular_radius_nm.setValue(0.000000000000000)
-
-        self.gridLayout_20.addWidget(self.spinBox_circular_radius_nm, 4, 1, 1, 1)
-
-        self.spinBox_circular_repetition = QSpinBox(self.groupBox_2)
-        self.spinBox_circular_repetition.setObjectName(u"spinBox_circular_repetition")
-        self.spinBox_circular_repetition.setMinimum(1)
-        self.spinBox_circular_repetition.setMaximum(999999)
-        self.spinBox_circular_repetition.setValue(1)
-
-        self.gridLayout_20.addWidget(self.spinBox_circular_repetition, 3, 1, 1, 1)
-
-        self.checkBox_circular = QCheckBox(self.groupBox_2)
-        self.checkBox_circular.setObjectName(u"checkBox_circular")
-
-        self.gridLayout_20.addWidget(self.checkBox_circular, 0, 0, 1, 3)
-
-        self.label_110 = QLabel(self.groupBox_2)
-        self.label_110.setObjectName(u"label_110")
-
-        self.gridLayout_20.addWidget(self.label_110, 3, 0, 1, 1)
-
-        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_20.addItem(self.horizontalSpacer_14, 2, 2, 1, 1)
-
-        self.spinBox_circular_points = QSpinBox(self.groupBox_2)
-        self.spinBox_circular_points.setObjectName(u"spinBox_circular_points")
-        self.spinBox_circular_points.setMinimum(1)
-        self.spinBox_circular_points.setMaximum(32)
-        self.spinBox_circular_points.setValue(1)
-
-        self.gridLayout_20.addWidget(self.spinBox_circular_points, 2, 1, 1, 1)
-
-
-        self.gridLayout_27.addWidget(self.groupBox_2, 1, 0, 1, 1)
-
-        self.groupBox_14 = QGroupBox(self.dockWidgetContents_4)
-        self.groupBox_14.setObjectName(u"groupBox_14")
-        self.gridLayout_55 = QGridLayout(self.groupBox_14)
-        self.gridLayout_55.setObjectName(u"gridLayout_55")
-        self.spinBox_compensation_delay = QSpinBox(self.groupBox_14)
-        self.spinBox_compensation_delay.setObjectName(u"spinBox_compensation_delay")
-        self.spinBox_compensation_delay.setMaximum(100000)
-
-        self.gridLayout_55.addWidget(self.spinBox_compensation_delay, 2, 1, 1, 1)
-
-        self.checkBox_snake = QCheckBox(self.groupBox_14)
-        self.checkBox_snake.setObjectName(u"checkBox_snake")
-
-        self.gridLayout_55.addWidget(self.checkBox_snake, 0, 0, 1, 2)
-
-        self.verticalSpacer_20 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_55.addItem(self.verticalSpacer_20, 3, 1, 1, 1)
-
-        self.label_35 = QLabel(self.groupBox_14)
-        self.label_35.setObjectName(u"label_35")
-
-        self.gridLayout_55.addWidget(self.label_35, 2, 0, 1, 1)
-
-        self.label_125 = QLabel(self.groupBox_14)
-        self.label_125.setObjectName(u"label_125")
-
-        self.gridLayout_55.addWidget(self.label_125, 2, 2, 1, 1)
-
-
-        self.gridLayout_27.addWidget(self.groupBox_14, 1, 1, 1, 1)
-
-        self.verticalSpacer_19 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_27.addItem(self.verticalSpacer_19, 2, 0, 1, 1)
-
-        self.dockWidget_activatefifo.setWidget(self.dockWidgetContents_4)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_activatefifo)
-        self.dockWidget_laser = QDockWidget(MainWindowDesign)
-        self.dockWidget_laser.setObjectName(u"dockWidget_laser")
-        sizePolicy6.setHeightForWidth(self.dockWidget_laser.sizePolicy().hasHeightForWidth())
-        self.dockWidget_laser.setSizePolicy(sizePolicy6)
-        self.dockWidgetContents_13 = QWidget()
-        self.dockWidgetContents_13.setObjectName(u"dockWidgetContents_13")
-        self.gridLayout_42 = QGridLayout(self.dockWidgetContents_13)
-        self.gridLayout_42.setObjectName(u"gridLayout_42")
-        self.groupBox_3 = QGroupBox(self.dockWidgetContents_13)
-        self.groupBox_3.setObjectName(u"groupBox_3")
-        sizePolicy.setHeightForWidth(self.groupBox_3.sizePolicy().hasHeightForWidth())
-        self.groupBox_3.setSizePolicy(sizePolicy)
-        self.gridLayout_75 = QGridLayout(self.groupBox_3)
-        self.gridLayout_75.setObjectName(u"gridLayout_75")
-        self.checkBox_laser1 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser1.setObjectName(u"checkBox_laser1")
-
-        self.gridLayout_75.addWidget(self.checkBox_laser1, 0, 1, 1, 1)
-
-        self.checkBox_laser2 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser2.setObjectName(u"checkBox_laser2")
-
-        self.gridLayout_75.addWidget(self.checkBox_laser2, 0, 2, 1, 1)
-
-        self.checkBox_laser0 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser0.setObjectName(u"checkBox_laser0")
-        self.checkBox_laser0.setChecked(True)
-
-        self.gridLayout_75.addWidget(self.checkBox_laser0, 0, 0, 1, 1)
-
-        self.checkBox_laser3 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser3.setObjectName(u"checkBox_laser3")
-
-        self.gridLayout_75.addWidget(self.checkBox_laser3, 0, 3, 1, 1)
-
-
-        self.gridLayout_42.addWidget(self.groupBox_3, 0, 0, 1, 1)
-
-        self.groupBox_7 = QGroupBox(self.dockWidgetContents_13)
-        self.groupBox_7.setObjectName(u"groupBox_7")
-        self.gridLayout_7 = QGridLayout(self.groupBox_7)
-        self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.spinBox_clk_base_multiplier = QSpinBox(self.groupBox_7)
-        self.spinBox_clk_base_multiplier.setObjectName(u"spinBox_clk_base_multiplier")
-        sizePolicy3.setHeightForWidth(self.spinBox_clk_base_multiplier.sizePolicy().hasHeightForWidth())
-        self.spinBox_clk_base_multiplier.setSizePolicy(sizePolicy3)
-        self.spinBox_clk_base_multiplier.setMinimum(1)
-        self.spinBox_clk_base_multiplier.setMaximum(6)
-
-        self.gridLayout_7.addWidget(self.spinBox_clk_base_multiplier, 0, 1, 1, 1)
-
-        self.label_120 = QLabel(self.groupBox_7)
-        self.label_120.setObjectName(u"label_120")
-        sizePolicy5.setHeightForWidth(self.label_120.sizePolicy().hasHeightForWidth())
-        self.label_120.setSizePolicy(sizePolicy5)
-
-        self.gridLayout_7.addWidget(self.label_120, 0, 0, 1, 1)
-
-
-        self.gridLayout_42.addWidget(self.groupBox_7, 0, 1, 1, 1)
-
-        self.groupBox_6 = QGroupBox(self.dockWidgetContents_13)
-        self.groupBox_6.setObjectName(u"groupBox_6")
-        sizePolicy6.setHeightForWidth(self.groupBox_6.sizePolicy().hasHeightForWidth())
-        self.groupBox_6.setSizePolicy(sizePolicy6)
-        self.gridLayout_41 = QGridLayout(self.groupBox_6)
-        self.gridLayout_41.setObjectName(u"gridLayout_41")
-        self.comboLaserSeq_4 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.setObjectName(u"comboLaserSeq_4")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_4.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_4.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_4, 0, 4, 1, 1)
-
-        self.comboLaserSeq_6 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.setObjectName(u"comboLaserSeq_6")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_6.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_6, 0, 6, 1, 1)
-
-        self.comboLaserSeq_2 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.setObjectName(u"comboLaserSeq_2")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_2.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_2.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_2, 0, 1, 1, 1)
-
-        self.comboLaserSeq_3 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.addItem("")
-        self.comboLaserSeq_3.setObjectName(u"comboLaserSeq_3")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_3.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_3.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_3, 0, 3, 1, 1)
-
-        self.comboLaserSeq_12 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.setObjectName(u"comboLaserSeq_12")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_12.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_12.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_12, 1, 6, 1, 1)
-
-        self.comboLaserSeq_11 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_11.addItem("")
-        self.comboLaserSeq_11.addItem("")
-        self.comboLaserSeq_11.addItem("")
-        self.comboLaserSeq_11.addItem("")
-        self.comboLaserSeq_11.addItem("")
-        self.comboLaserSeq_11.setObjectName(u"comboLaserSeq_11")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_11.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_11.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_11, 1, 5, 1, 1)
-
-        self.comboLaserSeq_1 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.setObjectName(u"comboLaserSeq_1")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_1.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_1, 0, 0, 1, 1)
-
-        self.comboLaserSeq_7 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.setObjectName(u"comboLaserSeq_7")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_7.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_7.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_7, 1, 0, 1, 1)
-
-        self.comboLaserSeq_8 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.setObjectName(u"comboLaserSeq_8")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_8.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_8.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_8, 1, 1, 1, 1)
-
-        self.comboLaserSeq_5 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.setObjectName(u"comboLaserSeq_5")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_5.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_5, 0, 5, 1, 1)
-
-        self.comboLaserSeq_10 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.setObjectName(u"comboLaserSeq_10")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_10.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_10.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_10, 1, 4, 1, 1)
-
-        self.comboLaserSeq_9 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_9.addItem("")
-        self.comboLaserSeq_9.addItem("")
-        self.comboLaserSeq_9.addItem("")
-        self.comboLaserSeq_9.addItem("")
-        self.comboLaserSeq_9.addItem("")
-        self.comboLaserSeq_9.setObjectName(u"comboLaserSeq_9")
-        sizePolicy3.setHeightForWidth(self.comboLaserSeq_9.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_9.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_9, 1, 3, 1, 1)
-
-
-        self.gridLayout_42.addWidget(self.groupBox_6, 2, 0, 1, 2)
-
-        self.verticalSpacer_24 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_42.addItem(self.verticalSpacer_24, 3, 0, 1, 1)
-
-        self.dockWidget_laser.setWidget(self.dockWidgetContents_13)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_laser)
-        self.dockWidget_adv = QDockWidget(MainWindowDesign)
-        self.dockWidget_adv.setObjectName(u"dockWidget_adv")
-        self.dockWidget_adv.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.dockWidgetContents_15 = QWidget()
+        self.tab_config = QWidget()
+        self.tab_config.setObjectName(u"tab_config")
+        self.gridLayout_config = QGridLayout(self.tab_config)
+        self.gridLayout_config.setObjectName(u"gridLayout_config")
+        self.dockWidgetContents_15 = QWidget(self.tab_config)
         self.dockWidgetContents_15.setObjectName(u"dockWidgetContents_15")
         self.gridLayout_37 = QGridLayout(self.dockWidgetContents_15)
         self.gridLayout_37.setObjectName(u"gridLayout_37")
-        self.scrollArea_2 = QScrollArea(self.dockWidgetContents_15)
-        self.scrollArea_2.setObjectName(u"scrollArea_2")
-        self.scrollArea_2.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_2 = QWidget()
-        self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 439, 354))
-        self.gridLayout_64 = QGridLayout(self.scrollAreaWidgetContents_2)
-        self.gridLayout_64.setObjectName(u"gridLayout_64")
-        self.tabWidget_2 = QTabWidget(self.scrollAreaWidgetContents_2)
+        self.gridLayout_37.setContentsMargins(0, 0, 0, 0)
+        self.tabWidget_2 = QTabWidget(self.dockWidgetContents_15)
         self.tabWidget_2.setObjectName(u"tabWidget_2")
         self.tab_2 = QWidget()
         self.tab_2.setObjectName(u"tab_2")
@@ -1786,8 +589,11 @@ class Ui_MainWindowDesign(object):
 
         self.pushButton_FPGA2_file_selection = QPushButton(self.tab_2)
         self.pushButton_FPGA2_file_selection.setObjectName(u"pushButton_FPGA2_file_selection")
-        sizePolicy3.setHeightForWidth(self.pushButton_FPGA2_file_selection.sizePolicy().hasHeightForWidth())
-        self.pushButton_FPGA2_file_selection.setSizePolicy(sizePolicy3)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.pushButton_FPGA2_file_selection.sizePolicy().hasHeightForWidth())
+        self.pushButton_FPGA2_file_selection.setSizePolicy(sizePolicy2)
 
         self.gridLayout_24.addWidget(self.pushButton_FPGA2_file_selection, 10, 2, 1, 1)
 
@@ -1832,8 +638,8 @@ class Ui_MainWindowDesign(object):
 
         self.pushButton_FPGA_file_selection = QPushButton(self.tab_2)
         self.pushButton_FPGA_file_selection.setObjectName(u"pushButton_FPGA_file_selection")
-        sizePolicy3.setHeightForWidth(self.pushButton_FPGA_file_selection.sizePolicy().hasHeightForWidth())
-        self.pushButton_FPGA_file_selection.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.pushButton_FPGA_file_selection.sizePolicy().hasHeightForWidth())
+        self.pushButton_FPGA_file_selection.setSizePolicy(sizePolicy2)
 
         self.gridLayout_24.addWidget(self.pushButton_FPGA_file_selection, 5, 2, 1, 1)
 
@@ -2309,15 +1115,15 @@ class Ui_MainWindowDesign(object):
 
         self.lineEdit_httpPort = QLineEdit(self.tab_12)
         self.lineEdit_httpPort.setObjectName(u"lineEdit_httpPort")
-        sizePolicy3.setHeightForWidth(self.lineEdit_httpPort.sizePolicy().hasHeightForWidth())
-        self.lineEdit_httpPort.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.lineEdit_httpPort.sizePolicy().hasHeightForWidth())
+        self.lineEdit_httpPort.setSizePolicy(sizePolicy2)
 
         self.gridLayout_72.addWidget(self.lineEdit_httpPort, 3, 1, 1, 1)
 
         self.lineEdit_httpAddr = QLineEdit(self.tab_12)
         self.lineEdit_httpAddr.setObjectName(u"lineEdit_httpAddr")
-        sizePolicy3.setHeightForWidth(self.lineEdit_httpAddr.sizePolicy().hasHeightForWidth())
-        self.lineEdit_httpAddr.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.lineEdit_httpAddr.sizePolicy().hasHeightForWidth())
+        self.lineEdit_httpAddr.setSizePolicy(sizePolicy2)
 
         self.gridLayout_72.addWidget(self.lineEdit_httpAddr, 2, 1, 1, 1)
 
@@ -2492,45 +1298,51 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_2.addTab(self.tab_8, "")
         self.tab_5 = QWidget()
         self.tab_5.setObjectName(u"tab_5")
-        self.gridLayout_52 = QGridLayout(self.tab_5)
+        self.gridLayout_acquisition = QGridLayout(self.tab_5)
+        self.gridLayout_acquisition.setObjectName(u"gridLayout_acquisition")
+        self.tabWidget_acquisition = QTabWidget(self.tab_5)
+        self.tabWidget_acquisition.setObjectName(u"tabWidget_acquisition")
+        self.tab_acquisition_ni_fifos = QWidget()
+        self.tab_acquisition_ni_fifos.setObjectName(u"tab_acquisition_ni_fifos")
+        self.gridLayout_52 = QGridLayout(self.tab_acquisition_ni_fifos)
         self.gridLayout_52.setObjectName(u"gridLayout_52")
-        self.label_90 = QLabel(self.tab_5)
+        self.label_90 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_90.setObjectName(u"label_90")
 
         self.gridLayout_52.addWidget(self.label_90, 3, 0, 1, 1)
 
-        self.label_63 = QLabel(self.tab_5)
+        self.label_63 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_63.setObjectName(u"label_63")
 
         self.gridLayout_52.addWidget(self.label_63, 5, 0, 1, 1)
 
-        self.comboBox_fifobackend = QComboBox(self.tab_5)
+        self.comboBox_fifobackend = QComboBox(self.tab_acquisition_ni_fifos)
         self.comboBox_fifobackend.addItem("")
         self.comboBox_fifobackend.addItem("")
         self.comboBox_fifobackend.setObjectName(u"comboBox_fifobackend")
 
         self.gridLayout_52.addWidget(self.comboBox_fifobackend, 10, 1, 1, 3)
 
-        self.spinBox_preview_buffer_samples = QSpinBox(self.tab_5)
+        self.spinBox_preview_buffer_samples = QSpinBox(self.tab_acquisition_ni_fifos)
         self.spinBox_preview_buffer_samples.setObjectName(u"spinBox_preview_buffer_samples")
         self.spinBox_preview_buffer_samples.setMaximum(1000000)
         self.spinBox_preview_buffer_samples.setValue(30000)
 
         self.gridLayout_52.addWidget(self.spinBox_preview_buffer_samples, 5, 1, 1, 1)
 
-        self.spinBox_requested_fifo_depth = QSpinBox(self.tab_5)
+        self.spinBox_requested_fifo_depth = QSpinBox(self.tab_acquisition_ni_fifos)
         self.spinBox_requested_fifo_depth.setObjectName(u"spinBox_requested_fifo_depth")
         self.spinBox_requested_fifo_depth.setMaximum(20000000)
         self.spinBox_requested_fifo_depth.setValue(200000)
 
         self.gridLayout_52.addWidget(self.spinBox_requested_fifo_depth, 0, 1, 1, 1)
 
-        self.label_last_preprocessed_size = QLabel(self.tab_5)
+        self.label_last_preprocessed_size = QLabel(self.tab_acquisition_ni_fifos)
         self.label_last_preprocessed_size.setObjectName(u"label_last_preprocessed_size")
 
         self.gridLayout_52.addWidget(self.label_last_preprocessed_size, 4, 1, 1, 1)
 
-        self.label_64 = QLabel(self.tab_5)
+        self.label_64 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_64.setObjectName(u"label_64")
 
         self.gridLayout_52.addWidget(self.label_64, 1, 0, 1, 1)
@@ -2539,89 +1351,1338 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_52.addItem(self.verticalSpacer_9, 9, 0, 1, 1)
 
-        self.label_configured_fifo_depth = QLabel(self.tab_5)
+        self.label_configured_fifo_depth = QLabel(self.tab_acquisition_ni_fifos)
         self.label_configured_fifo_depth.setObjectName(u"label_configured_fifo_depth")
 
         self.gridLayout_52.addWidget(self.label_configured_fifo_depth, 1, 1, 1, 1)
 
-        self.label_62 = QLabel(self.tab_5)
+        self.label_62 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_62.setObjectName(u"label_62")
 
         self.gridLayout_52.addWidget(self.label_62, 0, 0, 1, 1)
 
-        self.label_78 = QLabel(self.tab_5)
+        self.label_78 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_78.setObjectName(u"label_78")
 
         self.gridLayout_52.addWidget(self.label_78, 2, 0, 1, 1)
 
-        self.label_preview_buffer_capacity_samples = QLabel(self.tab_5)
+        self.label_preview_buffer_capacity_samples = QLabel(self.tab_acquisition_ni_fifos)
         self.label_preview_buffer_capacity_samples.setObjectName(u"label_preview_buffer_capacity_samples")
 
         self.gridLayout_52.addWidget(self.label_preview_buffer_capacity_samples, 6, 1, 1, 1)
 
-        self.label_fifo_last_pkt_size = QLabel(self.tab_5)
+        self.label_fifo_last_pkt_size = QLabel(self.tab_acquisition_ni_fifos)
         self.label_fifo_last_pkt_size.setObjectName(u"label_fifo_last_pkt_size")
 
         self.gridLayout_52.addWidget(self.label_fifo_last_pkt_size, 2, 1, 1, 1)
 
-        self.spinBox_fifo_timeout = QSpinBox(self.tab_5)
+        self.spinBox_fifo_timeout = QSpinBox(self.tab_acquisition_ni_fifos)
         self.spinBox_fifo_timeout.setObjectName(u"spinBox_fifo_timeout")
         self.spinBox_fifo_timeout.setMaximum(1000000)
         self.spinBox_fifo_timeout.setValue(10000)
 
         self.gridLayout_52.addWidget(self.spinBox_fifo_timeout, 7, 1, 1, 1)
 
-        self.label_79 = QLabel(self.tab_5)
+        self.label_79 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_79.setObjectName(u"label_79")
 
         self.gridLayout_52.addWidget(self.label_79, 6, 0, 1, 1)
 
-        self.label_89 = QLabel(self.tab_5)
+        self.label_89 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_89.setObjectName(u"label_89")
 
         self.gridLayout_52.addWidget(self.label_89, 4, 0, 1, 1)
 
-        self.label_96 = QLabel(self.tab_5)
+        self.label_96 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_96.setObjectName(u"label_96")
 
         self.gridLayout_52.addWidget(self.label_96, 7, 0, 1, 1)
 
-        self.spinBox_fifo_prebuffer_length = QSpinBox(self.tab_5)
+        self.spinBox_fifo_prebuffer_length = QSpinBox(self.tab_acquisition_ni_fifos)
         self.spinBox_fifo_prebuffer_length.setObjectName(u"spinBox_fifo_prebuffer_length")
         self.spinBox_fifo_prebuffer_length.setMaximum(10000000)
         self.spinBox_fifo_prebuffer_length.setValue(24000)
 
         self.gridLayout_52.addWidget(self.spinBox_fifo_prebuffer_length, 3, 1, 1, 1)
 
-        self.label_95 = QLabel(self.tab_5)
+        self.label_95 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_95.setObjectName(u"label_95")
 
         self.gridLayout_52.addWidget(self.label_95, 10, 0, 1, 1)
 
-        self.label_97 = QLabel(self.tab_5)
+        self.label_97 = QLabel(self.tab_acquisition_ni_fifos)
         self.label_97.setObjectName(u"label_97")
 
         self.gridLayout_52.addWidget(self.label_97, 8, 0, 1, 1)
 
-        self.checkBox_DummyData = QCheckBox(self.tab_5)
+        self.checkBox_DummyData = QCheckBox(self.tab_acquisition_ni_fifos)
         self.checkBox_DummyData.setObjectName(u"checkBox_DummyData")
 
         self.gridLayout_52.addWidget(self.checkBox_DummyData, 8, 1, 1, 1)
 
+        self.tabWidget_acquisition.addTab(self.tab_acquisition_ni_fifos, "")
+        self.tab_acquisition_pi23 = QWidget()
+        self.tab_acquisition_pi23.setObjectName(u"tab_acquisition_pi23")
+        self.gridLayout_acquisition_pi23 = QGridLayout(self.tab_acquisition_pi23)
+        self.gridLayout_acquisition_pi23.setObjectName(u"gridLayout_acquisition_pi23")
+        self.label_pi23_ip_addr = QLabel(self.tab_acquisition_pi23)
+        self.label_pi23_ip_addr.setObjectName(u"label_pi23_ip_addr")
+
+        self.gridLayout_acquisition_pi23.addWidget(self.label_pi23_ip_addr, 0, 0, 1, 1)
+
+        self.lineEdit_pi23_ip_addr = QLineEdit(self.tab_acquisition_pi23)
+        self.lineEdit_pi23_ip_addr.setObjectName(u"lineEdit_pi23_ip_addr")
+
+        self.gridLayout_acquisition_pi23.addWidget(self.lineEdit_pi23_ip_addr, 0, 1, 1, 1)
+
+        self.label_pi23_port = QLabel(self.tab_acquisition_pi23)
+        self.label_pi23_port.setObjectName(u"label_pi23_port")
+
+        self.gridLayout_acquisition_pi23.addWidget(self.label_pi23_port, 0, 2, 1, 1)
+
+        self.spinBox_pi23_port = QSpinBox(self.tab_acquisition_pi23)
+        self.spinBox_pi23_port.setObjectName(u"spinBox_pi23_port")
+        self.spinBox_pi23_port.setMinimum(1)
+        self.spinBox_pi23_port.setMaximum(65535)
+        self.spinBox_pi23_port.setValue(9997)
+
+        self.gridLayout_acquisition_pi23.addWidget(self.spinBox_pi23_port, 0, 3, 1, 1)
+
+        self.label_pi23_greeting_raw = QLabel(self.tab_acquisition_pi23)
+        self.label_pi23_greeting_raw.setObjectName(u"label_pi23_greeting_raw")
+
+        self.gridLayout_acquisition_pi23.addWidget(self.label_pi23_greeting_raw, 1, 0, 1, 1)
+
+        self.textEdit_pi23_greeting_raw = QTextEdit(self.tab_acquisition_pi23)
+        self.textEdit_pi23_greeting_raw.setObjectName(u"textEdit_pi23_greeting_raw")
+        self.textEdit_pi23_greeting_raw.setReadOnly(True)
+
+        self.gridLayout_acquisition_pi23.addWidget(self.textEdit_pi23_greeting_raw, 1, 1, 1, 3)
+
+        self.label_pi23_greeting_decoded = QLabel(self.tab_acquisition_pi23)
+        self.label_pi23_greeting_decoded.setObjectName(u"label_pi23_greeting_decoded")
+
+        self.gridLayout_acquisition_pi23.addWidget(self.label_pi23_greeting_decoded, 2, 0, 1, 1)
+
+        self.textEdit_pi23_greeting_decoded = QTextEdit(self.tab_acquisition_pi23)
+        self.textEdit_pi23_greeting_decoded.setObjectName(u"textEdit_pi23_greeting_decoded")
+        self.textEdit_pi23_greeting_decoded.setReadOnly(True)
+
+        self.gridLayout_acquisition_pi23.addWidget(self.textEdit_pi23_greeting_decoded, 2, 1, 1, 3)
+
+        self.verticalSpacer_pi23_acquisition = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_acquisition_pi23.addItem(self.verticalSpacer_pi23_acquisition, 3, 0, 1, 1)
+
+        self.tabWidget_acquisition.addTab(self.tab_acquisition_pi23, "")
+
+        self.gridLayout_acquisition.addWidget(self.tabWidget_acquisition, 0, 0, 1, 1)
+
         self.tabWidget_2.addTab(self.tab_5, "")
 
-        self.gridLayout_64.addWidget(self.tabWidget_2, 0, 0, 1, 1)
-
-        self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
-
-        self.gridLayout_37.addWidget(self.scrollArea_2, 0, 0, 1, 1)
+        self.gridLayout_37.addWidget(self.tabWidget_2, 0, 0, 1, 1)
 
         self.verticalSpacer_23 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_37.addItem(self.verticalSpacer_23, 1, 0, 1, 1)
 
-        self.dockWidget_adv.setWidget(self.dockWidgetContents_15)
-        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_adv)
+
+        self.gridLayout_config.addWidget(self.dockWidgetContents_15, 0, 0, 1, 1)
+
+        self.tabWidget.addTab(self.tab_config, "")
+
+        self.gridLayout_11.addWidget(self.tabWidget, 0, 0, 1, 1)
+
+
+        self.gridLayout_2.addLayout(self.gridLayout_11, 0, 0, 1, 1)
+
+        MainWindowDesign.setCentralWidget(self.centralwidget)
+        self.dockWidget_preview = QDockWidget(MainWindowDesign)
+        self.dockWidget_preview.setObjectName(u"dockWidget_preview")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.dockWidget_preview.sizePolicy().hasHeightForWidth())
+        self.dockWidget_preview.setSizePolicy(sizePolicy3)
+        self.dockWidget_preview.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.dockWidgetContents_8 = QWidget()
+        self.dockWidgetContents_8.setObjectName(u"dockWidgetContents_8")
+        self.gridLayout_15 = QGridLayout(self.dockWidgetContents_8)
+        self.gridLayout_15.setObjectName(u"gridLayout_15")
+        self.verticalSpacer_21 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_15.addItem(self.verticalSpacer_21, 9, 0, 1, 1)
+
+        self.pushButton_14 = QPushButton(self.dockWidgetContents_8)
+        self.pushButton_14.setObjectName(u"pushButton_14")
+
+        self.gridLayout_15.addWidget(self.pushButton_14, 2, 0, 1, 1)
+
+        self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_15.addItem(self.verticalSpacer_17, 6, 0, 1, 1)
+
+        self.checkBox_showPreview = QCheckBox(self.dockWidgetContents_8)
+        self.checkBox_showPreview.setObjectName(u"checkBox_showPreview")
+        self.checkBox_showPreview.setChecked(True)
+
+        self.gridLayout_15.addWidget(self.checkBox_showPreview, 4, 0, 1, 1)
+
+        self.groupBox_9 = QGroupBox(self.dockWidgetContents_8)
+        self.groupBox_9.setObjectName(u"groupBox_9")
+        self.gridLayout_30 = QGridLayout(self.groupBox_9)
+        self.gridLayout_30.setObjectName(u"gridLayout_30")
+        self.groupBox_12 = QGroupBox(self.groupBox_9)
+        self.groupBox_12.setObjectName(u"groupBox_12")
+        self.gridLayout_85 = QGridLayout(self.groupBox_12)
+        self.gridLayout_85.setObjectName(u"gridLayout_85")
+        self.checkBox_DFD = QCheckBox(self.groupBox_12)
+        self.checkBox_DFD.setObjectName(u"checkBox_DFD")
+        sizePolicy.setHeightForWidth(self.checkBox_DFD.sizePolicy().hasHeightForWidth())
+        self.checkBox_DFD.setSizePolicy(sizePolicy)
+
+        self.gridLayout_85.addWidget(self.checkBox_DFD, 0, 0, 1, 1)
+
+
+        self.gridLayout_30.addWidget(self.groupBox_12, 3, 1, 1, 1)
+
+        self.groupBox_10 = QGroupBox(self.groupBox_9)
+        self.groupBox_10.setObjectName(u"groupBox_10")
+        self.gridLayout_80 = QGridLayout(self.groupBox_10)
+        self.gridLayout_80.setObjectName(u"gridLayout_80")
+        self.checkBox_ttmActivate = QCheckBox(self.groupBox_10)
+        self.checkBox_ttmActivate.setObjectName(u"checkBox_ttmActivate")
+        sizePolicy.setHeightForWidth(self.checkBox_ttmActivate.sizePolicy().hasHeightForWidth())
+        self.checkBox_ttmActivate.setSizePolicy(sizePolicy)
+
+        self.gridLayout_80.addWidget(self.checkBox_ttmActivate, 0, 0, 1, 1)
+
+        self.checkBox_uttmActivate = QCheckBox(self.groupBox_10)
+        self.checkBox_uttmActivate.setObjectName(u"checkBox_uttmActivate")
+        sizePolicy.setHeightForWidth(self.checkBox_uttmActivate.sizePolicy().hasHeightForWidth())
+        self.checkBox_uttmActivate.setSizePolicy(sizePolicy)
+
+        self.gridLayout_80.addWidget(self.checkBox_uttmActivate, 0, 1, 1, 1)
+
+
+        self.gridLayout_30.addWidget(self.groupBox_10, 3, 0, 1, 1)
+
+        self.checkBox_fifo_analog = QCheckBox(self.groupBox_9)
+        self.checkBox_fifo_analog.setObjectName(u"checkBox_fifo_analog")
+
+        self.gridLayout_30.addWidget(self.checkBox_fifo_analog, 2, 0, 1, 1)
+
+        self.groupBox_13 = QGroupBox(self.groupBox_9)
+        self.groupBox_13.setObjectName(u"groupBox_13")
+        self.gridLayout_86 = QGridLayout(self.groupBox_13)
+        self.gridLayout_86.setObjectName(u"gridLayout_86")
+        self.comboBox_spad_channels = QComboBox(self.groupBox_13)
+        self.comboBox_spad_channels.addItem("")
+        self.comboBox_spad_channels.addItem("")
+        self.comboBox_spad_channels.setObjectName(u"comboBox_spad_channels")
+
+        self.gridLayout_86.addWidget(self.comboBox_spad_channels, 0, 0, 1, 1)
+
+
+        self.gridLayout_30.addWidget(self.groupBox_13, 1, 1, 2, 1)
+
+        self.checkBox_fifo_digital = QCheckBox(self.groupBox_9)
+        self.checkBox_fifo_digital.setObjectName(u"checkBox_fifo_digital")
+        self.checkBox_fifo_digital.setChecked(True)
+
+        self.gridLayout_30.addWidget(self.checkBox_fifo_digital, 1, 0, 1, 1)
+
+
+        self.gridLayout_15.addWidget(self.groupBox_9, 1, 1, 9, 1)
+
+        self.pushButton_externalProgram = QPushButton(self.dockWidgetContents_8)
+        self.pushButton_externalProgram.setObjectName(u"pushButton_externalProgram")
+        self.pushButton_externalProgram.setEnabled(False)
+
+        self.gridLayout_15.addWidget(self.pushButton_externalProgram, 3, 0, 1, 1)
+
+        self.groupBox_11 = QGroupBox(self.dockWidgetContents_8)
+        self.groupBox_11.setObjectName(u"groupBox_11")
+        sizePolicy1.setHeightForWidth(self.groupBox_11.sizePolicy().hasHeightForWidth())
+        self.groupBox_11.setSizePolicy(sizePolicy1)
+        self.gridLayout_81 = QGridLayout(self.groupBox_11)
+        self.gridLayout_81.setObjectName(u"gridLayout_81")
+        self.pushButton_acquisitionStart = QPushButton(self.groupBox_11)
+        self.pushButton_acquisitionStart.setObjectName(u"pushButton_acquisitionStart")
+        font1 = QFont()
+        font1.setPointSize(20)
+        self.pushButton_acquisitionStart.setFont(font1)
+        self.pushButton_acquisitionStart.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaRecord))
+        self.pushButton_acquisitionStart.setIcon(icon)
+        self.pushButton_acquisitionStart.setIconSize(QSize(32, 32))
+        self.pushButton_acquisitionStart.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_acquisitionStart, 0, 2, 1, 1)
+
+        self.pushButton_previewStart = QPushButton(self.groupBox_11)
+        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
+        self.pushButton_previewStart.setFont(font1)
+        self.pushButton_previewStart.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
+        self.pushButton_previewStart.setIcon(icon1)
+        self.pushButton_previewStart.setIconSize(QSize(32, 32))
+        self.pushButton_previewStart.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_previewStart, 0, 1, 1, 1)
+
+        self.pushButton_stop = QPushButton(self.groupBox_11)
+        self.pushButton_stop.setObjectName(u"pushButton_stop")
+        self.pushButton_stop.setEnabled(False)
+        sizePolicy2.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
+        self.pushButton_stop.setSizePolicy(sizePolicy2)
+        self.pushButton_stop.setFont(font1)
+        self.pushButton_stop.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStop))
+        self.pushButton_stop.setIcon(icon2)
+        self.pushButton_stop.setIconSize(QSize(32, 32))
+        self.pushButton_stop.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_stop, 0, 4, 1, 1)
+
+
+        self.gridLayout_15.addWidget(self.groupBox_11, 1, 0, 1, 1)
+
+        self.verticalSpacer_22 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_15.addItem(self.verticalSpacer_22, 5, 0, 1, 1)
+
+        self.dockWidget_preview.setWidget(self.dockWidgetContents_8)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_preview)
+        self.dockWidget_temporal = QDockWidget(MainWindowDesign)
+        self.dockWidget_temporal.setObjectName(u"dockWidget_temporal")
+        self.dockWidget_temporal.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.dockWidgetContents_3 = QWidget()
+        self.dockWidgetContents_3.setObjectName(u"dockWidgetContents_3")
+        self.gridLayout_9 = QGridLayout(self.dockWidgetContents_3)
+        self.gridLayout_9.setObjectName(u"gridLayout_9")
+        self.gridLayout_8 = QGridLayout()
+        self.gridLayout_8.setObjectName(u"gridLayout_8")
+        self.spinBox_waitAfterFrame = QDoubleSpinBox(self.dockWidgetContents_3)
+        self.spinBox_waitAfterFrame.setObjectName(u"spinBox_waitAfterFrame")
+        self.spinBox_waitAfterFrame.setKeyboardTracking(False)
+        self.spinBox_waitAfterFrame.setMaximum(3600000.000000000000000)
+
+        self.gridLayout_8.addWidget(self.spinBox_waitAfterFrame, 4, 1, 1, 1)
+
+        self.spinBox_timeresolution = QDoubleSpinBox(self.dockWidgetContents_3)
+        self.spinBox_timeresolution.setObjectName(u"spinBox_timeresolution")
+        self.spinBox_timeresolution.setKeyboardTracking(False)
+        self.spinBox_timeresolution.setDecimals(4)
+        self.spinBox_timeresolution.setMaximum(10000000000000.000000000000000)
+        self.spinBox_timeresolution.setValue(1.000000000000000)
+
+        self.gridLayout_8.addWidget(self.spinBox_timeresolution, 1, 1, 1, 1)
+
+        self.label_frame_time = QLabel(self.dockWidgetContents_3)
+        self.label_frame_time.setObjectName(u"label_frame_time")
+
+        self.gridLayout_8.addWidget(self.label_frame_time, 3, 0, 1, 1)
+
+        self.label_29 = QLabel(self.dockWidgetContents_3)
+        self.label_29.setObjectName(u"label_29")
+
+        self.gridLayout_8.addWidget(self.label_29, 4, 2, 1, 1)
+
+        self.spinBox_time_bin_per_px = QSpinBox(self.dockWidgetContents_3)
+        self.spinBox_time_bin_per_px.setObjectName(u"spinBox_time_bin_per_px")
+        self.spinBox_time_bin_per_px.setKeyboardTracking(False)
+        self.spinBox_time_bin_per_px.setMaximum(100000)
+        self.spinBox_time_bin_per_px.setValue(10)
+
+        self.gridLayout_8.addWidget(self.spinBox_time_bin_per_px, 2, 1, 1, 1)
+
+        self.label_time_bin_per_px = QLabel(self.dockWidgetContents_3)
+        self.label_time_bin_per_px.setObjectName(u"label_time_bin_per_px")
+
+        self.gridLayout_8.addWidget(self.label_time_bin_per_px, 2, 0, 1, 1)
+
+        self.label_dwell_time_2 = QLabel(self.dockWidgetContents_3)
+        self.label_dwell_time_2.setObjectName(u"label_dwell_time_2")
+
+        self.gridLayout_8.addWidget(self.label_dwell_time_2, 1, 2, 2, 1)
+
+        self.spinBox_waitForLaser = QDoubleSpinBox(self.dockWidgetContents_3)
+        self.spinBox_waitForLaser.setObjectName(u"spinBox_waitForLaser")
+        self.spinBox_waitForLaser.setKeyboardTracking(False)
+        self.spinBox_waitForLaser.setMaximum(3600000.000000000000000)
+
+        self.gridLayout_8.addWidget(self.spinBox_waitForLaser, 3, 1, 1, 1)
+
+        self.label_dwell_time_val = QLabel(self.dockWidgetContents_3)
+        self.label_dwell_time_val.setObjectName(u"label_dwell_time_val")
+
+        self.gridLayout_8.addWidget(self.label_dwell_time_val, 1, 3, 2, 1)
+
+        self.checkBox_laserOffAfterMeas = QCheckBox(self.dockWidgetContents_3)
+        self.checkBox_laserOffAfterMeas.setObjectName(u"checkBox_laserOffAfterMeas")
+        self.checkBox_laserOffAfterMeas.setChecked(True)
+
+        self.gridLayout_8.addWidget(self.checkBox_laserOffAfterMeas, 4, 3, 1, 1)
+
+        self.checkBox_waitOnlyFirstTime = QCheckBox(self.dockWidgetContents_3)
+        self.checkBox_waitOnlyFirstTime.setObjectName(u"checkBox_waitOnlyFirstTime")
+
+        self.gridLayout_8.addWidget(self.checkBox_waitOnlyFirstTime, 3, 2, 1, 1)
+
+        self.label_timeresolution = QLabel(self.dockWidgetContents_3)
+        self.label_timeresolution.setObjectName(u"label_timeresolution")
+
+        self.gridLayout_8.addWidget(self.label_timeresolution, 1, 0, 1, 1)
+
+        self.label_frame_time_2 = QLabel(self.dockWidgetContents_3)
+        self.label_frame_time_2.setObjectName(u"label_frame_time_2")
+
+        self.gridLayout_8.addWidget(self.label_frame_time_2, 4, 0, 1, 1)
+
+
+        self.gridLayout_9.addLayout(self.gridLayout_8, 1, 0, 1, 1)
+
+        self.dockWidget_temporal.setWidget(self.dockWidgetContents_3)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_temporal)
+        self.dockWidget_2 = QDockWidget(MainWindowDesign)
+        self.dockWidget_2.setObjectName(u"dockWidget_2")
+        self.dockWidget_2.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.dockWidgetContents_2 = QWidget()
+        self.dockWidgetContents_2.setObjectName(u"dockWidgetContents_2")
+        self.gridLayout_6 = QGridLayout(self.dockWidgetContents_2)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.gridLayout_5 = QGridLayout()
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.gridLayout_5.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        self.spinBox_nrepetition = QSpinBox(self.dockWidgetContents_2)
+        self.spinBox_nrepetition.setObjectName(u"spinBox_nrepetition")
+        self.spinBox_nrepetition.setMinimum(1)
+        self.spinBox_nrepetition.setMaximum(200000)
+        self.spinBox_nrepetition.setValue(1)
+
+        self.gridLayout_5.addWidget(self.spinBox_nrepetition, 3, 1, 1, 1)
+
+        self.spinBox_ny = QSpinBox(self.dockWidgetContents_2)
+        self.spinBox_ny.setObjectName(u"spinBox_ny")
+        self.spinBox_ny.setMinimum(1)
+        self.spinBox_ny.setMaximum(999999999)
+        self.spinBox_ny.setValue(512)
+
+        self.gridLayout_5.addWidget(self.spinBox_ny, 1, 1, 1, 1)
+
+        self.label_104 = QLabel(self.dockWidgetContents_2)
+        self.label_104.setObjectName(u"label_104")
+
+        self.gridLayout_5.addWidget(self.label_104, 1, 2, 1, 1)
+
+        self.label_nframe = QLabel(self.dockWidgetContents_2)
+        self.label_nframe.setObjectName(u"label_nframe")
+
+        self.gridLayout_5.addWidget(self.label_nframe, 2, 0, 1, 1)
+
+        self.spinBox_nframe = QSpinBox(self.dockWidgetContents_2)
+        self.spinBox_nframe.setObjectName(u"spinBox_nframe")
+        self.spinBox_nframe.setMinimum(1)
+        self.spinBox_nframe.setMaximum(999999999)
+        self.spinBox_nframe.setValue(1)
+
+        self.gridLayout_5.addWidget(self.spinBox_nframe, 2, 1, 1, 1)
+
+        self.label_ny = QLabel(self.dockWidgetContents_2)
+        self.label_ny.setObjectName(u"label_ny")
+
+        self.gridLayout_5.addWidget(self.label_ny, 1, 0, 1, 1)
+
+        self.label_nx = QLabel(self.dockWidgetContents_2)
+        self.label_nx.setObjectName(u"label_nx")
+
+        self.gridLayout_5.addWidget(self.label_nx, 0, 0, 1, 1)
+
+        self.label_105 = QLabel(self.dockWidgetContents_2)
+        self.label_105.setObjectName(u"label_105")
+
+        self.gridLayout_5.addWidget(self.label_105, 0, 2, 1, 1)
+
+        self.label_pixelsize_z = QLabel(self.dockWidgetContents_2)
+        self.label_pixelsize_z.setObjectName(u"label_pixelsize_z")
+
+        self.gridLayout_5.addWidget(self.label_pixelsize_z, 2, 3, 1, 1)
+
+        self.label_pixelsize_x = QLabel(self.dockWidgetContents_2)
+        self.label_pixelsize_x.setObjectName(u"label_pixelsize_x")
+
+        self.gridLayout_5.addWidget(self.label_pixelsize_x, 0, 3, 1, 1)
+
+        self.label_nrepetition = QLabel(self.dockWidgetContents_2)
+        self.label_nrepetition.setObjectName(u"label_nrepetition")
+
+        self.gridLayout_5.addWidget(self.label_nrepetition, 3, 0, 1, 1)
+
+        self.label_101 = QLabel(self.dockWidgetContents_2)
+        self.label_101.setObjectName(u"label_101")
+
+        self.gridLayout_5.addWidget(self.label_101, 2, 2, 1, 1)
+
+        self.spinBox_nx = QSpinBox(self.dockWidgetContents_2)
+        self.spinBox_nx.setObjectName(u"spinBox_nx")
+        self.spinBox_nx.setMinimum(1)
+        self.spinBox_nx.setMaximum(999999999)
+        self.spinBox_nx.setValue(512)
+
+        self.gridLayout_5.addWidget(self.spinBox_nx, 0, 1, 1, 1)
+
+        self.label_pixelsize_y = QLabel(self.dockWidgetContents_2)
+        self.label_pixelsize_y.setObjectName(u"label_pixelsize_y")
+
+        self.gridLayout_5.addWidget(self.label_pixelsize_y, 1, 3, 1, 1)
+
+        self.pushButton_18 = QPushButton(self.dockWidgetContents_2)
+        self.pushButton_18.setObjectName(u"pushButton_18")
+
+        self.gridLayout_5.addWidget(self.pushButton_18, 3, 2, 1, 2)
+
+
+        self.gridLayout_6.addLayout(self.gridLayout_5, 0, 0, 1, 1)
+
+        self.dockWidget_2.setWidget(self.dockWidgetContents_2)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_2)
+        self.dockWidget_fingerprint = QDockWidget(MainWindowDesign)
+        self.dockWidget_fingerprint.setObjectName(u"dockWidget_fingerprint")
+        self.dockWidget_fingerprint.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.dockWidgetContents_5 = QWidget()
+        self.dockWidgetContents_5.setObjectName(u"dockWidgetContents_5")
+        self.gridLayout_12 = QGridLayout(self.dockWidgetContents_5)
+        self.gridLayout_12.setObjectName(u"gridLayout_12")
+        self.scrollArea_6 = QScrollArea(self.dockWidgetContents_5)
+        self.scrollArea_6.setObjectName(u"scrollArea_6")
+        self.scrollArea_6.setWidgetResizable(True)
+        self.scrollAreaWidgetContents_4 = QWidget()
+        self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 436, 108))
+        self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
+        self.gridLayout_68.setObjectName(u"gridLayout_68")
+        self.gridLayout_3434 = QGridLayout()
+        self.gridLayout_3434.setObjectName(u"gridLayout_3434")
+        self.gridLayout_3434.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        self.gridLayout_47 = QGridLayout()
+        self.gridLayout_47.setObjectName(u"gridLayout_47")
+        self.gridLayout_microimage = QGridLayout()
+        self.gridLayout_microimage.setObjectName(u"gridLayout_microimage")
+
+        self.gridLayout_47.addLayout(self.gridLayout_microimage, 0, 0, 4, 4)
+
+        self.label_microimage = QLabel(self.scrollAreaWidgetContents_4)
+        self.label_microimage.setObjectName(u"label_microimage")
+
+        self.gridLayout_47.addWidget(self.label_microimage, 0, 4, 1, 1)
+
+        self.comboBox_fingerprint = QComboBox(self.scrollAreaWidgetContents_4)
+        self.comboBox_fingerprint.addItem("")
+        self.comboBox_fingerprint.addItem("")
+        self.comboBox_fingerprint.addItem("")
+        self.comboBox_fingerprint.setObjectName(u"comboBox_fingerprint")
+        sizePolicy2.setHeightForWidth(self.comboBox_fingerprint.sizePolicy().hasHeightForWidth())
+        self.comboBox_fingerprint.setSizePolicy(sizePolicy2)
+        self.comboBox_fingerprint.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+
+        self.gridLayout_47.addWidget(self.comboBox_fingerprint, 0, 5, 1, 1)
+
+        self.pushButton_4 = QPushButton(self.scrollAreaWidgetContents_4)
+        self.pushButton_4.setObjectName(u"pushButton_4")
+
+        self.gridLayout_47.addWidget(self.pushButton_4, 1, 4, 1, 2)
+
+        self.checkBox_autoscale_fingerprint = QCheckBox(self.scrollAreaWidgetContents_4)
+        self.checkBox_autoscale_fingerprint.setObjectName(u"checkBox_autoscale_fingerprint")
+        self.checkBox_autoscale_fingerprint.setChecked(True)
+
+        self.gridLayout_47.addWidget(self.checkBox_autoscale_fingerprint, 2, 4, 1, 2)
+
+        self.verticalSpacer_15 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_47.addItem(self.verticalSpacer_15, 3, 4, 1, 1)
+
+
+        self.gridLayout_3434.addLayout(self.gridLayout_47, 0, 0, 1, 1)
+
+
+        self.gridLayout_68.addLayout(self.gridLayout_3434, 0, 0, 1, 1)
+
+        self.scrollArea_6.setWidget(self.scrollAreaWidgetContents_4)
+
+        self.gridLayout_12.addWidget(self.scrollArea_6, 0, 0, 1, 1)
+
+        self.dockWidget_fingerprint.setWidget(self.dockWidgetContents_5)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_fingerprint)
+        self.dockWidget_trace = QDockWidget(MainWindowDesign)
+        self.dockWidget_trace.setObjectName(u"dockWidget_trace")
+        self.dockWidget_trace.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.dockWidgetContents_19 = QWidget()
+        self.dockWidgetContents_19.setObjectName(u"dockWidgetContents_19")
+        self.gridLayout_19 = QGridLayout(self.dockWidgetContents_19)
+        self.gridLayout_19.setObjectName(u"gridLayout_19")
+        self.gridLayout_trace = QGridLayout()
+        self.gridLayout_trace.setObjectName(u"gridLayout_trace")
+
+        self.gridLayout_19.addLayout(self.gridLayout_trace, 0, 0, 1, 1)
+
+        self.dockWidget_trace.setWidget(self.dockWidgetContents_19)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_trace)
+        self.dockWidget_statistics = QDockWidget(MainWindowDesign)
+        self.dockWidget_statistics.setObjectName(u"dockWidget_statistics")
+        self.dockWidget_statistics.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.dockWidgetContents_6 = QWidget()
+        self.dockWidgetContents_6.setObjectName(u"dockWidgetContents_6")
+        self.gridLayout_14 = QGridLayout(self.dockWidgetContents_6)
+        self.gridLayout_14.setObjectName(u"gridLayout_14")
+        self.gridLayout_13 = QGridLayout()
+        self.gridLayout_13.setObjectName(u"gridLayout_13")
+        self.gridLayout_13.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        self.progressBar_repetition = QProgressBar(self.dockWidgetContents_6)
+        self.progressBar_repetition.setObjectName(u"progressBar_repetition")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.progressBar_repetition.sizePolicy().hasHeightForWidth())
+        self.progressBar_repetition.setSizePolicy(sizePolicy4)
+        self.progressBar_repetition.setStyleSheet(u"height: 8px;")
+        self.progressBar_repetition.setValue(24)
+
+        self.gridLayout_13.addWidget(self.progressBar_repetition, 9, 2, 1, 10)
+
+        self.label_70 = QLabel(self.dockWidgetContents_6)
+        self.label_70.setObjectName(u"label_70")
+
+        self.gridLayout_13.addWidget(self.label_70, 8, 0, 1, 1)
+
+        self.label_current_repetition_val = QLabel(self.dockWidgetContents_6)
+        self.label_current_repetition_val.setObjectName(u"label_current_repetition_val")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.label_current_repetition_val.sizePolicy().hasHeightForWidth())
+        self.label_current_repetition_val.setSizePolicy(sizePolicy5)
+        self.label_current_repetition_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_current_repetition_val, 9, 1, 1, 1)
+
+        self.label_expected_dur = QLabel(self.dockWidgetContents_6)
+        self.label_expected_dur.setObjectName(u"label_expected_dur")
+        self.label_expected_dur.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_expected_dur, 4, 0, 1, 1)
+
+        self.label_71 = QLabel(self.dockWidgetContents_6)
+        self.label_71.setObjectName(u"label_71")
+
+        self.gridLayout_13.addWidget(self.label_71, 9, 0, 1, 1)
+
+        self.label_expected_dur_val = QLabel(self.dockWidgetContents_6)
+        self.label_expected_dur_val.setObjectName(u"label_expected_dur_val")
+        self.label_expected_dur_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_expected_dur_val, 3, 9, 1, 3)
+
+        self.progressBar_saving = QProgressBar(self.dockWidgetContents_6)
+        self.progressBar_saving.setObjectName(u"progressBar_saving")
+        sizePolicy4.setHeightForWidth(self.progressBar_saving.sizePolicy().hasHeightForWidth())
+        self.progressBar_saving.setSizePolicy(sizePolicy4)
+        self.progressBar_saving.setStyleSheet(u"height: 8px;")
+        self.progressBar_saving.setValue(0)
+
+        self.gridLayout_13.addWidget(self.progressBar_saving, 5, 2, 1, 10)
+
+        self.progressBar_fifo_digital = QProgressBar(self.dockWidgetContents_6)
+        self.progressBar_fifo_digital.setObjectName(u"progressBar_fifo_digital")
+        sizePolicy4.setHeightForWidth(self.progressBar_fifo_digital.sizePolicy().hasHeightForWidth())
+        self.progressBar_fifo_digital.setSizePolicy(sizePolicy4)
+        self.progressBar_fifo_digital.setStyleSheet(u"height: 8px;")
+        self.progressBar_fifo_digital.setValue(24)
+        self.progressBar_fifo_digital.setTextVisible(True)
+
+        self.gridLayout_13.addWidget(self.progressBar_fifo_digital, 6, 2, 1, 10)
+
+        self.label_current_frame_val = QLabel(self.dockWidgetContents_6)
+        self.label_current_frame_val.setObjectName(u"label_current_frame_val")
+        sizePolicy5.setHeightForWidth(self.label_current_frame_val.sizePolicy().hasHeightForWidth())
+        self.label_current_frame_val.setSizePolicy(sizePolicy5)
+        self.label_current_frame_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_current_frame_val, 8, 1, 1, 1)
+
+        self.progressBar_frame = QProgressBar(self.dockWidgetContents_6)
+        self.progressBar_frame.setObjectName(u"progressBar_frame")
+        sizePolicy4.setHeightForWidth(self.progressBar_frame.sizePolicy().hasHeightForWidth())
+        self.progressBar_frame.setSizePolicy(sizePolicy4)
+        self.progressBar_frame.setStyleSheet(u"height: 8px;")
+        self.progressBar_frame.setValue(24)
+
+        self.gridLayout_13.addWidget(self.progressBar_frame, 8, 2, 1, 10)
+
+        self.label_preview_delay = QLabel(self.dockWidgetContents_6)
+        self.label_preview_delay.setObjectName(u"label_preview_delay")
+        self.label_preview_delay.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_preview_delay, 4, 9, 1, 3)
+
+        self.label_72 = QLabel(self.dockWidgetContents_6)
+        self.label_72.setObjectName(u"label_72")
+
+        self.gridLayout_13.addWidget(self.label_72, 6, 0, 1, 1)
+
+        self.label_current_time_3 = QLabel(self.dockWidgetContents_6)
+        self.label_current_time_3.setObjectName(u"label_current_time_3")
+        self.label_current_time_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_current_time_3, 3, 6, 1, 3)
+
+        self.progressBar_fifo_analog = QProgressBar(self.dockWidgetContents_6)
+        self.progressBar_fifo_analog.setObjectName(u"progressBar_fifo_analog")
+        sizePolicy4.setHeightForWidth(self.progressBar_fifo_analog.sizePolicy().hasHeightForWidth())
+        self.progressBar_fifo_analog.setSizePolicy(sizePolicy4)
+        self.progressBar_fifo_analog.setStyleSheet(u"height: 8px;")
+        self.progressBar_fifo_analog.setValue(24)
+
+        self.gridLayout_13.addWidget(self.progressBar_fifo_analog, 7, 2, 1, 10)
+
+        self.label_85 = QLabel(self.dockWidgetContents_6)
+        self.label_85.setObjectName(u"label_85")
+
+        self.gridLayout_13.addWidget(self.label_85, 7, 0, 1, 1)
+
+        self.label_87 = QLabel(self.dockWidgetContents_6)
+        self.label_87.setObjectName(u"label_87")
+
+        self.gridLayout_13.addWidget(self.label_87, 5, 0, 1, 1)
+
+        self.label_preview_delay_label = QLabel(self.dockWidgetContents_6)
+        self.label_preview_delay_label.setObjectName(u"label_preview_delay_label")
+        self.label_preview_delay_label.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_preview_delay_label, 4, 6, 1, 3)
+
+        self.label_tot_num_dat_point = QLabel(self.dockWidgetContents_6)
+        self.label_tot_num_dat_point.setObjectName(u"label_tot_num_dat_point")
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.label_tot_num_dat_point.sizePolicy().hasHeightForWidth())
+        self.label_tot_num_dat_point.setSizePolicy(sizePolicy6)
+        self.label_tot_num_dat_point.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_tot_num_dat_point, 2, 0, 1, 1)
+
+        self.label_current_time = QLabel(self.dockWidgetContents_6)
+        self.label_current_time.setObjectName(u"label_current_time")
+        self.label_current_time.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_current_time, 3, 0, 1, 1)
+
+        self.label_current_time_val = QLabel(self.dockWidgetContents_6)
+        self.label_current_time_val.setObjectName(u"label_current_time_val")
+        self.label_current_time_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_current_time_val, 3, 1, 1, 3)
+
+        self.label_frame_time_val = QLabel(self.dockWidgetContents_6)
+        self.label_frame_time_val.setObjectName(u"label_frame_time_val")
+        self.label_frame_time_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_frame_time_val, 4, 1, 1, 3)
+
+        self.label_tot_num_dat_point_val = QLabel(self.dockWidgetContents_6)
+        self.label_tot_num_dat_point_val.setObjectName(u"label_tot_num_dat_point_val")
+        sizePolicy.setHeightForWidth(self.label_tot_num_dat_point_val.sizePolicy().hasHeightForWidth())
+        self.label_tot_num_dat_point_val.setSizePolicy(sizePolicy)
+        self.label_tot_num_dat_point_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_tot_num_dat_point_val, 2, 1, 1, 11)
+
+
+        self.gridLayout_14.addLayout(self.gridLayout_13, 4, 0, 1, 1)
+
+        self.verticalSpacer_13 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_14.addItem(self.verticalSpacer_13, 5, 0, 1, 1)
+
+        self.dockWidget_statistics.setWidget(self.dockWidgetContents_6)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_statistics)
+        self.statusBar = QStatusBar(MainWindowDesign)
+        self.statusBar.setObjectName(u"statusBar")
+        MainWindowDesign.setStatusBar(self.statusBar)
+        self.dockWidget_pos = QDockWidget(MainWindowDesign)
+        self.dockWidget_pos.setObjectName(u"dockWidget_pos")
+        self.dockWidget_pos.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.dockWidgetContents_9 = QWidget()
+        self.dockWidgetContents_9.setObjectName(u"dockWidgetContents_9")
+        self.gridLayout_17 = QGridLayout(self.dockWidgetContents_9)
+        self.gridLayout_17.setObjectName(u"gridLayout_17")
+        self.scrollArea_7 = QScrollArea(self.dockWidgetContents_9)
+        self.scrollArea_7.setObjectName(u"scrollArea_7")
+        sizePolicy7 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
+        sizePolicy7.setHorizontalStretch(0)
+        sizePolicy7.setVerticalStretch(0)
+        sizePolicy7.setHeightForWidth(self.scrollArea_7.sizePolicy().hasHeightForWidth())
+        self.scrollArea_7.setSizePolicy(sizePolicy7)
+        self.scrollArea_7.setWidgetResizable(True)
+        self.scrollAreaWidgetContents_7 = QWidget()
+        self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
+        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 439, 140))
+        self.gridLayout_74 = QGridLayout(self.scrollAreaWidgetContents_7)
+        self.gridLayout_74.setObjectName(u"gridLayout_74")
+        self.groupBox = QGroupBox(self.scrollAreaWidgetContents_7)
+        self.groupBox.setObjectName(u"groupBox")
+        self.gridLayout_69 = QGridLayout(self.groupBox)
+        self.gridLayout_69.setObjectName(u"gridLayout_69")
+        self.pushButton_loadPreset = QPushButton(self.groupBox)
+        self.pushButton_loadPreset.setObjectName(u"pushButton_loadPreset")
+
+        self.gridLayout_69.addWidget(self.pushButton_loadPreset, 0, 1, 1, 1)
+
+        self.pushButton_savePreset = QPushButton(self.groupBox)
+        self.pushButton_savePreset.setObjectName(u"pushButton_savePreset")
+
+        self.gridLayout_69.addWidget(self.pushButton_savePreset, 0, 2, 1, 1)
+
+        self.comboBox_preset = QComboBox(self.groupBox)
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.addItem("")
+        self.comboBox_preset.setObjectName(u"comboBox_preset")
+
+        self.gridLayout_69.addWidget(self.comboBox_preset, 0, 0, 1, 1)
+
+
+        self.gridLayout_74.addWidget(self.groupBox, 0, 0, 2, 1)
+
+        self.pushButton_15 = QPushButton(self.scrollAreaWidgetContents_7)
+        self.pushButton_15.setObjectName(u"pushButton_15")
+
+        self.gridLayout_74.addWidget(self.pushButton_15, 1, 1, 1, 1)
+
+        self.pushButton_Panorama = QPushButton(self.scrollAreaWidgetContents_7)
+        self.pushButton_Panorama.setObjectName(u"pushButton_Panorama")
+
+        self.gridLayout_74.addWidget(self.pushButton_Panorama, 0, 1, 1, 1)
+
+        self.tableWidget_markers = QTableWidget(self.scrollAreaWidgetContents_7)
+        if (self.tableWidget_markers.columnCount() < 4):
+            self.tableWidget_markers.setColumnCount(4)
+        __qtablewidgetitem = QTableWidgetItem()
+        self.tableWidget_markers.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        self.tableWidget_markers.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        self.tableWidget_markers.setHorizontalHeaderItem(2, __qtablewidgetitem2)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        self.tableWidget_markers.setHorizontalHeaderItem(3, __qtablewidgetitem3)
+        self.tableWidget_markers.setObjectName(u"tableWidget_markers")
+        self.tableWidget_markers.setFont(font)
+        self.tableWidget_markers.setColumnCount(4)
+        self.tableWidget_markers.horizontalHeader().setMinimumSectionSize(10)
+        self.tableWidget_markers.verticalHeader().setMinimumSectionSize(10)
+        self.tableWidget_markers.verticalHeader().setDefaultSectionSize(10)
+
+        self.gridLayout_74.addWidget(self.tableWidget_markers, 2, 0, 1, 2)
+
+        self.scrollArea_7.setWidget(self.scrollAreaWidgetContents_7)
+
+        self.gridLayout_17.addWidget(self.scrollArea_7, 2, 0, 1, 4)
+
+        self.gridLayout_18 = QGridLayout()
+        self.gridLayout_18.setObjectName(u"gridLayout_18")
+        self.label = QLabel(self.dockWidgetContents_9)
+        self.label.setObjectName(u"label")
+
+        self.gridLayout_18.addWidget(self.label, 1, 0, 1, 1)
+
+        self.label_3 = QLabel(self.dockWidgetContents_9)
+        self.label_3.setObjectName(u"label_3")
+
+        self.gridLayout_18.addWidget(self.label_3, 2, 0, 1, 1)
+
+        self.label_13 = QLabel(self.dockWidgetContents_9)
+        self.label_13.setObjectName(u"label_13")
+
+        self.gridLayout_18.addWidget(self.label_13, 1, 4, 1, 1)
+
+        self.label_27 = QLabel(self.dockWidgetContents_9)
+        self.label_27.setObjectName(u"label_27")
+
+        self.gridLayout_18.addWidget(self.label_27, 2, 8, 1, 1)
+
+        self.spinBox_range_z = sciSpinBox(self.dockWidgetContents_9)
+        self.spinBox_range_z.setObjectName(u"spinBox_range_z")
+        self.spinBox_range_z.setKeyboardTracking(False)
+        self.spinBox_range_z.setDecimals(3)
+        self.spinBox_range_z.setMinimum(0.000000000000000)
+        self.spinBox_range_z.setMaximum(150.000000000000000)
+
+        self.gridLayout_18.addWidget(self.spinBox_range_z, 3, 7, 1, 1)
+
+        self.spinBox_range_x = sciSpinBox(self.dockWidgetContents_9)
+        self.spinBox_range_x.setObjectName(u"spinBox_range_x")
+        self.spinBox_range_x.setKeyboardTracking(False)
+        self.spinBox_range_x.setDecimals(3)
+        self.spinBox_range_x.setMinimum(0.000000000000000)
+        self.spinBox_range_x.setMaximum(1000.000000000000000)
+        self.spinBox_range_x.setValue(200.000000000000000)
+
+        self.gridLayout_18.addWidget(self.spinBox_range_x, 1, 7, 1, 1)
+
+        self.label_26 = QLabel(self.dockWidgetContents_9)
+        self.label_26.setObjectName(u"label_26")
+
+        self.gridLayout_18.addWidget(self.label_26, 1, 8, 1, 1)
+
+        self.spinBox_off_y_um = sciSpinBox(self.dockWidgetContents_9)
+        self.spinBox_off_y_um.setObjectName(u"spinBox_off_y_um")
+        self.spinBox_off_y_um.setKeyboardTracking(False)
+        self.spinBox_off_y_um.setDecimals(3)
+        self.spinBox_off_y_um.setMinimum(-120.000000000000000)
+        self.spinBox_off_y_um.setMaximum(120.000000000000000)
+        self.spinBox_off_y_um.setValue(0.000000000000000)
+
+        self.gridLayout_18.addWidget(self.spinBox_off_y_um, 2, 3, 1, 1)
+
+        self.label_23 = QLabel(self.dockWidgetContents_9)
+        self.label_23.setObjectName(u"label_23")
+
+        self.gridLayout_18.addWidget(self.label_23, 3, 6, 1, 1)
+
+        self.spinBox_off_z_um = sciSpinBox(self.dockWidgetContents_9)
+        self.spinBox_off_z_um.setObjectName(u"spinBox_off_z_um")
+        self.spinBox_off_z_um.setKeyboardTracking(False)
+        self.spinBox_off_z_um.setDecimals(3)
+        self.spinBox_off_z_um.setMinimum(-200.000000000000000)
+        self.spinBox_off_z_um.setMaximum(200.000000000000000)
+
+        self.gridLayout_18.addWidget(self.spinBox_off_z_um, 3, 3, 1, 1)
+
+        self.label_14 = QLabel(self.dockWidgetContents_9)
+        self.label_14.setObjectName(u"label_14")
+
+        self.gridLayout_18.addWidget(self.label_14, 2, 4, 1, 1)
+
+        self.label_24 = QLabel(self.dockWidgetContents_9)
+        self.label_24.setObjectName(u"label_24")
+
+        self.gridLayout_18.addWidget(self.label_24, 0, 3, 1, 1)
+
+        self.label_15 = QLabel(self.dockWidgetContents_9)
+        self.label_15.setObjectName(u"label_15")
+
+        self.gridLayout_18.addWidget(self.label_15, 3, 4, 1, 1)
+
+        self.spinBox_off_x_um = sciSpinBox(self.dockWidgetContents_9)
+        self.spinBox_off_x_um.setObjectName(u"spinBox_off_x_um")
+        self.spinBox_off_x_um.setKeyboardTracking(False)
+        self.spinBox_off_x_um.setDecimals(3)
+        self.spinBox_off_x_um.setMinimum(-200.000000000000000)
+        self.spinBox_off_x_um.setMaximum(200.000000000000000)
+        self.spinBox_off_x_um.setValue(0.000000000000000)
+
+        self.gridLayout_18.addWidget(self.spinBox_off_x_um, 1, 3, 1, 1)
+
+        self.label_21 = QLabel(self.dockWidgetContents_9)
+        self.label_21.setObjectName(u"label_21")
+
+        self.gridLayout_18.addWidget(self.label_21, 1, 6, 1, 1)
+
+        self.label_28 = QLabel(self.dockWidgetContents_9)
+        self.label_28.setObjectName(u"label_28")
+
+        self.gridLayout_18.addWidget(self.label_28, 3, 8, 1, 1)
+
+        self.label_4 = QLabel(self.dockWidgetContents_9)
+        self.label_4.setObjectName(u"label_4")
+
+        self.gridLayout_18.addWidget(self.label_4, 3, 0, 1, 1)
+
+        self.spinBox_range_y = sciSpinBox(self.dockWidgetContents_9)
+        self.spinBox_range_y.setObjectName(u"spinBox_range_y")
+        self.spinBox_range_y.setKeyboardTracking(False)
+        self.spinBox_range_y.setDecimals(3)
+        self.spinBox_range_y.setMinimum(0.000000000000000)
+        self.spinBox_range_y.setMaximum(1000.000000000000000)
+        self.spinBox_range_y.setValue(10.000000000000000)
+
+        self.gridLayout_18.addWidget(self.spinBox_range_y, 2, 7, 1, 1)
+
+        self.label_25 = QLabel(self.dockWidgetContents_9)
+        self.label_25.setObjectName(u"label_25")
+
+        self.gridLayout_18.addWidget(self.label_25, 0, 7, 1, 1)
+
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_18.addItem(self.horizontalSpacer_7, 1, 5, 1, 1)
+
+        self.label_22 = QLabel(self.dockWidgetContents_9)
+        self.label_22.setObjectName(u"label_22")
+
+        self.gridLayout_18.addWidget(self.label_22, 2, 6, 1, 1)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_18.addItem(self.horizontalSpacer_4, 0, 9, 1, 1)
+
+        self.checkBoxLockRatio = QCheckBox(self.dockWidgetContents_9)
+        self.checkBoxLockRatio.setObjectName(u"checkBoxLockRatio")
+
+        self.gridLayout_18.addWidget(self.checkBoxLockRatio, 1, 9, 2, 1)
+
+
+        self.gridLayout_17.addLayout(self.gridLayout_18, 1, 0, 1, 4)
+
+        self.dockWidget_pos.setWidget(self.dockWidgetContents_9)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_pos)
+        self.dockWidget_activatefifo = QDockWidget(MainWindowDesign)
+        self.dockWidget_activatefifo.setObjectName(u"dockWidget_activatefifo")
+        sizePolicy3.setHeightForWidth(self.dockWidget_activatefifo.sizePolicy().hasHeightForWidth())
+        self.dockWidget_activatefifo.setSizePolicy(sizePolicy3)
+        self.dockWidget_activatefifo.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetFloatable|QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.dockWidgetContents_4 = QWidget()
+        self.dockWidgetContents_4.setObjectName(u"dockWidgetContents_4")
+        self.gridLayout_27 = QGridLayout(self.dockWidgetContents_4)
+        self.gridLayout_27.setObjectName(u"gridLayout_27")
+        self.groupBox_2 = QGroupBox(self.dockWidgetContents_4)
+        self.groupBox_2.setObjectName(u"groupBox_2")
+        self.gridLayout_20 = QGridLayout(self.groupBox_2)
+        self.gridLayout_20.setObjectName(u"gridLayout_20")
+        self.label_108 = QLabel(self.groupBox_2)
+        self.label_108.setObjectName(u"label_108")
+
+        self.gridLayout_20.addWidget(self.label_108, 4, 0, 1, 1)
+
+        self.label_109 = QLabel(self.groupBox_2)
+        self.label_109.setObjectName(u"label_109")
+
+        self.gridLayout_20.addWidget(self.label_109, 4, 2, 1, 1)
+
+        self.label_43 = QLabel(self.groupBox_2)
+        self.label_43.setObjectName(u"label_43")
+
+        self.gridLayout_20.addWidget(self.label_43, 2, 0, 1, 1)
+
+        self.spinBox_circular_radius_nm = sciSpinBox(self.groupBox_2)
+        self.spinBox_circular_radius_nm.setObjectName(u"spinBox_circular_radius_nm")
+        self.spinBox_circular_radius_nm.setKeyboardTracking(False)
+        self.spinBox_circular_radius_nm.setDecimals(3)
+        self.spinBox_circular_radius_nm.setMinimum(-1000000.000000000000000)
+        self.spinBox_circular_radius_nm.setMaximum(1000000.000000000000000)
+        self.spinBox_circular_radius_nm.setValue(0.000000000000000)
+
+        self.gridLayout_20.addWidget(self.spinBox_circular_radius_nm, 4, 1, 1, 1)
+
+        self.spinBox_circular_repetition = QSpinBox(self.groupBox_2)
+        self.spinBox_circular_repetition.setObjectName(u"spinBox_circular_repetition")
+        self.spinBox_circular_repetition.setMinimum(1)
+        self.spinBox_circular_repetition.setMaximum(999999)
+        self.spinBox_circular_repetition.setValue(1)
+
+        self.gridLayout_20.addWidget(self.spinBox_circular_repetition, 3, 1, 1, 1)
+
+        self.checkBox_circular = QCheckBox(self.groupBox_2)
+        self.checkBox_circular.setObjectName(u"checkBox_circular")
+
+        self.gridLayout_20.addWidget(self.checkBox_circular, 0, 0, 1, 3)
+
+        self.label_110 = QLabel(self.groupBox_2)
+        self.label_110.setObjectName(u"label_110")
+
+        self.gridLayout_20.addWidget(self.label_110, 3, 0, 1, 1)
+
+        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_20.addItem(self.horizontalSpacer_14, 2, 2, 1, 1)
+
+        self.spinBox_circular_points = QSpinBox(self.groupBox_2)
+        self.spinBox_circular_points.setObjectName(u"spinBox_circular_points")
+        self.spinBox_circular_points.setMinimum(1)
+        self.spinBox_circular_points.setMaximum(32)
+        self.spinBox_circular_points.setValue(1)
+
+        self.gridLayout_20.addWidget(self.spinBox_circular_points, 2, 1, 1, 1)
+
+
+        self.gridLayout_27.addWidget(self.groupBox_2, 1, 0, 1, 1)
+
+        self.groupBox_14 = QGroupBox(self.dockWidgetContents_4)
+        self.groupBox_14.setObjectName(u"groupBox_14")
+        self.gridLayout_55 = QGridLayout(self.groupBox_14)
+        self.gridLayout_55.setObjectName(u"gridLayout_55")
+        self.spinBox_compensation_delay = QSpinBox(self.groupBox_14)
+        self.spinBox_compensation_delay.setObjectName(u"spinBox_compensation_delay")
+        self.spinBox_compensation_delay.setMaximum(100000)
+
+        self.gridLayout_55.addWidget(self.spinBox_compensation_delay, 2, 1, 1, 1)
+
+        self.checkBox_snake = QCheckBox(self.groupBox_14)
+        self.checkBox_snake.setObjectName(u"checkBox_snake")
+
+        self.gridLayout_55.addWidget(self.checkBox_snake, 0, 0, 1, 2)
+
+        self.verticalSpacer_20 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_55.addItem(self.verticalSpacer_20, 3, 1, 1, 1)
+
+        self.label_35 = QLabel(self.groupBox_14)
+        self.label_35.setObjectName(u"label_35")
+
+        self.gridLayout_55.addWidget(self.label_35, 2, 0, 1, 1)
+
+        self.label_125 = QLabel(self.groupBox_14)
+        self.label_125.setObjectName(u"label_125")
+
+        self.gridLayout_55.addWidget(self.label_125, 2, 2, 1, 1)
+
+
+        self.gridLayout_27.addWidget(self.groupBox_14, 1, 1, 1, 1)
+
+        self.verticalSpacer_19 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_27.addItem(self.verticalSpacer_19, 2, 0, 1, 1)
+
+        self.dockWidget_activatefifo.setWidget(self.dockWidgetContents_4)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_activatefifo)
+        self.dockWidget_laser = QDockWidget(MainWindowDesign)
+        self.dockWidget_laser.setObjectName(u"dockWidget_laser")
+        sizePolicy6.setHeightForWidth(self.dockWidget_laser.sizePolicy().hasHeightForWidth())
+        self.dockWidget_laser.setSizePolicy(sizePolicy6)
+        self.dockWidgetContents_13 = QWidget()
+        self.dockWidgetContents_13.setObjectName(u"dockWidgetContents_13")
+        self.gridLayout_42 = QGridLayout(self.dockWidgetContents_13)
+        self.gridLayout_42.setObjectName(u"gridLayout_42")
+        self.groupBox_3 = QGroupBox(self.dockWidgetContents_13)
+        self.groupBox_3.setObjectName(u"groupBox_3")
+        sizePolicy.setHeightForWidth(self.groupBox_3.sizePolicy().hasHeightForWidth())
+        self.groupBox_3.setSizePolicy(sizePolicy)
+        self.gridLayout_75 = QGridLayout(self.groupBox_3)
+        self.gridLayout_75.setObjectName(u"gridLayout_75")
+        self.checkBox_laser1 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser1.setObjectName(u"checkBox_laser1")
+
+        self.gridLayout_75.addWidget(self.checkBox_laser1, 0, 1, 1, 1)
+
+        self.checkBox_laser2 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser2.setObjectName(u"checkBox_laser2")
+
+        self.gridLayout_75.addWidget(self.checkBox_laser2, 0, 2, 1, 1)
+
+        self.checkBox_laser0 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser0.setObjectName(u"checkBox_laser0")
+        self.checkBox_laser0.setChecked(True)
+
+        self.gridLayout_75.addWidget(self.checkBox_laser0, 0, 0, 1, 1)
+
+        self.checkBox_laser3 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser3.setObjectName(u"checkBox_laser3")
+
+        self.gridLayout_75.addWidget(self.checkBox_laser3, 0, 3, 1, 1)
+
+
+        self.gridLayout_42.addWidget(self.groupBox_3, 0, 0, 1, 1)
+
+        self.groupBox_7 = QGroupBox(self.dockWidgetContents_13)
+        self.groupBox_7.setObjectName(u"groupBox_7")
+        self.gridLayout_7 = QGridLayout(self.groupBox_7)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.spinBox_clk_base_multiplier = QSpinBox(self.groupBox_7)
+        self.spinBox_clk_base_multiplier.setObjectName(u"spinBox_clk_base_multiplier")
+        sizePolicy2.setHeightForWidth(self.spinBox_clk_base_multiplier.sizePolicy().hasHeightForWidth())
+        self.spinBox_clk_base_multiplier.setSizePolicy(sizePolicy2)
+        self.spinBox_clk_base_multiplier.setMinimum(1)
+        self.spinBox_clk_base_multiplier.setMaximum(6)
+
+        self.gridLayout_7.addWidget(self.spinBox_clk_base_multiplier, 0, 1, 1, 1)
+
+        self.label_120 = QLabel(self.groupBox_7)
+        self.label_120.setObjectName(u"label_120")
+        sizePolicy5.setHeightForWidth(self.label_120.sizePolicy().hasHeightForWidth())
+        self.label_120.setSizePolicy(sizePolicy5)
+
+        self.gridLayout_7.addWidget(self.label_120, 0, 0, 1, 1)
+
+
+        self.gridLayout_42.addWidget(self.groupBox_7, 0, 1, 1, 1)
+
+        self.groupBox_6 = QGroupBox(self.dockWidgetContents_13)
+        self.groupBox_6.setObjectName(u"groupBox_6")
+        sizePolicy6.setHeightForWidth(self.groupBox_6.sizePolicy().hasHeightForWidth())
+        self.groupBox_6.setSizePolicy(sizePolicy6)
+        self.gridLayout_41 = QGridLayout(self.groupBox_6)
+        self.gridLayout_41.setObjectName(u"gridLayout_41")
+        self.comboLaserSeq_4 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.setObjectName(u"comboLaserSeq_4")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_4.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_4.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_4, 0, 4, 1, 1)
+
+        self.comboLaserSeq_6 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.setObjectName(u"comboLaserSeq_6")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_6.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_6, 0, 6, 1, 1)
+
+        self.comboLaserSeq_2 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.setObjectName(u"comboLaserSeq_2")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_2.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_2.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_2, 0, 1, 1, 1)
+
+        self.comboLaserSeq_3 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.addItem("")
+        self.comboLaserSeq_3.setObjectName(u"comboLaserSeq_3")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_3.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_3.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_3, 0, 3, 1, 1)
+
+        self.comboLaserSeq_12 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.setObjectName(u"comboLaserSeq_12")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_12.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_12.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_12, 1, 6, 1, 1)
+
+        self.comboLaserSeq_11 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.addItem("")
+        self.comboLaserSeq_11.setObjectName(u"comboLaserSeq_11")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_11.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_11.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_11, 1, 5, 1, 1)
+
+        self.comboLaserSeq_1 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.setObjectName(u"comboLaserSeq_1")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_1.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_1, 0, 0, 1, 1)
+
+        self.comboLaserSeq_7 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.setObjectName(u"comboLaserSeq_7")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_7.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_7.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_7, 1, 0, 1, 1)
+
+        self.comboLaserSeq_8 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.setObjectName(u"comboLaserSeq_8")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_8.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_8.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_8, 1, 1, 1, 1)
+
+        self.comboLaserSeq_5 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.setObjectName(u"comboLaserSeq_5")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_5.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_5, 0, 5, 1, 1)
+
+        self.comboLaserSeq_10 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.setObjectName(u"comboLaserSeq_10")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_10.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_10.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_10, 1, 4, 1, 1)
+
+        self.comboLaserSeq_9 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.addItem("")
+        self.comboLaserSeq_9.setObjectName(u"comboLaserSeq_9")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_9.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_9.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_9, 1, 3, 1, 1)
+
+
+        self.gridLayout_42.addWidget(self.groupBox_6, 2, 0, 1, 2)
+
+        self.verticalSpacer_24 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_42.addItem(self.verticalSpacer_24, 3, 0, 1, 1)
+
+        self.dockWidget_laser.setWidget(self.dockWidgetContents_13)
+        MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_laser)
         self.dockWidget_debug = QDockWidget(MainWindowDesign)
         self.dockWidget_debug.setObjectName(u"dockWidget_debug")
         self.dockWidgetContents = QWidget()
@@ -3463,8 +3524,9 @@ class Ui_MainWindowDesign(object):
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(2)
         self.tabWidget_3.setCurrentIndex(1)
-        self.comboLaserSeq_1.setCurrentIndex(1)
         self.tabWidget_2.setCurrentIndex(0)
+        self.tabWidget_acquisition.setCurrentIndex(0)
+        self.comboLaserSeq_1.setCurrentIndex(1)
         self.comboBox_analogSelect_B.setCurrentIndex(1)
         self.comboBox_slavemode_type.setCurrentIndex(2)
 
@@ -3572,8 +3634,130 @@ class Ui_MainWindowDesign(object):
         self.pushButton_uttm_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status", None))
         self.pushButton_uttm_loop.setText(QCoreApplication.translate("MainWindowDesign", u"Test_uttm_loop", None))
         self.pushButton_uttm_check_laser.setText(QCoreApplication.translate("MainWindowDesign", u"Check Laser", None))
-        self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_16), QCoreApplication.translate("MainWindowDesign", u"uTTM", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"(u)TTM", None))
+        self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_16), QCoreApplication.translate("MainWindowDesign", u"u(TTM)", None))
+        self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_pi_timetagging), QCoreApplication.translate("MainWindowDesign", u"PI-Timetagging", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"TimeTagging", None))
+        self.label_92.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA 2nd Addr.", None))
+        self.pushButton_FPGA2_file_selection.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
+        self.lineEdit_fpga2bitfile.setText("")
+        self.label_75.setText(QCoreApplication.translate("MainWindowDesign", u"Load .cfg file", None))
+        self.label_66.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA Addr.", None))
+        self.label_91.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA 2nd Bitfile", None))
+        self.lineEdit_ni_addr.setText(QCoreApplication.translate("MainWindowDesign", u"RIO0", None))
+        self.label_88.setText(QCoreApplication.translate("MainWindowDesign", u"Loaded .cfg", None))
+        self.label_122.setText(QCoreApplication.translate("MainWindowDesign", u"Bitfile Sign.", None))
+        self.pushButton_FPGA_file_selection.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
+        self.lineEdit_fpgabitfile.setText(QCoreApplication.translate("MainWindowDesign", u"bitfiles/MyBitfileUSB.lvbitx", None))
+        self.label_81.setText(QCoreApplication.translate("MainWindowDesign", u"Save .cfg file", None))
+        self.pushButton_loadCfg.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
+        self.pushButton_saveCfg.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
+        self.lineEdit_configurationfile.setText(QCoreApplication.translate("MainWindowDesign", u"default.cfg", None))
+        self.label_67.setText(QCoreApplication.translate("MainWindowDesign", u"Default .cfg File", None))
+        self.label_65.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA Bitfile", None))
+        self.lineEdit_ni2addr.setText("")
+        self.label_98.setText("")
+        self.label_loadedcfg.setText(QCoreApplication.translate("MainWindowDesign", u".", None))
+        self.label_123.setText(QCoreApplication.translate("MainWindowDesign", u"Bitfile Sign.", None))
+        self.label_bitfile_signature.setText("")
+        self.label_bitfile_signature_2.setText("")
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_2), QCoreApplication.translate("MainWindowDesign", u"Board Configuration", None))
+        self.label_detector_model.setText(QCoreApplication.translate("MainWindowDesign", u"Detector", None))
+        self.comboBox_detector_model.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"SPAD", None))
+        self.comboBox_detector_model.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"PI23", None))
+
+        self.label_119.setText(QCoreApplication.translate("MainWindowDesign", u"(Legacy feature to program the old SPAD array prototype)", None))
+        self.lineEdit_spad_data.setText(QCoreApplication.translate("MainWindowDesign", u"33554431", None))
+        self.label_93.setText(QCoreApplication.translate("MainWindowDesign", u"Data length", None))
+        self.label_94.setText(QCoreApplication.translate("MainWindowDesign", u"Data cmd", None))
+        self.checkBox_spad_invert.setText(QCoreApplication.translate("MainWindowDesign", u"Invert", None))
+        self.lineEdit_spad_length.setText(QCoreApplication.translate("MainWindowDesign", u"25", None))
+        self.checkBox_SPAD_VR0.setText(QCoreApplication.translate("MainWindowDesign", u"VR0", None))
+        self.label_124.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD 7x7 hold-off configuration:", None))
+        self.checkBox_SPAD_VR1.setText(QCoreApplication.translate("MainWindowDesign", u"VR1", None))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab), QCoreApplication.translate("MainWindowDesign", u"SPAD", None))
+        self.label_56.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
+        self.label_49.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
+        self.label_47.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
+        self.label_50.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
+        self.label_55.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
+        self.label_52.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
+        self.label_54.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
+        self.label_46.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
+        self.label_48.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
+        self.label_53.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
+        self.label_57.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
+        self.label_51.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
+        self.label_58.setText(QCoreApplication.translate("MainWindowDesign", u"Pos.", None))
+        self.label_59.setText(QCoreApplication.translate("MainWindowDesign", u"Range", None))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_6), QCoreApplication.translate("MainWindowDesign", u"Default FOV", None))
+        self.label_17.setText(QCoreApplication.translate("MainWindowDesign", u"Offset [V]", None))
+        self.label_30.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
+        self.label_31.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
+        self.label_32.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
+        self.label_33.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
+        self.label_34.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
+        self.label_45.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
+        self.label_38.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
+        self.label_39.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
+        self.label_41.setText(QCoreApplication.translate("MainWindowDesign", u"Min.", None))
+        self.label_42.setText(QCoreApplication.translate("MainWindowDesign", u"Max.", None))
+        self.label_40.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
+        self.label_37.setText(QCoreApplication.translate("MainWindowDesign", u"Set Voltages Range [V]", None))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_7), QCoreApplication.translate("MainWindowDesign", u"Limits", None))
+        self.label_86.setText(QCoreApplication.translate("MainWindowDesign", u"External Call", None))
+        self.lineEdit_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"napari %lastfilename", None))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_13), QCoreApplication.translate("MainWindowDesign", u"Ext.", None))
+        self.checkBox_httpServer.setText(QCoreApplication.translate("MainWindowDesign", u"http API Server", None))
+        self.label_100.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
+        self.lineEdit_httpPort.setText(QCoreApplication.translate("MainWindowDesign", u"8000", None))
+        self.lineEdit_httpAddr.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
+        self.label_99.setText(QCoreApplication.translate("MainWindowDesign", u"Port", None))
+        self.label_44.setText(QCoreApplication.translate("MainWindowDesign", u"Address", None))
+        self.label_102.setText(QCoreApplication.translate("MainWindowDesign", u"Link", None))
+        self.label_httpLink.setText(QCoreApplication.translate("MainWindowDesign", u".", None))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_12), QCoreApplication.translate("MainWindowDesign", u"http Server", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
+        self.label_11.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
+        self.label_12.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
+        self.label_7.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
+        self.label_16.setText(QCoreApplication.translate("MainWindowDesign", u"CalibrationFactors ", None))
+        self.label_36.setText(QCoreApplication.translate("MainWindowDesign", u"Current Position in [V]", None))
+        self.label_19.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m/V]", None))
+        self.label_18.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m/V]", None))
+        self.label_6.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
+        self.label_20.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m/V]", None))
+        self.label_5.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_8), QCoreApplication.translate("MainWindowDesign", u"Calibration", None))
+        self.label_90.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Last PreProcessed size", None))
+        self.label_63.setText(QCoreApplication.translate("MainWindowDesign", u"Preview buffer samples", None))
+        self.comboBox_fifobackend.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Rust nifpga_fast_fifo_recv", None))
+        self.comboBox_fifobackend.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Python nifpga library", None))
+
+        self.label_last_preprocessed_size.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.label_64.setText(QCoreApplication.translate("MainWindowDesign", u"Configured FIFO depth", None))
+        self.label_configured_fifo_depth.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.label_62.setText(QCoreApplication.translate("MainWindowDesign", u"Requested FIFO depth", None))
+        self.label_78.setText(QCoreApplication.translate("MainWindowDesign", u"Last FIFO packet size", None))
+        self.label_preview_buffer_capacity_samples.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.label_fifo_last_pkt_size.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.label_79.setText(QCoreApplication.translate("MainWindowDesign", u"Preview Buffer size total", None))
+        self.label_89.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Last PreProcessed actual size", None))
+        self.label_96.setText(QCoreApplication.translate("MainWindowDesign", u"Timeout FIFO (us)", None))
+        self.label_95.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO reader backend", None))
+        self.label_97.setText(QCoreApplication.translate("MainWindowDesign", u"DummyData", None))
+        self.checkBox_DummyData.setText("")
+        self.tabWidget_acquisition.setTabText(self.tabWidget_acquisition.indexOf(self.tab_acquisition_ni_fifos), QCoreApplication.translate("MainWindowDesign", u"NI  FIFOs", None))
+        self.label_pi23_ip_addr.setText(QCoreApplication.translate("MainWindowDesign", u"IP addr.", None))
+        self.lineEdit_pi23_ip_addr.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
+        self.label_pi23_port.setText(QCoreApplication.translate("MainWindowDesign", u"Port", None))
+        self.label_pi23_greeting_raw.setText(QCoreApplication.translate("MainWindowDesign", u"Greeting raw", None))
+        self.label_pi23_greeting_decoded.setText(QCoreApplication.translate("MainWindowDesign", u"Greeting decoded", None))
+        self.tabWidget_acquisition.setTabText(self.tabWidget_acquisition.indexOf(self.tab_acquisition_pi23), QCoreApplication.translate("MainWindowDesign", u"PI23", None))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_5), QCoreApplication.translate("MainWindowDesign", u"Acquisition", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_config), QCoreApplication.translate("MainWindowDesign", u"Config", None))
         self.dockWidget_preview.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Commands", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_14.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Add the current configuration to the Batch acquisition table</p></body></html>", None))
@@ -3879,120 +4063,6 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_9.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
         self.comboLaserSeq_9.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
 
-        self.dockWidget_adv.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Adv.", None))
-        self.label_92.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA 2nd Addr.", None))
-        self.pushButton_FPGA2_file_selection.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.lineEdit_fpga2bitfile.setText("")
-        self.label_75.setText(QCoreApplication.translate("MainWindowDesign", u"Load .cfg file", None))
-        self.label_66.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA Addr.", None))
-        self.label_91.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA 2nd Bitfile", None))
-        self.lineEdit_ni_addr.setText(QCoreApplication.translate("MainWindowDesign", u"RIO0", None))
-        self.label_88.setText(QCoreApplication.translate("MainWindowDesign", u"Loaded .cfg", None))
-        self.label_122.setText(QCoreApplication.translate("MainWindowDesign", u"Bitfile Sign.", None))
-        self.pushButton_FPGA_file_selection.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.lineEdit_fpgabitfile.setText(QCoreApplication.translate("MainWindowDesign", u"bitfiles/MyBitfileUSB.lvbitx", None))
-        self.label_81.setText(QCoreApplication.translate("MainWindowDesign", u"Save .cfg file", None))
-        self.pushButton_loadCfg.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.pushButton_saveCfg.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.lineEdit_configurationfile.setText(QCoreApplication.translate("MainWindowDesign", u"default.cfg", None))
-        self.label_67.setText(QCoreApplication.translate("MainWindowDesign", u"Default .cfg File", None))
-        self.label_65.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA Bitfile", None))
-        self.lineEdit_ni2addr.setText("")
-        self.label_98.setText("")
-        self.label_loadedcfg.setText(QCoreApplication.translate("MainWindowDesign", u".", None))
-        self.label_123.setText(QCoreApplication.translate("MainWindowDesign", u"Bitfile Sign.", None))
-        self.label_bitfile_signature.setText("")
-        self.label_bitfile_signature_2.setText("")
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_2), QCoreApplication.translate("MainWindowDesign", u"Board Configuration", None))
-        self.label_detector_model.setText(QCoreApplication.translate("MainWindowDesign", u"Detector", None))
-        self.comboBox_detector_model.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"SPAD Array", None))
-        self.comboBox_detector_model.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"PI 23", None))
-
-        self.label_119.setText(QCoreApplication.translate("MainWindowDesign", u"(Legacy feature to program the old SPAD array prototype)", None))
-        self.lineEdit_spad_data.setText(QCoreApplication.translate("MainWindowDesign", u"33554431", None))
-        self.label_93.setText(QCoreApplication.translate("MainWindowDesign", u"Data length", None))
-        self.label_94.setText(QCoreApplication.translate("MainWindowDesign", u"Data cmd", None))
-        self.checkBox_spad_invert.setText(QCoreApplication.translate("MainWindowDesign", u"Invert", None))
-        self.lineEdit_spad_length.setText(QCoreApplication.translate("MainWindowDesign", u"25", None))
-        self.checkBox_SPAD_VR0.setText(QCoreApplication.translate("MainWindowDesign", u"VR0", None))
-        self.label_124.setText(QCoreApplication.translate("MainWindowDesign", u"SPAD 7x7 hold-off configuration:", None))
-        self.checkBox_SPAD_VR1.setText(QCoreApplication.translate("MainWindowDesign", u"VR1", None))
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab), QCoreApplication.translate("MainWindowDesign", u"SPAD", None))
-        self.label_56.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
-        self.label_49.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
-        self.label_47.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
-        self.label_50.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
-        self.label_55.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
-        self.label_52.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
-        self.label_54.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
-        self.label_46.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
-        self.label_48.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
-        self.label_53.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
-        self.label_57.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
-        self.label_51.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m]", None))
-        self.label_58.setText(QCoreApplication.translate("MainWindowDesign", u"Pos.", None))
-        self.label_59.setText(QCoreApplication.translate("MainWindowDesign", u"Range", None))
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_6), QCoreApplication.translate("MainWindowDesign", u"Default FOV", None))
-        self.label_17.setText(QCoreApplication.translate("MainWindowDesign", u"Offset [V]", None))
-        self.label_30.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
-        self.label_31.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
-        self.label_32.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
-        self.label_33.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
-        self.label_34.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
-        self.label_45.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
-        self.label_38.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
-        self.label_39.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
-        self.label_41.setText(QCoreApplication.translate("MainWindowDesign", u"Min.", None))
-        self.label_42.setText(QCoreApplication.translate("MainWindowDesign", u"Max.", None))
-        self.label_40.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
-        self.label_37.setText(QCoreApplication.translate("MainWindowDesign", u"Set Voltages Range [V]", None))
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_7), QCoreApplication.translate("MainWindowDesign", u"Limits", None))
-        self.label_86.setText(QCoreApplication.translate("MainWindowDesign", u"External Call", None))
-        self.lineEdit_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"napari %lastfilename", None))
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_13), QCoreApplication.translate("MainWindowDesign", u"Ext.", None))
-        self.checkBox_httpServer.setText(QCoreApplication.translate("MainWindowDesign", u"http API Server", None))
-        self.label_100.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
-        self.lineEdit_httpPort.setText(QCoreApplication.translate("MainWindowDesign", u"8000", None))
-        self.lineEdit_httpAddr.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
-        self.label_99.setText(QCoreApplication.translate("MainWindowDesign", u"Port", None))
-        self.label_44.setText(QCoreApplication.translate("MainWindowDesign", u"Address", None))
-        self.label_102.setText(QCoreApplication.translate("MainWindowDesign", u"Link", None))
-        self.label_httpLink.setText(QCoreApplication.translate("MainWindowDesign", u".", None))
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_12), QCoreApplication.translate("MainWindowDesign", u"http Server", None))
-        self.label_10.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
-        self.label_8.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
-        self.label_11.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
-        self.label_9.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
-        self.label_12.setText(QCoreApplication.translate("MainWindowDesign", u"[V]", None))
-        self.label_7.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
-        self.label_16.setText(QCoreApplication.translate("MainWindowDesign", u"CalibrationFactors ", None))
-        self.label_36.setText(QCoreApplication.translate("MainWindowDesign", u"Current Position in [V]", None))
-        self.label_19.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m/V]", None))
-        self.label_18.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m/V]", None))
-        self.label_6.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
-        self.label_20.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m/V]", None))
-        self.label_5.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_8), QCoreApplication.translate("MainWindowDesign", u"Calibration", None))
-        self.label_90.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Last PreProcessed size", None))
-        self.label_63.setText(QCoreApplication.translate("MainWindowDesign", u"Preview buffer samples", None))
-        self.comboBox_fifobackend.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Rust nifpga_fast_fifo_recv", None))
-        self.comboBox_fifobackend.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Python nifpga library", None))
-
-        self.label_last_preprocessed_size.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.label_64.setText(QCoreApplication.translate("MainWindowDesign", u"Configured FIFO depth", None))
-        self.label_configured_fifo_depth.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.label_62.setText(QCoreApplication.translate("MainWindowDesign", u"Requested FIFO depth", None))
-        self.label_78.setText(QCoreApplication.translate("MainWindowDesign", u"Last FIFO packet size", None))
-        self.label_preview_buffer_capacity_samples.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.label_fifo_last_pkt_size.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.label_79.setText(QCoreApplication.translate("MainWindowDesign", u"Preview Buffer size total", None))
-        self.label_89.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO Last PreProcessed actual size", None))
-        self.label_96.setText(QCoreApplication.translate("MainWindowDesign", u"Timeout FIFO (us)", None))
-        self.label_95.setText(QCoreApplication.translate("MainWindowDesign", u"FIFO reader backend", None))
-        self.label_97.setText(QCoreApplication.translate("MainWindowDesign", u"DummyData", None))
-        self.checkBox_DummyData.setText("")
-        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_5), QCoreApplication.translate("MainWindowDesign", u"FIFOs", None))
         self.dockWidget_debug.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Menu && Debug", None))
         self.checkBox_correlationMatrix.setText(QCoreApplication.translate("MainWindowDesign", u"Activate Corr. Matrix", None))
         self.label_dummy.setText(QCoreApplication.translate("MainWindowDesign", u"0t", None))

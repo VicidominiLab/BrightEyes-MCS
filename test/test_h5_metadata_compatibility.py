@@ -33,6 +33,11 @@ class TestH5MetadataCompatibility(unittest.TestCase):
 
         self.assertEqual(metadata["detector_model"], "PI 23")
 
+    def test_gui_config_for_h5_keeps_spad_ttm_detector_model(self):
+        metadata = MainWindow._gui_config_for_h5({"detector_model": "SPAD_TTM"})
+
+        self.assertEqual(metadata["detector_model"], "SPAD_TTM")
+
 
 if __name__ == "__main__":
     unittest.main()

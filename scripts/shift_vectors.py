@@ -3,7 +3,7 @@ Script that can be launched directly on the ScriptLauncher.
 This script calculate and shows the shift vector of the last ascquired image.
 """
 
-import brighteyes_ism.dataio.mcs as mcs
+from brighteyes_mcs_reader import reader_legacy as mcs
 import brighteyes_ism.analysis.APR_lib as apr
 import brighteyes_ism.analysis.Tools_lib as tools
 import brighteyes_ism.simulation.PSF_sim as psf

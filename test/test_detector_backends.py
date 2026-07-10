@@ -3,11 +3,15 @@ import unittest
 import numpy as np
 
 from brighteyes_mcs.libs.detector_backends import (
+    DETECTOR_PI23_TT,
     DETECTOR_PI_23,
     DETECTOR_SPAD_ARRAY,
+    DETECTOR_SPAD_TTM,
     Pi23RandomBunchSource,
     Pi23RawBunch,
+    detector_uses_pi23_pipeline,
     detector_uses_nifpga_fifo,
+    detector_uses_spad_pipeline,
     normalize_detector_model,
     pi23_decode_raw_bunch_to_spad_preview_words,
 )
@@ -21,9 +25,17 @@ class Counter:
 class TestDetectorBackends(unittest.TestCase):
     def test_detector_model_normalization(self):
         self.assertEqual(normalize_detector_model(DETECTOR_PI_23), DETECTOR_PI_23)
+        self.assertEqual(normalize_detector_model(DETECTOR_PI23_TT), DETECTOR_PI23_TT)
+        self.assertEqual(normalize_detector_model(DETECTOR_SPAD_TTM), DETECTOR_SPAD_TTM)
+        self.assertEqual(normalize_detector_model("PI23"), DETECTOR_PI_23)
+        self.assertEqual(normalize_detector_model("SPAD"), DETECTOR_SPAD_ARRAY)
         self.assertEqual(normalize_detector_model("unknown"), DETECTOR_SPAD_ARRAY)
         self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_ARRAY))
+        self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_TTM))
         self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PI_23))
+        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PI23_TT))
+        self.assertTrue(detector_uses_spad_pipeline(DETECTOR_SPAD_TTM))
+        self.assertTrue(detector_uses_pi23_pipeline(DETECTOR_PI23_TT))
 
     def test_pi23_random_source_returns_raw_bunches_until_expected_words(self):
         source = Pi23RandomBunchSource(

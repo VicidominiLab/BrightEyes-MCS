@@ -60,7 +60,11 @@ from ..libs.ttm import TtmRemoteManager
 from ..libs.plugin_loader import PluginsManager
 from ..libs.restapi import FastAPIServerThread
 from ..libs.spad_raw_acquisition_converter import convert_raw_acquisition
-from ..libs.detectors.models import DETECTOR_PI_23, DETECTOR_SPAD_ARRAY
+from ..libs.detectors.models import (
+    DETECTOR_SPAD_ARRAY,
+    detector_uses_pi23_pipeline,
+    normalize_detector_model,
+)
 
 import numpy as np
 import time
@@ -402,7 +406,7 @@ class MainWindow(QMainWindow):
             self.ui.comboBox_detector_model.currentTextChanged.connect(
                 self.detectorModelChanged
             )
-            self.detectorModelChanged(self.ui.comboBox_detector_model.currentText())
+            self.detectorModelChanged(self._current_detector_model())
         self.ui.spinBox_compensation_delay.valueChanged.connect(
             self.compensationDelayForSnakeChanged
         )
@@ -542,7 +546,6 @@ class MainWindow(QMainWindow):
         # self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_markers)
         self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_filename)
         self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_listfile)
-        self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_adv)
 
         self.tabifyDockWidget(
             self.ui.dockWidget_preview, self.ui.dockWidget_activatefifo
@@ -1160,6 +1163,20 @@ class MainWindow(QMainWindow):
             False,
         )
 
+        configuration_helper["pi23_ip_addr"] = (
+            "PI23 IP addr.",
+            str,
+            self.ui.lineEdit_pi23_ip_addr,
+            False,
+        )
+
+        configuration_helper["pi23_port"] = (
+            "PI23 Port",
+            int,
+            self.ui.spinBox_pi23_port,
+            False,
+        )
+
         configuration_helper["comment"] = (
             "Comment",
             str,
@@ -1344,7 +1361,22 @@ class MainWindow(QMainWindow):
         detector_model = detector_model or DETECTOR_SPAD_ARRAY
         self.mcs_manager.set_detector_model(detector_model)
         if hasattr(self.ui, "comboBox_fifobackend"):
-            self.ui.comboBox_fifobackend.setEnabled(detector_model != DETECTOR_PI_23)
+            self.ui.comboBox_fifobackend.setEnabled(
+                not detector_uses_pi23_pipeline(detector_model)
+            )
+
+    def _current_detector_model(self):
+        if getattr(self.ui, "comboBox_detector_model", None) is not None:
+            return normalize_detector_model(self.ui.comboBox_detector_model.currentText())
+        return DETECTOR_SPAD_ARRAY
+
+    def _set_detector_model_combo(self, detector_model):
+        detector_model = normalize_detector_model(detector_model)
+        combo_text = "PI23" if detector_uses_pi23_pipeline(detector_model) else "SPAD"
+        self.ui.comboBox_detector_model.blockSignals(True)
+        self.ui.comboBox_detector_model.setCurrentText(combo_text)
+        self.ui.comboBox_detector_model.blockSignals(False)
+        self.detectorModelChanged(self._current_detector_model())
 
     def setupAnalogOutputGUI(self):
         """
@@ -1980,6 +2012,8 @@ class MainWindow(QMainWindow):
             try:
                 if name == "plugins":
                     configuration[name] = self._get_plugins_configuration_section()
+                elif name == "detector_model":
+                    configuration[name] = self._current_detector_model()
                 else:
                     if (mtype is int) or (mtype is float):
                         configuration[name] = ref_obj.value()
@@ -2211,6 +2245,9 @@ class MainWindow(QMainWindow):
                         type(self.plugin_configuration),
                         self.plugin_configuration,
                     )
+
+                elif name == "detector_model":
+                    self._set_detector_model_combo(configuration[name])
 
                 else:
                     if (mtype is int) or (mtype is float):
@@ -2558,7 +2595,7 @@ class MainWindow(QMainWindow):
         if not os.path.isfile(path):
             msgBox = QMessageBox()
             msgBox.setText("The firmware file %s does not exist!\n"
-                           "Please check if the path in the menu Adv./Board configuration/FPGA Bitfiles is correct.\n"
+                           "Please check if the path in the menu Config/Board Configuration/FPGA Bitfiles is correct.\n"
                            "IMPORTANT: the firmwares are not included in BrightEyes-MCS tree\n"
                            "you need to download them a part. Please find in the documentation the link.\n" % path
                            )
@@ -2598,9 +2635,7 @@ class MainWindow(QMainWindow):
             )
             print_debug("rust_fifo_active", rust_fifo_active)
             self.mcs_manager.set_use_rust_fifo(rust_fifo_active)
-            self.mcs_manager.set_detector_model(
-                self.ui.comboBox_detector_model.currentText()
-            )
+            self.mcs_manager.set_detector_model(self._current_detector_model())
 
             msg_out = self.ui.lineEdit_spad_data.text()
             if msg_out.isdigit():
@@ -3712,11 +3747,28 @@ class MainWindow(QMainWindow):
                 F = "⏩"
         except:
             pass
+        self.updatePi23GreetingStatus()
         self.statusBar_cpu.setText("CPU: %d%%" % psutil.cpu_percent())
         self.statusBar_mem.setText("RAM: %d%%" % psutil.virtual_memory().percent)
 
         self.statusBar_processes.setText(P + D + F)
         self.timerConfigurationViewer_tick_mutex.unlock()
+
+    def updatePi23GreetingStatus(self):
+        if not hasattr(self.ui, "textEdit_pi23_greeting_raw"):
+            return
+        try:
+            raw_greeting = self.mcs_manager.shared_dict.get("pi23_greeting_raw", "")
+            decoded_greeting = self.mcs_manager.shared_dict.get(
+                "pi23_greeting_decoded",
+                "",
+            )
+        except Exception:
+            return
+        if raw_greeting != self.ui.textEdit_pi23_greeting_raw.toPlainText():
+            self.ui.textEdit_pi23_greeting_raw.setPlainText(raw_greeting)
+        if decoded_greeting != self.ui.textEdit_pi23_greeting_decoded.toPlainText():
+            self.ui.textEdit_pi23_greeting_decoded.setPlainText(decoded_greeting)
 
     @Slot()
     def cmd_call_external(self):
@@ -5211,6 +5263,10 @@ Have fun!
 
         self.spadChannelsChanged()
         self.mcs_manager.set_spad_channels(int(self.ui.comboBox_spad_channels.currentText()))
+        self.mcs_manager.set_pi23_connection(
+            self.ui.lineEdit_pi23_ip_addr.text(),
+            self.ui.spinBox_pi23_port.value(),
+        )
 
         self.mcs_manager.set_activate_DFD(self.DFD_Activate)
         self.mcs_manager.set_DFD_nbins(self.DFD_nbins)
@@ -6300,10 +6356,10 @@ Have fun!
                     "raw_writer_stop_reason": self.mcs_manager.shared_dict.get("raw_writer_stop_reason", ""),
                     "raw_writer_error": self.mcs_manager.shared_dict.get("raw_writer_error", ""),
                 }
-                if self.mcs_manager.detector_model == DETECTOR_PI_23:
+                if detector_uses_pi23_pipeline(self.mcs_manager.detector_model):
                     raw_stream_metadata.update(
                         {
-                            "detector_model": DETECTOR_PI_23,
+                            "detector_model": self.mcs_manager.detector_model,
                             "pi23_raw_stream_format": self.mcs_manager.shared_dict.get(
                                 "pi23_raw_stream_format",
                                 "",
