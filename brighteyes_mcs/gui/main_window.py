@@ -284,6 +284,9 @@ class MainWindow(QMainWindow):
 
         self.ui.pushButton_loadCfg.clicked.connect(self.LoadConfigurationCmd)
         self.ui.pushButton_saveCfg.clicked.connect(self.SaveConfigurationCmd)
+        self.ui.pushButton_convertRawAcquisition.clicked.connect(
+            self.cmd_convertRawAcquisition
+        )
 
         # self.ui.listWidget.clicked.connect(self.listwidget_click)
         # self.thread_timerPreviewImg_tick = Runnable(self.timerPreviewImg_tick)

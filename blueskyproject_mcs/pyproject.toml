@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brighteyes-bluesky"
+version = "0.1.0"
+description = "Bluesky/Ophyd device mapping for BrightEyes-MCS low-level FPGA registers."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "bluesky>=1.12",
+    "ophyd>=1.9",
+]
+
+[project.optional-dependencies]
+nifpga = ["nifpga"]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
