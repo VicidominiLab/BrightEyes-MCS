@@ -7,12 +7,13 @@ renderer:
   - title: API Documentation
     name: index
     contents:
-    - brighteyes_mcs.libs.*
-    - brighteyes_mcs.gui.main_window
-    - brighteyes_mcs.plugins.ao_system.*
-    - brighteyes_mcs.plugins.dfd.*
-    - brighteyes_mcs.plugins.channel_delay_skew.*
-    - brighteyes_mcs.plugins.myplugin.*
-    - brighteyes_mcs.plugins.script_launcher.*
+    - brighteyes_mcs.application.*
+    - brighteyes_mcs.acquisition.*
+    - brighteyes_mcs.hardware.*
+    - brighteyes_mcs.storage.*
+    - brighteyes_mcs.ui.controllers.*
+    - brighteyes_mcs.ui.qt.main_window
+    - brighteyes_mcs.plugins.api
+    - brighteyes_mcs.plugins.builtin.*
 
 # pydoc-markdown.exe .\pydocs-markdown.yaml > docs.md

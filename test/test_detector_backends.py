@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from brighteyes_mcs.libs.detector_backends import (
+from brighteyes_mcs.acquisition.detectors.backends import (
     DETECTOR_PI23_TT,
     DETECTOR_PI_23,
     DETECTOR_SPAD_ARRAY,

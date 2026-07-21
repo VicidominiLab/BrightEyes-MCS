@@ -1,58 +1,70 @@
-import os
-import sys
-# insert root directory into python module search path
-sys.path.insert(1, os.getcwd())
-
-
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
-from PySide6.QtCore import Slot
-from brighteyes_mcs.libs.plugin_loader import PluginsManager
 
-class TestPluginsManager(unittest.TestCase):
+from brighteyes_mcs.application.plugin_service import PluginManager
+from brighteyes_mcs.plugins.api import PluginMetadata
 
+
+class TestPluginManager(unittest.TestCase):
     def setUp(self):
-        self.main_window_mock = MagicMock()
-        self.plugins_manager = PluginsManager(self.main_window_mock)
+        self.main_window = MagicMock()
+        self.manager = PluginManager(self.main_window)
 
-    def signal_emitted_calls_registered_functions(self):
-        func_mock = MagicMock()
-        self.plugins_manager.register_trigger("beforeRun", func_mock)
-        self.plugins_manager.signal_emitted("beforeRun")
-        func_mock.assert_called_once()
+    def test_emit_calls_registered_callback(self):
+        callback = MagicMock()
+        self.manager.on("beforeRun", callback)
 
-    def signal_emitted_with_args_calls_registered_functions_with_args(self):
-        func_mock = MagicMock()
-        self.plugins_manager.register_trigger("beforeRun", func_mock)
-        self.plugins_manager.signal_emitted("beforeRun arg1 arg2")
-        func_mock.assert_called_once_with("arg1arg2")
+        self.manager.emit("beforeRun")
 
-    def plugin_list_returns_correct_plugins(self):
-        with patch('brighteyes_mcs.libs.plugin_loader.listdir', return_value=['plugin1', 'plugin2', '__init__']):
-            with patch('brighteyes_mcs.libs.plugin_loader.isdir', return_value=True):
-                plugins = self.plugins_manager.plugin_list()
-                self.assertEqual(plugins, ['plugin1', 'plugin2'])
+        callback.assert_called_once_with()
 
-    def plugin_loader_loads_plugin_correctly(self):
-        with patch('brighteyes_mcs.libs.plugin_loader.__import__') as import_mock:
-            self.plugins_manager.plugin_loader('test_plugin')
-            import_mock.assert_called_with('brighteyes_mcs.plugins.test_plugin.load_plugin')
+    def test_emit_preserves_event_payload(self):
+        callback = MagicMock()
+        self.manager.on("beforeRun", callback)
 
-    def addTab_adds_tab_to_main_window(self):
-        widget_mock = MagicMock()
-        self.plugins_manager.addTab(widget_mock, "Test Tab")
-        self.main_window_mock.ui.tabWidget.addTab.assert_called_once_with(widget_mock, "Test Tab")
+        self.manager.emit("beforeRun arg1 arg2")
 
-    def register_trigger_adds_function_to_trigger_register(self):
-        func_mock = MagicMock()
-        self.plugins_manager.register_trigger("afterStop", func_mock)
-        self.assertIn("afterStop", self.plugins_manager.trigger_register)
-        self.assertIn(func_mock, self.plugins_manager.trigger_register["afterStop"])
+        callback.assert_called_once_with("arg1 arg2")
 
-    def instances_returns_plugin_instances(self):
-        self.plugins_manager.plugin_instances = {"plugin1_0": {}, "plugin2_0": {}}
-        instances = self.plugins_manager.instances()
-        self.assertEqual(instances, ["plugin1_0", "plugin2_0"])
+    def test_available_plugins_only_returns_valid_entrypoint_packages(self):
+        plugins = self.manager.available_plugins()
 
-if __name__ == '__main__':
+        self.assertIn("dfd", plugins)
+        self.assertIn("channel_delay_skew", plugins)
+        self.assertNotIn("__pycache__", plugins)
+
+    def test_load_calls_single_context_entrypoint(self):
+        setup = MagicMock(return_value="plugin-object")
+        module = SimpleNamespace(
+            PLUGIN=PluginMetadata("test_plugin", "Test Plugin"),
+            setup=setup,
+        )
+        with patch(
+            "brighteyes_mcs.application.plugin_service.import_module",
+            return_value=module,
+        ) as importer:
+            instance_id = self.manager.load("test_plugin")
+
+        importer.assert_called_once_with(
+            "brighteyes_mcs.plugins.builtin.test_plugin.plugin"
+        )
+        setup.assert_called_once()
+        self.assertEqual(instance_id, "test_plugin_0")
+        self.assertEqual(self.manager.instances[instance_id]["plugin"], "plugin-object")
+
+    def test_add_tab_delegates_to_main_window(self):
+        widget = MagicMock()
+
+        self.manager.add_tab(widget, "Test Tab")
+
+        self.main_window.ui.tabWidget.addTab.assert_called_once_with(widget, "Test Tab")
+
+    def test_load_once_reuses_existing_instance(self):
+        self.manager.instances["plugin_0"] = {}
+
+        self.assertEqual(self.manager.load_once("plugin"), "plugin_0")
+
+
+if __name__ == "__main__":
     unittest.main()

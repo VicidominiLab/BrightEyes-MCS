@@ -16,7 +16,7 @@ The live image uses a much faster 3-sample phase/circular-mean estimator.
 -------------------------------------
 
 Code path:
-- brighteyes_mcs/gui/main_window.py
+- brighteyes_mcs/ui/qt/main_window.py
 - MainWindow.estimateDfdDecayLifetimeNs(...)
 - MainWindow.timerPreviewImg_tick(...)
 
@@ -105,11 +105,11 @@ Important implementation detail:
 -------------------------------------------------------------
 
 Code path:
-- brighteyes_mcs/libs/processes/acquisition_loop_process.py
+- brighteyes_mcs/acquisition/workers/spad/acquisition_loop_process.py
 - flim_parameters_from_3samples(...)
 - flim_map_to_hcl(...)
-- brighteyes_mcs/gui/main_window.py -> plotPreviewImage(...)
-- brighteyes_mcs/gui/flim_image_view.py -> setFlimImage(...) and _apply_hcl_render(...)
+- brighteyes_mcs/ui/qt/main_window.py -> plotPreviewImage(...)
+- brighteyes_mcs/ui/qt/flim_image_view.py -> setFlimImage(...) and _apply_hcl_render(...)
 
 Important:
 - This live mode is not doing a full exponential fit for each pixel.
@@ -291,8 +291,8 @@ displayed colors.
 ----------------------------------------------------
 
 Code path:
-- brighteyes_mcs/gui/main_window.py -> plotPreviewImage(...)
-- brighteyes_mcs/gui/flim_image_view.py
+- brighteyes_mcs/ui/qt/main_window.py -> plotPreviewImage(...)
+- brighteyes_mcs/ui/qt/flim_image_view.py
 
 When the selected preview channel is a lifetime color channel:
 
@@ -390,7 +390,7 @@ Live LIFETIME_HSV/HSL/HCL image:
 5) Main files involved
 ----------------------
 
-- brighteyes_mcs/gui/main_window.py
-- brighteyes_mcs/gui/flim_image_view.py
-- brighteyes_mcs/libs/processes/acquisition_loop_process.py
-- brighteyes_mcs/libs/mcs_manager.py
+- brighteyes_mcs/ui/qt/main_window.py
+- brighteyes_mcs/ui/qt/flim_image_view.py
+- brighteyes_mcs/acquisition/workers/spad/acquisition_loop_process.py
+- brighteyes_mcs/acquisition/manager.py

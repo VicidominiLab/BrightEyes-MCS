@@ -88,6 +88,15 @@ class InstallerError(RuntimeError):
     pass
 
 
+def user_configuration_dir() -> Path:
+    """Return the user-owned configuration directory used by the application."""
+
+    base = os.environ.get("APPDATA") or os.environ.get("LOCALAPPDATA")
+    if base:
+        return Path(base) / "BrightEyes-MCS"
+    return Path.home() / ".config" / "BrightEyes-MCS"
+
+
 def creationflags() -> int:
     return subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
 
@@ -724,6 +733,9 @@ def install_project(
     venv_python = create_virtual_environment(project_dir, selected_python, log)
     install_requirements(project_dir, venv_python, log, upgrade_requirements)
     check_compiled_extensions(project_dir, venv_python, log)
+    config_dir = user_configuration_dir()
+    config_dir.mkdir(parents=True, exist_ok=True)
+    log(f"User configuration is preserved in {config_dir}.")
     if create_desktop_links:
         create_links(project_dir, venv_python, log)
     if firmware_branch is not None:

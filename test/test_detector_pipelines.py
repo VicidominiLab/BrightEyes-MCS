@@ -1,9 +1,9 @@
 import unittest
 
-from brighteyes_mcs.libs.detectors import create_detector_pipeline
-from brighteyes_mcs.libs.detectors.pi23.pipeline import Pi23DetectorPipeline
-from brighteyes_mcs.libs.detectors.spad.pipeline import SpadDetectorPipeline
-from brighteyes_mcs.libs.detector_backends import (
+from brighteyes_mcs.acquisition.detectors import create_detector_pipeline
+from brighteyes_mcs.acquisition.detectors.pi23.pipeline import Pi23DetectorPipeline
+from brighteyes_mcs.acquisition.detectors.spad.pipeline import SpadDetectorPipeline
+from brighteyes_mcs.acquisition.detectors.backends import (
     DETECTOR_PI23_TT,
     DETECTOR_PI_23,
     DETECTOR_SPAD_ARRAY,

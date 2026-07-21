@@ -11,16 +11,16 @@ from unittest.mock import patch
 import h5py
 import numpy as np
 
-from brighteyes_mcs.libs.detector_backends import DETECTOR_PI_23
-from brighteyes_mcs.libs.spad_raw_acquisition_converter import (
+from brighteyes_mcs.acquisition.detectors.backends import DETECTOR_PI_23
+from brighteyes_mcs.storage.converters.spad import (
     _detect_streams,
     _load_metadata,
     convert_raw_acquisition,
 )
-from brighteyes_mcs.libs.processes.spad.raw_stream_writer_process import (
+from brighteyes_mcs.acquisition.workers.detectors.spad.raw_writer import (
     SpadRawStreamWriterProcess,
 )
-from brighteyes_mcs.libs.mcs_manager import create_i64_counter
+from brighteyes_mcs.acquisition.manager import create_i64_counter
 
 
 class TestRawStreamLargeCounters(unittest.TestCase):
@@ -130,8 +130,8 @@ class TestRustFifoReaderConfiguration(unittest.TestCase):
             sys.modules,
             {"nifpga": fake_nifpga, "nifpga_fast_fifo_recv": fake_recv},
         ):
-            sys.modules.pop("brighteyes_mcs.libs.rust_fifo_reader", None)
-            module = importlib.import_module("brighteyes_mcs.libs.rust_fifo_reader")
+            sys.modules.pop("brighteyes_mcs.acquisition.fifo", None)
+            module = importlib.import_module("brighteyes_mcs.acquisition.fifo")
             module.RustFastFifoReader(
                 "bitfile.lvbitx",
                 ["FIFO", "FIFOAnalog"],

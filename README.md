@@ -57,6 +57,21 @@ BrightEyes-MCS imports them from the installed pip package and no longer compile
 extensions from this repository during installation. The companion source package is
 expected at `C:\Users\madonato\Documents\Git\BrightEyes-MCS-cylibs`.
 
+## Development
+
+Project metadata and developer dependencies are defined in `pyproject.toml`:
+
+```powershell
+python -m pip install -e ".[dev]"
+python -m pytest -q
+python -m unittest test.test_channel_delay_skew_plugin -v
+```
+
+The second test command intentionally runs the PySide channel-delay widget tests
+in a separate interpreter on Windows/Python 3.13. See
+`docs/refactoring-architecture.md` for the package boundaries and compatibility
+rules.
+
 ## Development Notice
 
 **Important:** This software is currently under active development and may contain bugs or incomplete features. Please use it with caution and report any issues you encounter to help us improve the application. 

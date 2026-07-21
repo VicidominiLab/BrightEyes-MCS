@@ -5,7 +5,7 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(1, os.getcwd())
 
-from brighteyes_mcs.gui.main_window import MainWindow
+from brighteyes_mcs.ui.qt.main_window import MainWindow
 
 
 class TestH5MetadataCompatibility(unittest.TestCase):

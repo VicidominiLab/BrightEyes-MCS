@@ -1,2 +1,0 @@
-"""SPAD detector processes."""
-

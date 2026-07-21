@@ -7,7 +7,7 @@ import sys
 import traceback
 from pathlib import Path
 
-from brighteyes_mcs.libs.raw_acquisition_converter import convert_raw_acquisition
+from brighteyes_mcs.storage.converters import convert_raw_acquisition
 
 
 def main():

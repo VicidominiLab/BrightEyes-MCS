@@ -1,9 +1,9 @@
 # BrightEyes-MCS HDF5 Output Schema
 
 This document describes the HDF5 files written by `brighteyes_mcs`.
-It is based on the current writer implementation in `brighteyes_mcs/libs/h5manager.py`,
-the acquisition loop in `brighteyes_mcs/libs/processes/acquisition_loop_process.py`,
-the RAW converter in `brighteyes_mcs/libs/raw_acquisition_converter.py`, and the
+It is based on the current writer implementation in `brighteyes_mcs/storage/h5.py`,
+the workers in `brighteyes_mcs/acquisition/workers`, the RAW converters in
+`brighteyes_mcs/storage/converters`, and the
 sample tree printed by the last cell of `datah5.ipynb`.
 
 ## Top-Level Layout

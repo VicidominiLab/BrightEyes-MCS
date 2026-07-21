@@ -20,7 +20,7 @@ qtconsole
 
 uvicorn
 importlib-metadata
-nifpga-fast-fifo-recv>=0.101.7
+nifpga-fast-fifo-recv>=0.102.0
 
 #ultradict
 #pprofile

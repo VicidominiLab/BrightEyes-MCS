@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brighteyes-mcs"
+version = "0.0.0"
+description = "Microscope control software for image-scanning microscopy"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE.md" }
+dependencies = [
+    "brighteyes-mcs-cylibs>=1.0.0",
+    "brighteyes-mcs-reader>=0.1.0",
+    "pyqtdarktheme==0.1.7",
+    "pyqtgraph==0.13.7",
+    "PySide6>=6.10.1",
+    "numpy",
+    "nifpga",
+    "h5py",
+    "scipy",
+    "imageio",
+    "qtconsole",
+    "uvicorn",
+    "importlib-metadata",
+    "nifpga-fast-fifo-recv>=0.102.0",
+    "atomics",
+    "matplotlib",
+    "fastapi",
+    "markdown",
+    "requests",
+    "python-multipart",
+    "pywin32; platform_system == 'Windows'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.11"]
+
+[project.gui-scripts]
+brighteyes-mcs = "brighteyes_mcs.application.bootstrap:main"
+
+[tool.setuptools.packages.find]
+include = ["brighteyes_mcs*"]
+
+[tool.setuptools.package-data]
+brighteyes_mcs = [
+    "cfg/*.cfg",
+    "cfg/plugins_cfg/*.cfg",
+    "ui/qt/*.ui",
+    "ui/qt/*.html",
+    "images/*.png",
+    "images/*.ico",
+    "plugins/**/*.ui",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+addopts = ["-m", "not qt_isolated"]
+markers = [
+    "integration: process or storage integration tests",
+    "qt: tests requiring a Qt application",
+    "hardware: tests requiring connected acquisition hardware",
+    "qt_isolated: Qt tests run in a dedicated interpreter on Windows/Python 3.13",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+exclude = ["brighteyes_mcs/ui/qt/*_design.py", "brighteyes_mcs/plugins/**/*_design.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+ignore = ["E501"]

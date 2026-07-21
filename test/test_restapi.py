@@ -7,7 +7,7 @@ from fastapi import HTTPException
 
 sys.path.insert(1, os.getcwd())
 
-from brighteyes_mcs.libs.restapi import FastAPIServerThread
+from brighteyes_mcs.api.rest import FastAPIServerThread
 
 
 class TestFastApiStatusEndpoint(unittest.TestCase):

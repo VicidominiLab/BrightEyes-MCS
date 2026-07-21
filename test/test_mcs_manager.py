@@ -6,7 +6,7 @@ sys.path.insert(1, os.getcwd())
 import unittest
 from unittest.mock import MagicMock, patch
 import numpy as np
-from brighteyes_mcs.libs.detectors.models import (
+from brighteyes_mcs.acquisition.detectors.models import (
     DETECTOR_PI23_TT,
     DETECTOR_PI_23,
     DETECTOR_SPAD_ARRAY,
@@ -14,7 +14,7 @@ from brighteyes_mcs.libs.detectors.models import (
     detector_uses_nifpga_control,
     detector_uses_nifpga_fifo,
 )
-from brighteyes_mcs.libs.mcs_manager import McsManager
+from brighteyes_mcs.acquisition.manager import McsManager
 
 class TestMcsManager(unittest.TestCase):
 
@@ -125,7 +125,7 @@ class TestMcsManager(unittest.TestCase):
         instance.fpga_handle.run = MagicMock()
         instance.update_chuck = MagicMock()
 
-        with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:
+        with patch("brighteyes_mcs.acquisition.manager.FpgaHandle") as MockFpgaHandle:
             MockFpgaHandle.return_value = MagicMock()
             instance.connect()
 
@@ -138,7 +138,7 @@ class TestMcsManager(unittest.TestCase):
         instance.set_detector_model(DETECTOR_PI_23)
         instance.update_chuck = MagicMock()
 
-        with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:
+        with patch("brighteyes_mcs.acquisition.manager.FpgaHandle") as MockFpgaHandle:
             fpga_handle = MagicMock()
             MockFpgaHandle.return_value = fpga_handle
             instance.connect(
@@ -161,7 +161,7 @@ class TestMcsManager(unittest.TestCase):
         instance.set_detector_model(DETECTOR_PI_23)
         instance.update_chuck = MagicMock()
 
-        with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:
+        with patch("brighteyes_mcs.acquisition.manager.FpgaHandle") as MockFpgaHandle:
             fpga_handle = MagicMock()
             MockFpgaHandle.return_value = fpga_handle
             instance.connect(
@@ -182,7 +182,7 @@ class TestMcsManager(unittest.TestCase):
         instance.set_detector_model(DETECTOR_PI23_TT)
         instance.update_chuck = MagicMock()
 
-        with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:
+        with patch("brighteyes_mcs.acquisition.manager.FpgaHandle") as MockFpgaHandle:
             fpga_handle = MagicMock()
             MockFpgaHandle.return_value = fpga_handle
             instance.connect(
@@ -264,7 +264,7 @@ class TestMcsManager(unittest.TestCase):
 
     def test_connect_raises_exception_on_error(self):
         instance = McsManager()
-        with patch("brighteyes_mcs.libs.mcs_manager.FpgaHandle") as MockFpgaHandle:
+        with patch("brighteyes_mcs.acquisition.manager.FpgaHandle") as MockFpgaHandle:
             MockFpgaHandle.return_value = MagicMock()
             MockFpgaHandle.return_value.run = MagicMock(side_effect=Exception("Error"))
 
@@ -285,7 +285,7 @@ class TestMcsManager(unittest.TestCase):
         fake_pipeline.make_acquisition_loop.return_value = instance.previewProcess
         instance.detector_pipeline = fake_pipeline
 
-        with patch("brighteyes_mcs.libs.mcs_manager.create_detector_pipeline", return_value=fake_pipeline):
+        with patch("brighteyes_mcs.acquisition.manager.create_detector_pipeline", return_value=fake_pipeline):
             instance.run()
 
         instance.dataProcess.start.assert_called()
@@ -319,7 +319,7 @@ class TestMcsManager(unittest.TestCase):
         self.assertTrue((result == np.array([[1, 2], [3, 4]])).all())
 
     def test_getTrace_in_dfd_mode_returns_counts_per_second(self):
-        with patch("brighteyes_mcs.libs.mcs_manager.mp.Manager", return_value=MagicMock()):
+        with patch("brighteyes_mcs.acquisition.manager.mp.Manager", return_value=MagicMock()):
             instance = McsManager()
         instance.DFD_Activate = True
         instance.time_resolution = 2.0

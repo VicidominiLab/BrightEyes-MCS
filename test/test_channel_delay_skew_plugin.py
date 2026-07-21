@@ -12,8 +12,8 @@ import numpy as np
 from PySide6.QtCore import QEventLoop, QTimer
 from PySide6.QtWidgets import QApplication, QComboBox
 
-from brighteyes_mcs.plugins.channel_delay_skew import channel_delay_skew_extractor
-from brighteyes_mcs.plugins.channel_delay_skew.channel_delay_skew_widget import (
+from brighteyes_mcs.plugins.builtin.channel_delay_skew import channel_delay_skew_extractor
+from brighteyes_mcs.plugins.builtin.channel_delay_skew.channel_delay_skew_widget import (
     ChannelDelaySkewWidget,
     TWENTY_FIVE_TO_FORTY_NINE,
 )

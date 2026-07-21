@@ -8,8 +8,8 @@ sys.path.insert(1, os.getcwd())
 from PySide6.QtGui import QValidator
 from PySide6.QtWidgets import QApplication, QDoubleSpinBox
 
-from brighteyes_mcs.gui.scispinbox import eng_string, sciSpinBox, value_eng_string
-from brighteyes_mcs.gui.qt_locale import install_scientific_locale
+from brighteyes_mcs.ui.qt.scispinbox import eng_string, sciSpinBox, value_eng_string
+from brighteyes_mcs.ui.qt.qt_locale import install_scientific_locale
 
 
 class TestSciSpinBox(unittest.TestCase):
