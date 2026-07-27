@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QTextBrowser,
     QHeaderView,
     QProgressDialog,
+    QMenu,
 )
 from PySide6.QtGui import QScreen  # Replaces QDesktopWidget
 
@@ -212,6 +213,108 @@ class MainWindow(QMainWindow):
         self.webcam_capture = None
         self.ui = Ui_MainWindowDesign()
         self.ui.setupUi(self)
+        self._latest_status_registers = {}
+        self._monitored_registers = {}
+        self._monitor_started_at = time.monotonic()
+        self._last_circular_debug_signature = None
+
+        self.monitor_plot_widget = pg.PlotWidget(self)
+        self.monitor_plot_widget.setLabel("bottom", "Time", units="s")
+        self.monitor_plot_widget.setLabel("left", "Register value")
+        self.monitor_plot_widget.showGrid(x=True, y=True, alpha=0.25)
+        self.monitor_plot_widget.addLegend()
+        self.ui.gridLayout_monitorPlot.addWidget(self.monitor_plot_widget, 0, 0)
+        self.ui.pushButton_resetMonitor.clicked.connect(self.resetMonitor)
+
+        self.circular_preview_plot_item = pg.PlotItem()
+        self.circular_preview_plot_item.setLabel("bottom", "x", units="um")
+        self.circular_preview_plot_item.setLabel("left", "y", units="um")
+        self.circular_preview_widget = FlimImageView(
+            self, view=self.circular_preview_plot_item
+        )
+        self.circular_scan_points = pg.PlotDataItem(
+            pen=pg.mkPen("#fff176", width=1.5),
+            symbol="o",
+            symbolSize=4,
+            symbolPen=pg.mkPen("#fffde7", width=1),
+            symbolBrush=pg.mkBrush("#ff7043"),
+        )
+        self.circular_preview_widget.addItem(self.circular_scan_points)
+        self.circular_scan_first_points = pg.ScatterPlotItem(
+            pen=pg.mkPen("#ffffff", width=1.5),
+            brush=pg.mkBrush("#00e676"),
+            size=9,
+            symbol="o",
+        )
+        self.circular_preview_widget.addItem(
+            self.circular_scan_first_points
+        )
+        self.ui.gridLayout_circularPreview.addWidget(
+            self.circular_preview_widget, 0, 0
+        )
+        self.ui.pushButton_updateCircularView.clicked.connect(
+            self.updateCircularPreview
+        )
+        self.lissajous_mini_plot = pg.PlotWidget(self)
+        self.lissajous_mini_plot.setFixedHeight(105)
+        self.lissajous_mini_plot.hideAxis("bottom")
+        self.lissajous_mini_plot.hideAxis("left")
+        self.lissajous_mini_plot.setMouseEnabled(x=False, y=False)
+        self.lissajous_mini_plot.setMenuEnabled(False)
+        self.lissajous_mini_plot.setAspectLocked(True)
+        self.lissajous_mini_curve = self.lissajous_mini_plot.plot(
+            pen=pg.mkPen("#00d8ff", width=2)
+        )
+        self.lissajous_mini_points = pg.ScatterPlotItem(
+            pen=pg.mkPen("#fff176", width=1),
+            brush=pg.mkBrush("#ff7043"),
+            size=7,
+            symbol="o",
+        )
+        self.lissajous_mini_plot.addItem(self.lissajous_mini_points)
+        self.lissajous_mini_first_point = pg.ScatterPlotItem(
+            pen=pg.mkPen("#ffffff", width=1),
+            brush=pg.mkBrush("#00e676"),
+            size=10,
+            symbol="o",
+        )
+        self.lissajous_mini_plot.addItem(
+            self.lissajous_mini_first_point
+        )
+        self.ui.gridLayout_lissajousMiniPlot.setContentsMargins(0, 0, 0, 0)
+        self.ui.gridLayout_lissajousMiniPlot.addWidget(
+            self.lissajous_mini_plot, 0, 0
+        )
+        self.ui.checkBox_lissajous.toggled.connect(
+            self.lissajousModeChanged
+        )
+        self.ui.spinBox_lissajous_omega_x.valueChanged.connect(
+            self.lissajousFrequencyChanged
+        )
+        self.ui.spinBox_lissajous_omega_y.valueChanged.connect(
+            self.lissajousFrequencyChanged
+        )
+        self.ui.spinBox_lissajous_phase_deg.valueChanged.connect(
+            self.lissajousFrequencyChanged
+        )
+        self.ui.spinBox_lissajous_firstposition.valueChanged.connect(
+            self.lissajousFrequencyChanged
+        )
+        self.lissajousModeChanged(
+            self.ui.checkBox_lissajous.isChecked()
+        )
+        for status_tree in (
+            self.ui.treeView,
+            self.ui.treeView_2,
+            self.ui.treeView_3,
+        ):
+            status_tree.setContextMenuPolicy(
+                Qt.ContextMenuPolicy.CustomContextMenu
+            )
+            status_tree.customContextMenuRequested.connect(
+                lambda position, tree=status_tree:
+                    self.statusRegisterContextMenu(tree, position)
+            )
         for special_channel in (
             "RGBDFD",
             "LIFETIME_HCL",
@@ -785,6 +888,36 @@ class MainWindow(QMainWindow):
             "Circular Repetition",
             int,
             self.ui.spinBox_circular_repetition,
+            True,
+        )
+        configuration_helper["lissajous_active"] = (
+            "Lissajous Curve",
+            bool,
+            self.ui.checkBox_lissajous,
+            True,
+        )
+        configuration_helper["lissajous_omega_x"] = (
+            "Lissajous Omega X",
+            int,
+            self.ui.spinBox_lissajous_omega_x,
+            True,
+        )
+        configuration_helper["lissajous_omega_y"] = (
+            "Lissajous Omega Y",
+            int,
+            self.ui.spinBox_lissajous_omega_y,
+            True,
+        )
+        configuration_helper["lissajous_phase_deg"] = (
+            "Lissajous Rotation Phase (degree)",
+            int,
+            self.ui.spinBox_lissajous_phase_deg,
+            True,
+        )
+        configuration_helper["lissajous_first_position"] = (
+            "Lissajous First Array Position",
+            int,
+            self.ui.spinBox_lissajous_firstposition,
             True,
         )
         configuration_helper["slave_mode_enable"] = (
@@ -3208,6 +3341,371 @@ class MainWindow(QMainWindow):
                     autoHistogramRange=False,
                 )
 
+    def _status_tree_source(self, tree):
+        if tree is self.ui.treeView_2:
+            return "Conf. FPGA dict.", self.configurationFPGA_dict
+        if tree is self.ui.treeView_3:
+            return "Conf. GUI dict.", self.configurationGUI_dict
+        return "Read Conf. FPGA", self._latest_status_registers
+
+    def statusRegisterContextMenu(self, tree, position):
+        """Offer monitoring for scalar numeric FPGA status registers."""
+        index = tree.indexAt(position)
+        if not index.isValid():
+            return
+        name_index = index.sibling(index.row(), 0)
+        value_index = index.sibling(index.row(), 1)
+        register_name = name_index.data(Qt.ItemDataRole.DisplayRole)
+        source_name, source = self._status_tree_source(tree)
+        value = source.get(register_name)
+        numeric_value = self._coerce_monitor_value(value)
+
+        # TEMP DEBUG: remove after the monitor context-menu behavior is verified.
+        print(
+            "[Monitor debug] right-click",
+            {
+                "tree": source_name,
+                "register": register_name,
+                "raw_value": repr(value),
+                "display_value": value_index.data(Qt.ItemDataRole.DisplayRole),
+                "numeric_value": numeric_value,
+            },
+        )
+
+        menu = QMenu(self)
+        action = menu.addAction("Add to Monitor")
+        monitor_id = (source_name, register_name)
+        action.setEnabled(
+            numeric_value is not None
+            and monitor_id not in self._monitored_registers
+        )
+        selected_action = menu.exec(
+            tree.viewport().mapToGlobal(position)
+        )
+        if selected_action is action:
+            self.addRegisterToMonitor(
+                register_name,
+                source_name=source_name,
+                value=numeric_value,
+            )
+
+    @staticmethod
+    def _coerce_monitor_value(value):
+        if isinstance(value, (bool, np.bool_, str, bytes)):
+            return None
+        try:
+            array = np.asarray(value)
+            if array.ndim != 0:
+                return None
+            numeric_value = float(array.item())
+        except (TypeError, ValueError, OverflowError):
+            return None
+        return numeric_value if np.isfinite(numeric_value) else None
+
+    @classmethod
+    def _is_monitorable_value(cls, value):
+        return cls._coerce_monitor_value(value) is not None
+
+    def addRegisterToMonitor(
+        self,
+        register_name,
+        source_name="Read Conf. FPGA",
+        value=None,
+    ):
+        """Add one FPGA register and its latest value to the time trace."""
+        monitor_id = (source_name, register_name)
+        if monitor_id in self._monitored_registers:
+            return
+        if value is None:
+            _, source = self._status_tree_source(
+                {
+                    "Read Conf. FPGA": self.ui.treeView,
+                    "Conf. FPGA dict.": self.ui.treeView_2,
+                    "Conf. GUI dict.": self.ui.treeView_3,
+                }[source_name]
+            )
+            value = self._coerce_monitor_value(source.get(register_name))
+        if value is None:
+            raise ValueError(
+                f"Register {register_name!r} does not contain a numeric scalar."
+            )
+
+        # TEMP DEBUG: remove after monitor selection is verified.
+        print(
+            "[Monitor debug] adding",
+            {
+                "tree": source_name,
+                "register": register_name,
+                "value": value,
+            },
+        )
+
+        color = pg.intColor(
+            len(self._monitored_registers),
+            hues=max(8, len(self._monitored_registers) + 1),
+        )
+        curve_name = f"{source_name} / {register_name}"
+        curve = self.monitor_plot_widget.plot(
+            pen=pg.mkPen(color, width=2),
+            name=curve_name,
+        )
+        elapsed = time.monotonic() - self._monitor_started_at
+        self._monitored_registers[monitor_id] = {
+            "source_name": source_name,
+            "register_name": register_name,
+            "times": [elapsed],
+            "values": [float(value)],
+            "curve": curve,
+        }
+        curve.setData([elapsed], [float(value)])
+
+    def _append_monitor_points(self, sources, timestamp=None):
+        if not self._monitored_registers:
+            return
+        elapsed = (
+            time.monotonic() - self._monitor_started_at
+            if timestamp is None
+            else float(timestamp)
+        )
+        for trace in self._monitored_registers.values():
+            source = sources.get(trace["source_name"], {})
+            value = self._coerce_monitor_value(
+                source.get(trace["register_name"])
+            )
+            if value is None:
+                continue
+            trace["times"].append(elapsed)
+            trace["values"].append(value)
+            trace["curve"].setData(trace["times"], trace["values"])
+
+    @Slot()
+    def resetMonitor(self):
+        """Remove all selected registers and their accumulated samples."""
+        self._monitored_registers.clear()
+        self.monitor_plot_widget.clear()
+        legend = self.monitor_plot_widget.plotItem.legend
+        if legend is not None:
+            legend.clear()
+        self._monitor_started_at = time.monotonic()
+
+    @staticmethod
+    def _circular_points_for_projection(
+        registers,
+        projection,
+        calibration,
+        offset,
+        point_count,
+        scan_range=None,
+        pixel_counts=None,
+    ):
+        """Add calibrated circular displacements to raster-pixel centers."""
+        arrays = []
+        for register_name in (
+            "ScanXVoltages",
+            "ScanYVoltages",
+            "ScanZVoltages",
+        ):
+            try:
+                array = np.asarray(
+                    registers.get(register_name, []), dtype=float
+                ).reshape(-1)
+            except (TypeError, ValueError):
+                return np.asarray([]), np.asarray([])
+            arrays.append(array)
+
+        count = min(
+            max(0, int(point_count)),
+            *(len(array) for array in arrays),
+        )
+        if count == 0:
+            return np.asarray([]), np.asarray([])
+
+        circular_displacements = [
+            arrays[axis][:count] * float(calibration[axis])
+            for axis in range(3)
+        ]
+        axes = {
+            "xy": (0, 1),
+            "yx": (1, 0),
+            "zy": (2, 1),
+            "yz": (1, 2),
+            "zx": (2, 0),
+            "xz": (0, 2),
+        }.get(projection, (0, 1))
+
+        if scan_range is None or pixel_counts is None:
+            raster_centers = [
+                np.asarray([float(offset[axis])]) for axis in range(3)
+            ]
+        else:
+            raster_centers = []
+            for axis in range(3):
+                axis_count = max(1, int(pixel_counts[axis]))
+                axis_range = float(scan_range[axis])
+                pixel_size = axis_range / axis_count
+                raster_centers.append(
+                    float(offset[axis])
+                    - axis_range / 2.0
+                    + (np.arange(axis_count, dtype=float) + 0.5)
+                    * pixel_size
+                )
+
+        projected_center_x, projected_center_y = np.meshgrid(
+            raster_centers[axes[0]],
+            raster_centers[axes[1]],
+            indexing="xy",
+        )
+        center_x = projected_center_x.reshape(-1, 1)
+        center_y = projected_center_y.reshape(-1, 1)
+        projected_x = (
+            center_x + circular_displacements[axes[0]].reshape(1, -1)
+        ).reshape(-1)
+        projected_y = (
+            center_y + circular_displacements[axes[1]].reshape(1, -1)
+        ).reshape(-1)
+        return projected_x, projected_y
+
+    def updateCircularPoints(self):
+        """Read, calibrate, offset, and display the circular voltage arrays."""
+        registers = dict(self._latest_status_registers)
+        # Prefer the values most recently configured by this application. The
+        # live readback may still contain the previous point count briefly.
+        registers.update(self.configurationFPGA_dict)
+        projection = self.ui.comboBox_view_projection.currentText()
+        calibration = (
+            self.ui.spinBox_calib_x.value(),
+            self.ui.spinBox_calib_y.value(),
+            self.ui.spinBox_calib_z.value(),
+        )
+        # Use exactly the same geometry as getCurrentPreviewImage(). This keeps
+        # the calibrated trajectory aligned with the image even when the live
+        # GUI controls have changed since that image was acquired.
+        offset = tuple(float(value) for value in self.currentImage_pos)
+        scan_range = tuple(float(value) for value in self.currentImage_size)
+        pixel_counts = tuple(
+            max(1, int(value)) for value in self.currentImage_pixels
+        )
+        point_count = self.ui.spinBox_circular_points.value()
+        x_points, y_points = self._circular_points_for_projection(
+            registers=registers,
+            projection=projection,
+            calibration=calibration,
+            offset=offset,
+            point_count=point_count,
+            scan_range=scan_range,
+            pixel_counts=pixel_counts,
+        )
+
+        debug_payload = {
+            "projection": projection,
+            "point_count": point_count,
+            "lissajous_active": self.ui.checkBox_lissajous.isChecked(),
+            "omega_x": self.ui.spinBox_lissajous_omega_x.value(),
+            "omega_y": self.ui.spinBox_lissajous_omega_y.value(),
+            "phase_deg": self.ui.spinBox_lissajous_phase_deg.value(),
+            "first_position": (
+                self.ui.spinBox_lissajous_firstposition.value()
+            ),
+            "ScanXVoltages": repr(registers.get("ScanXVoltages")),
+            "ScanYVoltages": repr(registers.get("ScanYVoltages")),
+            "ScanZVoltages": repr(registers.get("ScanZVoltages")),
+            "calibration_um_per_v": calibration,
+            "offset_um": offset,
+            "scan_range_um": scan_range,
+            "pixel_counts": pixel_counts,
+            "replicated_points": len(x_points),
+            "projected_x_um": x_points.tolist(),
+            "projected_y_um": y_points.tolist(),
+        }
+        debug_signature = repr(debug_payload)
+        if debug_signature != self._last_circular_debug_signature:
+            # TEMP DEBUG: remove after the Circular overlay is verified.
+            print("[Circular debug]", debug_payload)
+            self._last_circular_debug_signature = debug_signature
+
+        self.circular_scan_points.setData(x=x_points, y=y_points)
+        try:
+            trajectory_point_count = min(
+                int(point_count),
+                *(
+                    np.asarray(registers.get(register_name, [])).size
+                    for register_name in (
+                        "ScanXVoltages",
+                        "ScanYVoltages",
+                        "ScanZVoltages",
+                    )
+                ),
+            )
+        except (TypeError, ValueError):
+            trajectory_point_count = 0
+        if trajectory_point_count > 0:
+            self.circular_scan_first_points.setData(
+                x=x_points[::trajectory_point_count],
+                y=y_points[::trajectory_point_count],
+            )
+        else:
+            self.circular_scan_first_points.setData(x=[], y=[])
+        self.circular_preview_plot_item.setLabel(
+            "bottom", projection[0], units="um"
+        )
+        self.circular_preview_plot_item.setLabel(
+            "left", projection[1], units="um"
+        )
+        if len(x_points):
+            self.circular_preview_plot_item.autoRange()
+
+    def updateCircularPreview(self):
+        """Mirror the central preview and overlay calibrated circular points."""
+        self.updateCircularPoints()
+        try:
+            preview = self.getCurrentPreviewImage()
+            if preview is None:
+                return
+            (
+                preview_img,
+                channel,
+                auto_levels,
+                _auto_range,
+                position,
+                scale,
+            ) = preview
+
+            if self.isLifetimeColorChannel(channel):
+                tcycle_ns = 1e3 / (
+                    max(float(self.dfd_cycle_mhz), 1e-12)
+                    * max(int(self.mcs_manager.clk_multiplier), 1)
+                )
+                h_shift = 0.0
+                if tcycle_ns > 0.0:
+                    h_shift = (
+                        self.ui.doubleSpinBox_delta_tau_ns.value() % tcycle_ns
+                    ) / tcycle_ns
+                self.circular_preview_widget.setFlimImage(
+                    preview_img,
+                    valid=preview_img[:, :, 2],
+                    h_display_max=tcycle_ns,
+                    h_shift=h_shift,
+                    render_mode=self.getLifetimeColorRenderMode(channel),
+                    hue_display_range=self.getLifetimeHueDisplayRange(),
+                    force_quality_full=self.getLifetimeForceQualityFull(),
+                    autoLevels=auto_levels,
+                    autoRange=True,
+                    pos=position,
+                    scale=scale,
+                )
+            else:
+                level_mode = "rgba" if channel.startswith("RGB") else "mono"
+                self.circular_preview_widget.setImage(
+                    preview_img,
+                    levelMode=level_mode,
+                    autoLevels=auto_levels,
+                    autoRange=True,
+                    pos=position,
+                    scale=scale,
+                )
+        except Exception:
+            logger.exception("Could not update the Circular status preview")
+
     @Slot()
     def updateTables(self):
         """
@@ -3217,6 +3715,7 @@ class MainWindow(QMainWindow):
             fff = self.mcs_manager.fpga_handle.register_read_all()
         else:
             fff = self.mcs_manager.get_registers_configuration()
+        self._latest_status_registers = dict(fff)
 
         try:
             t = [
@@ -3272,6 +3771,14 @@ class MainWindow(QMainWindow):
             self.ui.treeView_3.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         else:
             self.ui.treeView_3.model().updateData(fff)
+
+        self._append_monitor_points(
+            {
+                "Read Conf. FPGA": self._latest_status_registers,
+                "Conf. FPGA dict.": self.configurationFPGA_dict,
+                "Conf. GUI dict.": self.configurationGUI_dict,
+            }
+        )
 
 
     @Slot()
@@ -3384,9 +3891,143 @@ class MainWindow(QMainWindow):
         pass
         # self.define_circular()
 
+    @Slot(bool)
+    def lissajousModeChanged(self, enabled):
+        """Enable Lissajous controls or restore the standard unit circle."""
+        self.ui.spinBox_lissajous_omega_x.setEnabled(enabled)
+        self.ui.spinBox_lissajous_omega_y.setEnabled(enabled)
+        self.ui.spinBox_lissajous_phase_deg.setEnabled(enabled)
+        self.ui.spinBox_lissajous_firstposition.setEnabled(enabled)
+        if not enabled:
+            for spinbox in (
+                self.ui.spinBox_lissajous_omega_x,
+                self.ui.spinBox_lissajous_omega_y,
+            ):
+                signals_were_blocked = spinbox.blockSignals(True)
+                spinbox.setValue(1)
+                spinbox.blockSignals(signals_were_blocked)
+            signals_were_blocked = (
+                self.ui.spinBox_lissajous_phase_deg.blockSignals(True)
+            )
+            self.ui.spinBox_lissajous_phase_deg.setValue(0)
+            self.ui.spinBox_lissajous_phase_deg.blockSignals(
+                signals_were_blocked
+            )
+            signals_were_blocked = (
+                self.ui.spinBox_lissajous_firstposition.blockSignals(True)
+            )
+            self.ui.spinBox_lissajous_firstposition.setValue(0)
+            self.ui.spinBox_lissajous_firstposition.blockSignals(
+                signals_were_blocked
+            )
+
+        self.updateLissajousMiniPlot()
+        if (
+            hasattr(self, "mcs_manager")
+            and self.ui.checkBox_circular.isChecked()
+        ):
+            self.circularMotionActivateChanged()
+
+    @Slot(int)
+    def lissajousFrequencyChanged(self, _value):
+        """Regenerate the active trajectory after an omega change."""
+        if not self.ui.checkBox_lissajous.isChecked():
+            self.lissajousModeChanged(False)
+            return
+        self.updateLissajousMiniPlot()
+        if (
+            hasattr(self, "mcs_manager")
+            and self.ui.checkBox_circular.isChecked()
+        ):
+            self.circularMotionActivateChanged()
+
+    @staticmethod
+    def _lissajous_offsets(
+        radius,
+        point_count,
+        omega_x=1,
+        omega_y=1,
+        phase_deg=0,
+        first_position=0,
+    ):
+        """Return a rotated trajectory with the selected point at index zero."""
+        t = np.linspace(0, 2 * np.pi, int(point_count) + 1)[:-1]
+        x_unrotated = np.cos(int(omega_x) * t) * float(radius)
+        y_unrotated = np.sin(int(omega_y) * t) * float(radius)
+        phase_rad = np.deg2rad(float(phase_deg))
+        cos_phase = np.cos(phase_rad)
+        sin_phase = np.sin(phase_rad)
+        x_values = (
+            x_unrotated * cos_phase - y_unrotated * sin_phase,
+            x_unrotated * sin_phase + y_unrotated * cos_phase,
+        )
+        if int(point_count) <= 0:
+            return x_values
+        first_index = int(first_position) % int(point_count)
+        return (
+            np.roll(x_values[0], -first_index),
+            np.roll(x_values[1], -first_index),
+        )
+
+    def updateLissajousMiniPlot(self):
+        """Draw a normalized dense preview of the selected trajectory."""
+        if self.ui.checkBox_lissajous.isChecked():
+            omega_x = self.ui.spinBox_lissajous_omega_x.value()
+            omega_y = self.ui.spinBox_lissajous_omega_y.value()
+            phase_deg = self.ui.spinBox_lissajous_phase_deg.value()
+            first_position = (
+                self.ui.spinBox_lissajous_firstposition.value()
+            )
+        else:
+            omega_x = 1
+            omega_y = 1
+            phase_deg = 0
+            first_position = 0
+        selected_point_count = self.ui.spinBox_circular_points.value()
+        maximum_first_position = max(0, selected_point_count - 1)
+        signals_were_blocked = (
+            self.ui.spinBox_lissajous_firstposition.blockSignals(True)
+        )
+        self.ui.spinBox_lissajous_firstposition.setMaximum(
+            maximum_first_position
+        )
+        if first_position > maximum_first_position:
+            first_position %= selected_point_count
+            self.ui.spinBox_lissajous_firstposition.setValue(
+                first_position
+            )
+        self.ui.spinBox_lissajous_firstposition.blockSignals(
+            signals_were_blocked
+        )
+        x_values, y_values = self._lissajous_offsets(
+            radius=1.0,
+            point_count=512,
+            omega_x=omega_x,
+            omega_y=omega_y,
+            phase_deg=phase_deg,
+        )
+        self.lissajous_mini_curve.setData(
+            np.append(x_values, x_values[0]),
+            np.append(y_values, y_values[0]),
+        )
+        sampled_x, sampled_y = self._lissajous_offsets(
+            radius=1.0,
+            point_count=selected_point_count,
+            omega_x=omega_x,
+            omega_y=omega_y,
+            phase_deg=phase_deg,
+            first_position=first_position,
+        )
+        self.lissajous_mini_points.setData(x=sampled_x, y=sampled_y)
+        self.lissajous_mini_first_point.setData(
+            x=sampled_x[:1],
+            y=sampled_y[:1],
+        )
+        self.lissajous_mini_plot.autoRange(padding=0.08)
+
     def define_circular(self, circular_points):
         """
-        define the points for the circular scan
+        Define the points for the circular or Lissajous scan.
         """
         radius = self.ui.spinBox_circular_radius_nm.value() / 1000.
 
@@ -3394,11 +4035,27 @@ class MainWindow(QMainWindow):
         calib_yy = self.ui.spinBox_calib_y.value()
         calib_zz = self.ui.spinBox_calib_z.value()
 
-        t = np.linspace(0, 2 * np.pi, circular_points + 1)[:-1]
-
-        self.X_array_um = (np.cos(t) * radius)
-        self.Y_array_um = (np.sin(t) * radius)
-        self.Z_array_um = np.zeros(circular_points + 1)
+        if self.ui.checkBox_lissajous.isChecked():
+            omega_x = self.ui.spinBox_lissajous_omega_x.value()
+            omega_y = self.ui.spinBox_lissajous_omega_y.value()
+            phase_deg = self.ui.spinBox_lissajous_phase_deg.value()
+            first_position = (
+                self.ui.spinBox_lissajous_firstposition.value()
+            )
+        else:
+            omega_x = 1
+            omega_y = 1
+            phase_deg = 0
+            first_position = 0
+        self.X_array_um, self.Y_array_um = self._lissajous_offsets(
+            radius,
+            circular_points,
+            omega_x,
+            omega_y,
+            phase_deg,
+            first_position,
+        )
+        self.Z_array_um = np.zeros(circular_points)
 
         self.X_array = self.X_array_um / calib_xx
         self.Y_array = self.Y_array_um / calib_yy
@@ -3473,6 +4130,7 @@ class MainWindow(QMainWindow):
         """
         activate or disactivate the circular motion
         """
+        self.updateLissajousMiniPlot()
         if self.ui.checkBox_circular.isChecked():
             circular_points = self.ui.spinBox_circular_points.value()
             self.define_circular(circular_points)
@@ -6697,7 +7355,6 @@ Have fun!
                 pos=pos,
                 scale=scale,
             )
-
     def plotCurrentImage(self):
         """
         plot the current image

@@ -188,6 +188,7 @@ class McsManager():
         self.dim_rep = 0
         # self.acquisitionThread = Thread()
         self.previewProcess = None  # mp.Process()
+        self.dataProcess = None
         self.expected_words_data_digital = 0
         self.expected_words_data_analog = 0
         self.expected_words_data_per_frame_digital = 0

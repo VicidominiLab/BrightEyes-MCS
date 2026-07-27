@@ -30,7 +30,7 @@ class Ui_MainWindowDesign(object):
     def setupUi(self, MainWindowDesign):
         if not MainWindowDesign.objectName():
             MainWindowDesign.setObjectName(u"MainWindowDesign")
-        MainWindowDesign.resize(1753, 1596)
+        MainWindowDesign.resize(1952, 1596)
         self.centralwidget = QWidget(MainWindowDesign)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_2 = QGridLayout(self.centralwidget)
@@ -321,12 +321,36 @@ class Ui_MainWindowDesign(object):
         self.tab_4.setObjectName(u"tab_4")
         self.gridLayout_50 = QGridLayout(self.tab_4)
         self.gridLayout_50.setObjectName(u"gridLayout_50")
-        self.treeView_4 = QTreeView(self.tab_4)
-        self.treeView_4.setObjectName(u"treeView_4")
+        self.pushButton_updateCircularView = QPushButton(self.tab_4)
+        self.pushButton_updateCircularView.setObjectName(u"pushButton_updateCircularView")
 
-        self.gridLayout_50.addWidget(self.treeView_4, 0, 0, 1, 1)
+        self.gridLayout_50.addWidget(self.pushButton_updateCircularView, 0, 0, 1, 1)
+
+        self.gridLayout_circularPreview = QGridLayout()
+        self.gridLayout_circularPreview.setObjectName(u"gridLayout_circularPreview")
+
+        self.gridLayout_50.addLayout(self.gridLayout_circularPreview, 1, 0, 1, 1)
 
         self.tabWidget_circular.addTab(self.tab_4, "")
+        self.tab_monitor = QWidget()
+        self.tab_monitor.setObjectName(u"tab_monitor")
+        self.gridLayout_monitor = QGridLayout(self.tab_monitor)
+        self.gridLayout_monitor.setObjectName(u"gridLayout_monitor")
+        self.pushButton_resetMonitor = QPushButton(self.tab_monitor)
+        self.pushButton_resetMonitor.setObjectName(u"pushButton_resetMonitor")
+
+        self.gridLayout_monitor.addWidget(self.pushButton_resetMonitor, 0, 0, 1, 1)
+
+        self.horizontalSpacer_monitor = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_monitor.addItem(self.horizontalSpacer_monitor, 0, 1, 1, 1)
+
+        self.gridLayout_monitorPlot = QGridLayout()
+        self.gridLayout_monitorPlot.setObjectName(u"gridLayout_monitorPlot")
+
+        self.gridLayout_monitor.addLayout(self.gridLayout_monitorPlot, 1, 0, 1, 2)
+
+        self.tabWidget_circular.addTab(self.tab_monitor, "")
 
         self.gridLayout.addWidget(self.tabWidget_circular, 1, 0, 1, 2)
 
@@ -569,12 +593,9 @@ class Ui_MainWindowDesign(object):
         self.tab_config.setObjectName(u"tab_config")
         self.gridLayout_config = QGridLayout(self.tab_config)
         self.gridLayout_config.setObjectName(u"gridLayout_config")
-        self.dockWidgetContents_15 = QWidget(self.tab_config)
-        self.dockWidgetContents_15.setObjectName(u"dockWidgetContents_15")
-        self.gridLayout_37 = QGridLayout(self.dockWidgetContents_15)
+        self.gridLayout_37 = QGridLayout()
         self.gridLayout_37.setObjectName(u"gridLayout_37")
-        self.gridLayout_37.setContentsMargins(0, 0, 0, 0)
-        self.tabWidget_2 = QTabWidget(self.dockWidgetContents_15)
+        self.tabWidget_2 = QTabWidget(self.tab_config)
         self.tabWidget_2.setObjectName(u"tabWidget_2")
         self.tab_2 = QWidget()
         self.tab_2.setObjectName(u"tab_2")
@@ -1506,7 +1527,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_37.addItem(self.verticalSpacer_23, 1, 0, 1, 1)
 
 
-        self.gridLayout_config.addWidget(self.dockWidgetContents_15, 0, 0, 1, 1)
+        self.gridLayout_config.addLayout(self.gridLayout_37, 0, 0, 1, 1)
 
         self.tabWidget.addTab(self.tab_config, "")
 
@@ -1887,7 +1908,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_6.setWidgetResizable(True)
         self.scrollAreaWidgetContents_4 = QWidget()
         self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 436, 108))
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 466, 116))
         self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName(u"gridLayout_68")
         self.gridLayout_3434 = QGridLayout()
@@ -2156,7 +2177,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollAreaWidgetContents_7 = QWidget()
         self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
-        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 439, 140))
+        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 498, 146))
         self.gridLayout_74 = QGridLayout(self.scrollAreaWidgetContents_7)
         self.gridLayout_74.setObjectName(u"gridLayout_74")
         self.groupBox = QGroupBox(self.scrollAreaWidgetContents_7)
@@ -2382,86 +2403,20 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_4.setObjectName(u"dockWidgetContents_4")
         self.gridLayout_27 = QGridLayout(self.dockWidgetContents_4)
         self.gridLayout_27.setObjectName(u"gridLayout_27")
-        self.groupBox_2 = QGroupBox(self.dockWidgetContents_4)
-        self.groupBox_2.setObjectName(u"groupBox_2")
-        self.gridLayout_20 = QGridLayout(self.groupBox_2)
-        self.gridLayout_20.setObjectName(u"gridLayout_20")
-        self.label_108 = QLabel(self.groupBox_2)
-        self.label_108.setObjectName(u"label_108")
-
-        self.gridLayout_20.addWidget(self.label_108, 4, 0, 1, 1)
-
-        self.label_109 = QLabel(self.groupBox_2)
-        self.label_109.setObjectName(u"label_109")
-
-        self.gridLayout_20.addWidget(self.label_109, 4, 2, 1, 1)
-
-        self.label_43 = QLabel(self.groupBox_2)
-        self.label_43.setObjectName(u"label_43")
-
-        self.gridLayout_20.addWidget(self.label_43, 2, 0, 1, 1)
-
-        self.spinBox_circular_radius_nm = sciSpinBox(self.groupBox_2)
-        self.spinBox_circular_radius_nm.setObjectName(u"spinBox_circular_radius_nm")
-        self.spinBox_circular_radius_nm.setKeyboardTracking(False)
-        self.spinBox_circular_radius_nm.setDecimals(3)
-        self.spinBox_circular_radius_nm.setMinimum(-1000000.000000000000000)
-        self.spinBox_circular_radius_nm.setMaximum(1000000.000000000000000)
-        self.spinBox_circular_radius_nm.setValue(0.000000000000000)
-
-        self.gridLayout_20.addWidget(self.spinBox_circular_radius_nm, 4, 1, 1, 1)
-
-        self.spinBox_circular_repetition = QSpinBox(self.groupBox_2)
-        self.spinBox_circular_repetition.setObjectName(u"spinBox_circular_repetition")
-        self.spinBox_circular_repetition.setMinimum(1)
-        self.spinBox_circular_repetition.setMaximum(999999)
-        self.spinBox_circular_repetition.setValue(1)
-
-        self.gridLayout_20.addWidget(self.spinBox_circular_repetition, 3, 1, 1, 1)
-
-        self.checkBox_circular = QCheckBox(self.groupBox_2)
-        self.checkBox_circular.setObjectName(u"checkBox_circular")
-
-        self.gridLayout_20.addWidget(self.checkBox_circular, 0, 0, 1, 3)
-
-        self.label_110 = QLabel(self.groupBox_2)
-        self.label_110.setObjectName(u"label_110")
-
-        self.gridLayout_20.addWidget(self.label_110, 3, 0, 1, 1)
-
-        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_20.addItem(self.horizontalSpacer_14, 2, 2, 1, 1)
-
-        self.spinBox_circular_points = QSpinBox(self.groupBox_2)
-        self.spinBox_circular_points.setObjectName(u"spinBox_circular_points")
-        self.spinBox_circular_points.setMinimum(1)
-        self.spinBox_circular_points.setMaximum(32)
-        self.spinBox_circular_points.setValue(1)
-
-        self.gridLayout_20.addWidget(self.spinBox_circular_points, 2, 1, 1, 1)
-
-
-        self.gridLayout_27.addWidget(self.groupBox_2, 1, 0, 1, 1)
-
         self.groupBox_14 = QGroupBox(self.dockWidgetContents_4)
         self.groupBox_14.setObjectName(u"groupBox_14")
         self.gridLayout_55 = QGridLayout(self.groupBox_14)
         self.gridLayout_55.setObjectName(u"gridLayout_55")
-        self.spinBox_compensation_delay = QSpinBox(self.groupBox_14)
-        self.spinBox_compensation_delay.setObjectName(u"spinBox_compensation_delay")
-        self.spinBox_compensation_delay.setMaximum(100000)
-
-        self.gridLayout_55.addWidget(self.spinBox_compensation_delay, 2, 1, 1, 1)
-
         self.checkBox_snake = QCheckBox(self.groupBox_14)
         self.checkBox_snake.setObjectName(u"checkBox_snake")
 
         self.gridLayout_55.addWidget(self.checkBox_snake, 0, 0, 1, 2)
 
-        self.verticalSpacer_20 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.spinBox_compensation_delay = QSpinBox(self.groupBox_14)
+        self.spinBox_compensation_delay.setObjectName(u"spinBox_compensation_delay")
+        self.spinBox_compensation_delay.setMaximum(100000)
 
-        self.gridLayout_55.addItem(self.verticalSpacer_20, 3, 1, 1, 1)
+        self.gridLayout_55.addWidget(self.spinBox_compensation_delay, 2, 1, 1, 1)
 
         self.label_35 = QLabel(self.groupBox_14)
         self.label_35.setObjectName(u"label_35")
@@ -2476,9 +2431,142 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_27.addWidget(self.groupBox_14, 1, 1, 1, 1)
 
-        self.verticalSpacer_19 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.gridLayout_lissajousMiniPlot = QGridLayout()
+        self.gridLayout_lissajousMiniPlot.setObjectName(u"gridLayout_lissajousMiniPlot")
 
-        self.gridLayout_27.addItem(self.verticalSpacer_19, 2, 0, 1, 1)
+        self.gridLayout_27.addLayout(self.gridLayout_lissajousMiniPlot, 2, 1, 1, 1)
+
+        self.groupBox_2 = QGroupBox(self.dockWidgetContents_4)
+        self.groupBox_2.setObjectName(u"groupBox_2")
+        self.gridLayout_20 = QGridLayout(self.groupBox_2)
+        self.gridLayout_20.setObjectName(u"gridLayout_20")
+        self.label_108 = QLabel(self.groupBox_2)
+        self.label_108.setObjectName(u"label_108")
+
+        self.gridLayout_20.addWidget(self.label_108, 6, 0, 1, 1)
+
+        self.label_43 = QLabel(self.groupBox_2)
+        self.label_43.setObjectName(u"label_43")
+
+        self.gridLayout_20.addWidget(self.label_43, 4, 0, 1, 1)
+
+        self.spinBox_circular_radius_nm = sciSpinBox(self.groupBox_2)
+        self.spinBox_circular_radius_nm.setObjectName(u"spinBox_circular_radius_nm")
+        self.spinBox_circular_radius_nm.setKeyboardTracking(False)
+        self.spinBox_circular_radius_nm.setDecimals(3)
+        self.spinBox_circular_radius_nm.setMinimum(-1000000.000000000000000)
+        self.spinBox_circular_radius_nm.setMaximum(1000000.000000000000000)
+        self.spinBox_circular_radius_nm.setValue(0.000000000000000)
+
+        self.gridLayout_20.addWidget(self.spinBox_circular_radius_nm, 6, 1, 1, 1)
+
+        self.label_110 = QLabel(self.groupBox_2)
+        self.label_110.setObjectName(u"label_110")
+
+        self.gridLayout_20.addWidget(self.label_110, 5, 0, 1, 1)
+
+        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_20.addItem(self.horizontalSpacer_14, 4, 2, 1, 1)
+
+        self.label_109 = QLabel(self.groupBox_2)
+        self.label_109.setObjectName(u"label_109")
+
+        self.gridLayout_20.addWidget(self.label_109, 6, 2, 1, 1)
+
+        self.spinBox_circular_repetition = QSpinBox(self.groupBox_2)
+        self.spinBox_circular_repetition.setObjectName(u"spinBox_circular_repetition")
+        self.spinBox_circular_repetition.setMinimum(1)
+        self.spinBox_circular_repetition.setMaximum(999999)
+        self.spinBox_circular_repetition.setValue(1)
+
+        self.gridLayout_20.addWidget(self.spinBox_circular_repetition, 5, 1, 1, 1)
+
+        self.spinBox_circular_points = QSpinBox(self.groupBox_2)
+        self.spinBox_circular_points.setObjectName(u"spinBox_circular_points")
+        self.spinBox_circular_points.setMinimum(1)
+        self.spinBox_circular_points.setMaximum(32)
+        self.spinBox_circular_points.setValue(1)
+
+        self.gridLayout_20.addWidget(self.spinBox_circular_points, 4, 1, 1, 1)
+
+        self.gridLayout_64 = QGridLayout()
+        self.gridLayout_64.setObjectName(u"gridLayout_64")
+        self.checkBox_circular = QCheckBox(self.groupBox_2)
+        self.checkBox_circular.setObjectName(u"checkBox_circular")
+
+        self.gridLayout_64.addWidget(self.checkBox_circular, 0, 0, 1, 1)
+
+        self.checkBox_lissajous = QCheckBox(self.groupBox_2)
+        self.checkBox_lissajous.setObjectName(u"checkBox_lissajous")
+
+        self.gridLayout_64.addWidget(self.checkBox_lissajous, 1, 0, 1, 1)
+
+        self.spinBox_lissajous_omega_y = QSpinBox(self.groupBox_2)
+        self.spinBox_lissajous_omega_y.setObjectName(u"spinBox_lissajous_omega_y")
+        self.spinBox_lissajous_omega_y.setEnabled(False)
+        self.spinBox_lissajous_omega_y.setMaximumSize(QSize(55, 16777215))
+        self.spinBox_lissajous_omega_y.setMinimum(1)
+        self.spinBox_lissajous_omega_y.setMaximum(32)
+        self.spinBox_lissajous_omega_y.setValue(1)
+
+        self.gridLayout_64.addWidget(self.spinBox_lissajous_omega_y, 1, 4, 1, 1)
+
+        self.spinBox_lissajous_omega_x = QSpinBox(self.groupBox_2)
+        self.spinBox_lissajous_omega_x.setObjectName(u"spinBox_lissajous_omega_x")
+        self.spinBox_lissajous_omega_x.setEnabled(False)
+        self.spinBox_lissajous_omega_x.setMaximumSize(QSize(55, 16777215))
+        self.spinBox_lissajous_omega_x.setMinimum(1)
+        self.spinBox_lissajous_omega_x.setMaximum(32)
+        self.spinBox_lissajous_omega_x.setValue(1)
+
+        self.gridLayout_64.addWidget(self.spinBox_lissajous_omega_x, 1, 2, 1, 1)
+
+        self.label_lissajousOmegaY = QLabel(self.groupBox_2)
+        self.label_lissajousOmegaY.setObjectName(u"label_lissajousOmegaY")
+
+        self.gridLayout_64.addWidget(self.label_lissajousOmegaY, 1, 3, 1, 1)
+
+        self.label_lissajousOmegaX = QLabel(self.groupBox_2)
+        self.label_lissajousOmegaX.setObjectName(u"label_lissajousOmegaX")
+
+        self.gridLayout_64.addWidget(self.label_lissajousOmegaX, 1, 1, 1, 1)
+
+        self.label_lissajousPhase = QLabel(self.groupBox_2)
+        self.label_lissajousPhase.setObjectName(u"label_lissajousPhase")
+
+        self.gridLayout_64.addWidget(self.label_lissajousPhase, 2, 1, 1, 1)
+
+        self.spinBox_lissajous_phase_deg = QSpinBox(self.groupBox_2)
+        self.spinBox_lissajous_phase_deg.setObjectName(u"spinBox_lissajous_phase_deg")
+        self.spinBox_lissajous_phase_deg.setEnabled(False)
+        self.spinBox_lissajous_phase_deg.setMaximumSize(QSize(72, 16777215))
+        self.spinBox_lissajous_phase_deg.setMinimum(-180)
+        self.spinBox_lissajous_phase_deg.setMaximum(180)
+        self.spinBox_lissajous_phase_deg.setValue(0)
+
+        self.gridLayout_64.addWidget(self.spinBox_lissajous_phase_deg, 2, 2, 1, 1)
+
+        self.label_lissajousPhase_2 = QLabel(self.groupBox_2)
+        self.label_lissajousPhase_2.setObjectName(u"label_lissajousPhase_2")
+
+        self.gridLayout_64.addWidget(self.label_lissajousPhase_2, 2, 3, 1, 1)
+
+        self.spinBox_lissajous_firstposition = QSpinBox(self.groupBox_2)
+        self.spinBox_lissajous_firstposition.setObjectName(u"spinBox_lissajous_firstposition")
+        self.spinBox_lissajous_firstposition.setEnabled(False)
+        self.spinBox_lissajous_firstposition.setMaximumSize(QSize(72, 16777215))
+        self.spinBox_lissajous_firstposition.setMinimum(0)
+        self.spinBox_lissajous_firstposition.setMaximum(32)
+        self.spinBox_lissajous_firstposition.setValue(0)
+
+        self.gridLayout_64.addWidget(self.spinBox_lissajous_firstposition, 2, 4, 1, 1)
+
+
+        self.gridLayout_20.addLayout(self.gridLayout_64, 0, 0, 1, 3)
+
+
+        self.gridLayout_27.addWidget(self.groupBox_2, 1, 0, 2, 1)
 
         self.dockWidget_activatefifo.setWidget(self.dockWidgetContents_4)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_activatefifo)
@@ -2713,7 +2801,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_5.setWidgetResizable(True)
         self.scrollAreaWidgetContents_6 = QWidget()
         self.scrollAreaWidgetContents_6.setObjectName(u"scrollAreaWidgetContents_6")
-        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 436, 304))
+        self.scrollAreaWidgetContents_6.setGeometry(QRect(0, 0, 466, 322))
         self.gridLayout_67 = QGridLayout(self.scrollAreaWidgetContents_6)
         self.gridLayout_67.setObjectName(u"gridLayout_67")
         self.checkBox_correlationMatrix = QCheckBox(self.scrollAreaWidgetContents_6)
@@ -2939,7 +3027,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 439, 186))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 498, 206))
         self.gridLayout_63 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_63.setObjectName(u"gridLayout_63")
         self.groupBox_4 = QGroupBox(self.scrollAreaWidgetContents)
@@ -3102,7 +3190,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 448, 120))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 466, 108))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -3147,7 +3235,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 436, 72))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 466, 74))
         self.gridLayout_65 = QGridLayout(self.scrollAreaWidgetContents_3)
         self.gridLayout_65.setObjectName(u"gridLayout_65")
         self.gridLayout_AO = QGridLayout()
@@ -3619,7 +3707,16 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_circular.setTabText(self.tabWidget_circular.indexOf(self.tab_10), QCoreApplication.translate("MainWindowDesign", u"Read Conf. FPGA", None))
         self.tabWidget_circular.setTabText(self.tabWidget_circular.indexOf(self.tab_11), QCoreApplication.translate("MainWindowDesign", u"Conf. FPGA dict.", None))
         self.tabWidget_circular.setTabText(self.tabWidget_circular.indexOf(self.tab_3), QCoreApplication.translate("MainWindowDesign", u"Conf. GUI dict.", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_updateCircularView.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Refresh the preview and circular points from the current scan configuration", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_updateCircularView.setText(QCoreApplication.translate("MainWindowDesign", u"Update Circular View", None))
         self.tabWidget_circular.setTabText(self.tabWidget_circular.indexOf(self.tab_4), QCoreApplication.translate("MainWindowDesign", u"Circular", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_resetMonitor.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Remove all registers and traces from the monitor", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_resetMonitor.setText(QCoreApplication.translate("MainWindowDesign", u"Reset monitored registers", None))
+        self.tabWidget_circular.setTabText(self.tabWidget_circular.indexOf(self.tab_monitor), QCoreApplication.translate("MainWindowDesign", u"Monitor", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_statusmonitor), QCoreApplication.translate("MainWindowDesign", u"Status", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_terminal), QCoreApplication.translate("MainWindowDesign", u"Terminal", None))
         self.toolButton_ttm_executable_path.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
@@ -3990,18 +4087,6 @@ class Ui_MainWindowDesign(object):
 #endif // QT_CONFIG(tooltip)
         self.checkBoxLockRatio.setText(QCoreApplication.translate("MainWindowDesign", u"Lock", None))
         self.dockWidget_activatefifo.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Adv.", None))
-        self.groupBox_2.setTitle(QCoreApplication.translate("MainWindowDesign", u"Circular Motion", None))
-        self.label_108.setText(QCoreApplication.translate("MainWindowDesign", u"Radius", None))
-        self.label_109.setText(QCoreApplication.translate("MainWindowDesign", u"[nm]", None))
-        self.label_43.setText(QCoreApplication.translate("MainWindowDesign", u"Number of points", None))
-#if QT_CONFIG(tooltip)
-        self.spinBox_circular_radius_nm.setToolTip(QCoreApplication.translate("MainWindowDesign", u"X position \u00b5m", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.checkBox_circular.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_circular.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
-        self.label_110.setText(QCoreApplication.translate("MainWindowDesign", u"Repetition", None))
         self.groupBox_14.setTitle(QCoreApplication.translate("MainWindowDesign", u"Snake walk", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_snake.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Use for the scanning a &quot;snake-walk&quot; instead of a normal &quot;raster-scan&quot;</p></body></html>", None))
@@ -4009,6 +4094,28 @@ class Ui_MainWindowDesign(object):
         self.checkBox_snake.setText(QCoreApplication.translate("MainWindowDesign", u"Enable", None))
         self.label_35.setText(QCoreApplication.translate("MainWindowDesign", u"Delay", None))
         self.label_125.setText(QCoreApplication.translate("MainWindowDesign", u"[px]", None))
+        self.groupBox_2.setTitle(QCoreApplication.translate("MainWindowDesign", u"Circular Motion", None))
+        self.label_108.setText(QCoreApplication.translate("MainWindowDesign", u"Radius", None))
+        self.label_43.setText(QCoreApplication.translate("MainWindowDesign", u"Number of points", None))
+#if QT_CONFIG(tooltip)
+        self.spinBox_circular_radius_nm.setToolTip(QCoreApplication.translate("MainWindowDesign", u"X position \u00b5m", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_110.setText(QCoreApplication.translate("MainWindowDesign", u"Repetition", None))
+        self.label_109.setText(QCoreApplication.translate("MainWindowDesign", u"[nm]", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_circular.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>This use instead of the scanning position the circular motion. This must be activated AFTER the circular motion is defined.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_circular.setText(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_lissajous.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Use a Lissajous trajectory instead of a circle", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_lissajous.setText(QCoreApplication.translate("MainWindowDesign", u"Lissajous", None))
+        self.label_lissajousOmegaY.setText(QCoreApplication.translate("MainWindowDesign", u"\u03c9y", None))
+        self.label_lissajousOmegaX.setText(QCoreApplication.translate("MainWindowDesign", u"\u03c9x", None))
+        self.label_lissajousPhase.setText(QCoreApplication.translate("MainWindowDesign", u"Phase", None))
+        self.spinBox_lissajous_phase_deg.setSuffix(QCoreApplication.translate("MainWindowDesign", u"\u00b0", None))
+        self.label_lissajousPhase_2.setText(QCoreApplication.translate("MainWindowDesign", u"First", None))
+        self.spinBox_lissajous_firstposition.setSuffix("")
         self.dockWidget_laser.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Laser configuration", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
         self.checkBox_laser1.setText(QCoreApplication.translate("MainWindowDesign", u"L2", None))
