@@ -3,6 +3,7 @@
 import numpy as np
 import multiprocessing as mp
 import re
+import time
 
 # from PySide6.QtCore import QObject
 
@@ -992,7 +993,39 @@ class McsManager():
         stop the FPGA
         """
         logger.debug("stopAcquisition.stop()")
-        self.fpga_handle.stop()
+        if self.fpga_handle is not None:
+            self.fpga_handle.stop()
+
+    def wait_for_fpga_idle(self, timeout=5.0, poll_interval=0.01):
+        """Wait until the scan state machine reports its idle state."""
+        if not self.is_connected or self.fpga_handle is None:
+            raise RuntimeError("The FPGA is not connected.")
+
+        deadline = time.monotonic() + float(timeout)
+        last_status = None
+        while time.monotonic() < deadline:
+            registers = self.fpga_handle.register_read(("FSM Status",))
+            last_status = registers.get("FSM Status")
+            self.registers_configuration["FSM Status"] = last_status
+            if last_status == 0:
+                return
+            time.sleep(float(poll_interval))
+
+        raise TimeoutError(
+            "FPGA FSM did not reach idle state 0 within "
+            f"{float(timeout):g} seconds (last status: {last_status!r})."
+        )
+
+    def quick_reset_fpga(self, timeout=5.0, poll_interval=0.01):
+        """Pulse the stop register and verify that the scan FSM becomes idle."""
+        if not self.is_connected or self.fpga_handle is None:
+            raise RuntimeError("The FPGA is not connected.")
+
+        self.fpga_handle.register_write_checked("stop", True)
+        self.registers_configuration["stop"] = True
+        self.fpga_handle.register_write_checked("stop", False)
+        self.registers_configuration["stop"] = False
+        self.wait_for_fpga_idle(timeout=timeout, poll_interval=poll_interval)
 
     def _stop_detector_receiver(self):
         if self.detector_receiver_process is None:
@@ -1002,7 +1035,7 @@ class McsManager():
         self.process_supervisor.stop("receiver", timeout=5)
         self.detector_receiver_process = None
 
-    def stopAcquisition(self):
+    def stopAcquisition(self, keep_fpga_loaded=False):
         """
         Stop the acquisition
         """
@@ -1010,7 +1043,8 @@ class McsManager():
         self._stop_detector_receiver()
         if self.dataProcess is not None:
             self.dataProcess.stop()
-        self.is_connected = False
+        if not keep_fpga_loaded:
+            self.is_connected = False
 
     def stopPreview(self):
         """Stop acquisition through the application coordinator."""

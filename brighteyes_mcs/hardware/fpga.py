@@ -154,23 +154,48 @@ class FpgaHandle(object):
         self.configuration["fpgarunning"].set()
 
     def stop(self):
-        self.configuration["stop_event"].set()
-        if self.fpga_handle_process is not None and self.fpga_handle_process.is_alive():
-            self.fpga_handle_process.terminate()
-        logger.debug("self.fpga_handle_process.join() stopped")
-        if self.nifpga_obj is not None:
-            self.nifpga_obj.abort()
-            self.nifpga_obj.reset()
-            self.nifpga_obj.close()
+        """Stop the control process and close every NI FPGA session."""
+        errors = []
 
-        logger.debug("nifpga_obj killed")
+        try:
+            self.configuration["stop_event"].set()
+        except Exception as error:
+            errors.append(error)
+            logger.exception("Could not signal the FPGA control process to stop")
 
-        if self.nifpga_obj2 is not None:
-            self.nifpga_obj2.abort()
-            self.nifpga_obj2.reset()
-            self.nifpga_obj2.close()
+        process = self.fpga_handle_process
+        self.fpga_handle_process = None
+        if process is not None:
+            try:
+                process.join(timeout=1.0)
+                if process.is_alive():
+                    process.terminate()
+                    process.join(timeout=1.0)
+            except Exception as error:
+                errors.append(error)
+                logger.exception("Could not stop the FPGA control process cleanly")
 
-        logger.debug("nifpga_obj2 killed")
+        for attribute_name in ("nifpga_obj", "nifpga_obj2"):
+            session = getattr(self, attribute_name, None)
+            setattr(self, attribute_name, None)
+            if session is None:
+                continue
+            for action_name in ("abort", "reset", "close"):
+                try:
+                    getattr(session, action_name)()
+                except Exception as error:
+                    errors.append(error)
+                    logger.exception(
+                        "NI FPGA session %s failed during %s",
+                        attribute_name,
+                        action_name,
+                    )
+
+        logger.debug("FPGA process and NI sessions stopped")
+        if errors:
+            raise RuntimeError(
+                f"FPGA shutdown completed with {len(errors)} error(s)."
+            ) from errors[0]
 
     # SLOW VERSION
     # def register_read(self, register, timeout=1000):
@@ -223,6 +248,13 @@ class FpgaHandle(object):
         except Exception as e:
             print("ERROR:", register, data, e)
         # self.configuration['queueRegisterWrite'].put({register: data})
+
+    def register_write_checked(self, register, data):
+        """Write a register and propagate hardware failures to the caller."""
+        if not detector_uses_nifpga_control(self.configuration["detector_model"]):
+            self.configuration["initial_registers"][register] = data
+            return
+        self.nifpga_obj.registers[register].write(data)
     #
     # def fifo_read(self, fifoname, timeout):
     #     self.configuration["queueFifoReadReq"].put(

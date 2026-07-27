@@ -580,6 +580,25 @@ class Ui_MainWindowDesign(object):
         self.tab_2.setObjectName(u"tab_2")
         self.gridLayout_36 = QGridLayout(self.tab_2)
         self.gridLayout_36.setObjectName(u"gridLayout_36")
+        self.horizontalLayout_boardActions = QHBoxLayout()
+        self.horizontalLayout_boardActions.setObjectName(u"horizontalLayout_boardActions")
+        self.pushButton_stopAll = QPushButton(self.tab_2)
+        self.pushButton_stopAll.setObjectName(u"pushButton_stopAll")
+
+        self.horizontalLayout_boardActions.addWidget(self.pushButton_stopAll)
+
+        self.checkBox_loadFirmwareOnce = QCheckBox(self.tab_2)
+        self.checkBox_loadFirmwareOnce.setObjectName(u"checkBox_loadFirmwareOnce")
+
+        self.horizontalLayout_boardActions.addWidget(self.checkBox_loadFirmwareOnce)
+
+        self.horizontalSpacer_boardActions = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_boardActions.addItem(self.horizontalSpacer_boardActions)
+
+
+        self.gridLayout_36.addLayout(self.horizontalLayout_boardActions, 0, 0, 1, 1)
+
         self.gridLayout_24 = QGridLayout()
         self.gridLayout_24.setObjectName(u"gridLayout_24")
         self.label_92 = QLabel(self.tab_2)
@@ -3637,6 +3656,14 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_16), QCoreApplication.translate("MainWindowDesign", u"u(TTM)", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_pi_timetagging), QCoreApplication.translate("MainWindowDesign", u"PI-Timetagging", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"TimeTagging", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_stopAll.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Pulse the FPGA stop register and wait for FSM Status 0", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_stopAll.setText(QCoreApplication.translate("MainWindowDesign", u"Stop All", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_loadFirmwareOnce.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Keep the FPGA firmware loaded between preview and acquisition runs", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_loadFirmwareOnce.setText(QCoreApplication.translate("MainWindowDesign", u"Experimental: load the firmware only once", None))
         self.label_92.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA 2nd Addr.", None))
         self.pushButton_FPGA2_file_selection.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
         self.lineEdit_fpga2bitfile.setText("")

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import atexit
 import os
 import platform
 import sys
@@ -33,8 +34,25 @@ def main(argv=None):
     app.setStyle("Fusion")
     app.styleHints().setColorScheme(Qt.ColorScheme.Dark)
     window = MainWindow(argv)
-    window.show()
-    return app.exec()
+    original_excepthook = sys.excepthook
+
+    def shutdown_after_unhandled_exception(exception_type, exception, traceback):
+        try:
+            window.shutdown()
+        finally:
+            app.exit(1)
+            original_excepthook(exception_type, exception, traceback)
+
+    sys.excepthook = shutdown_after_unhandled_exception
+    app.aboutToQuit.connect(window.shutdown)
+    atexit.register(window.shutdown)
+    try:
+        window.show()
+        return app.exec()
+    finally:
+        window.shutdown()
+        atexit.unregister(window.shutdown)
+        sys.excepthook = original_excepthook
 
 
 __all__ = ["main"]

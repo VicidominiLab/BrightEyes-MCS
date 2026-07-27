@@ -909,6 +909,43 @@
              <string>Board Configuration</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_36">
+             <item row="0" column="0">
+              <layout class="QHBoxLayout" name="horizontalLayout_boardActions">
+               <item>
+                <widget class="QPushButton" name="pushButton_stopAll">
+                 <property name="toolTip">
+                  <string>Pulse the FPGA stop register and wait for FSM Status 0</string>
+                 </property>
+                 <property name="text">
+                  <string>Stop All</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="checkBox_loadFirmwareOnce">
+                 <property name="toolTip">
+                  <string>Keep the FPGA firmware loaded between preview and acquisition runs</string>
+                 </property>
+                 <property name="text">
+                  <string>Experimental: load the firmware only once</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_boardActions">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
              <item row="1" column="0">
               <layout class="QGridLayout" name="gridLayout_24">
                <item row="12" column="0">

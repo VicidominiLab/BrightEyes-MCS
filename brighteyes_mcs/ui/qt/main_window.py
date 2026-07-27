@@ -130,6 +130,7 @@ class MainWindow(QMainWindow):
         PROGRAM_STATE_PREVIEW,
         PROGRAM_STATE_ACQUISITION_DONE,
     )
+    FPGA_IDLE_TIMEOUT_SECONDS = 5.0
 
     def __init__(self, args=None):
         install_scientific_locale()
@@ -202,6 +203,8 @@ class MainWindow(QMainWindow):
         self.preview_run_id = 0
         self.completed_acquisition_count = 0
         self._pending_program_state_after_stop = None
+        self._shutdown_started = False
+        self._shutdown_complete = False
         self.raw_stream_mode = False
         self.raw_stream_output_files = {}
         self.console_widget = None
@@ -277,6 +280,10 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_saveCfg.clicked.connect(self.SaveConfigurationCmd)
         self.ui.pushButton_convertRawAcquisition.clicked.connect(
             self.cmd_convertRawAcquisition
+        )
+        self.ui.pushButton_stopAll.clicked.connect(self.stopAll)
+        self.ui.checkBox_loadFirmwareOnce.toggled.connect(
+            self.loadFirmwareOnceChanged
         )
 
         # self.ui.listWidget.clicked.connect(self.listwidget_click)
@@ -1293,6 +1300,13 @@ class MainWindow(QMainWindow):
             "bitFile2_sign",
             str,
             self.ui.label_bitfile_signature_2,
+            False,
+        )
+
+        configuration_helper["load_firmware_once"] = (
+            "Experimental: load the firmware only once",
+            bool,
+            self.ui.checkBox_loadFirmwareOnce,
             False,
         )
 
@@ -2465,47 +2479,65 @@ class MainWindow(QMainWindow):
                     self.positionSettingsChanged()
 
     @Slot()
-    def closeEvent(self, event):
-        """
-        Overridden closeEvent method for closing the application
-        """
+    def shutdown(self):
+        """Best-effort shutdown that always closes the NI FPGA sessions."""
+        if self._shutdown_complete or self._shutdown_started:
+            return
+        self._shutdown_started = True
+
         logger.debug("=======================")
         logger.debug("   CLOSE EVERYTHING")
         logger.debug("=======================")
 
-        logger.debug("self.mcs_manager.stopPreview()")
+        if self.mcs_manager.is_connected:
+            logger.debug("Quick-resetting FPGA before shutdown")
+            try:
+                self.mcs_manager.quick_reset_fpga(
+                    timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
+                )
+            except Exception:
+                logger.exception(
+                    "FPGA quick reset failed during shutdown; "
+                    "continuing with forced session shutdown"
+                )
+
         try:
             self.mcs_manager.stopPreview()
-        except Exception as e:
-            logger.debug("%s %s", "not present", repr(e))
+        except Exception:
+            logger.exception("Could not stop acquisition/preview workers")
 
-        logger.debug("self.timerPreviewImg.stop()")
         try:
             self.timerPreviewImg.stop()
-        except Exception as e:
-            logger.debug("%s %s", "not present", repr(e))
+        except Exception:
+            logger.exception("Could not stop the preview timer")
 
-        logger.debug("self.mcs_manager.stopAcquisition()")
         try:
             self.mcs_manager.stopAcquisition()
-        except Exception as e:
-            logger.debug("%s %s", "not present", repr(e))
+        except Exception:
+            logger.exception("Could not stop acquisition processes")
 
-        logger.debug("self.mcs_manager.stopPreview()")
-        try:
-            self.mcs_manager.stopPreview()
-        except Exception as e:
-            logger.debug("%s %s", "not present", repr(e))
-
-        logger.debug("self.ttm_remote_manager.close()")
         try:
             if self.ttm_remote_manager is not None:
                 self.ttm_remote_manager.close()
                 self.ttm_remote_manager = None
-        except Exception as e:
-            logger.debug("%s %s", "not present", repr(e))
+        except Exception:
+            logger.exception("Could not close the TTM manager")
+
+        try:
+            self.mcs_manager.stopFPGA()
+        except Exception:
+            logger.exception("FPGA session shutdown reported errors")
+        finally:
+            self.mcs_manager.is_connected = False
+            self._shutdown_complete = True
+            self._shutdown_started = False
 
         logger.debug("Now every process should be closed.")
+
+    @Slot()
+    def closeEvent(self, event):
+        """Shut down hardware and workers before accepting the close event."""
+        self.shutdown()
         event.accept()
 
         logger.debug("Now every process should be closed,Really! \n=============\n=== CIAO! ===\n=============")
@@ -5146,6 +5178,28 @@ Have fun!
         """
         self.stop()
 
+    @Slot()
+    def stopAll(self):
+        """Quick-reset the FPGA scan state machine without unloading firmware."""
+        try:
+            self.mcs_manager.quick_reset_fpga(
+                timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
+            )
+            self.ui.statusBar.showMessage("FPGA is idle.", 5000)
+        except Exception as error:
+            logger.exception("FPGA quick reset failed")
+            QMessageBox.critical(self, "FPGA quick reset failed", str(error))
+
+    @Slot(bool)
+    def loadFirmwareOnceChanged(self, enabled):
+        """Restore normal reload behavior when experimental mode is disabled."""
+        if enabled or not self.mcs_manager.is_connected:
+            return
+        if self.started_normal or self.started_preview:
+            return
+        self.mcs_manager.stopFPGA()
+        self.mcs_manager.stopAcquisition()
+
     # @Slot()
     # def connectButtonClicked(self):
     #     self.connectCmd()
@@ -5758,6 +5812,7 @@ Have fun!
         self.ui.pushButton_previewStart.setEnabled(False)
         self.ui.pushButton_acquisitionStart.setEnabled(False)
         self.ui.pushButton_stop.setEnabled(True)
+        self.ui.checkBox_loadFirmwareOnce.setEnabled(False)
 
         # Ensure FPGA is connected
         if not self.mcs_manager.is_connected:
@@ -5765,6 +5820,10 @@ Have fun!
             self.connectFPGA()
         else:
             logger.debug("FPGA Already connected")
+            if self.ui.checkBox_loadFirmwareOnce.isChecked():
+                self.mcs_manager.wait_for_fpga_idle(
+                    timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
+                )
 
         # Configure preview settings
         self.updatePreviewConfiguration()
@@ -6305,13 +6364,32 @@ Have fun!
         stop the acquisition
         """
         logger.debug("stopAcquisition")
-        self.sendCmdStop()
-        self.mcs_manager.stopPreview()
-        self.timerPreviewImg.stop()
-        logger.debug("self.timerPreviewImg.stop()")
-        self.mcs_manager.stopFPGA()
-        self.mcs_manager.stopAcquisition()
-        self.mcs_manager.stopPreview()
+        keep_fpga_loaded = self.ui.checkBox_loadFirmwareOnce.isChecked()
+        reset_error = None
+        try:
+            if keep_fpga_loaded:
+                self.mcs_manager.quick_reset_fpga(
+                    timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
+                )
+            else:
+                self.sendCmdStop()
+        except Exception as error:
+            reset_error = error
+        finally:
+            self.mcs_manager.stopPreview()
+            self.timerPreviewImg.stop()
+            logger.debug("self.timerPreviewImg.stop()")
+            if not keep_fpga_loaded:
+                self.mcs_manager.stopFPGA()
+            self.mcs_manager.stopAcquisition(
+                keep_fpga_loaded=keep_fpga_loaded and reset_error is None
+            )
+            self.mcs_manager.stopPreview()
+
+        if reset_error is not None:
+            if keep_fpga_loaded:
+                self.mcs_manager.stopFPGA()
+            raise reset_error
 
     @Slot()
     def stop(self):
@@ -6341,6 +6419,7 @@ Have fun!
         self.ui.pushButton_previewStart.setEnabled(True)
         self.ui.pushButton_acquisitionStart.setEnabled(True)
         self.ui.pushButton_stop.setEnabled(False)
+        self.ui.checkBox_loadFirmwareOnce.setEnabled(True)
 
         self.ui.checkBox_fifo_digital.setEnabled(True)
         self.ui.checkBox_fifo_analog.setEnabled(True)
@@ -6379,8 +6458,12 @@ Have fun!
         """
         send the run command to the FPGA
         """
-        self.setRegistersDict({"stop": False, "Run": False})
-        self.setRegistersDict({"Run": True})
+        if self.ui.checkBox_loadFirmwareOnce.isChecked():
+            self.setRegistersDict({"stop": False, "Run": True})
+            self.setRegistersDict({"Run": False})
+        else:
+            self.setRegistersDict({"stop": False, "Run": False})
+            self.setRegistersDict({"Run": True})
 
     def sendCmdStop(self):
         """
