@@ -288,6 +288,9 @@ class MainWindow(QMainWindow):
         self.ui.checkBox_lissajous.toggled.connect(
             self.lissajousModeChanged
         )
+        self.ui.checkBox_lissajous_opencurve.toggled.connect(
+            self.lissajousFrequencyChanged
+        )
         self.ui.spinBox_lissajous_omega_x.valueChanged.connect(
             self.lissajousFrequencyChanged
         )
@@ -894,6 +897,12 @@ class MainWindow(QMainWindow):
             "Lissajous Curve",
             bool,
             self.ui.checkBox_lissajous,
+            True,
+        )
+        configuration_helper["lissajous_open_curve"] = (
+            "Open Lissajous Curve",
+            bool,
+            self.ui.checkBox_lissajous_opencurve,
             True,
         )
         configuration_helper["lissajous_omega_x"] = (
@@ -3600,6 +3609,9 @@ class MainWindow(QMainWindow):
             "projection": projection,
             "point_count": point_count,
             "lissajous_active": self.ui.checkBox_lissajous.isChecked(),
+            "lissajous_open_curve": (
+                self.ui.checkBox_lissajous_opencurve.isChecked()
+            ),
             "omega_x": self.ui.spinBox_lissajous_omega_x.value(),
             "omega_y": self.ui.spinBox_lissajous_omega_y.value(),
             "phase_deg": self.ui.spinBox_lissajous_phase_deg.value(),
@@ -3894,6 +3906,7 @@ class MainWindow(QMainWindow):
     @Slot(bool)
     def lissajousModeChanged(self, enabled):
         """Enable Lissajous controls or restore the standard unit circle."""
+        self.ui.checkBox_lissajous_opencurve.setEnabled(enabled)
         self.ui.spinBox_lissajous_omega_x.setEnabled(enabled)
         self.ui.spinBox_lissajous_omega_y.setEnabled(enabled)
         self.ui.spinBox_lissajous_phase_deg.setEnabled(enabled)
@@ -3928,6 +3941,7 @@ class MainWindow(QMainWindow):
         ):
             self.circularMotionActivateChanged()
 
+    @Slot(bool)
     @Slot(int)
     def lissajousFrequencyChanged(self, _value):
         """Regenerate the active trajectory after an omega change."""
@@ -3949,11 +3963,28 @@ class MainWindow(QMainWindow):
         omega_y=1,
         phase_deg=0,
         first_position=0,
+        open_curve=False,
     ):
         """Return a rotated trajectory with the selected point at index zero."""
-        t = np.linspace(0, 2 * np.pi, int(point_count) + 1)[:-1]
-        x_unrotated = np.cos(int(omega_x) * t) * float(radius)
-        y_unrotated = np.sin(int(omega_y) * t) * float(radius)
+        point_count = int(point_count)
+        if point_count <= 0:
+            return np.asarray([], dtype=float), np.asarray([], dtype=float)
+
+        if open_curve:
+            # The odd x frequency gives opposite x coordinates at the two
+            # endpoints, while the integer y frequency returns y to zero.
+            t = np.linspace(0.0, 1.0, point_count)
+            x_unrotated = (
+                -np.cos((2 * int(omega_x) + 1) * np.pi * t)
+                * float(radius)
+            )
+            y_unrotated = (
+                np.sin(int(omega_y) * np.pi * t) * float(radius)
+            )
+        else:
+            t = np.linspace(0, 2 * np.pi, point_count + 1)[:-1]
+            x_unrotated = np.cos(int(omega_x) * t) * float(radius)
+            y_unrotated = np.sin(int(omega_y) * t) * float(radius)
         phase_rad = np.deg2rad(float(phase_deg))
         cos_phase = np.cos(phase_rad)
         sin_phase = np.sin(phase_rad)
@@ -3961,9 +3992,7 @@ class MainWindow(QMainWindow):
             x_unrotated * cos_phase - y_unrotated * sin_phase,
             x_unrotated * sin_phase + y_unrotated * cos_phase,
         )
-        if int(point_count) <= 0:
-            return x_values
-        first_index = int(first_position) % int(point_count)
+        first_index = int(first_position) % point_count
         return (
             np.roll(x_values[0], -first_index),
             np.roll(x_values[1], -first_index),
@@ -3972,6 +4001,7 @@ class MainWindow(QMainWindow):
     def updateLissajousMiniPlot(self):
         """Draw a normalized dense preview of the selected trajectory."""
         if self.ui.checkBox_lissajous.isChecked():
+            open_curve = self.ui.checkBox_lissajous_opencurve.isChecked()
             omega_x = self.ui.spinBox_lissajous_omega_x.value()
             omega_y = self.ui.spinBox_lissajous_omega_y.value()
             phase_deg = self.ui.spinBox_lissajous_phase_deg.value()
@@ -3979,6 +4009,7 @@ class MainWindow(QMainWindow):
                 self.ui.spinBox_lissajous_firstposition.value()
             )
         else:
+            open_curve = False
             omega_x = 1
             omega_y = 1
             phase_deg = 0
@@ -4005,11 +4036,15 @@ class MainWindow(QMainWindow):
             omega_x=omega_x,
             omega_y=omega_y,
             phase_deg=phase_deg,
+            open_curve=open_curve,
         )
-        self.lissajous_mini_curve.setData(
-            np.append(x_values, x_values[0]),
-            np.append(y_values, y_values[0]),
-        )
+        if open_curve:
+            self.lissajous_mini_curve.setData(x_values, y_values)
+        else:
+            self.lissajous_mini_curve.setData(
+                np.append(x_values, x_values[0]),
+                np.append(y_values, y_values[0]),
+            )
         sampled_x, sampled_y = self._lissajous_offsets(
             radius=1.0,
             point_count=selected_point_count,
@@ -4017,6 +4052,7 @@ class MainWindow(QMainWindow):
             omega_y=omega_y,
             phase_deg=phase_deg,
             first_position=first_position,
+            open_curve=open_curve,
         )
         self.lissajous_mini_points.setData(x=sampled_x, y=sampled_y)
         self.lissajous_mini_first_point.setData(
@@ -4036,6 +4072,7 @@ class MainWindow(QMainWindow):
         calib_zz = self.ui.spinBox_calib_z.value()
 
         if self.ui.checkBox_lissajous.isChecked():
+            open_curve = self.ui.checkBox_lissajous_opencurve.isChecked()
             omega_x = self.ui.spinBox_lissajous_omega_x.value()
             omega_y = self.ui.spinBox_lissajous_omega_y.value()
             phase_deg = self.ui.spinBox_lissajous_phase_deg.value()
@@ -4043,6 +4080,7 @@ class MainWindow(QMainWindow):
                 self.ui.spinBox_lissajous_firstposition.value()
             )
         else:
+            open_curve = False
             omega_x = 1
             omega_y = 1
             phase_deg = 0
@@ -4054,6 +4092,7 @@ class MainWindow(QMainWindow):
             omega_y,
             phase_deg,
             first_position,
+            open_curve=open_curve,
         )
         self.Z_array_um = np.zeros(circular_points)
 

@@ -249,6 +249,26 @@ def test_lissajous_first_position_rotates_the_output_array():
     np.testing.assert_allclose(y_offsets, [1.0, 0.0, -1.0, 0.0], atol=1e-12)
 
 
+def test_open_lissajous_uses_edge_to_edge_trajectory():
+    x_offsets, y_offsets = MainWindow._lissajous_offsets(
+        radius=2.0,
+        point_count=5,
+        omega_x=1,
+        omega_y=2,
+        open_curve=True,
+    )
+
+    t = np.linspace(0.0, 1.0, 5)
+    np.testing.assert_allclose(
+        x_offsets, -2.0 * np.cos(3 * np.pi * t), atol=1e-12
+    )
+    np.testing.assert_allclose(
+        y_offsets, 2.0 * np.sin(2 * np.pi * t), atol=1e-12
+    )
+    np.testing.assert_allclose(x_offsets[[0, -1]], [-2.0, 2.0])
+    np.testing.assert_allclose(y_offsets[[0, -1]], [0.0, 0.0], atol=1e-12)
+
+
 def test_disabling_lissajous_restores_unit_frequencies():
     window = MainWindow.__new__(MainWindow)
     omega_x = MagicMock()
@@ -261,6 +281,7 @@ def test_disabling_lissajous_restores_unit_frequencies():
     first_position.blockSignals.return_value = False
     window.updateLissajousMiniPlot = MagicMock()
     window.ui = SimpleNamespace(
+        checkBox_lissajous_opencurve=MagicMock(),
         spinBox_lissajous_omega_x=omega_x,
         spinBox_lissajous_omega_y=omega_y,
         spinBox_lissajous_phase_deg=phase,
@@ -273,6 +294,9 @@ def test_disabling_lissajous_restores_unit_frequencies():
     window.lissajousModeChanged(False)
 
     omega_x.setEnabled.assert_called_once_with(False)
+    window.ui.checkBox_lissajous_opencurve.setEnabled.assert_called_once_with(
+        False
+    )
     omega_y.setEnabled.assert_called_once_with(False)
     omega_x.setValue.assert_called_once_with(1)
     omega_y.setValue.assert_called_once_with(1)
@@ -287,6 +311,9 @@ def test_lissajous_mini_plot_marks_selected_fpga_sample_points():
     window.ui = SimpleNamespace(
         checkBox_lissajous=MagicMock(
             isChecked=MagicMock(return_value=True)
+        ),
+        checkBox_lissajous_opencurve=MagicMock(
+            isChecked=MagicMock(return_value=False)
         ),
         spinBox_lissajous_omega_x=MagicMock(
             value=MagicMock(return_value=1)
@@ -367,6 +394,9 @@ def test_circular_points_replicate_at_each_raster_pixel_center():
         spinBox_nframe=MagicMock(value=MagicMock(return_value=9)),
         spinBox_circular_points=MagicMock(value=MagicMock(return_value=2)),
         checkBox_lissajous=MagicMock(
+            isChecked=MagicMock(return_value=False)
+        ),
+        checkBox_lissajous_opencurve=MagicMock(
             isChecked=MagicMock(return_value=False)
         ),
         spinBox_lissajous_omega_x=MagicMock(

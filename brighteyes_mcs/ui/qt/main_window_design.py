@@ -2177,7 +2177,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollAreaWidgetContents_7 = QWidget()
         self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
-        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 498, 146))
+        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 512, 146))
         self.gridLayout_74 = QGridLayout(self.scrollAreaWidgetContents_7)
         self.gridLayout_74.setObjectName(u"gridLayout_74")
         self.groupBox = QGroupBox(self.scrollAreaWidgetContents_7)
@@ -2561,6 +2561,12 @@ class Ui_MainWindowDesign(object):
         self.spinBox_lissajous_firstposition.setValue(0)
 
         self.gridLayout_64.addWidget(self.spinBox_lissajous_firstposition, 2, 4, 1, 1)
+
+        self.checkBox_lissajous_opencurve = QCheckBox(self.groupBox_2)
+        self.checkBox_lissajous_opencurve.setObjectName(u"checkBox_lissajous_opencurve")
+        self.checkBox_lissajous_opencurve.setEnabled(False)
+
+        self.gridLayout_64.addWidget(self.checkBox_lissajous_opencurve, 2, 0, 1, 1)
 
 
         self.gridLayout_20.addLayout(self.gridLayout_64, 0, 0, 1, 3)
@@ -3027,7 +3033,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 498, 206))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 512, 206))
         self.gridLayout_63 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_63.setObjectName(u"gridLayout_63")
         self.groupBox_4 = QGroupBox(self.scrollAreaWidgetContents)
@@ -3628,7 +3634,7 @@ class Ui_MainWindowDesign(object):
         self.lineEdit_fpgabitfile.textChanged.connect(MainWindowDesign.bitfile_changed)
         self.lineEdit_fpga2bitfile.textChanged.connect(MainWindowDesign.bitfile_changed)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(5)
         self.tabWidget_circular.setCurrentIndex(2)
         self.tabWidget_3.setCurrentIndex(1)
         self.tabWidget_2.setCurrentIndex(0)
@@ -4116,6 +4122,10 @@ class Ui_MainWindowDesign(object):
         self.spinBox_lissajous_phase_deg.setSuffix(QCoreApplication.translate("MainWindowDesign", u"\u00b0", None))
         self.label_lissajousPhase_2.setText(QCoreApplication.translate("MainWindowDesign", u"First", None))
         self.spinBox_lissajous_firstposition.setSuffix("")
+#if QT_CONFIG(tooltip)
+        self.checkBox_lissajous_opencurve.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Use an open, edge-to-edge Lissajous trajectory", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_lissajous_opencurve.setText(QCoreApplication.translate("MainWindowDesign", u"Open curve", None))
         self.dockWidget_laser.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Laser configuration", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
         self.checkBox_laser1.setText(QCoreApplication.translate("MainWindowDesign", u"L2", None))
