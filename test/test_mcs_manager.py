@@ -92,14 +92,14 @@ class TestMcsManager(unittest.TestCase):
         instance.set_do_not_save(False)
         instance.do_not_save_event.clear.assert_called()
 
-    def test_set_activate_DFD_sets_DFD_Activate(self):
+    def test_set_dfd_enable_sets_dfd_enable(self):
         instance = McsManager()
 
-        instance.set_activate_DFD(True)
-        self.assertTrue(instance.DFD_Activate)
+        instance.set_dfd_enable(True)
+        self.assertTrue(instance.dfd_enable)
 
-        instance.set_activate_DFD(False)
-        self.assertFalse(instance.DFD_Activate)
+        instance.set_dfd_enable(False)
+        self.assertFalse(instance.dfd_enable)
 
     def test_set_activate_snake_walk_xy_sets_snake_walk_xy(self):
         instance = McsManager()
@@ -143,18 +143,18 @@ class TestMcsManager(unittest.TestCase):
             MockFpgaHandle.return_value = fpga_handle
             instance.connect(
                 {
-                    "activateFIFODigital": True,
-                    "activateFIFOAnalog": True,
-                    "DFD_Activate": True,
+                    "stream_out_main_enable": True,
+                    "stream_out_aux_enable": True,
+                    "dfd_enable": True,
                 },
-                list_fifos=["FIFO", "FIFOAnalog"],
+                list_fifos=["stream_out_main", "stream_out_aux"],
             )
 
         self.assertEqual(MockFpgaHandle.call_args.kwargs["list_fifos"], [])
         run_registers = fpga_handle.run.call_args.args[0]
-        self.assertFalse(run_registers["activateFIFODigital"])
-        self.assertFalse(run_registers["activateFIFOAnalog"])
-        self.assertFalse(run_registers["DFD_Activate"])
+        self.assertFalse(run_registers["stream_out_main_enable"])
+        self.assertFalse(run_registers["stream_out_aux_enable"])
+        self.assertFalse(run_registers["dfd_enable"])
 
     def test_connect_pi23_offsets_nifpga_scan_dimensions(self):
         instance = McsManager()
@@ -166,16 +166,16 @@ class TestMcsManager(unittest.TestCase):
             MockFpgaHandle.return_value = fpga_handle
             instance.connect(
                 {
-                    "#pixels": 100,
-                    "#lines": 200,
-                    "#frames": 3,
+                    "max_pixel": 100,
+                    "max_line": 200,
+                    "max_frame": 3,
                 }
             )
 
         run_registers = fpga_handle.run.call_args.args[0]
-        self.assertEqual(run_registers["#pixels"], 101)
-        self.assertEqual(run_registers["#lines"], 201)
-        self.assertEqual(run_registers["#frames"], 4)
+        self.assertEqual(run_registers["max_pixel"], 101)
+        self.assertEqual(run_registers["max_line"], 201)
+        self.assertEqual(run_registers["max_frame"], 4)
 
     def test_connect_pi23tt_offsets_nifpga_scan_dimensions(self):
         instance = McsManager()
@@ -187,16 +187,16 @@ class TestMcsManager(unittest.TestCase):
             MockFpgaHandle.return_value = fpga_handle
             instance.connect(
                 {
-                    "#pixels": 100,
-                    "#lines": 200,
-                    "#frames": 3,
+                    "max_pixel": 100,
+                    "max_line": 200,
+                    "max_frame": 3,
                 }
             )
 
         run_registers = fpga_handle.run.call_args.args[0]
-        self.assertEqual(run_registers["#pixels"], 101)
-        self.assertEqual(run_registers["#lines"], 201)
-        self.assertEqual(run_registers["#frames"], 4)
+        self.assertEqual(run_registers["max_pixel"], 101)
+        self.assertEqual(run_registers["max_line"], 201)
+        self.assertEqual(run_registers["max_frame"], 4)
 
     def test_set_registers_dict_pi23_forces_fifo_registers_off(self):
         instance = McsManager()
@@ -206,15 +206,15 @@ class TestMcsManager(unittest.TestCase):
 
         instance.setRegistersDict(
             {
-                "activateFIFODigital": True,
-                "activateFIFOAnalog": True,
-                "DFD_Activate": True,
+                "stream_out_main_enable": True,
+                "stream_out_aux_enable": True,
+                "dfd_enable": True,
             }
         )
 
-        instance.fpga_handle.register_write.assert_any_call("activateFIFODigital", False)
-        instance.fpga_handle.register_write.assert_any_call("activateFIFOAnalog", False)
-        instance.fpga_handle.register_write.assert_any_call("DFD_Activate", False)
+        instance.fpga_handle.register_write.assert_any_call("stream_out_main_enable", False)
+        instance.fpga_handle.register_write.assert_any_call("stream_out_aux_enable", False)
+        instance.fpga_handle.register_write.assert_any_call("dfd_enable", False)
 
     def test_set_registers_dict_pi23_offsets_nifpga_scan_dimensions_only(self):
         instance = McsManager()
@@ -224,18 +224,18 @@ class TestMcsManager(unittest.TestCase):
 
         instance.setRegistersDict(
             {
-                "#pixels": 100,
-                "#lines": 200,
-                "#frames": 3,
+                "max_pixel": 100,
+                "max_line": 200,
+                "max_frame": 3,
             }
         )
 
-        instance.fpga_handle.register_write.assert_any_call("#pixels", 101)
-        instance.fpga_handle.register_write.assert_any_call("#lines", 201)
-        instance.fpga_handle.register_write.assert_any_call("#frames", 4)
-        self.assertEqual(instance.registers_configuration["#pixels"], 100)
-        self.assertEqual(instance.registers_configuration["#lines"], 200)
-        self.assertEqual(instance.registers_configuration["#frames"], 3)
+        instance.fpga_handle.register_write.assert_any_call("max_pixel", 101)
+        instance.fpga_handle.register_write.assert_any_call("max_line", 201)
+        instance.fpga_handle.register_write.assert_any_call("max_frame", 4)
+        self.assertEqual(instance.registers_configuration["max_pixel"], 100)
+        self.assertEqual(instance.registers_configuration["max_line"], 200)
+        self.assertEqual(instance.registers_configuration["max_frame"], 3)
 
     def test_read_registers_dict_pi23_restores_logical_scan_dimensions(self):
         instance = McsManager()
@@ -243,14 +243,14 @@ class TestMcsManager(unittest.TestCase):
         instance.is_connected = True
         instance.fpga_handle = MagicMock()
         instance.fpga_handle.register_read_all.return_value = {
-            "#timebinsPerPixel": 10,
-            "#circular_rep": 1,
-            "#circular_points": 1,
-            "Cx": 40,
-            "#pixels": 101,
-            "#lines": 201,
-            "#frames": 4,
-            "#repetition": 2,
+            "max_time_bins_per_pixel": 10,
+            "max_circular_repetition": 1,
+            "max_circular_point": 1,
+            "time_bin_dwell_cycles": 40,
+            "max_pixel": 101,
+            "max_line": 201,
+            "max_frame": 4,
+            "max_repetition": 2,
         }
 
         instance.readRegistersDict()
@@ -258,9 +258,9 @@ class TestMcsManager(unittest.TestCase):
         self.assertEqual(instance.dim_x, 100)
         self.assertEqual(instance.dim_y, 200)
         self.assertEqual(instance.dim_z, 3)
-        self.assertEqual(instance.registers_configuration["#pixels"], 100)
-        self.assertEqual(instance.registers_configuration["#lines"], 200)
-        self.assertEqual(instance.registers_configuration["#frames"], 3)
+        self.assertEqual(instance.registers_configuration["max_pixel"], 100)
+        self.assertEqual(instance.registers_configuration["max_line"], 200)
+        self.assertEqual(instance.registers_configuration["max_frame"], 3)
 
     def test_connect_raises_exception_on_error(self):
         instance = McsManager()
@@ -321,14 +321,14 @@ class TestMcsManager(unittest.TestCase):
     def test_getTrace_in_dfd_mode_returns_counts_per_second(self):
         with patch("brighteyes_mcs.acquisition.manager.mp.Manager", return_value=MagicMock()):
             instance = McsManager()
-        instance.DFD_Activate = True
+        instance.dfd_enable = True
         instance.time_resolution = 2.0
         instance.clk_multiplier = 2
         instance.timebins_per_pixel = 8
         instance.trace_sample_per_bins = 5
         instance.expected_words_data_per_frame_digital = 80
         instance.trace_pos = MagicMock(value=0)
-        instance.loc_previewed = {"FIFO": MagicMock(value=10)}
+        instance.loc_previewed = {"stream_out_main": MagicMock(value=10)}
         instance.shared_trace = MagicMock()
         instance.shared_trace.get_numpy_handle = MagicMock(
             return_value=np.array(

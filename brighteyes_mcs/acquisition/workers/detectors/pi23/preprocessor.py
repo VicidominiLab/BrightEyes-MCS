@@ -17,8 +17,8 @@ class Pi23DataPreProcess(mp.Process):
     """
     Decode PI23-native raw bunches into the shared preview/acquisition stream.
 
-    The output queue names intentionally remain ``FIFO`` and ``FIFOAnalog`` for
-    now because the existing preview/H5 writer consumes those stream names.
+    Output queues use the same ``stream_out_main`` and ``stream_out_aux`` names
+    as the NI-FPGA acquisition path.
     """
 
     def __init__(

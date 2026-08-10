@@ -2,7 +2,7 @@
 __author__ = "Mattia Donato"
 __copyright__ = "Copyright (C) 2023, Istituto Italiano di Tecnologia"
 __license__ = "GPL"
-__version__ = "0.0.1"
+__version__ = "1.0.0"
 __email__ = ["mattia.donato@iit.it", "giuseppe.vicidomini@iit.it"]
 
 # pyside6-uic main_design.ui -o main_design.py
@@ -68,6 +68,7 @@ from ...acquisition.detectors.models import (
 )
 from ...storage.legacy_config import LegacyConfigurationCodec, NumpyJSONEncoder
 from ...storage.h5_schema import legacy_gui_metadata, legacy_raw_stream_metadata
+from ...storage.legacy_names import LEGACY_H5_REGISTER_NAME_MAP
 from ..controllers import ConfigurationController, LifecycleController, PreviewController
 from ...application.paths import (
     ensure_user_configuration,
@@ -748,7 +749,7 @@ class MainWindow(QMainWindow):
         self.clock_base = 40 #MHz
         self.dfd_cycle_mhz = 40
 
-        self.DFD_Activate = False
+        self.dfd_enable = False
         self.DFD_nbins = 81
         self.snake_walk_Activate_XY = False
         self.snake_walk_Activate_Z = False
@@ -1211,25 +1212,25 @@ class MainWindow(QMainWindow):
             False,
         )
 
-        configuration_helper["LaserEnable0"] = (
+        configuration_helper["laser_1_enable"] = (
             "Laser 0 En.",
             bool,
             self.ui.checkBox_laser0,
             True,
         )
-        configuration_helper["LaserEnable1"] = (
+        configuration_helper["laser_2_enable"] = (
             "Laser 1 En.",
             bool,
             self.ui.checkBox_laser1,
             True,
         )
-        configuration_helper["LaserEnable2"] = (
+        configuration_helper["laser_3_enable"] = (
             "Laser 2 En.",
             bool,
             self.ui.checkBox_laser2,
             True,
         )
-        configuration_helper["LaserEnable3"] = (
+        configuration_helper["laser_4_enable"] = (
             "Laser 3 En.",
             bool,
             self.ui.checkBox_laser3,
@@ -1585,8 +1586,8 @@ class MainWindow(QMainWindow):
             if self.ui.comboBox_AnalogOut[ch].currentText() == "Constant":
                 sel = 15
 
-            mydict["AnalogSelector_%d" % ch] = sel
-            mydict["AnalogOutDC_%d" % ch] = self.ui.spinBox_AnalogOut[ch].value()
+            mydict["analog_output_%d_source_selector" % ch] = sel
+            mydict["analog_output_%d_dc_volts" % ch] = self.ui.spinBox_AnalogOut[ch].value()
 
         self.setRegistersDict(mydict)
 
@@ -1598,10 +1599,10 @@ class MainWindow(QMainWindow):
         logger.debug("laserChanged")
         self.setRegistersDict(
             {
-                "LaserEnable0": self.ui.checkBox_laser0.isChecked(),
-                "LaserEnable1": self.ui.checkBox_laser1.isChecked(),
-                "LaserEnable2": self.ui.checkBox_laser2.isChecked(),
-                "LaserEnable3": self.ui.checkBox_laser3.isChecked(),
+                "laser_1_enable": self.ui.checkBox_laser0.isChecked(),
+                "laser_2_enable": self.ui.checkBox_laser1.isChecked(),
+                "laser_3_enable": self.ui.checkBox_laser2.isChecked(),
+                "laser_4_enable": self.ui.checkBox_laser3.isChecked(),
             }
         )
 
@@ -2749,22 +2750,22 @@ class MainWindow(QMainWindow):
 
             mydict.update(
                 {
-                    "Invert SDATA": self.ui.checkBox_spad_invert.isChecked(),
-                    "msgOut": msg_out,
-                    "msgLen": msg_len,
+                    "spad_sdata_invert_enable": self.ui.checkBox_spad_invert.isChecked(),
+                    "spad_configuration_message": msg_out,
+                    "spad_configuration_message_length": msg_len,
                 }
             )
 
             if self.spad_channels == 49:
                 mydict.update(
                     {
-                        "49_enable": True
+                        "detector_49_channel_mode_enable": True
                     }
                 )
             else:
                 mydict.update(
                     {
-                        "49_enable": False
+                        "detector_49_channel_mode_enable": False
                     }
                 )
 
@@ -2782,9 +2783,9 @@ class MainWindow(QMainWindow):
 
             fifo = []
             if self.ui.checkBox_fifo_analog.isChecked():
-                fifo.append("FIFOAnalog")
+                fifo.append("stream_out_aux")
             if self.ui.checkBox_fifo_digital.isChecked():
-                fifo.append("FIFO")
+                fifo.append("stream_out_main")
 
             self.mcs_manager.set_fifo_prebuffer_length(
                 self.ui.spinBox_fifo_prebuffer_length.value()
@@ -3510,9 +3511,9 @@ class MainWindow(QMainWindow):
         """Add calibrated circular displacements to raster-pixel centers."""
         arrays = []
         for register_name in (
-            "ScanXVoltages",
-            "ScanYVoltages",
-            "ScanZVoltages",
+            "circular_scan_x_volts",
+            "circular_scan_y_volts",
+            "circular_scan_z_volts",
         ):
             try:
                 array = np.asarray(
@@ -3618,9 +3619,9 @@ class MainWindow(QMainWindow):
             "first_position": (
                 self.ui.spinBox_lissajous_firstposition.value()
             ),
-            "ScanXVoltages": repr(registers.get("ScanXVoltages")),
-            "ScanYVoltages": repr(registers.get("ScanYVoltages")),
-            "ScanZVoltages": repr(registers.get("ScanZVoltages")),
+            "circular_scan_x_volts": repr(registers.get("circular_scan_x_volts")),
+            "circular_scan_y_volts": repr(registers.get("circular_scan_y_volts")),
+            "circular_scan_z_volts": repr(registers.get("circular_scan_z_volts")),
             "calibration_um_per_v": calibration,
             "offset_um": offset,
             "scan_range_um": scan_range,
@@ -3642,9 +3643,9 @@ class MainWindow(QMainWindow):
                 *(
                     np.asarray(registers.get(register_name, [])).size
                     for register_name in (
-                        "ScanXVoltages",
-                        "ScanYVoltages",
-                        "ScanZVoltages",
+                        "circular_scan_x_volts",
+                        "circular_scan_y_volts",
+                        "circular_scan_z_volts",
                     )
                 ),
             )
@@ -3733,11 +3734,11 @@ class MainWindow(QMainWindow):
             t = [
                 str(fff[i])
                 for i in (
-                    "cur_t",
-                    "cur_x",
-                    "cur_y",
-                    "cur_z",
-                    "cur_rep",
+                    "current_time_bin_index",
+                    "current_x_index",
+                    "current_y_index",
+                    "current_z_index",
+                    "current_repetition_index",
                     # "current_cycle",
                 )
             ]
@@ -4223,9 +4224,9 @@ class MainWindow(QMainWindow):
 
         self.setRegistersDict(
             {
-                "ScanXVoltages": X_arr,
-                "ScanYVoltages": Y_arr,
-                "ScanZVoltages": Z_arr,
+                "circular_scan_x_volts": X_arr,
+                "circular_scan_y_volts": Y_arr,
+                "circular_scan_z_volts": Z_arr,
             }
         )
 
@@ -4470,10 +4471,10 @@ class MainWindow(QMainWindow):
 
         fifo_activated = []
         if self.ui.checkBox_fifo_analog.isChecked():
-            fifo_name = "FIFOAnalog"
+            fifo_name = "stream_out_aux"
             fifo_activated.append(fifo_name)
         if self.ui.checkBox_fifo_digital.isChecked():
-            fifo_name = "FIFO"
+            fifo_name = "stream_out_main"
             fifo_activated.append(fifo_name)
         if not (self.ui.checkBox_fifo_analog.isChecked() or self.ui.checkBox_fifo_digital.isChecked()):
             logger.debug("Bug: No FIFO Selected")
@@ -4537,7 +4538,7 @@ class MainWindow(QMainWindow):
                 self.mcs_manager.acquisition_done_reset()
                 self.finalizeAcquisition()
 
-            fifo1, fifo2 = self.mcs_manager.get_FIFO_status()
+            fifo1, fifo2 = self.mcs_manager.get_stream_status()
             self.ui.progressBar_fifo_digital.setValue(fifo1)
             self.ui.progressBar_fifo_analog.setValue(fifo2)
             self.ui.progressBar_saving.setValue(0)
@@ -4552,14 +4553,14 @@ class MainWindow(QMainWindow):
 
             try:
                 self.ui.label_last_preprocessed_size.setText(
-                    "%d" % self.mcs_manager.last_preprocessed_len["FIFOAnalog"].value
+                    "%d" % self.mcs_manager.last_preprocessed_len["stream_out_aux"].value
                 )
             except:
                 pass
 
             try:
                 self.ui.label_last_preprocessed_size.setText(
-                    "%d" % self.mcs_manager.last_preprocessed_len["FIFO"].value
+                    "%d" % self.mcs_manager.last_preprocessed_len["stream_out_main"].value
                 )
             except:
                 pass
@@ -4621,7 +4622,7 @@ class MainWindow(QMainWindow):
         trace_x = trace[0, :trace_pos]
         trace_y = trace[1, :trace_pos]
 
-        if clk_multiplier > 1 and not self.DFD_Activate:
+        if clk_multiplier > 1 and not self.dfd_enable:
             size = trace_x.shape[0]
             idx = np.arange(size)
             trace_x_n = trace_x[:size//clk_multiplier]
@@ -4643,7 +4644,7 @@ class MainWindow(QMainWindow):
             trace_x = trace_x_n
             trace_y = trace_y_n
 
-        if ( "Analog" in self.ui.comboBox_plot_channel.currentText() and not self.DFD_Activate):
+        if ( "Analog" in self.ui.comboBox_plot_channel.currentText() and not self.dfd_enable):
             self.trace_widget.setLabel("left", "Mean", "V")
             trace_bin = int(
                 self.ui.doubleSpinBox_binsize.value()
@@ -4662,8 +4663,8 @@ class MainWindow(QMainWindow):
         else:
             self.trace_widget.plot(trace_x, trace_y, clear=True)
 
-        self.trace_dfd_widget.setVisible(self.DFD_Activate)
-        if self.DFD_Activate:
+        self.trace_dfd_widget.setVisible(self.dfd_enable)
+        if self.dfd_enable:
             dfd_trace = self.mcs_manager.getDfdTrace()
             trace_dfd_x = dfd_trace[0, :]
             trace_live = dfd_trace[1, :]
@@ -4831,7 +4832,7 @@ class MainWindow(QMainWindow):
                     self.mcs_manager.acquisition_done_reset()
                     self.finalizeAcquisition()
 
-        fifo1, fifo2 = self.mcs_manager.get_FIFO_status()
+        fifo1, fifo2 = self.mcs_manager.get_stream_status()
 
         if fifo1 > 0.9 * self.ui.progressBar_fifo_digital.maximum():
             self.ui.progressBar_fifo_digital.setMaximum(fifo1 * 1.2)
@@ -4886,23 +4887,23 @@ class MainWindow(QMainWindow):
 
         try:
             # print(self.mcs_manager.last_preprocessed_len)
-            # print(self.mcs_manager.last_preprocessed_len["FIFO"].value)
+            # print(self.mcs_manager.last_preprocessed_len["stream_out_main"].value)
             self.ui.label_last_preprocessed_size.setText(
                 "%d"
-                % self.mcs_manager.last_preprocessed_len["FIFOAnalog"].value
+                % self.mcs_manager.last_preprocessed_len["stream_out_aux"].value
             )
         except:
-            logger.debug("self.ui.last_preprocessed_len FIFOAnalog FAIL")
+            logger.debug("self.ui.last_preprocessed_len stream_out_aux FAIL")
 
         try:
             # print(self.mcs_manager.last_preprocessed_len)
-            # print(self.mcs_manager.last_preprocessed_len["FIFO"].value)
+            # print(self.mcs_manager.last_preprocessed_len["stream_out_main"].value)
             self.ui.label_last_preprocessed_size.setText(
-                "%d" % self.mcs_manager.last_preprocessed_len["FIFO"].value
+                "%d" % self.mcs_manager.last_preprocessed_len["stream_out_main"].value
             )
 
         except:
-            logger.debug("self.ui.last_preprocessed_len FIFO FAIL")
+            logger.debug("self.ui.last_preprocessed_len stream_out_main FAIL")
 
         self.timerPreviewImg_tick_mutex.unlock()
 
@@ -5097,14 +5098,14 @@ Have fun!
 
         self.setRegistersDict(
             {
-                "Cx": int(Cx),
-                "#timebinsPerPixel": int(time_bin),
-                "ClockDur": int(clock_duration),
-                "WaitForLaser": int(waitForLaserInCycle),
-                "WaitAfterFrame": int(waitAfterFrame),
-                "WaitOnlyFirstTime": waitOnlyFirstTime,
-                "#circular_points": circ_points,
-                "#circular_rep": circ_repetition
+                "time_bin_dwell_cycles": int(Cx),
+                "max_time_bins_per_pixel": int(time_bin),
+                "tag_clock_duration_cycles": int(clock_duration),
+                "wait_laser_startup_cycles": int(waitForLaserInCycle),
+                "wait_post_frame_cycles": int(waitAfterFrame),
+                "wait_laser_first_time_only_enable": waitOnlyFirstTime,
+                "max_circular_point": circ_points,
+                "max_circular_repetition": circ_repetition
             }
         )
 
@@ -5583,12 +5584,12 @@ Have fun!
 
             self.setRegistersDict(
                 {
-                    "CalibrationFactors(V/step)": calibration_v_step,
-                    "Offset/StartValue (V)": start_offset,
-                    "#pixels": numbers_xx,
-                    "#lines": numbers_yy,
-                    "#frames": numbers_ff,
-                    "#repetition": numbers_repetition + 1,
+                    "axis_calibration_volts_per_step": calibration_v_step,
+                    "axis_start_offset_volts": start_offset,
+                    "max_pixel": numbers_xx,
+                    "max_line": numbers_yy,
+                    "max_frame": numbers_ff,
+                    "max_repetition": numbers_repetition + 1,
                 }
             )
 
@@ -5649,12 +5650,12 @@ Have fun!
 
         self.setRegistersDict(
             {
-                "MinXVoltages": min_x_V,
-                "MinYVoltages": min_y_V,
-                "MinZVoltages": min_z_V,
-                "MaxXVoltages": max_x_V,
-                "MaxYVoltages": max_y_V,
-                "MaxZVoltages": max_z_V,
+                "min_x_volts": min_x_V,
+                "min_y_volts": min_y_V,
+                "min_z_volts": min_z_V,
+                "max_x_volts": max_x_V,
+                "max_y_volts": max_y_V,
+                "max_z_volts": max_z_V,
             }
         )
 
@@ -5913,7 +5914,7 @@ Have fun!
         self.raw_stream_mode = raw_stream_mode
 
         # Initialize DFD settings BEFORE circular motion to ensure correct state
-        self.DFD_Activate = self.ui.checkBox_DFD.isChecked()
+        self.dfd_enable = self.ui.checkBox_DFD.isChecked()
         self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
 
         # Now initialize circular motion with correct DFD state
@@ -5926,7 +5927,7 @@ Have fun!
             self.ui.spinBox_pi23_port.value(),
         )
 
-        self.mcs_manager.set_activate_DFD(self.DFD_Activate)
+        self.mcs_manager.set_dfd_enable(self.dfd_enable)
         self.mcs_manager.set_DFD_nbins(self.DFD_nbins)
 
         self.ui.progressBar_fifo_digital.setMaximum(5)
@@ -6025,13 +6026,13 @@ Have fun!
         if self.spad_channels == 49:
             self.setRegistersDict(
                 {
-                    "49_enable": True
+                    "detector_49_channel_mode_enable": True
                 }
             )
         else:
             self.setRegistersDict(
                 {
-                    "49_enable": False
+                    "detector_49_channel_mode_enable": False
                 }
             )
 
@@ -6086,36 +6087,36 @@ Have fun!
 
         self.setRegistersDict(
             {
-                "Cx": int(Cx),
-                "#timebinsPerPixel": int(time_bin),
-                "ClockDur": int(clock_duration),
-                "WaitForLaser": int(waitForLaserInCycle),
-                "WaitAfterFrame": int(waitAfterFrame),
-                "WaitOnlyFirstTime": waitOnlyFirstTime,
-                "#circular_points": circ_points,
-                "#circular_rep": circ_repetition,
-                "CircularMotionActivate": circular_motion,
-                "DummyData": dummy_data,
-                "excitation sequence": laser_sequence,
-                "ext_px_selector": slave_type,
-                "SlaveMode": slave_mode,
-                "VR0": vr0,
-                "VR1": vr1,
-                "snake": self.snake_walk_Activate_XY,
-                "snake_z": self.snake_walk_Activate_Z,
-                "DFD_LaserSyncDebug": laser_debug,
+                "time_bin_dwell_cycles": int(Cx),
+                "max_time_bins_per_pixel": int(time_bin),
+                "tag_clock_duration_cycles": int(clock_duration),
+                "wait_laser_startup_cycles": int(waitForLaserInCycle),
+                "wait_post_frame_cycles": int(waitAfterFrame),
+                "wait_laser_first_time_only_enable": waitOnlyFirstTime,
+                "max_circular_point": circ_points,
+                "max_circular_repetition": circ_repetition,
+                "circular_scan_enable": circular_motion,
+                "dummy_data_enable": dummy_data,
+                "laser_excitation_sequence": laser_sequence,
+                "slave_mode_external_source_selector": slave_type,
+                "slave_mode_enable": slave_mode,
+                "spad_vr0_enable": vr0,
+                "spad_vr1_enable": vr1,
+                "xy_snake_scan_enable": self.snake_walk_Activate_XY,
+                "z_snake_scan_enable": self.snake_walk_Activate_Z,
+                "dfd_laser_sync_debug_enable": laser_debug,
                 # "AD5764_MaxBit": 1,
-                "CalibrationFactors(V/step)": calibration_v_step,
-                "Offset/StartValue (V)": start_offset,
-                "#pixels": numbers_xx,
-                "#lines": numbers_yy,
-                "#frames": numbers_ff,
-                "#repetition": numbers_repetition + 1,
-                "LaserEnable0": laserEnable0,
-                "LaserEnable1": laserEnable1,
-                "LaserEnable2": laserEnable2,
-                "LaserEnable3": laserEnable3,
-                "DFD_Trig_Selector": 5, #IT MEANS GET DFD EVERY CIRCULAR SCANNING POINT THIS SHOULD NOT HARD-CODE
+                "axis_calibration_volts_per_step": calibration_v_step,
+                "axis_start_offset_volts": start_offset,
+                "max_pixel": numbers_xx,
+                "max_line": numbers_yy,
+                "max_frame": numbers_ff,
+                "max_repetition": numbers_repetition + 1,
+                "laser_1_enable": laserEnable0,
+                "laser_2_enable": laserEnable1,
+                "laser_3_enable": laserEnable2,
+                "laser_4_enable": laserEnable3,
+                "dfd_trigger_selector": 5, #IT MEANS GET DFD EVERY CIRCULAR SCANNING POINT THIS SHOULD NOT HARD-CODE
             }
         )
 
@@ -6157,7 +6158,7 @@ Have fun!
         self.configure_analog()
 
         if do_run:
-            self.activateFIFOflag()
+            self.configure_stream_enables()
         self.activateShowPreview(self.ui.checkBox_showPreview.isChecked() and not raw_stream_mode)
 
 
@@ -6216,7 +6217,7 @@ Have fun!
         self.ui.label_configured_fifo_depth.setText(
             "%d" % self.mcs_manager.fpga_handle.get_actual_fifo_depth()
         )
-        if self.DFD_Activate:
+        if self.dfd_enable:
             self.mcs_manager.set_clk_multiplier(
                 self.ui.spinBox_clk_base_multiplier.value()
             )
@@ -6293,18 +6294,18 @@ Have fun!
 
         self.setRegistersDict(
             {
-                "AnalogA0 integrate": self.ui.checkBox_analog_in_integrate_AI0.isChecked(),
-                "AnalogA0 invert": self.ui.checkBox_analog_in_invert_AI0.isChecked(),
-                "AnalogA1 integrate": self.ui.checkBox_analog_in_integrate_AI1.isChecked(),
-                "AnalogA1 invert": self.ui.checkBox_analog_in_invert_AI1.isChecked(),
-                "AnalogA2 integrate": self.ui.checkBox_analog_in_integrate_AI2.isChecked(),
-                "AnalogA2 invert": self.ui.checkBox_analog_in_invert_AI2.isChecked(),
-                "AnalogA3 integrate": self.ui.checkBox_analog_in_integrate_AI3.isChecked(),
-                "AnalogA3 invert": self.ui.checkBox_analog_in_invert_AI3.isChecked(),
-                "AnalogInputA": self.ui.comboBox_analogSelect_A.currentIndex(),
-                "AnalogInputB": self.ui.comboBox_analogSelect_B.currentIndex(),
-                "AnalogA differential": self.ui.checkBox_analog_in_differentiate_A.isChecked(),
-                "AnalogB differential": self.ui.checkBox_analog_in_differentiate_B.isChecked(),
+                "analog_a_channel_0_integrate_enable": self.ui.checkBox_analog_in_integrate_AI0.isChecked(),
+                "analog_a_channel_0_invert_enable": self.ui.checkBox_analog_in_invert_AI0.isChecked(),
+                "analog_a_channel_1_integrate_enable": self.ui.checkBox_analog_in_integrate_AI1.isChecked(),
+                "analog_a_channel_1_invert_enable": self.ui.checkBox_analog_in_invert_AI1.isChecked(),
+                "analog_a_channel_2_integrate_enable": self.ui.checkBox_analog_in_integrate_AI2.isChecked(),
+                "analog_a_channel_2_invert_enable": self.ui.checkBox_analog_in_invert_AI2.isChecked(),
+                "analog_a_channel_3_integrate_enable": self.ui.checkBox_analog_in_integrate_AI3.isChecked(),
+                "analog_a_channel_3_invert_enable": self.ui.checkBox_analog_in_invert_AI3.isChecked(),
+                "analog_a_input_selector": self.ui.comboBox_analogSelect_A.currentIndex(),
+                "analog_b_input_selector": self.ui.comboBox_analogSelect_B.currentIndex(),
+                "analog_a_differential_mode_enable": self.ui.checkBox_analog_in_differentiate_A.isChecked(),
+                "analog_b_differential_mode_enable": self.ui.checkBox_analog_in_differentiate_B.isChecked(),
             }
         )
 
@@ -6314,36 +6315,36 @@ Have fun!
         """
         self.mcs_manager.activateShowPreview(enable)
 
-    def activateFIFOflag(self):
+    def configure_stream_enables(self):
         """
-        activate the FIFO flag
+        Configure the firmware output-stream enable registers.
         """
 
-        logger.debug("activateFIFOflag")
-        logger.debug("%s %s", "DFD", self.DFD_Activate)
+        logger.debug("configure_stream_enables")
+        logger.debug("%s %s", "DFD", self.dfd_enable)
 
         fifo = []
         if self.ui.checkBox_fifo_digital.isChecked():
-            fifo.append("FIFO")
+            fifo.append("stream_out_main")
         if self.ui.checkBox_fifo_analog.isChecked():
-            fifo.append("FIFOAnalog")
+            fifo.append("stream_out_aux")
 
         self.mcs_manager.setActivatedFifo(fifo)
 
-        if self.DFD_Activate:
+        if self.dfd_enable:
             self.setRegistersDict(
                 {
-                    "DFD_Activate": True,
-                    "activateFIFOAnalog": self.ui.checkBox_fifo_analog.isChecked(),
-                    "activateFIFODigital": self.ui.checkBox_fifo_digital.isChecked(),
+                    "dfd_enable": True,
+                    "stream_out_aux_enable": self.ui.checkBox_fifo_analog.isChecked(),
+                    "stream_out_main_enable": self.ui.checkBox_fifo_digital.isChecked(),
                 }
             )
         else:
             self.setRegistersDict(
                 {
-                    "DFD_Activate": False,
-                    "activateFIFOAnalog": self.ui.checkBox_fifo_analog.isChecked(),
-                    "activateFIFODigital": self.ui.checkBox_fifo_digital.isChecked(),
+                    "dfd_enable": False,
+                    "stream_out_aux_enable": self.ui.checkBox_fifo_analog.isChecked(),
+                    "stream_out_main_enable": self.ui.checkBox_fifo_digital.isChecked(),
                 }
             )
 
@@ -6966,9 +6967,14 @@ Have fun!
             h5mgr.metadata_add_dict(
                 "configurationSpadFCSmanager",
                 self.mcs_manager.registers_configuration,
+                legacy_name_map=LEGACY_H5_REGISTER_NAME_MAP,
             )
 
-            h5mgr.metadata_add_dict("configurationFPGA", self.configurationFPGA_dict)
+            h5mgr.metadata_add_dict(
+                "configurationFPGA",
+                self.configurationFPGA_dict,
+                legacy_name_map=LEGACY_H5_REGISTER_NAME_MAP,
+            )
 
             h5mgr.metadata_add_dict(
                 "configurationGUI",
@@ -7050,8 +7056,8 @@ Have fun!
         mydict = {}
         for ch in range(0, 8):
             if self.ui.checkBox_AnalogOut[ch].isChecked() == True:
-                logger.debug("AnalogOutDC_%d set to 0V as requested" % ch)
-                mydict["AnalogOutDC_%d" % ch] = 0
+                logger.debug("analog_output_%d_dc_volts set to 0V as requested" % ch)
+                mydict["analog_output_%d_dc_volts" % ch] = 0
 
         self.setRegistersDict(mydict)
         # time.sleep(0.2)
@@ -7156,18 +7162,18 @@ Have fun!
         send the run command to the FPGA
         """
         if self.ui.checkBox_loadFirmwareOnce.isChecked():
-            self.setRegistersDict({"stop": False, "Run": True})
-            self.setRegistersDict({"Run": False})
+            self.setRegistersDict({"stop_command": False, "start_command": True})
+            self.setRegistersDict({"start_command": False})
         else:
-            self.setRegistersDict({"stop": False, "Run": False})
-            self.setRegistersDict({"Run": True})
+            self.setRegistersDict({"stop_command": False, "start_command": False})
+            self.setRegistersDict({"start_command": True})
 
     def sendCmdStop(self):
         """
         send the stop command to the FPGA
         """
-        self.setRegistersDict({"stop": False})
-        self.setRegistersDict({"stop": True})
+        self.setRegistersDict({"stop_command": False})
+        self.setRegistersDict({"stop_command": True})
 
     def getPreviewImage(self, projection="xy", rgb=False):
         """
@@ -7722,7 +7728,3 @@ Have fun!
 
             if hasattr(self, "panorama_marker"):
                 self.panorama_marker.clear()
-
-
-
-

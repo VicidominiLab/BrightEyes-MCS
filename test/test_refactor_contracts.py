@@ -17,6 +17,11 @@ from brighteyes_mcs.storage.h5_schema import (
     describe_h5,
     legacy_raw_stream_metadata,
 )
+from brighteyes_mcs.storage.legacy_names import (
+    LEGACY_H5_FIFO_NAME_MAP,
+    LEGACY_H5_REGISTER_NAME_MAP,
+    translate_metadata_names,
+)
 from brighteyes_mcs.storage.raw import metadata_filename, raw_output_files
 
 
@@ -57,23 +62,45 @@ class TestLegacyConfigurationContract(unittest.TestCase):
 
 
 class TestAcquisitionFormatContract(unittest.TestCase):
+    def test_all_v1_firmware_names_translate_only_at_the_h5_boundary(self):
+        runtime_registers = {
+            name: index for index, name in enumerate(LEGACY_H5_REGISTER_NAME_MAP)
+        }
+
+        translated = translate_metadata_names(
+            runtime_registers, LEGACY_H5_REGISTER_NAME_MAP
+        )
+
+        self.assertEqual(set(translated), set(LEGACY_H5_REGISTER_NAME_MAP.values()))
+        self.assertEqual(len(translated), 179)
+        self.assertEqual(
+            translate_metadata_names(
+                {"stream_out_main": True}, LEGACY_H5_FIFO_NAME_MAP
+            ),
+            {"FIFO": True},
+        )
+        self.assertEqual(
+            translate_metadata_names({"max_pixel": 10}, None),
+            {"max_pixel": 10},
+        )
+
     def test_raw_stream_metadata_keeps_legacy_public_keys(self):
         acquisition = SimpleNamespace(
             registers_configuration={
-                "#timebinsPerPixel": 2,
-                "#circular_rep": 3,
-                "#circular_points": 4,
+                "max_time_bins_per_pixel": 2,
+                "max_circular_repetition": 3,
+                "max_circular_point": 4,
             },
             shared_dict={
-                "FIFO_bytes_written": 100,
+                "stream_out_main_bytes_written": 100,
                 "pi23_raw_stream_format": "pi23-v1",
             },
-            activated_fifos_list=["FIFO"],
+            activated_fifos_list=["stream_out_main"],
             clk_multiplier=2,
             dfd_shift=1,
             snake_walk_xy=True,
             snake_walk_z=False,
-            DFD_Activate=True,
+            dfd_enable=True,
             detector_model="PI 23",
         )
 
@@ -81,7 +108,7 @@ class TestAcquisitionFormatContract(unittest.TestCase):
             acquisition,
             spad_channels=25,
             clock_base_mhz=40,
-            raw_files={"FIFO": "scan_FIFO.raw"},
+            raw_files={"stream_out_main": "scan_FIFO.raw"},
             include_pi23=True,
         )
 
@@ -98,8 +125,8 @@ class TestAcquisitionFormatContract(unittest.TestCase):
         self.assertEqual(
             raw_output_files(metadata, digital=True, analog=True),
             {
-                "FIFO": "C:/data/scan_FIFO.raw",
-                "FIFOAnalog": "C:/data/scan_FIFOAnalog.raw",
+                "stream_out_main": "C:/data/scan_FIFO.raw",
+                "stream_out_aux": "C:/data/scan_FIFOAnalog.raw",
             },
         )
 
@@ -109,8 +136,16 @@ class TestAcquisitionFormatContract(unittest.TestCase):
             manager = H5Manager(filename)
             manager.init_dataset("data", [2, 3, 1], 4, 5, np.uint16)
             manager.metadata_add_initial("contract")
-            manager.metadata_add_dict("configurationSpadFCSmanager", {"#pixels": 2})
-            manager.metadata_add_dict("configurationFPGA", {"Run": False})
+            manager.metadata_add_dict(
+                "configurationSpadFCSmanager",
+                {"max_pixel": 2},
+                legacy_name_map=LEGACY_H5_REGISTER_NAME_MAP,
+            )
+            manager.metadata_add_dict(
+                "configurationFPGA",
+                {"start_command": False},
+                legacy_name_map=LEGACY_H5_REGISTER_NAME_MAP,
+            )
             manager.metadata_add_dict("configurationGUI", {"spad_number_of_channels": "25"})
             manager.metadata_add_dict("configurationGUI_beforeStart", {"nx": 2})
             manager.close()
@@ -121,6 +156,13 @@ class TestAcquisitionFormatContract(unittest.TestCase):
             self.assertEqual(schema["root_attributes"]["data_format_version"], DATA_FORMAT_VERSION)
             self.assertEqual(schema["objects"]["data"]["shape"], (1, 1, 3, 2, 4, 5))
             self.assertEqual(schema["objects"]["data"]["dtype"], "uint16")
+            self.assertEqual(
+                schema["objects"]["configurationSpadFCSmanager"]["attributes"]["#pixels"],
+                2,
+            )
+            self.assertFalse(
+                schema["objects"]["configurationFPGA"]["attributes"]["Run"]
+            )
             self.assertEqual(
                 set(schema["objects"]),
                 {"data", "configurationSpadFCSmanager", "configurationFPGA", "configurationGUI", "configurationGUI_beforeStart"},

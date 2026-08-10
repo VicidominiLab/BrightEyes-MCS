@@ -49,7 +49,7 @@ class TestDetectorBackends(unittest.TestCase):
         )
         source.start()
 
-        first_bunch = source.read_bunch("FIFO")
+        first_bunch = source.read_bunch("stream_out_main")
         self.assertIsInstance(first_bunch, Pi23RawBunch)
         self.assertIsInstance(first_bunch.payload, dict)
         self.assertIn("channel_counts", first_bunch.payload)
@@ -65,7 +65,7 @@ class TestDetectorBackends(unittest.TestCase):
 
         received = first_packet.shape[0]
         while True:
-            bunch = source.read_bunch("FIFO")
+            bunch = source.read_bunch("stream_out_main")
             if bunch is None:
                 break
             packet = pi23_decode_raw_bunch_to_spad_preview_words(

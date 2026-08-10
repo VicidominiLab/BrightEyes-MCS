@@ -14,7 +14,7 @@ def pi23_words_per_sample(spad_channels):
 
 
 def _pi23_active_fifos(active_fifos):
-    return [fifo for fifo in active_fifos if fifo == "FIFO"] or ["FIFO"]
+    return [fifo for fifo in active_fifos if fifo == "stream_out_main"] or ["stream_out_main"]
 
 
 def _pi23_total_scan_frames(acquisition):
@@ -24,7 +24,7 @@ def _pi23_total_scan_frames(acquisition):
 def _pi23_dwell_us(acquisition):
     if os.environ.get("PI23_FORCE_DWELLTIME") is not None:
         acquisition.registers_configuration.get(
-            "ClockDur", acquisition.default_configuration.get("ClockDur", 2000)
+            "tag_clock_duration_cycles", acquisition.default_configuration.get("tag_clock_duration_cycles", 2000)
         )
     return 0
 

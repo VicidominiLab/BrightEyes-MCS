@@ -284,7 +284,7 @@ class FpgaHandle(object):
         self.configuration["expected_words_data_analog"].value = expected_words_data_analog
 
     def set_list_fifos_to_read_continously(
-        self, list_fifos_to_read_continously=["FIFO"]
+        self, list_fifos_to_read_continously=["stream_out_main"]
     ):
         self.configuration["list_fifos_to_read_continously"][:] = []
         self.configuration["list_fifos_to_read_continously"][:] = list(

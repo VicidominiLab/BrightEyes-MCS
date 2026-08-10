@@ -1,5 +1,12 @@
 # BrightEyes-MCS HDF5 Output Schema
 
+> **Firmware v1 naming compatibility:** BrightEyes-MCS uses the firmware v1
+> snake-case register names and `stream_*` FIFO names at runtime. HDF5 files
+> intentionally retain the legacy register attribute names and RAW filename
+> suffixes documented here. A temporary optional translation dictionary at the
+> storage boundary preserves this format and is marked for removal in a future
+> major data-format version.
+
 This document describes the HDF5 files written by `brighteyes_mcs`.
 It is based on the current writer implementation in `brighteyes_mcs/storage/h5.py`,
 the workers in `brighteyes_mcs/acquisition/workers`, the RAW converters in

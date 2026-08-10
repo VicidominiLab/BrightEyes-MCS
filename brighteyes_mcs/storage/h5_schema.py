@@ -48,35 +48,35 @@ def legacy_raw_stream_metadata(
     runtime = acquisition.shared_dict
     payload = {
         "enabled": True,
-        "digital_fifo_present": "FIFO" in acquisition.activated_fifos_list,
-        "analog_fifo_present": "FIFOAnalog" in acquisition.activated_fifos_list,
+        "digital_fifo_present": "stream_out_main" in acquisition.activated_fifos_list,
+        "analog_fifo_present": "stream_out_aux" in acquisition.activated_fifos_list,
         "digital_channels": spad_channels,
         "digital_words_per_sample": 2 if spad_channels == 25 else 8,
         "analog_words_per_sample": 1,
         "effective_timebins_per_pixel": (
-            registers.get("#timebinsPerPixel", 1)
-            * registers.get("#circular_rep", 1)
-            * registers.get("#circular_points", 1)
+            registers.get("max_time_bins_per_pixel", 1)
+            * registers.get("max_circular_repetition", 1)
+            * registers.get("max_circular_point", 1)
         ),
         "clock_base_mhz": clock_base_mhz,
         "clk_multiplier": acquisition.clk_multiplier,
         "dfd_shift": acquisition.dfd_shift,
         "snake_walk_xy": acquisition.snake_walk_xy,
         "snake_walk_z": acquisition.snake_walk_z,
-        "dfd_activate": acquisition.DFD_Activate,
-        "digital_raw_file": raw_files.get("FIFO", ""),
-        "analog_raw_file": raw_files.get("FIFOAnalog", ""),
-        "digital_raw_bytes": runtime.get("FIFO_bytes_written", 0),
-        "analog_raw_bytes": runtime.get("FIFOAnalog_bytes_written", 0),
-        "digital_expected_words": runtime.get("FIFO_expected_words", 0),
-        "analog_expected_words": runtime.get("FIFOAnalog_expected_words", 0),
-        "digital_expected_bytes": runtime.get("FIFO_expected_bytes", 0),
-        "analog_expected_bytes": runtime.get("FIFOAnalog_expected_bytes", 0),
+        "dfd_activate": acquisition.dfd_enable,
+        "digital_raw_file": raw_files.get("stream_out_main", ""),
+        "analog_raw_file": raw_files.get("stream_out_aux", ""),
+        "digital_raw_bytes": runtime.get("stream_out_main_bytes_written", 0),
+        "analog_raw_bytes": runtime.get("stream_out_aux_bytes_written", 0),
+        "digital_expected_words": runtime.get("stream_out_main_expected_words", 0),
+        "analog_expected_words": runtime.get("stream_out_aux_expected_words", 0),
+        "digital_expected_bytes": runtime.get("stream_out_main_expected_bytes", 0),
+        "analog_expected_bytes": runtime.get("stream_out_aux_expected_bytes", 0),
         "digital_actual_bytes_on_disk": runtime.get(
-            "FIFO_actual_bytes_on_disk", 0
+            "stream_out_main_actual_bytes_on_disk", 0
         ),
         "analog_actual_bytes_on_disk": runtime.get(
-            "FIFOAnalog_actual_bytes_on_disk", 0
+            "stream_out_aux_actual_bytes_on_disk", 0
         ),
         "raw_writer_stop_reason": runtime.get("raw_writer_stop_reason", ""),
         "raw_writer_error": runtime.get("raw_writer_error", ""),

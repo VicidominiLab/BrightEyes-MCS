@@ -168,9 +168,9 @@ class FpgaHandleProcess(mp.Process):
                 command = self.queueFifoReadReq.get()
                 logger.debug(command)
                 for current_fifo in command:
-                    if current_fifo == "FIFO":
+                    if current_fifo == "stream_out_main":
                         chunk = self.fifo_chuck_size_digital.value
-                    elif current_fifo == "FIFOAnalog":
+                    elif current_fifo == "stream_out_aux":
                         chunk = self.fifo_chuck_size_analog.value
                     else:
                         logger.debug("BUG")
@@ -207,9 +207,9 @@ class FpgaHandleProcess(mp.Process):
                     #         read_data = self.nifpga_session.fifos[current_fifo].read(0, 0)
                     #         if read_data.elements_remaining > 0:
                     # print("E ", read_data.elements_remaining)
-                    if current_fifo == "FIFO":
+                    if current_fifo == "stream_out_main":
                         chunk = self.fifo_chuck_size_digital.value
-                    elif current_fifo == "FIFOAnalog":
+                    elif current_fifo == "stream_out_aux":
                         chunk = self.fifo_chuck_size_analog.value
                     else:
                         logger.debug("BUG")
@@ -246,9 +246,9 @@ class FpgaHandleProcess(mp.Process):
                     #         read_data = self.nifpga_session.fifos[current_fifo].read(0, 0)
                     #         if read_data.elements_remaining > 0:
                     # print("E ", read_data.elements_remaining)
-                    if current_fifo == "FIFO":
+                    if current_fifo == "stream_out_main":
                         chunk = self.fifo_chuck_size_digital.value
-                    elif current_fifo == "FIFOAnalog":
+                    elif current_fifo == "stream_out_aux":
                         chunk = self.fifo_chuck_size_analog.value
                     else:
                         logger.debug("BUG")
@@ -372,13 +372,13 @@ class FpgaHandleProcess(mp.Process):
                         )
                         self.nifpga_session.fifos[fifo].configure(self.requested_fifo_depth)
                         self.nifpga_session.fifos[fifo].start()
-                    logger.debug("%s %s %s %s %s %s", "FIFO", fifo, "req:", self.requested_fifo_depth, "actual:", self.actual_fifo_depth.value)
+                    logger.debug("%s %s %s %s %s %s", "stream_out_main", fifo, "req:", self.requested_fifo_depth, "actual:", self.actual_fifo_depth.value)
                     self.fifo_element_remaining[fifo] = 0
             else:
                 self.actual_fifo_depth.value = 0
                 self.list_fifos_to_read_continously[:] = []
                 self.fifo_element_remaining.clear()
-                for register in ("activateFIFOAnalog", "activateFIFODigital", "DFD_Activate"):
+                for register in ("stream_out_aux_enable", "stream_out_main_enable", "dfd_enable"):
                     if register in self.initial_registers:
                         self.initial_registers[register] = False
 

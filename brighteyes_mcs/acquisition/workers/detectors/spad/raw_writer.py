@@ -42,12 +42,12 @@ class RawStreamWriterProcess(mp.Process):
         self.stop_event = mp.Event()
 
         self.expected_words = {
-            "FIFO": shared_dict["expected_words_data_digital"],
-            "FIFOAnalog": shared_dict["expected_words_data_analog"],
+            "stream_out_main": shared_dict["expected_words_data_digital"],
+            "stream_out_aux": shared_dict["expected_words_data_analog"],
         }
         self.expected_words_per_frame = {
-            "FIFO": shared_dict["expected_words_data_per_frame_digital"],
-            "FIFOAnalog": shared_dict["expected_words_data_per_frame_analog"],
+            "stream_out_main": shared_dict["expected_words_data_per_frame_digital"],
+            "stream_out_aux": shared_dict["expected_words_data_per_frame_analog"],
         }
         self.shape = shared_dict["shape"]
         self.received_any_packet = {fifo_name: False for fifo_name in self.active_fifos}
@@ -72,10 +72,10 @@ class RawStreamWriterProcess(mp.Process):
         current_z = current_frame % self.shape[2] if self.shape[2] else 0
         current_rep = current_frame // self.shape[2] if self.shape[2] else 0
 
-        if fifo_name == "FIFO":
+        if fifo_name == "stream_out_main":
             self.shared_dict["current_z_digital"] = current_z
             self.shared_dict["current_rep_digital"] = current_rep
-        elif fifo_name == "FIFOAnalog":
+        elif fifo_name == "stream_out_aux":
             self.shared_dict["current_z_analog"] = current_z
             self.shared_dict["current_rep_analog"] = current_rep
 
@@ -137,8 +137,8 @@ class RawStreamWriterProcess(mp.Process):
                     queue_depth = self.queue_in.qsize()
                 except Exception:
                     queue_depth = 0
-                self.shared_dict["FIFO_status"] = queue_depth if "FIFO" in self.active_fifos else 0
-                self.shared_dict["FIFOAnalog_status"] = queue_depth if "FIFOAnalog" in self.active_fifos else 0
+                self.shared_dict["stream_out_main_status"] = queue_depth if "stream_out_main" in self.active_fifos else 0
+                self.shared_dict["stream_out_aux_status"] = queue_depth if "stream_out_aux" in self.active_fifos else 0
 
                 if idle_after_stop >= 3:
                     if self.stop_event.is_set():
@@ -174,4 +174,3 @@ class RawStreamWriterProcess(mp.Process):
 
 class SpadRawStreamWriterProcess(RawStreamWriterProcess):
     """SPAD-named raw FIFO stream writer."""
-

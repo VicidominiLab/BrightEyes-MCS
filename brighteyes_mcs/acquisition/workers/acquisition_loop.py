@@ -437,7 +437,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
         self.expected_words_data_per_frame_digital = shared_dict["expected_words_data_per_frame_digital"]
         self.expected_words_data_per_frame_analog = shared_dict["expected_words_data_per_frame_analog"]
 
-        self.DFD_Activate = shared_dict["DFD_Activate"]
+        self.dfd_enable = shared_dict["dfd_enable"]
         self.DFD_nbins = shared_dict["DFD_nbins"]
 
         self.snake_walk_xy = shared_dict["snake_walk_xy"]
@@ -592,7 +592,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
         )
 
         # in h5file the first dimension as "free size" is the fastest way to write on disk
-        # if self.DFD_Activate:
+        # if self.dfd_enable:
         #     self.timebinsPerPixel = self.DFD_nbins
 
         if not self.do_not_save:
@@ -607,7 +607,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
             # self.h5file = h5py.File(self.filenameh5, "w")
             logger.debug("%s %s", "Filename:", self.filenameh5)
 
-            if "FIFO" in self.shm_activated_fifos_list:
+            if "stream_out_main" in self.shm_activated_fifos_list:
                 self.h5mgr.init_dataset(
                     "data", self.shape, self.timebinsPerPixel // self.clk_multiplier, self.spad_channels, np.uint16
                 )
@@ -618,7 +618,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
                     self.channels_extra,
                     np.uint8,
                 )
-            if "FIFOAnalog" in self.shm_activated_fifos_list:
+            if "stream_out_aux" in self.shm_activated_fifos_list:
                 self.h5mgr.init_dataset(
                     "data_analog",
                     self.shape,
@@ -694,7 +694,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
         self.gap_digital_in_sample = 0
         self.gap_analog_in_sample = 0
 
-        # create a dictionary for the frameComplete={"FIFO": False, "FIFOAnalog": False})
+        # create a dictionary for the frameComplete={"stream_out_main": False, "stream_out_aux": False})
         frameComplete = dict((name, False) for name in self.shm_activated_fifos_list)
 
         internal_buffer_digital = (
@@ -709,8 +709,8 @@ class BaseAcquisitionLoopProcess(mp.Process):
         logger.debug("%s %s", "shm_activated_fifos_list", self.shm_activated_fifos_list)
         logger.debug("%s %s", "self.activate_show_preview", self.activate_show_preview)
 
-        # self.data_queue["FIFO"] = self.data_queue["FIFO"]
-        # self.shm_loc_acquired["FIFO"] = self.shm_loc_acquired["FIFO"]
+        # self.data_queue["stream_out_main"] = self.data_queue["stream_out_main"]
+        # self.shm_loc_acquired["stream_out_main"] = self.shm_loc_acquired["stream_out_main"]
 
         self.shared_dict_proxy = {}
         self.update_dictionary_slowly(0.1)
@@ -737,7 +737,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
             self.trace_pos.value = temporalBinner.get_current_position_bins()
             self.trace[1, :] = temporalBinner.get_bins()
 
-            if self.DFD_Activate and time_bins is not None:
+            if self.dfd_enable and time_bins is not None:
                 valid = (time_bins >= 0) & (time_bins < self.trace_dfd.shape[1])
                 self.trace_dfd[1, :] = 0
                 if np.any(valid):
@@ -747,11 +747,11 @@ class BaseAcquisitionLoopProcess(mp.Process):
         def finalize_frame_fifo():
             logger.debug("finalize_frame_fifo()")
             try:
-                if self.activate_trace and self.DFD_Activate:
+                if self.activate_trace and self.dfd_enable:
                     self.trace_dfd[2, :] = 0
 
                 # reset and finalize fingerprints (same block as original)
-                frameComplete["FIFO"] = False
+                frameComplete["stream_out_main"] = False
                 self.fingerprint[3, :, :] = self.fingerprint[0, :, :]
                 self.fingerprint[0, :, :] = 0
                 self.fingerprint[1, :, :] = 0
@@ -760,7 +760,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
                 current_z_digital = (self.current_frame_digital - 1) % self.shape[2]
                 current_rep_digital = (self.current_frame_digital - 1) // self.shape[2]
-                logger.debug("%s %s %s %s", "FRAME [FIFO] ", current_z_digital, current_rep_digital, " DONE")
+                logger.debug("%s %s %s %s", "FRAME [stream_out_main] ", current_z_digital, current_rep_digital, " DONE")
 
                 self.shared_dict_proxy.update(
                     {
@@ -794,11 +794,11 @@ class BaseAcquisitionLoopProcess(mp.Process):
         def finalize_frame_fifo_analog():
             logger.debug("finalize_frame_fifo_analog()")
             try:
-                frameComplete["FIFOAnalog"] = False
+                frameComplete["stream_out_aux"] = False
 
                 current_z_analog = (self.current_frame_analog - 1) % self.shape[2]
                 current_rep_analog = (self.current_frame_analog - 1) // self.shape[2]
-                logger.debug("%s %s %s %s", "FRAME [FIFOAnalog] ", current_z_analog, current_rep_analog, " DONE")
+                logger.debug("%s %s %s %s", "FRAME [stream_out_aux] ", current_z_analog, current_rep_analog, " DONE")
 
                 self.shared_dict_proxy.update(
                     {
@@ -827,15 +827,15 @@ class BaseAcquisitionLoopProcess(mp.Process):
             if self.do_not_save:
                 self.shm_number_of_threads_h5.value = -1
 
-            self.shared_dict_proxy["FIFO_status"] = self.data_queue["FIFO"].qsize()
-            self.shared_dict_proxy["FIFOAnalog_status"] = self.data_queue["FIFOAnalog"].qsize()
+            self.shared_dict_proxy["stream_out_main_status"] = self.data_queue["stream_out_main"].qsize()
+            self.shared_dict_proxy["stream_out_aux_status"] = self.data_queue["stream_out_aux"].qsize()
 
-            if "FIFO" in self.shm_activated_fifos_list:
+            if "stream_out_main" in self.shm_activated_fifos_list:
                 max_gap_frame_digital_in_words = self.expected_words_data_per_frame_digital * (
                         self.current_frame_digital + 1
                 )
 
-                if not self.data_queue["FIFO"].empty():
+                if not self.data_queue["stream_out_main"].empty():
                     remaining_digital_in_words = max_gap_frame_digital_in_words - (self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL)
 
                     # handle previously split buffer first
@@ -849,7 +849,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
                             logger.debug("%s %s", "THIS IS DEEPLY WRONG!! remaining_digital_in_words < 0, ", remaining_digital_in_words)
 
                         elif remaining_digital_in_words == 0:
-                            frameComplete["FIFO"] = True
+                            frameComplete["stream_out_main"] = True
                             self.current_frame_digital += 1
                             max_gap_frame_digital_in_words = self.expected_words_data_per_frame_digital * (self.current_frame_digital + 1)
                             remaining_digital_in_words = max_gap_frame_digital_in_words - (self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL)
@@ -867,7 +867,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
                     # standard path: get a new packet from the queue
                     if  internal_buffer_digital is None:  # standard case (no previous split data)
                         data_from_queue_digital = self.normalize_digital_payload(
-                            self.data_queue["FIFO"].get()
+                            self.data_queue["stream_out_main"].get()
                         )
                         self.gap_digital_in_sample = data_from_queue_digital.shape[0] // self.DATA_WORDS_PER_SAMPLE_DIGITAL
 
@@ -876,7 +876,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
                         if remaining_digital_in_words == 0:
                             # nothing left in this frame: finalize it
-                            frameComplete["FIFO"] = True
+                            frameComplete["stream_out_main"] = True
                             self.current_frame_digital += 1
                             # push the whole packet to next frame (store for next iteration)
                             internal_buffer_digital = data_from_queue_digital  # push entire packet to next frame
@@ -902,7 +902,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
                                 data_from_queue_digital = data_from_queue_digital[:remaining_digital_in_words]
                                 self.gap_digital_in_sample = data_from_queue_digital.shape[0] // self.DATA_WORDS_PER_SAMPLE_DIGITAL
 
-                                frameComplete["FIFO"] = True
+                                frameComplete["stream_out_main"] = True
 
                                 self.current_frame_digital += 1
 
@@ -1357,20 +1357,20 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
                             self.fingerprint[4, :, :] += self.saturation[:spad_channels].reshape(spad_channels_x, spad_channels_y)
                             self.current_pointer_in_sample_digital += self.gap_digital_in_sample
-                            self.shm_loc_previewed["FIFO"].value = self.current_pointer_in_sample_digital
+                            self.shm_loc_previewed["stream_out_main"].value = self.current_pointer_in_sample_digital
                             # debug(self.current_pointer_in_sample_digital*2, self.gap_digital_in_sample*2, (self.current_pointer_in_sample_digital + self.gap_digital_in_sample)*2)
 
-                            if frameComplete["FIFO"]:
+                            if frameComplete["stream_out_main"]:
                                 # we still run the same finalization here for the normal path
                                 finalize_frame_fifo()
 
 
-            if "FIFOAnalog" in self.shm_activated_fifos_list:
+            if "stream_out_aux" in self.shm_activated_fifos_list:
                 max_gap_frame_analog_in_words = self.expected_words_data_per_frame_analog * (
                         self.current_frame_analog + 1
 
                 )
-                if not self.data_queue["FIFOAnalog"].empty():
+                if not self.data_queue["stream_out_aux"].empty():
                     remaining_analog_in_words = max_gap_frame_analog_in_words - (self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG)
 
                     if (
@@ -1381,7 +1381,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
                             logger.debug("%s %s", "THIS IS DEEPLY WRONG!! remaining_analog_in_words < 0, ", remaining_analog_in_words)
 
                         elif remaining_analog_in_words == 0:
-                            frameComplete["FIFOAnalog"] = True
+                            frameComplete["stream_out_aux"] = True
                             self.current_frame_analog += 1
                             max_gap_frame_analog_in_words = self.expected_words_data_per_frame_analog * (self.current_frame_analog + 1)
                             remaining_analog_in_words = max_gap_frame_analog_in_words - (self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG)
@@ -1396,7 +1396,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
                             internal_buffer_analog = None
 
                     if internal_buffer_analog is None:
-                        data_from_queue_analog = self.data_queue["FIFOAnalog"].get()
+                        data_from_queue_analog = self.data_queue["stream_out_aux"].get()
                         self.gap_analog_in_sample = data_from_queue_analog.shape[0] // self.DATA_WORDS_PER_SAMPLE_ANALOG
 
                         # recompute remaining_analog_in_words (current_frame_analog could have changed)
@@ -1404,7 +1404,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
                         if remaining_analog_in_words == 0:
                             # nothing left in this analog frame
-                            frameComplete["FIFOAnalog"] = True
+                            frameComplete["stream_out_aux"] = True
                             self.current_frame_analog += 1
                             # push whole analog packet to next frame
                             internal_buffer_analog = data_from_queue_analog  # CORRECT: use analog variable
@@ -1428,7 +1428,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
                                 data_from_queue_analog = data_from_queue_analog[:remaining_analog_in_words]
                                 self.gap_analog_in_sample = data_from_queue_analog.shape[0] // self.DATA_WORDS_PER_SAMPLE_ANALOG
 
-                                frameComplete["FIFOAnalog"] = True
+                                frameComplete["stream_out_aux"] = True
 
                                 self.current_frame_analog += 1
 
@@ -1528,10 +1528,10 @@ class BaseAcquisitionLoopProcess(mp.Process):
                                 ] = buffer_up_to_gap_analog
 
                             self.current_pointer_in_sample_analog += self.gap_analog_in_sample
-                            self.shm_loc_previewed["FIFOAnalog"].value = self.current_pointer_in_sample_analog
+                            self.shm_loc_previewed["stream_out_aux"].value = self.current_pointer_in_sample_analog
 
                             self.shared_dict_proxy.update({"total_photon": self.total_photon})
-                            if frameComplete["FIFOAnalog"]:
+                            if frameComplete["stream_out_aux"]:
                                 # finalize analog frame on the normal path
                                 finalize_frame_fifo_analog()
                             #debug("self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog:",
@@ -1542,9 +1542,9 @@ class BaseAcquisitionLoopProcess(mp.Process):
             cond_analog  = (self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog)
 
             if not(
-                    ("FIFO" in self.shm_activated_fifos_list and not cond_digital)
+                    ("stream_out_main" in self.shm_activated_fifos_list and not cond_digital)
                     or
-                    ("FIFOAnalog" in self.shm_activated_fifos_list and not cond_analog)
+                    ("stream_out_aux" in self.shm_activated_fifos_list and not cond_analog)
             ):
                 self.stop_event.set()
                 stop_event_proxy.set()
@@ -1552,7 +1552,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
             if trace_reset_event_proxy.is_set():
                 logger.debug("trace_reset_event.is_set()")
                 temporalBinner.reset()
-                if self.DFD_Activate:
+                if self.dfd_enable:
                     self.trace_dfd[1, :] = 0
                     self.trace_dfd[2, :] = 0
                 trace_reset_event_proxy.clear()
@@ -1616,4 +1616,3 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
     def stop_update_dictionary_slowly(self):
         self.thread_for_dict_stop.set()
-

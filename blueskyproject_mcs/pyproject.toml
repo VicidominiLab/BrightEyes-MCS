@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "brighteyes-bluesky"
-version = "0.1.0"
+version = "1.0.0"
 description = "Bluesky/Ophyd device mapping for BrightEyes-MCS low-level FPGA registers."
 readme = "README.md"
 requires-python = ">=3.9"

@@ -27,9 +27,9 @@ from ..acquisition import (
 
 
 PI23_NIFPGA_DIMENSION_OFFSETS = {
-    "#pixels": 1,
-    "#lines": 1,
-    "#frames": 1,
+    "max_pixel": 1,
+    "max_line": 1,
+    "max_frame": 1,
 }
 
 
@@ -94,7 +94,7 @@ class McsManager():
         preview_buffer_capacity_samples (int): Preview buffer capacity in samples.
         fifo_prebuffer_length (int): Number of FIFO values accumulated before dispatch.
         activated_fifos_list (list): List of activated FIFOs.
-        DFD_Activate (bool): Flag for DFD activation.
+        dfd_enable (bool): Flag for DFD activation.
         snake_walk_xy (bool): Flag for snake walk mode on xy.
         snake_walk_z (bool): Flag for snake walk mode on z.
         clk_multiplier (int): DFD Laser Clk multiplier = decimation on the time dimension
@@ -135,44 +135,44 @@ class McsManager():
         self.shared_dict = self.mp_manager.dict()
 
         self.default_configuration = {
-            "shutters": None,
+            "shutter_enable": None,
             # 'wait time': 5000000,
             # 'wait time': 1,
-            "LC": None,
-            "t": None,
-            "rz": None,
-            "ry": None,
-            "rx": None,
-            "Frame tag": None,
-            "Line tag": None,
-            "Pixel tag": None,
-            "CalibrationFactors(V/step)": [0.00219727, 0.00219727, 0],
-            "Offset/StartValue (V)": [-0.561798, -1.1236, 0],
-            "msgLen": 29,
-            "msgOut": 0,  # 33554431, #535822335,
-            "initializationTime": 0,
-            "holdOff": 11,
-            "Cx": 40,
-            "ClockDur": 20000,
-            "turnOffFC": None,
-            "turnOffLC": None,
-            "turnOffPC": None,
-            "rz2": None,
-            "ry2": None,
-            "rx2": None,
-            "#timebinsPerPixel": 10,
-            "#circular_points": 1,
-            '#circular_rep': 1,
-            "#pixels": 512,
-            "#lines": 512,
-            "#frames": 1,
-            "stop": False,
-            "Run": False,
+            "debug_line_counter": None,
+            "debug_t": None,
+            "debug_z_index": None,
+            "debug_y_index": None,
+            "debug_x_index": None,
+            "debug_frame_tag": None,
+            "debug_line_tag": None,
+            "debug_pixel_tag": None,
+            "axis_calibration_volts_per_step": [0.00219727, 0.00219727, 0],
+            "axis_start_offset_volts": [-0.561798, -1.1236, 0],
+            "spad_configuration_message_length": 29,
+            "spad_configuration_message": 0,  # 33554431, #535822335,
+            "wait_initialization_time_in_us": 0,
+            "detector_fpga_holdoff_cycles": 11,
+            "time_bin_dwell_cycles": 40,
+            "tag_clock_duration_cycles": 20000,
+            "tag_turnoff_frame_counter": None,
+            "tag_turnoff_line_counter": None,
+            "tag_turnoff_pixel_counter": None,
+            "debug_z_index_2": None,
+            "debug_y_index_2": None,
+            "debug_x_index_2": None,
+            "max_time_bins_per_pixel": 10,
+            "max_circular_point": 1,
+            'max_circular_repetition': 1,
+            "max_pixel": 512,
+            "max_line": 512,
+            "max_frame": 1,
+            "stop_command": False,
+            "start_command": False,
             "L1": 1,
             "L2": 0,
             "L3": 0,
             "L4": 0,
-            # 'LaserOffAfterMeasurement' : False,
+            # 'laser_off_after_measurement_enable' : False,
         }
         self.requested_fifo_depth = 100000
         self.actual_fifo_depth = 0
@@ -228,7 +228,7 @@ class McsManager():
         self.activated_fifos_list = []
         self.activate_show_preview = False
 
-        self.DFD_Activate = False
+        self.dfd_enable = False
         self.DFD_nbins = 0
         self.dfd_cycle_mhz = 40
 
@@ -312,13 +312,13 @@ class McsManager():
         if ch == 49:
             mydict.update(
                 {
-                    "49_enable": True
+                    "detector_49_channel_mode_enable": True
                 }
             )
         else:
             mydict.update(
                 {
-                    "49_enable": False
+                    "detector_49_channel_mode_enable": False
                 }
             )
 
@@ -388,12 +388,12 @@ class McsManager():
             self.do_not_save_event.clear()
             logger.debug("self.do_not_save_event.clear()")
 
-    def set_activate_DFD(self, activate=True):
+    def set_dfd_enable(self, activate=True):
         """
         Activate the DFD mode
         """
-        logger.debug("%s %s", "set_activate_DFD() set to ", activate)
-        self.DFD_Activate = activate
+        logger.debug("%s %s", "set_dfd_enable() set to ", activate)
+        self.dfd_enable = activate
 
     def set_activate_snake_walk_xy(self, activate=True):
         """
@@ -494,10 +494,10 @@ class McsManager():
             initial_registers_for_detector = {
                 **self.default_configuration,
                 **initial_registers_for_detector,
-                "#repetition": initial_registers_for_detector.get("#repetition", 2),
-                "activateFIFOAnalog": False,
-                "activateFIFODigital": False,
-                "DFD_Activate": False,
+                "max_repetition": initial_registers_for_detector.get("max_repetition", 2),
+                "stream_out_aux_enable": False,
+                "stream_out_main_enable": False,
+                "dfd_enable": False,
             }
         nifpga_initial_registers = _pi23_nifpga_dimension_registers(
             initial_registers_for_detector,
@@ -626,28 +626,28 @@ class McsManager():
         # self.shared_index = mp.Value("i",0)
         # , self.dim_z
 
-        # self.data_queue = {"FIFO":       CircularSharedBuffer(size=1024*1024*128, dtype=np.uint64), # mp.Queue(),
-        #                    "FIFOAnalog": CircularSharedBuffer(size=1024*1024*128, dtype=np.uint64), # mp.Queue()}
+        # self.data_queue = {"stream_out_main":       CircularSharedBuffer(size=1024*1024*128, dtype=np.uint64), # mp.Queue(),
+        #                    "stream_out_aux": CircularSharedBuffer(size=1024*1024*128, dtype=np.uint64), # mp.Queue()}
         #                   }
 
-        self.data_queue = {"FIFO":  mp.Queue(),
-                           "FIFOAnalog": mp.Queue()
+        self.data_queue = {"stream_out_main":  mp.Queue(),
+                           "stream_out_aux": mp.Queue()
                            }
 
 
-        self.loc_acquired = {"FIFO": mp.Value("q"), "FIFOAnalog": mp.Value("q")}
+        self.loc_acquired = {"stream_out_main": mp.Value("q"), "stream_out_aux": mp.Value("q")}
 
         self.last_preprocessed_len = {
-            "FIFO": mp.Value("q"),
-            "FIFOAnalog": mp.Value("q"),
+            "stream_out_main": mp.Value("q"),
+            "stream_out_aux": mp.Value("q"),
         }
 
-        self.loc_previewed = {"FIFO": mp.Value("q"), "FIFOAnalog": mp.Value("q")}
+        self.loc_previewed = {"stream_out_main": mp.Value("q"), "stream_out_aux": mp.Value("q")}
 
         self.dtype_data_queue = {
-            "FIFO": np.uint64,
-            # "FIFO": np.uint64,
-            "FIFOAnalog": np.uint64,
+            "stream_out_main": np.uint64,
+            # "stream_out_main": np.uint64,
+            "stream_out_aux": np.uint64,
         }
         self.detector_receiver_start_event = mp.Event()
         self.detector_receiver_queue = self.detector_pipeline.make_receiver_queue(self)
@@ -739,11 +739,11 @@ class McsManager():
                 "current_z_digital": 0,
                 "current_rep_digital": 0,
                 "total_photon": 0,
-                "FIFO_status": 0,
-                "FIFOAnalog_status": 0,
+                "stream_out_main_status": 0,
+                "stream_out_aux_status": 0,
                 "preview_buffer_capacity_samples": self.preview_buffer_capacity_samples,
                 "last_packet_size": 0,
-                "DFD_Activate": self.DFD_Activate,
+                "dfd_enable": self.dfd_enable,
                 "DFD_nBins": self.DFD_nbins,
                 "dfd_peak_idx": -1,
                 "snake_walk_xy": self.snake_walk_xy,
@@ -828,7 +828,7 @@ class McsManager():
         """
         myconf = dict(myconf)
         if not detector_uses_nifpga_fifo(self.detector_model):
-            for register in ("activateFIFOAnalog", "activateFIFODigital", "DFD_Activate"):
+            for register in ("stream_out_aux_enable", "stream_out_main_enable", "dfd_enable"):
                 if register in myconf:
                     myconf[register] = False
         nifpga_conf = _pi23_nifpga_dimension_registers(myconf, self.detector_model)
@@ -865,16 +865,16 @@ class McsManager():
         else:
             logger.debug("register_read_all() not called due to FPGAhandle not connected")
 
-        self.timebins_per_pixel = self.registers_configuration["#timebinsPerPixel"]
-        self.circ_repetition = self.registers_configuration["#circular_rep"]
-        self.circ_points = self.registers_configuration["#circular_points"]
+        self.timebins_per_pixel = self.registers_configuration["max_time_bins_per_pixel"]
+        self.circ_repetition = self.registers_configuration["max_circular_repetition"]
+        self.circ_points = self.registers_configuration["max_circular_point"]
 
-        self.time_resolution = self.registers_configuration["Cx"] / self.clock_base
+        self.time_resolution = self.registers_configuration["time_bin_dwell_cycles"] / self.clock_base
 
-        self.dim_x = self.registers_configuration["#pixels"]
-        self.dim_y = self.registers_configuration["#lines"]
-        self.dim_z = self.registers_configuration["#frames"]
-        self.dim_rep = self.registers_configuration["#repetition"] - 1
+        self.dim_x = self.registers_configuration["max_pixel"]
+        self.dim_y = self.registers_configuration["max_line"]
+        self.dim_z = self.registers_configuration["max_frame"]
+        self.dim_rep = self.registers_configuration["max_repetition"] - 1
 
         self.expected_words_data_per_frame_analog = (
                 self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
@@ -886,7 +886,7 @@ class McsManager():
                 2 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
             )
             logger.debug("%s %s", "self.expected_words_data_per_frame_digital calculated for 25 SPAD channels ", self.expected_words_data_per_frame_digital)
-            logger.debug("%s %s %s %s %s %s %s %s %s %s %s %s %s %s", "timebins", self.timebins_per_pixel, "x", self.dim_x, "y", self.dim_y, "z", self.dim_z, "rep", self.dim_rep, "circ_rep", self.circ_repetition, "circ_points", self.circ_points)
+            logger.debug("%s %s %s %s %s %s %s %s %s %s %s %s %s %s", "timebins", self.timebins_per_pixel, "x", self.dim_x, "y", self.dim_y, "z", self.dim_z, "rep", self.dim_rep, "circular_repetition", self.circ_repetition, "circular_points", self.circ_points)
         elif self.spad_channels == 49:
             self.expected_words_data_per_frame_digital = (
                     8 * self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
@@ -911,13 +911,13 @@ class McsManager():
         Update the chuck size
         """
         try:
-            self.timebins_per_pixel = self.registers_configuration["#timebinsPerPixel"]
-            self.circ_repetition = self.registers_configuration["#circular_rep"]
-            self.circ_points = self.registers_configuration["#circular_points"]
+            self.timebins_per_pixel = self.registers_configuration["max_time_bins_per_pixel"]
+            self.circ_repetition = self.registers_configuration["max_circular_repetition"]
+            self.circ_points = self.registers_configuration["max_circular_point"]
         except:
-            self.timebins_per_pixel = self.default_configuration["#timebinsPerPixel"]
-            self.circ_repetition = self.default_configuration["#circular_rep"]
-            self.circ_points = self.default_configuration["#circular_points"]
+            self.timebins_per_pixel = self.default_configuration["max_time_bins_per_pixel"]
+            self.circ_repetition = self.default_configuration["max_circular_repetition"]
+            self.circ_points = self.default_configuration["max_circular_point"]
 
 
         self.fifo_chuck_size_analog = self.timebins_per_pixel * self.circ_repetition * self.circ_points
@@ -969,9 +969,9 @@ class McsManager():
         """
         Get the expected FIFO elements
         """
-        if fifo_name=="FIFO":
+        if fifo_name=="stream_out_main":
             return self.expected_words_data_digital
-        elif fifo_name=="FIFOAnalog":
+        elif fifo_name=="stream_out_aux":
             return self.expected_words_data_analog
         else:
             logger.debug("BUG: getExpectedFifoElements WRONG CALL")
@@ -981,9 +981,9 @@ class McsManager():
         """
         Get the expected FIFO elements per frame
         """
-        if fifo_name=="FIFO":
+        if fifo_name=="stream_out_main":
             return self.expected_words_data_per_frame_digital
-        elif fifo_name=="FIFOAnalog":
+        elif fifo_name=="stream_out_aux":
             return self.expected_words_data_per_frame_analog
         else:
             logger.debug("BUG: getExpectedFifoElements WRONG CALL")
@@ -1005,9 +1005,9 @@ class McsManager():
         deadline = time.monotonic() + float(timeout)
         last_status = None
         while time.monotonic() < deadline:
-            registers = self.fpga_handle.register_read(("FSM Status",))
-            last_status = registers.get("FSM Status")
-            self.registers_configuration["FSM Status"] = last_status
+            registers = self.fpga_handle.register_read(("debug_scan_fsm_status",))
+            last_status = registers.get("debug_scan_fsm_status")
+            self.registers_configuration["debug_scan_fsm_status"] = last_status
             if last_status == 0:
                 return
             time.sleep(float(poll_interval))
@@ -1022,10 +1022,10 @@ class McsManager():
         if not self.is_connected or self.fpga_handle is None:
             raise RuntimeError("The FPGA is not connected.")
 
-        self.fpga_handle.register_write_checked("stop", True)
-        self.registers_configuration["stop"] = True
-        self.fpga_handle.register_write_checked("stop", False)
-        self.registers_configuration["stop"] = False
+        self.fpga_handle.register_write_checked("stop_command", True)
+        self.registers_configuration["stop_command"] = True
+        self.fpga_handle.register_write_checked("stop_command", False)
+        self.registers_configuration["stop_command"] = False
         self.wait_for_fpga_idle(timeout=timeout, poll_interval=poll_interval)
 
     def _stop_detector_receiver(self):
@@ -1073,22 +1073,22 @@ class McsManager():
         self.h5_response_queue = None
         logger.debug("self.previewThread.join() done")
 
-    def get_current_z(self, fifo="FIFO"):
+    def get_current_z(self, fifo="stream_out_main"):
         """
         Get the current z
         """
-        if fifo=="FIFO":
+        if fifo=="stream_out_main":
             return self.shared_dict["current_z_digital"]
-        if fifo=="FIFOAnalog":
+        if fifo=="stream_out_aux":
             return self.shared_dict["current_z_analog"]
 
-    def get_current_rep(self, fifo="FIFO"):
+    def get_current_rep(self, fifo="stream_out_main"):
         """
         Get the current repetition
         """
-        if fifo=="FIFO":
+        if fifo=="stream_out_main":
             return self.shared_dict["current_rep_digital"]
-        if fifo=="FIFOAnalog":
+        if fifo=="stream_out_aux":
             return self.shared_dict["current_rep_analog"]
 
 
@@ -1241,7 +1241,7 @@ class McsManager():
                 int(self.timebins_per_pixel // max(self.clk_multiplier, 1)),
                 1,
             )
-            samples_processed = int(self.loc_previewed["FIFO"].value)
+            samples_processed = int(self.loc_previewed["stream_out_main"].value)
             data_words_per_sample_digital = 8 if self.spad_channels == 49 else 2
             if self.expected_words_data_per_frame_digital > 0:
                 samples_per_frame = max(
@@ -1314,11 +1314,14 @@ class McsManager():
         """
         return dict(self.shared_dict)
 
-    def get_FIFO_status(self):
+    def get_stream_status(self):
         """
         Get the status of the FIFO
         """
-        return self.shared_dict["FIFO_status"], self.shared_dict["FIFOAnalog_status"]
+        return (
+            self.shared_dict["stream_out_main_status"],
+            self.shared_dict["stream_out_aux_status"],
+        )
 
     def trace_reset(self):
         """
@@ -1331,4 +1334,3 @@ class McsManager():
         Reset the FCS process
         """
         self.previewProcess.FCS_reset()
-

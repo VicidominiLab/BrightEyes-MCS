@@ -9,6 +9,7 @@ from PySide6.QtCore import QByteArray, QBuffer, QIODevice
 
 from brighteyes_mcs.logging_setup import logger
 from ..storage.h5_schema import DATA_FORMAT_VERSION
+from ..storage.legacy_names import translate_metadata_names
 
 
 
@@ -87,10 +88,13 @@ class H5Manager:
         if self.shm_number_of_threads_h5 is not None:
             self.shm_number_of_threads_h5.value = self.get_number_of_threads()
 
-    def metadata_add_dict(self, group_name, mydict=None):
+    def metadata_add_dict(self, group_name, mydict=None, *, legacy_name_map=None):
+        """Store metadata, optionally translating runtime names for legacy HDF5."""
+
         logger.debug("metadata_add_dict")
         if mydict is None:
             mydict = {}
+        mydict = translate_metadata_names(mydict, legacy_name_map)
         if not (group_name in self.h5file.keys()):
             group_conf = self.h5file.create_group(group_name)
         else:

@@ -41,16 +41,16 @@ class TestRawStreamLargeCounters(unittest.TestCase):
 
     def test_raw_writer_progress_uses_i64_word_counters(self):
         loc_acquired = {
-            "FIFO": create_i64_counter(2**32 + 5),
-            "FIFOAnalog": create_i64_counter(),
+            "stream_out_main": create_i64_counter(2**32 + 5),
+            "stream_out_aux": create_i64_counter(),
         }
         loc_previewed = {
-            "FIFO": create_i64_counter(),
-            "FIFOAnalog": create_i64_counter(),
+            "stream_out_main": create_i64_counter(),
+            "stream_out_aux": create_i64_counter(),
         }
         last_preprocessed_len = {
-            "FIFO": create_i64_counter(),
-            "FIFOAnalog": create_i64_counter(),
+            "stream_out_main": create_i64_counter(),
+            "stream_out_aux": create_i64_counter(),
         }
         shared_dict = {
             "expected_words_data_digital": 2**32 + 1000,
@@ -61,8 +61,8 @@ class TestRawStreamLargeCounters(unittest.TestCase):
         }
         writer = SpadRawStreamWriterProcess(
             queue.Queue(),
-            ["FIFO"],
-            {"FIFO": "unused.raw"},
+            ["stream_out_main"],
+            {"stream_out_main": "unused.raw"},
             loc_acquired,
             loc_previewed,
             last_preprocessed_len,
@@ -71,12 +71,12 @@ class TestRawStreamLargeCounters(unittest.TestCase):
             shared_dict=shared_dict,
         )
 
-        writer._update_progress("FIFO", 123, 123 * 8)
+        writer._update_progress("stream_out_main", 123, 123 * 8)
 
-        self.assertEqual(loc_acquired["FIFO"].value, 2**32 + 128)
-        self.assertEqual(loc_previewed["FIFO"].value, 2**32 + 128)
-        self.assertEqual(last_preprocessed_len["FIFO"].value, 123)
-        self.assertEqual(shared_dict["FIFO_bytes_written"], 123 * 8)
+        self.assertEqual(loc_acquired["stream_out_main"].value, 2**32 + 128)
+        self.assertEqual(loc_previewed["stream_out_main"].value, 2**32 + 128)
+        self.assertEqual(last_preprocessed_len["stream_out_main"].value, 123)
+        self.assertEqual(shared_dict["stream_out_main_bytes_written"], 123 * 8)
         self.assertEqual(shared_dict["last_packet_size"], 123)
 
     def test_raw_writer_expected_bytes_are_uint64_words(self):
@@ -89,17 +89,17 @@ class TestRawStreamLargeCounters(unittest.TestCase):
         }
         writer = SpadRawStreamWriterProcess(
             queue.Queue(),
-            ["FIFO"],
-            {"FIFO": "unused.raw"},
-            {"FIFO": create_i64_counter(), "FIFOAnalog": create_i64_counter()},
-            {"FIFO": create_i64_counter(), "FIFOAnalog": create_i64_counter()},
-            {"FIFO": create_i64_counter(), "FIFOAnalog": create_i64_counter()},
+            ["stream_out_main"],
+            {"stream_out_main": "unused.raw"},
+            {"stream_out_main": create_i64_counter(), "stream_out_aux": create_i64_counter()},
+            {"stream_out_main": create_i64_counter(), "stream_out_aux": create_i64_counter()},
+            {"stream_out_main": create_i64_counter(), "stream_out_aux": create_i64_counter()},
             acquisition_done=types.SimpleNamespace(clear=lambda: None, set=lambda: None),
             acquisition_almost_done=types.SimpleNamespace(clear=lambda: None, set=lambda: None),
             shared_dict=shared_dict,
         )
 
-        self.assertEqual(writer._expected_bytes("FIFO"), (2**32 + 1) * 8)
+        self.assertEqual(writer._expected_bytes("stream_out_main"), (2**32 + 1) * 8)
 
 
 class TestRustFifoReaderConfiguration(unittest.TestCase):
@@ -108,7 +108,7 @@ class TestRustFifoReaderConfiguration(unittest.TestCase):
 
         class FakeBitfile:
             signature = "SIG"
-            fifos = {"FIFO": object(), "FIFOAnalog": object()}
+            fifos = {"stream_out_main": object(), "stream_out_aux": object()}
 
             def __init__(self, _bitfile):
                 pass
@@ -134,7 +134,7 @@ class TestRustFifoReaderConfiguration(unittest.TestCase):
             module = importlib.import_module("brighteyes_mcs.acquisition.fifo")
             module.RustFastFifoReader(
                 "bitfile.lvbitx",
-                ["FIFO", "FIFOAnalog"],
+                ["stream_out_main", "stream_out_aux"],
                 chunk_digital=16,
                 chunk_analog=32,
                 requested_fifo_depth=1000,

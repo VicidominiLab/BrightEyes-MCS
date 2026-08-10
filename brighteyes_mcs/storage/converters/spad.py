@@ -177,7 +177,7 @@ def _detect_streams(metadata_filename: Path, meta):
 
         streams.append(
             {
-                "fifo_name": "FIFO",
+                "fifo_name": "stream_out_main",
                 "path": digital_path,
                 "kind": "digital",
                 "spad_channels": spad_channels_hint,
@@ -187,7 +187,7 @@ def _detect_streams(metadata_filename: Path, meta):
     if analog_path is not None and analog_path.exists():
         streams.append(
             {
-                "fifo_name": "FIFOAnalog",
+                "fifo_name": "stream_out_aux",
                 "path": analog_path,
                 "kind": "analog",
                 "channels": 2,

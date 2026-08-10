@@ -12,16 +12,16 @@ def metadata_filename(filename):
 
 
 def raw_output_files(metadata_h5, *, digital, analog):
-    """Preserve sibling RAW filenames and FIFO keys."""
+    """Return v1 stream keys while preserving legacy RAW filename suffixes."""
 
     base = str(metadata_h5).replace(".h5", "")
     if base.endswith("_only_metadata"):
         base = base[: -len("_only_metadata")]
     result = {}
     if digital:
-        result["FIFO"] = base + "_FIFO.raw"
+        result["stream_out_main"] = base + "_FIFO.raw"
     if analog:
-        result["FIFOAnalog"] = base + "_FIFOAnalog.raw"
+        result["stream_out_aux"] = base + "_FIFOAnalog.raw"
     return result
 
 

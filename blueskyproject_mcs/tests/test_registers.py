@@ -7,15 +7,21 @@ def test_register_attrs_are_unique():
 
 def test_channel_families_are_expanded():
     for channel in range(8):
-        assert f"AnalogOUT{channel}" in REGISTER_ATTR_BY_NAME
-        assert f"AnalogSelector_{channel}" in REGISTER_ATTR_BY_NAME
-        assert f"AnalogOutDC_{channel}" in REGISTER_ATTR_BY_NAME
-        assert f"AnalogA{channel} invert" in REGISTER_ATTR_BY_NAME
-        assert f"AnalogA{channel} integrate" in REGISTER_ATTR_BY_NAME
-        assert f"AnalogIN{channel}" in REGISTER_ATTR_BY_NAME
+        assert f"analog_output_{channel}_volts" in REGISTER_ATTR_BY_NAME
+        assert f"analog_output_{channel}_source_selector" in REGISTER_ATTR_BY_NAME
+        assert f"analog_output_{channel}_dc_volts" in REGISTER_ATTR_BY_NAME
+        assert f"analog_a_channel_{channel}_invert_enable" in REGISTER_ATTR_BY_NAME
+        assert f"analog_a_channel_{channel}_integrate_enable" in REGISTER_ATTR_BY_NAME
+        assert f"analog_input_{channel}_volts" in REGISTER_ATTR_BY_NAME
 
 
 def test_documented_core_registers_are_present():
-    assert REGISTER_ATTR_BY_NAME["Run"] == "reg_run"
-    assert REGISTER_ATTR_BY_NAME["#timebinsPerPixel"] == "reg_number_timebins_per_pixel"
-    assert REGISTER_ATTR_BY_NAME["Offset/StartValue (V)"] == "reg_offset_start_value_v"
+    assert REGISTER_ATTR_BY_NAME["start_command"] == "reg_start_command"
+    assert (
+        REGISTER_ATTR_BY_NAME["max_time_bins_per_pixel"]
+        == "reg_max_time_bins_per_pixel"
+    )
+    assert (
+        REGISTER_ATTR_BY_NAME["axis_start_offset_volts"]
+        == "reg_axis_start_offset_volts"
+    )

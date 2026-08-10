@@ -20,14 +20,14 @@ class RustFastFifoReader:
         }
 
         for fifo in list_fifo:
-            if fifo.endswith("In"):
+            if fifo == "stream_in":
                 continue
 
             dma_read_buffer_size = (50 * requested_fifo_depth // 8) * 8
             fifo_read_buffer_size = (requested_fifo_depth // 8) * 8
             fifo_number = self.bitfile_fifo_number[fifo]
 
-            if fifo=="FIFOAnalog":
+            if fifo=="stream_out_aux":
                 delay = delay_us * 20
                 chunk = chunk_analog
             else:
@@ -69,7 +69,7 @@ class RustFastFifoReader:
             logger.debug("%s %s", "nifpga_fast_fifo_recv.thread_started ", fifo)
         logger.debug(self.fast_fifo_recv_inst)
 
-    def read_data(self, fifo="FIFO"):
+    def read_data(self, fifo="stream_out_main"):
         try:
             read_data = self.fast_fifo_recv_inst[fifo].get_data_as_numpy()
         except KeyError as e:
@@ -99,4 +99,3 @@ class RustFastFifoReader:
             except Exception as e:
                 logger.debug("fast_fifo_recv_inst[%s].thread_stop() already closed(?) %s"
                     % (i, e))
-

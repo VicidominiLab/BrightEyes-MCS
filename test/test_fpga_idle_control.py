@@ -24,10 +24,10 @@ def test_quick_reset_pulses_stop_and_waits_for_idle():
     manager.quick_reset_fpga(timeout=2.5)
 
     assert manager.fpga_handle.register_write_checked.call_args_list == [
-        call("stop", True),
-        call("stop", False),
+        call("stop_command", True),
+        call("stop_command", False),
     ]
-    assert manager.registers_configuration["stop"] is False
+    assert manager.registers_configuration["stop_command"] is False
     manager.wait_for_fpga_idle.assert_called_once_with(
         timeout=2.5, poll_interval=0.01
     )
@@ -36,19 +36,19 @@ def test_quick_reset_pulses_stop_and_waits_for_idle():
 def test_wait_for_fpga_idle_returns_on_status_zero():
     manager = bare_manager()
     manager.fpga_handle.register_read.side_effect = [
-        {"FSM Status": 3},
-        {"FSM Status": 0},
+        {"debug_scan_fsm_status": 3},
+        {"debug_scan_fsm_status": 0},
     ]
 
     manager.wait_for_fpga_idle(timeout=1, poll_interval=0)
 
-    assert manager.registers_configuration["FSM Status"] == 0
+    assert manager.registers_configuration["debug_scan_fsm_status"] == 0
     assert manager.fpga_handle.register_read.call_count == 2
 
 
 def test_wait_for_fpga_idle_raises_after_timeout():
     manager = bare_manager()
-    manager.fpga_handle.register_read.return_value = {"FSM Status": 4}
+    manager.fpga_handle.register_read.return_value = {"debug_scan_fsm_status": 4}
 
     with pytest.raises(TimeoutError, match="last status: 4"):
         manager.wait_for_fpga_idle(timeout=0.001, poll_interval=0)
@@ -66,8 +66,8 @@ def test_experimental_run_pulses_run_true_then_false():
     window.sendCmdRun()
 
     assert window.setRegistersDict.call_args_list == [
-        call({"stop": False, "Run": True}),
-        call({"Run": False}),
+        call({"stop_command": False, "start_command": True}),
+        call({"start_command": False}),
     ]
 
 
@@ -83,8 +83,8 @@ def test_default_run_sequence_is_unchanged():
     window.sendCmdRun()
 
     assert window.setRegistersDict.call_args_list == [
-        call({"stop": False, "Run": False}),
-        call({"Run": True}),
+        call({"stop_command": False, "start_command": False}),
+        call({"start_command": True}),
     ]
 
 
@@ -185,9 +185,9 @@ def test_fpga_handle_stop_closes_all_sessions_after_an_error():
 def test_circular_voltage_points_are_calibrated_offset_and_projected():
     x_points, y_points = MainWindow._circular_points_for_projection(
         registers={
-            "ScanXVoltages": [1.0, 2.0, 99.0],
-            "ScanYVoltages": [3.0, 4.0, 99.0],
-            "ScanZVoltages": [1.0, 2.0, 99.0],
+            "circular_scan_x_volts": [1.0, 2.0, 99.0],
+            "circular_scan_y_volts": [3.0, 4.0, 99.0],
+            "circular_scan_z_volts": [1.0, 2.0, 99.0],
         },
         projection="xz",
         calibration=(2.0, 3.0, 4.0),
@@ -361,14 +361,14 @@ def test_only_finite_numeric_scalars_can_be_monitored():
 def test_circular_points_replicate_at_each_raster_pixel_center():
     window = MainWindow.__new__(MainWindow)
     window._latest_status_registers = {
-        "ScanXVoltages": [99.0],
-        "ScanYVoltages": [99.0],
-        "ScanZVoltages": [99.0],
+        "circular_scan_x_volts": [99.0],
+        "circular_scan_y_volts": [99.0],
+        "circular_scan_z_volts": [99.0],
     }
     window.configurationFPGA_dict = {
-        "ScanXVoltages": [1.0, 2.0],
-        "ScanYVoltages": [3.0, 4.0],
-        "ScanZVoltages": [5.0, 6.0],
+        "circular_scan_x_volts": [1.0, 2.0],
+        "circular_scan_y_volts": [3.0, 4.0],
+        "circular_scan_z_volts": [5.0, 6.0],
     }
     # The circular overlay must use the geometry of the displayed image, not
     # potentially newer values in the GUI controls.
@@ -431,16 +431,16 @@ def test_status_update_appends_one_point_to_each_monitored_register():
     first_curve = MagicMock()
     second_curve = MagicMock()
     window._monitored_registers = {
-        ("Read Conf. FPGA", "FSM Status"): {
+        ("Read Conf. FPGA", "debug_scan_fsm_status"): {
             "source_name": "Read Conf. FPGA",
-            "register_name": "FSM Status",
+            "register_name": "debug_scan_fsm_status",
             "times": [],
             "values": [],
             "curve": first_curve,
         },
-        ("Conf. FPGA dict.", "cur_x"): {
+        ("Conf. FPGA dict.", "current_x_index"): {
             "source_name": "Conf. FPGA dict.",
-            "register_name": "cur_x",
+            "register_name": "current_x_index",
             "times": [],
             "values": [],
             "curve": second_curve,
@@ -449,17 +449,17 @@ def test_status_update_appends_one_point_to_each_monitored_register():
 
     window._append_monitor_points(
         {
-            "Read Conf. FPGA": {"FSM Status": 2},
-            "Conf. FPGA dict.": {"cur_x": 17},
+            "Read Conf. FPGA": {"debug_scan_fsm_status": 2},
+            "Conf. FPGA dict.": {"current_x_index": 17},
         },
         timestamp=1.25,
     )
 
     first_trace = window._monitored_registers[
-        ("Read Conf. FPGA", "FSM Status")
+        ("Read Conf. FPGA", "debug_scan_fsm_status")
     ]
     second_trace = window._monitored_registers[
-        ("Conf. FPGA dict.", "cur_x")
+        ("Conf. FPGA dict.", "current_x_index")
     ]
     assert first_trace["times"] == [1.25]
     assert first_trace["values"] == [2.0]

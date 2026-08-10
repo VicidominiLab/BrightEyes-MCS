@@ -30,15 +30,15 @@ For NI FPGA hardware access, install the NI FPGA Python package in the same envi
 ```python
 from brighteyes_bluesky import BrightEyesMCSLLDevice, MappingRegisterIO
 
-io = MappingRegisterIO({"#pixels": 512, "#lines": 512, "Run": False})
+io = MappingRegisterIO({"max_pixel": 512, "max_line": 512, "start_command": False})
 mcs = BrightEyesMCSLLDevice(name="mcs", register_io=io)
 
-mcs.reg_number_pixels.put(300)
-mcs.reg_number_lines.put(300)
-mcs.reg_run.put(True)
+mcs.reg_max_pixel.put(300)
+mcs.reg_max_line.put(300)
+mcs.reg_start_command.put(True)
 
-print(mcs.reg_number_pixels.get())
-print(mcs.read_registers("#pixels", "#lines", "Run"))
+print(mcs.reg_max_pixel.get())
+print(mcs.read_registers("max_pixel", "max_line", "start_command"))
 ```
 
 With an existing `nifpga.Session`:
@@ -51,14 +51,14 @@ mcs = BrightEyesMCSLLDevice(
     register_io=NifpgaRegisterIO(session),
 )
 
-mcs.reg_run.put(True)
+mcs.reg_start_command.put(True)
 ```
 
 The original FPGA register names are available through:
 
 ```python
-mcs.describe_register("#timebinsPerPixel")
-mcs.get_signal("#timebinsPerPixel").put(10)
+mcs.describe_register("max_time_bins_per_pixel")
+mcs.get_signal("max_time_bins_per_pixel").put(10)
 ```
 
 ## Notes

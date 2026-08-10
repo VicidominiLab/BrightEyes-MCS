@@ -105,13 +105,13 @@ class Pi23TcpBunchSource:
         )
         self.shared_dict = shared_dict
         self.debug = bool(debug)
-        self.generated_words = {"FIFO": 0, "FIFOAnalog": 0}
+        self.generated_words = {"stream_out_main": 0, "stream_out_aux": 0}
         self.started_at_ns = None
         self._counts = None
         self._sample_cursor = 0
 
     def start(self):
-        self.generated_words = {"FIFO": 0, "FIFOAnalog": 0}
+        self.generated_words = {"stream_out_main": 0, "stream_out_aux": 0}
         self.started_at_ns = perf_counter_ns()
         self._counts = None
         self._sample_cursor = 0
@@ -133,7 +133,7 @@ class Pi23TcpBunchSource:
         self._sample_cursor = 0
 
     def read_bunch(self, fifo_name):
-        if fifo_name == "FIFOAnalog":
+        if fifo_name == "stream_out_aux":
             return None
 
         if self._counts is None:
@@ -150,8 +150,8 @@ class Pi23TcpBunchSource:
 
         remaining_samples = self._counts.shape[0] - self._sample_cursor
         if remaining_samples <= 0:
-            expected_words = self._expected_words("FIFO")
-            generated_words = self.generated_words.get("FIFO", 0)
+            expected_words = self._expected_words("stream_out_main")
+            generated_words = self.generated_words.get("stream_out_main", 0)
             if expected_words > 0 and generated_words >= expected_words:
                 return None
             logger.debug("%s %s", "PI23 source receiving next scan", fifo_name)
@@ -162,7 +162,7 @@ class Pi23TcpBunchSource:
             if remaining_samples <= 0:
                 return None
 
-        n_words = self._next_packet_words("FIFO", remaining_samples)
+        n_words = self._next_packet_words("stream_out_main", remaining_samples)
         sample_count = max(1, min(remaining_samples, n_words // self.digital_words_per_sample))
         start = self._sample_cursor
         stop = start + sample_count
@@ -170,7 +170,7 @@ class Pi23TcpBunchSource:
         self._sample_cursor = stop
 
         bunch = Pi23RawBunch(
-            fifo_name="FIFO",
+            fifo_name="stream_out_main",
             timestamp_ns=perf_counter_ns(),
             sample_count=int(counts.shape[0]),
             payload={
@@ -179,7 +179,7 @@ class Pi23TcpBunchSource:
                 "sample_start": start,
             },
         )
-        self.generated_words["FIFO"] = self.generated_words.get("FIFO", 0) + (
+        self.generated_words["stream_out_main"] = self.generated_words.get("stream_out_main", 0) + (
             bunch.sample_count * self.digital_words_per_sample
         )
         logger.debug("%s %s %s", "PI23 source emit bunch", f"samples={bunch.sample_count}", f"cursor={self._sample_cursor}/{self._counts.shape[0]}")
@@ -326,22 +326,22 @@ class Pi23TcpBunchSource:
         return int(packet_words)
 
     def _chunk_words(self, fifo_name):
-        if fifo_name == "FIFOAnalog":
+        if fifo_name == "stream_out_aux":
             return int(self.fifo_chuck_size_analog.value)
         return int(self.fifo_chuck_size_digital.value)
 
     def _expected_words(self, fifo_name):
-        if fifo_name == "FIFOAnalog":
+        if fifo_name == "stream_out_aux":
             return int(self.expected_words_data_analog.value)
         return int(self.expected_words_data_digital.value)
 
     def _word_count_to_sample_count(self, fifo_name, word_count):
-        if fifo_name == "FIFOAnalog":
+        if fifo_name == "stream_out_aux":
             return int(word_count)
         return int(word_count) // self.digital_words_per_sample
 
     def _sample_count_to_word_count(self, fifo_name, sample_count):
-        if fifo_name == "FIFOAnalog":
+        if fifo_name == "stream_out_aux":
             return int(sample_count)
         return int(sample_count) * self.digital_words_per_sample
 
@@ -416,7 +416,7 @@ def pi23_decode_raw_bunch_to_spad_preview_words(
     if raw_bunch is None or raw_bunch.sample_count <= 0:
         return np.array([], dtype=np.uint64)
 
-    if raw_bunch.fifo_name == "FIFOAnalog":
+    if raw_bunch.fifo_name == "stream_out_aux":
         analog = np.asarray(raw_bunch.payload["analog_samples"], dtype=np.int32)
         high = analog[:, 0].astype(np.uint32).astype(np.uint64) << np.uint64(32)
         low = analog[:, 1].astype(np.uint32).astype(np.uint64)
@@ -457,19 +457,19 @@ class Pi23RandomBunchSource:
         # crash some Windows/Python builds during garbage collection.  The
         # module-level import keeps dry-run generation deterministic and safe.
         self.rng = default_rng(seed)
-        self.generated_words = {"FIFO": 0, "FIFOAnalog": 0}
+        self.generated_words = {"stream_out_main": 0, "stream_out_aux": 0}
 
     def start(self):
-        self.generated_words = {"FIFO": 0, "FIFOAnalog": 0}
+        self.generated_words = {"stream_out_main": 0, "stream_out_aux": 0}
 
     def stop(self):
         pass
 
     def read_bunch(self, fifo_name):
-        if fifo_name == "FIFOAnalog":
+        if fifo_name == "stream_out_aux":
             return None
 
-        n_words = self._next_packet_words("FIFO")
+        n_words = self._next_packet_words("stream_out_main")
         if n_words <= 0:
             return None
 
@@ -481,16 +481,16 @@ class Pi23RandomBunchSource:
             dtype=np.uint16,
         )
         bunch = Pi23RawBunch(
-            fifo_name="FIFO",
+            fifo_name="stream_out_main",
             timestamp_ns=perf_counter_ns(),
             sample_count=int(sample_count),
             payload={
                 "channel_counts": counts,
                 "source": "random",
-                "sample_start": self.generated_words["FIFO"] // self.digital_words_per_sample,
+                "sample_start": self.generated_words["stream_out_main"] // self.digital_words_per_sample,
             },
         )
-        self.generated_words["FIFO"] += sample_count * self.digital_words_per_sample
+        self.generated_words["stream_out_main"] += sample_count * self.digital_words_per_sample
         return bunch
 
     def _next_packet_words(self, fifo_name):
@@ -512,11 +512,11 @@ class Pi23RandomBunchSource:
         return int(packet_words)
 
     def _chunk_words(self, fifo_name):
-        if fifo_name == "FIFOAnalog":
+        if fifo_name == "stream_out_aux":
             return int(self.fifo_chuck_size_analog.value)
         return int(self.fifo_chuck_size_digital.value)
 
     def _expected_words(self, fifo_name):
-        if fifo_name == "FIFOAnalog":
+        if fifo_name == "stream_out_aux":
             return int(self.expected_words_data_analog.value)
         return int(self.expected_words_data_digital.value)

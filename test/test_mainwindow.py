@@ -17,14 +17,14 @@ class TestMyClass(unittest.TestCase):
         instance.temporalSettingsChanged()
 
         instance.setRegistersDict.assert_called_with({
-            "Cx": int(Cx),
-            "#timebinsPerPixel": int(time_bin),
-            "ClockDur": int(clock_duration),
-            "WaitForLaser": int(waitForLaserInCycle),
-            "WaitAfterFrame": int(waitAfterFrame),
-            "WaitOnlyFirstTime": waitOnlyFirstTime,
-            "CircularMotionActivate": True,
-            "DummyData": False,
+            "time_bin_dwell_cycles": int(Cx),
+            "max_time_bins_per_pixel": int(time_bin),
+            "tag_clock_duration_cycles": int(clock_duration),
+            "wait_laser_startup_cycles": int(waitForLaserInCycle),
+            "wait_post_frame_cycles": int(waitAfterFrame),
+            "wait_laser_first_time_only_enable": waitOnlyFirstTime,
+            "circular_scan_enable": True,
+            "dummy_data_enable": False,
         })
 
     def trace_parameters_changed_updates_labels(self):
@@ -51,10 +51,10 @@ class TestMyClass(unittest.TestCase):
         instance.configure_analog()
 
         instance.setRegistersDict.assert_called_with({
-            "AnalogA0 integrate": True,
-            "AnalogA0 invert": False,
-            "AnalogInputA": 1,
-            "AnalogInputB": 2,
+            "analog_a_channel_0_integrate_enable": True,
+            "analog_a_channel_0_invert_enable": False,
+            "analog_a_input_selector": 1,
+            "analog_b_input_selector": 2,
         })
 
     def activateShowPreview_calls_activateShowPreview(self):
@@ -65,20 +65,20 @@ class TestMyClass(unittest.TestCase):
 
         instance.mcs_manager.activateShowPreview.assert_called_with(True)
 
-    def activateFIFOflag_sets_fifo_flags(self):
+    def configure_stream_enables_sets_stream_flags(self):
         instance = MyClass()
         instance.ui.checkBox_fifo_digital.isChecked = MagicMock(return_value=True)
         instance.ui.checkBox_fifo_analog.isChecked = MagicMock(return_value=False)
         instance.mcs_manager.setActivatedFifo = MagicMock()
         instance.setRegistersDict = MagicMock()
 
-        instance.activateFIFOflag()
+        instance.configure_stream_enables()
 
-        instance.mcs_manager.setActivatedFifo.assert_called_with(["FIFO"])
+        instance.mcs_manager.setActivatedFifo.assert_called_with(["stream_out_main"])
         instance.setRegistersDict.assert_called_with({
-            "DFD_Activate": False,
-            "activateFIFOAnalog": False,
-            "activateFIFODigital": True,
+            "dfd_enable": False,
+            "stream_out_aux_enable": False,
+            "stream_out_main_enable": True,
         })
 
     def grabPanorama_sets_image(self):
@@ -249,7 +249,7 @@ class TestMyClass(unittest.TestCase):
 
         instance.analog_before_stop()
 
-        instance.setRegistersDict.assert_called_with({"AnalogOutDC_0": 0, "AnalogOutDC_1": 0, "AnalogOutDC_2": 0, "AnalogOutDC_3": 0, "AnalogOutDC_4": 0, "AnalogOutDC_5": 0, "AnalogOutDC_6": 0, "AnalogOutDC_7": 0})
+        instance.setRegistersDict.assert_called_with({"analog_output_0_dc_volts": 0, "analog_output_1_dc_volts": 0, "analog_output_2_dc_volts": 0, "analog_output_3_dc_volts": 0, "analog_output_4_dc_volts": 0, "analog_output_5_dc_volts": 0, "analog_output_6_dc_volts": 0, "analog_output_7_dc_volts": 0})
 
     def stopAcquisition_stops_fpga(self):
         instance = MyClass()
@@ -288,8 +288,8 @@ class TestMyClass(unittest.TestCase):
 
         instance.sendCmdRun()
 
-        instance.setRegistersDict.assert_any_call({"stop": False, "Run": False})
-        instance.setRegistersDict.assert_any_call({"Run": True})
+        instance.setRegistersDict.assert_any_call({"stop_command": False, "start_command": False})
+        instance.setRegistersDict.assert_any_call({"start_command": True})
 
     def sendCmdStop_sets_stop_register(self):
         instance = MyClass()
@@ -297,8 +297,8 @@ class TestMyClass(unittest.TestCase):
 
         instance.sendCmdStop()
 
-        instance.setRegistersDict.assert_any_call({"stop": False})
-        instance.setRegistersDict.assert_any_call({"stop": True})
+        instance.setRegistersDict.assert_any_call({"stop_command": False})
+        instance.setRegistersDict.assert_any_call({"stop_command": True})
 
     def getPreviewImage_returns_preview_image(self):
         instance = MyClass()
