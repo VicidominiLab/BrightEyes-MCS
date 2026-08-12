@@ -32,7 +32,6 @@ ENV/
 build/
 dist/
 *.spec
-/brighteyes_mcs_installer.exe
 .eggs/
 *.egg-info/
 pip-wheel-metadata/

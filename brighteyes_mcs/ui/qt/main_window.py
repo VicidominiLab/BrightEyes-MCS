@@ -2,7 +2,7 @@
 __author__ = "Mattia Donato"
 __copyright__ = "Copyright (C) 2023, Istituto Italiano di Tecnologia"
 __license__ = "GPL"
-__version__ = "1.0.0"
+from brighteyes_mcs import __version__
 __email__ = ["mattia.donato@iit.it", "giuseppe.vicidomini@iit.it"]
 
 # pyside6-uic main_design.ui -o main_design.py
@@ -47,7 +47,7 @@ from PySide6.QtGui import QPixmap, QIcon, QGuiApplication, QDesktopServices
 from datetime import datetime
 
 from .main_window_design import Ui_MainWindowDesign
-from .flim_image_view import FlimImageView
+from .flim_image_view import FlimImageView, ModifierGatedViewBox
 from .qt_locale import install_scientific_locale
 from .support import DoubleClickDoubleSpinBox, PluginSignals, RectROIWithoutHandles
 
@@ -133,6 +133,7 @@ class MainWindow(QMainWindow):
         PROGRAM_STATE_ACQUISITION_DONE,
     )
     FPGA_IDLE_TIMEOUT_SECONDS = 5.0
+    FPGA_WATCHDOG_INTERVAL_MS = 500
 
     def __init__(self, args=None):
         install_scientific_locale()
@@ -388,9 +389,8 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_convertRawAcquisition.clicked.connect(
             self.cmd_convertRawAcquisition
         )
-        self.ui.pushButton_stopAll.clicked.connect(self.stopAll)
-        self.ui.checkBox_loadFirmwareOnce.toggled.connect(
-            self.loadFirmwareOnceChanged
+        self.ui.pushButton_fpga_connection_cmd.clicked.connect(
+            self.fpgaConnectionButtonClicked
         )
 
         # self.ui.listWidget.clicked.connect(self.listwidget_click)
@@ -411,7 +411,8 @@ class MainWindow(QMainWindow):
         self.timerConfigurationViewer.setInterval(500)
         self.timerConfigurationViewer.start()
 
-        self.im_widget_plot_item = pg.PlotItem()
+        self.preview_view_box = ModifierGatedViewBox()
+        self.im_widget_plot_item = pg.PlotItem(viewBox=self.preview_view_box)
         self.im_widget_plot_item.setLabel("left", "y (um)")
         self.im_widget_plot_item.setLabel("bottom", "x (um)")
 
@@ -429,6 +430,12 @@ class MainWindow(QMainWindow):
 
         self.im_widget.show()
         self.im_widget.getView().showGrid(True, True)
+        self.ui.checkBox_invertPreviewCtrl.toggled.connect(
+            self.previewControlModeChanged
+        )
+        self.previewControlModeChanged(
+            self.ui.checkBox_invertPreviewCtrl.isChecked()
+        )
 
         im_widget_view_left_ax = self.im_widget.getView().getAxis("left")
         im_widget_view_bottom_ax = self.im_widget.getView().getAxis("bottom")
@@ -501,7 +508,6 @@ class MainWindow(QMainWindow):
         self.im_widget.setPredefinedGradient("thermal")
         self.fingerprint_widget.setPredefinedGradient("thermal")
 
-        self.old_status_lockmovecheckbox = False
         self.lock_parameters_changed_call = False
         logger.debug("self.lock_parameters_changed_call UNSET False")
 
@@ -511,6 +517,24 @@ class MainWindow(QMainWindow):
         self.mcs_manager = McsManager()
         self.preview_controller = PreviewController()
         logger.debug("McsManager()")
+        self._laser_force_pulsing_previous = None
+        self.ui.checkBox_pulsing_forced.toggled.connect(
+            self.laserForcePulsingChanged
+        )
+        self.ui.checkBox_DFD.toggled.connect(
+            self.updateLaserForcePulsingAvailability
+        )
+        self.updateLaserForcePulsingAvailability()
+        self._fpga_watchdog_blink_on = False
+        # This is a user preference, not a mirror of the live connection
+        # state.  Acquisitions connect the FPGA automatically, but that must
+        # not opt in to keeping the session alive after the run.
+        self._keep_fpga_on_requested = False
+        self.timerFPGAWatchdog = QTimer(self)
+        self.timerFPGAWatchdog.setInterval(self.FPGA_WATCHDOG_INTERVAL_MS)
+        self.timerFPGAWatchdog.timeout.connect(self._fpgaWatchdogTick)
+        self.timerFPGAWatchdog.start()
+        self._update_fpga_connection_button()
         if hasattr(self.ui, "comboBox_detector_model"):
             self.ui.comboBox_detector_model.currentTextChanged.connect(
                 self.detectorModelChanged
@@ -1046,6 +1070,12 @@ class MainWindow(QMainWindow):
             self.ui.checkBox_autoscale_img,
             False,
         )
+        configuration_helper["preview_invert_ctrl"] = (
+            "Invert Preview Ctrl Behavior",
+            bool,
+            self.ui.checkBox_invertPreviewCtrl,
+            False,
+        )
         configuration_helper["projection"] = (
             "Preview Projection",
             str,
@@ -1446,13 +1476,6 @@ class MainWindow(QMainWindow):
             False,
         )
 
-        configuration_helper["load_firmware_once"] = (
-            "Experimental: load the firmware only once",
-            bool,
-            self.ui.checkBox_loadFirmwareOnce,
-            False,
-        )
-
         configuration_helper["plugins"] = ("Plugins", dict, None, False)
 
         return configuration_helper
@@ -1790,6 +1813,7 @@ class MainWindow(QMainWindow):
 
         progress_dialog.setValue(100)
         self.last_saved_filename = str(converted_path)
+        self._publish_filename_to_console(self.last_saved_filename)
         self.ui.pushButton_externalProgram.setEnabled(True)
         self.plugin_signals.signal.emit(
             "acquisitionDone %s" % self.last_saved_filename
@@ -2322,6 +2346,11 @@ class MainWindow(QMainWindow):
         """
         Set the GUI data from a dictionary (it can be also a partial configuration)
         """
+        configuration = dict(configuration)
+        # FPGA connection is live hardware state, not a saved GUI preference.
+        configuration.pop("load_firmware_once", None)
+        configuration.pop("keep_fpga_connected", None)
+
         # lock_old = self.lock_parameters_changed_call
         # self.lock_parameters_changed_call = True
 
@@ -2429,7 +2458,7 @@ class MainWindow(QMainWindow):
         Slot for the axes range changed event, when the range of the axes of the Image Preview is changed
         """
         logger.debug("axesRangeChanged(...)")
-        if not self.ui.checkBox_lockMove.isChecked():
+        if self.preview_view_box.navigation_event_active:
             proj = self.ui.comboBox_view_projection.currentText()
             old_lock_parameters_changed_call = self.lock_parameters_changed_call
             if not self.lock_range_changing:
@@ -2655,6 +2684,11 @@ class MainWindow(QMainWindow):
             logger.exception("Could not stop the preview timer")
 
         try:
+            self.timerFPGAWatchdog.stop()
+        except (AttributeError, RuntimeError):
+            logger.debug("FPGA watchdog timer was not active during shutdown")
+
+        try:
             self.mcs_manager.stopAcquisition()
         except Exception:
             logger.exception("Could not stop acquisition processes")
@@ -2726,6 +2760,10 @@ class MainWindow(QMainWindow):
             mydict = {}
             mydict.update(self.mcs_manager.default_configuration)
             mydict.update(self.configurationFPGA_dict)
+            # Opening the FPGA session must never start the scan FSM.  A stale
+            # start value may remain in configurationFPGA_dict after a run.
+            mydict["stop_command"] = False
+            mydict["start_command"] = False
 
             invert_sdata = (self.ui.checkBox_spad_invert.isChecked(),)
 
@@ -2797,23 +2835,11 @@ class MainWindow(QMainWindow):
             try:
                 self.mcs_manager.connect(mydict, list_fifos=fifo)
             except Exception as e:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Icon.Critical)
-                msg.setWindowTitle("Error")
-                msg.setText("FPGA initialization failed.")
-                msg.setInformativeText(
-                    "<b>Please check your configuration:</b><br><br>"
-                    "• Verify that the FPGA is <b>powered on</b> and properly <b>connected</b>.<br>"
-                    '• Verify that <b>FPGA BitFile</b> firmware matches your FPGA model.<br>'
-                    '• Verify that <b>FPGA Addr</b> is correct (usually <i>RIO0</i>, but it may change if multiple FPGAs are configured).'
-                )
-                msg.setStandardButtons(QMessageBox.StandardButton.Ok)
-
-                msg.exec()
-
-                raise ("ERROR")
+                raise RuntimeError(str(e) or "FPGA initialization failed.") from e
 
             # self.mcs_manager.start()
+
+        self._update_fpga_connection_button()
 
     def setRegistersDict(self, myconf):
         """
@@ -3045,9 +3071,10 @@ class MainWindow(QMainWindow):
 
     def imageClicked(self, event):
         """
-        image clicked event.
-        if the CTRL key is pressed, it will add a marker
-        else it will center the image on the clicked point
+        Handle a double-click as either move-to or add-marker.
+
+        Ctrl selects move-to by default.  The preview inversion control swaps
+        the two actions.
         """
         mouse_event = event
         mouse_point = mouse_event.pos()
@@ -3073,7 +3100,13 @@ class MainWindow(QMainWindow):
 
             logger.debug("%s %s", "event.modifiers()", event.modifiers())
 
-            if event.modifiers()  & Qt.ControlModifier:
+            if self.preview_view_box.navigation_allowed(event.modifiers()):
+                logger.debug("imageClicked(): move to position")
+                self.ui.spinBox_off_x_um.setValue(a[0])
+                self.ui.spinBox_off_y_um.setValue(a[1])
+                self.ui.spinBox_off_z_um.setValue(a[2])
+                self.offset_um_Changed()
+            else:
                 conf = self.getGUI_data()
 
                 conf["offset_x_um"] = a[0]
@@ -3083,12 +3116,22 @@ class MainWindow(QMainWindow):
                 self.markers_list.append(conf)
                 self.drawMarkers()
                 self.markersViewTable()
-            else:
-                logger.debug("imageClicked() + Qt.CTRL")
-                self.ui.spinBox_off_x_um.setValue(a[0])
-                self.ui.spinBox_off_y_um.setValue(a[1])
-                self.ui.spinBox_off_z_um.setValue(a[2])
-                self.offset_um_Changed()
+
+    @Slot(bool)
+    def previewControlModeChanged(self, inverted):
+        """Apply and explain the selected Ctrl interaction mode."""
+        inverted = bool(inverted)
+        self.preview_view_box.set_control_inverted(inverted)
+        if inverted:
+            self.ui.label_106.setText(
+                "Ctrl+Drag/Wheel: image only; Drag/Wheel/Double-Click: microscope"
+            )
+            self.ui.label_107.setText("Ctrl+Double-Click: set a Marker")
+        else:
+            self.ui.label_106.setText(
+                "Drag/Wheel: image only; Ctrl+Drag/Wheel/Double-Click: microscope"
+            )
+            self.ui.label_107.setText("Double-Click: set a Marker")
 
 
     def drawMarkers(self):
@@ -5015,6 +5058,19 @@ Have fun!
         self.console_widget.show()
         self.console_widget.kernel_manager.kernel.shell.user_ns.update(namespace)
 
+    def _publish_filename_to_console(self, filename):
+        """Expose the latest completed file in the embedded Python console."""
+        console = getattr(self, "console_widget", None)
+        if console is None or not filename:
+            return
+        try:
+            # Keep this in the core lifecycle instead of relying on the optional
+            # Script Launcher plug-in.  The plug-in may be removed or disabled,
+            # but ``filename`` is part of the console's documented namespace.
+            console.push_vars({"filename": os.path.abspath(filename)})
+        except Exception:
+            logger.exception("Unable to publish filename to Python console")
+
     def microimage_analysis(self, data_finger_print):
         """
         microimage analysis in live, useful for alligment
@@ -5358,9 +5414,8 @@ Have fun!
         # self.positionSettingsChanged()
 
         # pass
-        if self.ui.checkBox_lockMove.isChecked():
-            logger.debug("self.im_widget.autoRange()")
-            self.im_widget.autoRange()
+        logger.debug("self.im_widget.autoRange()")
+        self.im_widget.autoRange()
 
     def updateLabelPixelSize(self):
         if self.ui.spinBox_nx.value() != 1:
@@ -5475,9 +5530,6 @@ Have fun!
         spatial settings changed event
         """
         if self.lockspatialSettingsChanged == False:
-            lockmove = self.ui.checkBox_lockMove.isChecked()
-
-            self.ui.checkBox_lockMove.setChecked(True)
             # Update only the statistics the configuration will be updated during the start acquisition
 
             time_res = self.ui.spinBox_timeresolution.value()
@@ -5516,7 +5568,6 @@ Have fun!
             )
 
             self.checkAlerts()
-            self.ui.checkBox_lockMove.setChecked(lockmove)
 
             self.ui.pushButton_18.setStyleSheet("border: 1px solid red;")
 
@@ -5625,6 +5676,65 @@ Have fun!
         if self.ui.checkBox_DFD.isChecked():
             self.ui.spinBox_time_bin_per_px.setValue(self.DFD_nbins)
             self.ui.spinBox_timeresolution.setValue(2.0)
+        self.updateLaserForcePulsingAvailability()
+
+    def _currentLaserRegisterValue(self, register_name):
+        """Return the latest configured value for a laser register, if known."""
+        for configuration in (
+            self.configurationFPGA_dict,
+            self.mcs_manager.registers_configuration,
+            self.mcs_manager.default_configuration,
+        ):
+            if register_name in configuration and configuration[register_name] is not None:
+                return True, configuration[register_name]
+        return False, None
+
+    @Slot(bool)
+    def laserForcePulsingChanged(self, enabled):
+        """Apply force-pulsing registers and restore their prior values."""
+        if enabled and self.ui.checkBox_DFD.isChecked():
+            self.ui.checkBox_pulsing_forced.setChecked(False)
+            return
+
+        restored_registers = ("laser_time_bin_mode_enable", "max_laser_time_bin")
+        if enabled:
+            previous = {}
+            for register_name in restored_registers:
+                found, value = self._currentLaserRegisterValue(register_name)
+                if found:
+                    previous[register_name] = value
+            self._laser_force_pulsing_previous = previous
+            self.setRegistersDict(
+                {
+                    "laser_time_bin_mode_enable": True,
+                    "max_laser_time_bin": 1,
+                    "laser_force_pulsing_enable": True,
+                }
+            )
+            return
+
+        previous = self._laser_force_pulsing_previous
+        if previous is None:
+            # The unchecked initial UI state must not emit a hardware write.
+            return
+
+        restore = dict(previous)
+        restore["laser_force_pulsing_enable"] = False
+        for register_name in restored_registers:
+            if register_name not in previous:
+                # No value was configured before activation (normally this only
+                # occurs before connecting); stop carrying the temporary forced
+                # value into a later FPGA connection.
+                self.configurationFPGA_dict.pop(register_name, None)
+        self._laser_force_pulsing_previous = None
+        self.setRegistersDict(restore)
+
+    def updateLaserForcePulsingAvailability(self, _checked=None):
+        """Force pulsing and DFD are mutually exclusive."""
+        dfd_enabled = self.ui.checkBox_DFD.isChecked()
+        if dfd_enabled and self.ui.checkBox_pulsing_forced.isChecked():
+            self.ui.checkBox_pulsing_forced.setChecked(False)
+        self.ui.checkBox_pulsing_forced.setEnabled(not dfd_enabled)
 
     @Slot(int)
     def compensationDelayForSnakeChanged(self, value):
@@ -5876,27 +5986,126 @@ Have fun!
         """
         self.stop()
 
+    def _update_fpga_connection_button(self):
+        """Reflect whether FPGA firmware is currently loaded."""
+        connected = bool(self.mcs_manager.is_connected)
+        keep_requested = bool(
+            getattr(self, "_keep_fpga_on_requested", False)
+        )
+        button = self.ui.pushButton_fpga_connection_cmd
+        button.setChecked(connected and keep_requested)
+        button.setText(
+            "Disconnect FPGA"
+            if connected and keep_requested
+            else "Keep FPGA On"
+        )
+        button.setToolTip(
+            "Stop any active acquisition, reset, and disconnect the FPGA"
+            if connected
+            else "Load the FPGA firmware and keep it connected"
+        )
+        if not connected:
+            self._fpga_watchdog_blink_on = False
+            self.ui.label_FPGA_status.setText("● FPGA disconnected")
+            self.ui.label_FPGA_status.setStyleSheet("color: #808080;")
+            self.ui.label_FPGA_status.setToolTip("Waiting for a Preview / Acquisition or the Keep FPGA On button.")
+
     @Slot()
-    def stopAll(self):
-        """Quick-reset the FPGA scan state machine without unloading firmware."""
+    def _fpgaWatchdogTick(self):
+        """Poll the FPGA and blink its status label after successful reads."""
+        if not self.mcs_manager.is_connected:
+            self._update_fpga_connection_button()
+            return
+
+        try:
+            status = self.mcs_manager.check_fpga_alive()
+        except Exception as error:
+            self._fpga_watchdog_blink_on = False
+            self.ui.label_FPGA_status.setText("● FPGA not responding")
+            self.ui.label_FPGA_status.setStyleSheet("color: #d32f2f;")
+            self.ui.label_FPGA_status.setToolTip(str(error))
+            logger.warning("FPGA watchdog read failed: %s", error)
+            return
+
+        self._fpga_watchdog_blink_on = not self._fpga_watchdog_blink_on
+        color = "#00e676" if self._fpga_watchdog_blink_on else "#006b3c"
+        self.ui.label_FPGA_status.setText("● FPGA connected")
+        self.ui.label_FPGA_status.setStyleSheet(f"color: {color};")
+        self.ui.label_FPGA_status.setToolTip(
+            f"Watchdog OK — debug_scan_fsm_status: {status}"
+        )
+
+    def _show_fpga_initialization_error(self, error):
+        """Show an actionable hardware or firmware connection error."""
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Critical)
+        msg.setWindowTitle("FPGA initialization failed")
+        msg.setText("The FPGA could not be initialized.\n"
+                    "Probably the firmware selected is not compatible with the hardware, " \
+                    "or the hardware is not connected. Check that the firmware is correct" \
+                    "and the FPGA is powered on and connected.")
+        msg.setInformativeText(str(error))
+        msg.setDetailedText(
+            "Check that:\n"
+            "- the FPGA is powered on and connected;\n"
+            "- FPGA BitFile matches the FPGA model and BrightEyes-MCS;\n"
+            "- FPGA Addr is correct (usually RIO0)."
+        )
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg.exec()
+
+    def disconnectFPGA(self):
+        """Stop FPGA activity and close the hardware session."""
+        self._keep_fpga_on_requested = False
+        if not self.mcs_manager.is_connected:
+            self._update_fpga_connection_button()
+            return
+
+        reset_error = None
         try:
             self.mcs_manager.quick_reset_fpga(
                 timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
             )
-            self.ui.statusBar.showMessage("FPGA is idle.", 5000)
         except Exception as error:
-            logger.exception("FPGA quick reset failed")
-            QMessageBox.critical(self, "FPGA quick reset failed", str(error))
+            reset_error = error
+            logger.exception(
+                "FPGA quick reset failed; forcing the session to close"
+            )
+
+        try:
+            self.mcs_manager.stopPreview()
+            self.timerPreviewImg.stop()
+            self.mcs_manager.stopFPGA()
+        finally:
+            self.mcs_manager.stopAcquisition(keep_fpga_loaded=False)
+            self.mcs_manager.is_connected = False
+            self._update_fpga_connection_button()
+
+        if reset_error is not None:
+            raise reset_error
 
     @Slot(bool)
-    def loadFirmwareOnceChanged(self, enabled):
-        """Restore normal reload behavior when experimental mode is disabled."""
-        if enabled or not self.mcs_manager.is_connected:
-            return
-        if self.started_normal or self.started_preview:
-            return
-        self.mcs_manager.stopFPGA()
-        self.mcs_manager.stopAcquisition()
+    def fpgaConnectionButtonClicked(self, checked):
+        """Connect when checked; stop, reset, and disconnect when unchecked."""
+        self._keep_fpga_on_requested = bool(checked)
+        try:
+            if not checked:
+                if self.started_normal or self.started_preview:
+                    self.stop()
+                if self.mcs_manager.is_connected:
+                    self.disconnectFPGA()
+                self.ui.statusBar.showMessage("FPGA disconnected.", 5000)
+            elif not self.mcs_manager.is_connected:
+                self.connectFPGA()
+                self._fpgaWatchdogTick()
+                self.ui.statusBar.showMessage("FPGA connected and idle.", 5000)
+        except Exception as error:
+            logger.exception("Could not change the FPGA connection state")
+            self._keep_fpga_on_requested = False
+            self.ui.pushButton_fpga_connection_cmd.setChecked(False)
+            self._show_fpga_initialization_error(error)
+        finally:
+            self._update_fpga_connection_button()
 
     # @Slot()
     # def connectButtonClicked(self):
@@ -6491,6 +6700,21 @@ Have fun!
         """
         self.beginAcquisition(is_preview=False)
 
+    def _prepare_fpga_for_acquisition(self):
+        """Connect when necessary and reset the scan FSM before each run."""
+        if not self.mcs_manager.is_connected:
+            logger.debug("FPGA not connected, connecting now...")
+            self.connectFPGA()
+        else:
+            logger.debug("FPGA already connected")
+
+        # A freshly loaded firmware is not guaranteed to have observed a stop
+        # command.  Without this pulse the first start can be ignored, while a
+        # later run succeeds only because stopping the first one reset the FSM.
+        self.mcs_manager.quick_reset_fpga(
+            timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
+        )
+
     @Slot()
     def beginAcquisition(self, is_preview=False):
         """
@@ -6510,18 +6734,28 @@ Have fun!
         self.ui.pushButton_previewStart.setEnabled(False)
         self.ui.pushButton_acquisitionStart.setEnabled(False)
         self.ui.pushButton_stop.setEnabled(True)
-        self.ui.checkBox_loadFirmwareOnce.setEnabled(False)
 
-        # Ensure FPGA is connected
-        if not self.mcs_manager.is_connected:
-            logger.debug("FPGA not connected, connecting now...")
-            self.connectFPGA()
-        else:
-            logger.debug("FPGA Already connected")
-            if self.ui.checkBox_loadFirmwareOnce.isChecked():
-                self.mcs_manager.wait_for_fpga_idle(
-                    timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
-                )
+        # Validate and start the FPGA before allocating acquisition workers or
+        # activating any FIFO readers.
+        try:
+            self._prepare_fpga_for_acquisition()
+        except Exception as error:
+            logger.exception("FPGA preparation failed; acquisition not started")
+            if self.mcs_manager.is_connected:
+                try:
+                    self.disconnectFPGA()
+                except Exception:
+                    logger.exception(
+                        "Could not fully close the failed FPGA connection"
+                    )
+            self.ui.pushButton_previewStart.setEnabled(True)
+            self.ui.pushButton_acquisitionStart.setEnabled(True)
+            self.ui.pushButton_stop.setEnabled(False)
+            self.ui.pushButton_fpga_connection_cmd.setEnabled(True)
+            self._update_fpga_connection_button()
+            self.ui.statusBar.showMessage("FPGA initialization failed.", 5000)
+            self._show_fpga_initialization_error(error)
+            return
 
         # Configure preview settings
         self.updatePreviewConfiguration()
@@ -6549,10 +6783,6 @@ Have fun!
 
         # Save current GUI configuration for later comparison
         self.configurationGUI_dict_beforeStart = self.getGUI_data()
-
-        # Lock movement controls
-        self.old_status_lockmovecheckbox = self.ui.checkBox_lockMove.isChecked()
-        self.ui.checkBox_lockMove.setChecked(True)
 
         # If preview mode, adjust repetitions and disable certain controls
         if is_preview:
@@ -6585,19 +6815,6 @@ Have fun!
             do_run=True,
             raw_stream_mode=raw_stream_mode,
         )
-
-        if is_preview:
-            self.preview_run_id += 1
-            self.last_preview_started_at = self._make_status_timestamp()
-            self._set_program_state(
-                self.PROGRAM_STATE_PREVIEW, "preview_started"
-            )
-        else:
-            self.acquisition_run_id += 1
-            self.last_acquisition_started_at = self._make_status_timestamp()
-            self._set_program_state(
-                self.PROGRAM_STATE_ACQUISITION, "acquisition_started"
-            )
 
         if is_preview:
             self.preview_run_id += 1
@@ -6923,9 +7140,8 @@ Have fun!
         logger.debug("projChanged()")
         self.plotPreviewImage()
 
-        if self.ui.checkBox_lockMove.isChecked():
-            logger.debug("self.im_widget.autoRange()")
-            self.im_widget.autoRange()
+        logger.debug("self.im_widget.autoRange()")
+        self.im_widget.autoRange()
 
         self.drawMarkers()
         self.checkAlerts()
@@ -7017,6 +7233,7 @@ Have fun!
                 self.finalizeImage()
 
             h5mgr.close()
+            self._publish_filename_to_console(self.last_saved_filename)
 
             if self.ttm_remote_is_up():
                 self.ttm_remote_manager.wait_ttm_filename(self.ui.listWidget.addItem)
@@ -7067,15 +7284,21 @@ Have fun!
         stop the acquisition
         """
         logger.debug("stopAcquisition")
-        keep_fpga_loaded = self.ui.checkBox_loadFirmwareOnce.isChecked()
+        # Do not infer this from the hardware connection: every acquisition
+        # connects automatically.  Only an explicit click on Keep FPGA On
+        # should preserve the session after a manual or natural stop.
+        keep_fpga_loaded = bool(
+            getattr(
+                self,
+                "_keep_fpga_on_requested",
+                self.ui.pushButton_fpga_connection_cmd.isChecked(),
+            )
+        )
         reset_error = None
         try:
-            if keep_fpga_loaded:
-                self.mcs_manager.quick_reset_fpga(
-                    timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
-                )
-            else:
-                self.sendCmdStop()
+            self.mcs_manager.quick_reset_fpga(
+                timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
+            )
         except Exception as error:
             reset_error = error
         finally:
@@ -7088,6 +7311,7 @@ Have fun!
                 keep_fpga_loaded=keep_fpga_loaded and reset_error is None
             )
             self.mcs_manager.stopPreview()
+            self._update_fpga_connection_button()
 
         if reset_error is not None:
             if keep_fpga_loaded:
@@ -7122,7 +7346,7 @@ Have fun!
         self.ui.pushButton_previewStart.setEnabled(True)
         self.ui.pushButton_acquisitionStart.setEnabled(True)
         self.ui.pushButton_stop.setEnabled(False)
-        self.ui.checkBox_loadFirmwareOnce.setEnabled(True)
+        self.ui.pushButton_fpga_connection_cmd.setEnabled(True)
 
         self.ui.checkBox_fifo_digital.setEnabled(True)
         self.ui.checkBox_fifo_analog.setEnabled(True)
@@ -7130,7 +7354,6 @@ Have fun!
         self.ui.checkBox_uttmActivate.setEnabled(True)
         self.ui.checkBox_ttmActivate.setEnabled(True)
 
-        self.ui.checkBox_lockMove.setChecked(self.old_status_lockmovecheckbox)
         self.stopAcquisition()
 
         # self.timerPreviewImg.stop()
@@ -7161,10 +7384,13 @@ Have fun!
         """
         send the run command to the FPGA
         """
-        if self.ui.checkBox_loadFirmwareOnce.isChecked():
+        if self.ui.pushButton_fpga_connection_cmd.isChecked():
+            # A reused VI needs a fresh edge for every acquisition.
             self.setRegistersDict({"stop_command": False, "start_command": True})
             self.setRegistersDict({"start_command": False})
         else:
+            # Preserve the normal firmware protocol: Run remains asserted until
+            # the acquisition is stopped and the FPGA session is closed.
             self.setRegistersDict({"stop_command": False, "start_command": False})
             self.setRegistersDict({"start_command": True})
 
@@ -7650,6 +7876,9 @@ Have fun!
             logger.debug("%s %s", "filecfg", filecfg)
             mydict, _typed_configuration = self.configuration_controller.load(filecfg)
             if mydict:
+                mydict = dict(mydict)
+                mydict.pop("load_firmware_once", None)
+                mydict.pop("keep_fpga_connected", None)
                 self._loaded_configuration_payload = dict(mydict)
                 logger.debug(mydict)
                 l1 = self.lock_parameters_changed_call

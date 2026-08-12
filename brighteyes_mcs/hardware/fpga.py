@@ -67,9 +67,11 @@ class FpgaHandle(object):
             "queueFifoRead": self.mp_manager.Queue(),
             "is_connected": self.mp_manager.Event(),
             "is_readytorun": self.mp_manager.Event(),
+            "initialization_error": self.mp_manager.dict(),
             "list_registers": self.mp_manager.list(),
             "actual_fifo_depth": self.mp_manager.Value("I", 0),
             "fpgarunning": self.mp_manager.Event(),
+            "fpga_started": self.mp_manager.Event(),
             "fifo_chuck_size_digital": self.mp_manager.Value("I", 0),
             "fifo_chuck_size_analog": self.mp_manager.Value("I", 0),
             "expected_words_data_digital": self.mp_manager.Value("q", 0),
@@ -91,6 +93,8 @@ class FpgaHandle(object):
             initial_registers = {}
         self.configuration["initial_registers"].clear()
         self.configuration["initial_registers"].update(initial_registers)
+        self.configuration["initialization_error"].clear()
+        self.configuration["is_readytorun"].clear()
         if not detector_uses_nifpga_control(self.configuration["detector_model"]):
             logger.debug("Detector selected without NI FPGA control; skipping NI FPGA session startup")
             self.configuration["is_connected"].set()
@@ -114,8 +118,19 @@ class FpgaHandle(object):
         logger.debug("Waiting for the ready to run")
         tstart = datetime.now()
         flag = self.configuration["is_readytorun"].wait(timeout=5.)
-        if flag != True:
-            raise ("TIMEOUT")
+        if flag is not True:
+            raise TimeoutError(
+                "Timed out while loading and validating the FPGA firmware."
+            )
+        initialization_error = self.configuration["initialization_error"].get(
+            "message"
+        )
+        if initialization_error:
+            raise RuntimeError(initialization_error)
+        if not self.configuration["is_connected"].is_set():
+            raise RuntimeError(
+                "The FPGA session did not reach the connected state."
+            )
         tstop = datetime.now()
         logger.debug("%s %s %s", "self.configuration['is_readytorun'] now is up after ", (tstop - tstart).microseconds * 1e-6, "s")
         logger.debug("self.fpga_handle_process.start() done")
@@ -149,9 +164,23 @@ class FpgaHandle(object):
         except:
             return False
 
-    def runfpga(self):
+    def runfpga(self, timeout=5.0):
+        """Start the FPGA VI and wait for confirmation from its process."""
         logger.debug("nifpga_session.run()")
+        started_event = self.configuration["fpga_started"]
+        if started_event.is_set():
+            return
+
+        if not detector_uses_nifpga_control(self.configuration["detector_model"]):
+            started_event.set()
+            return
+
         self.configuration["fpgarunning"].set()
+        if not started_event.wait(timeout=float(timeout)):
+            raise TimeoutError(
+                "The FPGA VI did not enter the running state within "
+                f"{float(timeout):g} seconds."
+            )
 
     def stop(self):
         """Stop the control process and close every NI FPGA session."""
@@ -191,6 +220,9 @@ class FpgaHandle(object):
                         action_name,
                     )
 
+        started_event = self.configuration.get("fpga_started")
+        if started_event is not None:
+            started_event.clear()
         logger.debug("FPGA process and NI sessions stopped")
         if errors:
             raise RuntimeError(
@@ -299,4 +331,3 @@ class FpgaHandle(object):
 
     def get_actual_depth(self):
         return self.get_actual_fifo_depth()
-

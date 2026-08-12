@@ -5,8 +5,164 @@ sys.path.insert(1, os.getcwd())
 
 import unittest
 from unittest.mock import MagicMock, patch
+from types import SimpleNamespace
+from PySide6.QtCore import Qt
+
+from brighteyes_mcs.ui.qt.main_window import MainWindow
+from brighteyes_mcs.ui.qt.flim_image_view import (
+    control_modifier_selects_navigation,
+)
 
 class TestMyClass(unittest.TestCase):
+
+    def test_preview_ctrl_modifier_selects_navigation_by_default(self):
+        self.assertTrue(
+            control_modifier_selects_navigation(
+                Qt.KeyboardModifier.ControlModifier
+            )
+        )
+        self.assertFalse(
+            control_modifier_selects_navigation(
+                Qt.KeyboardModifier.NoModifier
+            )
+        )
+
+    def test_preview_ctrl_modifier_can_be_inverted(self):
+        self.assertFalse(
+            control_modifier_selects_navigation(
+                Qt.KeyboardModifier.ControlModifier,
+                inverted=True,
+            )
+        )
+        self.assertTrue(
+            control_modifier_selects_navigation(
+                Qt.KeyboardModifier.NoModifier,
+                inverted=True,
+            )
+        )
+
+    @staticmethod
+    def _preview_click_fixture(modifiers, inverted=False):
+        point = SimpleNamespace(x=lambda: 1.25, y=lambda: 2.5)
+        event = SimpleNamespace(
+            double=lambda: True,
+            pos=lambda: object(),
+            modifiers=lambda: modifiers,
+        )
+        spin_x = MagicMock()
+        spin_y = MagicMock()
+        spin_z = MagicMock()
+        spin_z.value.return_value = 3.75
+        instance = SimpleNamespace(
+            im_widget=SimpleNamespace(
+                view=SimpleNamespace(
+                    vb=SimpleNamespace(mapToView=lambda _point: point)
+                )
+            ),
+            preview_view_box=SimpleNamespace(
+                navigation_allowed=lambda value:
+                    control_modifier_selects_navigation(value, inverted)
+            ),
+            ui=SimpleNamespace(
+                comboBox_view_projection=SimpleNamespace(
+                    currentText=lambda: "xy"
+                ),
+                spinBox_off_x_um=spin_x,
+                spinBox_off_y_um=spin_y,
+                spinBox_off_z_um=spin_z,
+            ),
+            getGUI_data=MagicMock(return_value={}),
+            markers_list=[],
+            drawMarkers=MagicMock(),
+            markersViewTable=MagicMock(),
+            offset_um_Changed=MagicMock(),
+        )
+        return instance, event
+
+    def test_unmodified_double_click_adds_preview_marker_by_default(self):
+        instance, event = self._preview_click_fixture(
+            Qt.KeyboardModifier.NoModifier
+        )
+
+        MainWindow.imageClicked(instance, event)
+
+        self.assertEqual(
+            instance.markers_list,
+            [{
+                "offset_x_um": 1.25,
+                "offset_y_um": 2.5,
+                "offset_z_um": 3.75,
+            }],
+        )
+        instance.offset_um_Changed.assert_not_called()
+
+    def test_ctrl_double_click_moves_preview_by_default(self):
+        instance, event = self._preview_click_fixture(
+            Qt.KeyboardModifier.ControlModifier
+        )
+
+        MainWindow.imageClicked(instance, event)
+
+        self.assertEqual(instance.markers_list, [])
+        instance.ui.spinBox_off_x_um.setValue.assert_called_once_with(1.25)
+        instance.ui.spinBox_off_y_um.setValue.assert_called_once_with(2.5)
+        instance.ui.spinBox_off_z_um.setValue.assert_called_once_with(3.75)
+        instance.offset_um_Changed.assert_called_once_with()
+
+    def test_laser_force_pulsing_applies_and_restores_registers(self):
+        instance = SimpleNamespace(
+            configurationFPGA_dict={
+                "laser_time_bin_mode_enable": False,
+                "max_laser_time_bin": 9,
+            },
+            mcs_manager=SimpleNamespace(
+                registers_configuration={},
+                default_configuration={},
+            ),
+            ui=SimpleNamespace(
+                checkBox_DFD=SimpleNamespace(isChecked=lambda: False),
+            ),
+            _laser_force_pulsing_previous=None,
+            setRegistersDict=MagicMock(),
+        )
+        instance._currentLaserRegisterValue = (
+            lambda name: MainWindow._currentLaserRegisterValue(instance, name)
+        )
+
+        MainWindow.laserForcePulsingChanged(instance, True)
+        instance.setRegistersDict.assert_called_once_with(
+            {
+                "laser_time_bin_mode_enable": True,
+                "max_laser_time_bin": 1,
+                "laser_force_pulsing_enable": True,
+            }
+        )
+
+        instance.setRegistersDict.reset_mock()
+        MainWindow.laserForcePulsingChanged(instance, False)
+        instance.setRegistersDict.assert_called_once_with(
+            {
+                "laser_time_bin_mode_enable": False,
+                "max_laser_time_bin": 9,
+                "laser_force_pulsing_enable": False,
+            }
+        )
+        self.assertIsNone(instance._laser_force_pulsing_previous)
+
+    def test_dfd_disables_and_unchecks_force_pulsing(self):
+        force_pulsing = MagicMock()
+        force_pulsing.isChecked.return_value = True
+        instance = SimpleNamespace(
+            ui=SimpleNamespace(
+                checkBox_DFD=SimpleNamespace(isChecked=lambda: True),
+                checkBox_pulsing_forced=force_pulsing,
+            )
+        )
+
+        MainWindow.updateLaserForcePulsingAvailability(instance)
+
+        force_pulsing.setChecked.assert_called_once_with(False)
+        force_pulsing.setEnabled.assert_called_once_with(False)
 
     def temporalSettingsChanged_updates_registers(self):
         instance = MyClass()

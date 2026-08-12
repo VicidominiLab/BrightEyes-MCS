@@ -8,6 +8,14 @@ import pyqtgraph as pg
 _FIXED_RGB_LEVELS = [[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]
 
 
+def control_modifier_selects_navigation(modifiers, inverted=False):
+    """Return whether the Ctrl state selects preview navigation."""
+    control_pressed = bool(
+        modifiers & QtCore.Qt.KeyboardModifier.ControlModifier
+    )
+    return control_pressed != bool(inverted)
+
+
 def _lab_f_inv(t):
     delta = 6.0 / 29.0
     return np.where(
@@ -162,6 +170,47 @@ class ZoomableHistogramViewBox(pg.ViewBox):
             self.sigRangeChangedManually.emit([True, False])
             return
         super().mouseClickEvent(ev)
+
+
+class ModifierGatedViewBox(pg.ViewBox):
+    """ViewBox that tracks when navigation should affect the microscope."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._invert_control = False
+        self._navigation_event_active = False
+
+    @property
+    def navigation_event_active(self):
+        """Whether a permitted mouse navigation event is being processed."""
+        return self._navigation_event_active
+
+    def set_control_inverted(self, inverted):
+        """Invert which Ctrl state applies navigation to the microscope."""
+        self._invert_control = bool(inverted)
+
+    def navigation_allowed(self, modifiers):
+        """Return whether *modifiers* select microscope navigation."""
+        return control_modifier_selects_navigation(
+            modifiers,
+            self._invert_control,
+        )
+
+    def _handle_navigation_event(self, ev, handler, axis):
+        # Dragging and wheel zooming always manipulate the displayed image.
+        # The modifier only decides whether the resulting range is also sent
+        # to the microscopy position/range controls by ``axesRangeChanged``.
+        self._navigation_event_active = self.navigation_allowed(ev.modifiers())
+        try:
+            handler(ev, axis=axis)
+        finally:
+            self._navigation_event_active = False
+
+    def mouseDragEvent(self, ev, axis=None):
+        self._handle_navigation_event(ev, super().mouseDragEvent, axis)
+
+    def wheelEvent(self, ev, axis=None):
+        self._handle_navigation_event(ev, super().wheelEvent, axis)
 
 
 class FlimHistogramLUTItem(pg.HistogramLUTItem):

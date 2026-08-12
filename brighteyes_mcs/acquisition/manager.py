@@ -520,17 +520,28 @@ class McsManager():
                 ni_address2=self.niAddr2,
                 detector_model=self.detector_model,
             )
-            self.is_connected = True
-            logger.debug("%s %s", ".is_conneccted", self.is_connected)
-
             self.update_chuck()
 
             self.fpga_handle.run(nifpga_initial_registers)
             logger.debug("self.fpga_handle.run()")
+            # Confirm that the FPGA VI is running before any acquisition can
+            # issue the short scan-FSM start pulse.
+            self.fpga_handle.runfpga()
+            logger.debug("self.fpga_handle.runfpga()")
+            self.is_connected = True
+            logger.debug("%s %s", "is_connected", self.is_connected)
         except Exception as e:
             self.is_connected = False
-            logger.debug("%s %s", "connect ERROR", repr(e))
-            raise RuntimeError("ERROR") from e
+            logger.exception("FPGA connection failed")
+            if self.fpga_handle is not None:
+                try:
+                    self.fpga_handle.stop()
+                except Exception:
+                    logger.exception(
+                        "Could not fully clean up the failed FPGA session"
+                    )
+            self.fpga_handle = None
+            raise RuntimeError(str(e) or "FPGA initialization failed.") from e
 
 
     def set_filename_h5(self, filename):
@@ -1016,6 +1027,18 @@ class McsManager():
             "FPGA FSM did not reach idle state 0 within "
             f"{float(timeout):g} seconds (last status: {last_status!r})."
         )
+
+    def check_fpga_alive(self):
+        """Read a lightweight status register to verify FPGA responsiveness."""
+        if not self.is_connected or self.fpga_handle is None:
+            raise RuntimeError("The FPGA is not connected.")
+
+        registers = self.fpga_handle.register_read(("debug_scan_fsm_status",))
+        if "debug_scan_fsm_status" not in registers:
+            raise RuntimeError("The FPGA watchdog register did not return a value.")
+        status = registers["debug_scan_fsm_status"]
+        self.registers_configuration["debug_scan_fsm_status"] = status
+        return status
 
     def quick_reset_fpga(self, timeout=5.0, poll_interval=0.01):
         """Pulse the stop register and verify that the scan FSM becomes idle."""

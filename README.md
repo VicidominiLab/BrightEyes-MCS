@@ -13,49 +13,54 @@ For complete documentation, please visit our [Wiki page](https://github.com/Vici
 
 To get started, refer to the detailed instructions and guidelines available on the [Wiki](https://github.com/VicidominiLab/BrightEyes-MCS/wiki).
 
-## Installer
+BrightEyes-MCS is a Windows-focused application. Python 3.13 (64-bit) is the
+recommended runtime; the package metadata permits Python 3.10 and newer. The NI
+drivers and FPGA firmware required for physical acquisition are installed
+separately and are not distributed in the Python package.
 
-BrightEyes-MCS now uses a single standalone stdlib installer:
+Install Python 3.13 (64-bit) from
+[python.org](https://www.python.org/downloads/windows/), then create a dedicated
+environment and install BrightEyes-MCS from PyPI:
 
-```bat
-python brighteyes_mcs_installer.py
+```powershell
+py -3.13 -m venv "$env:LOCALAPPDATA\BrightEyes-MCS\venv"
+$BrightEyesPython = "$env:LOCALAPPDATA\BrightEyes-MCS\venv\Scripts\python.exe"
+& $BrightEyesPython -m pip install --upgrade pip
+& $BrightEyesPython -m pip install brighteyes-mcs
+& $BrightEyesPython -m brighteyes_mcs
 ```
 
-Without arguments it opens the Tk GUI. The same file also works as a CLI:
+The first launch offers to create a Desktop shortcut for that environment. The
+shortcut uses `pythonw.exe -m brighteyes_mcs`; BrightEyes-MCS
+does not build or install an application executable. To reopen shortcut setup:
 
-```bat
-python brighteyes_mcs_installer.py install
-python brighteyes_mcs_installer.py install --source-branch main --source-commit <commit>
-python brighteyes_mcs_installer.py update --stash-local
-python brighteyes_mcs_installer.py update --branch main --commit <commit>
-python brighteyes_mcs_installer.py firmware --firmware-branch main
-python brighteyes_mcs_installer.py links
+```powershell
+& $BrightEyesPython -m brighteyes_mcs --setup
 ```
 
-The installer finds local Python installations, requires Python 3.13 for the
-project `.venv`, can download the Python 3.13.14 Windows installer from
-python.org, suggests the Git for Windows download when git is missing, creates
-shortcuts, downloads firmware from a selectable BrightEyes-MCSLL branch, and
-installs or updates from a selected BrightEyes-MCS branch or commit. In the GUI,
-the `BrightEyes-MCS source` group lists recent commits for the selected branch.
-Updates preserve local `brighteyes_mcs/cfg` and `brighteyes_mcs/bitfiles`.
+To upgrade later:
 
-To build the small GUI executable:
-
-```bat
-build_installer_exe.bat
+```powershell
+& $BrightEyesPython -m pip install --upgrade brighteyes-mcs
 ```
 
-The build writes `brighteyes_mcs_installer.exe` in the repository root and
-removes the temporary `dist/` folder. Install/update preserves that root exe if
-it is already present.
+Optional built-in plugin dependencies can be installed with extras:
+
+```powershell
+& $BrightEyesPython -m pip install "brighteyes-mcs[ao]"    # serial-controlled AO hardware
+& $BrightEyesPython -m pip install "brighteyes-mcs[flim]"  # FLIM/DFD analysis
+```
+
+The NI drivers and FPGA firmware used for physical acquisition remain separate
+from the PyPI package. Follow the hardware setup instructions in the project
+Wiki after installing the application.
 
 ## Compiled Extensions
 
-The compiled extension modules are distributed separately as `brighteyes-mcs-cylibs`.
-BrightEyes-MCS imports them from the installed pip package and no longer compiles
-extensions from this repository during installation. The companion source package is
-expected at `C:\Users\madonato\Documents\Git\BrightEyes-MCS-cylibs`.
+The compiled extension modules are distributed separately as
+`brighteyes-mcs-cylibs`. Pip installs a compatible wheel automatically as a
+BrightEyes-MCS dependency; this repository does not compile them during
+installation.
 
 ## Development
 
@@ -72,15 +77,20 @@ in a separate interpreter on Windows/Python 3.13. See
 `docs/refactoring-architecture.md` for the package boundaries and compatibility
 rules.
 
+Maintainers can find the complete build, validation, TestPyPI, and Trusted
+Publishing procedure in the
+[PyPI release guide](https://github.com/VicidominiLab/BrightEyes-MCS/blob/main/docs/pypi-release.md).
+
 ## Development Notice
 
 **Important:** This software is currently under active development and may contain bugs or incomplete features. Please use it with caution and report any issues you encounter to help us improve the application. 
 
-For contribution guidelines, refer to the [contributing.md](CONTRIBUTING.md).
+For contribution guidelines, refer to
+[CONTRIBUTING.md](https://github.com/VicidominiLab/BrightEyes-MCS/blob/main/CONTRIBUTING.md).
 
 ## License
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This is free software, and you are welcome to redistribute it under certain conditions; this software code is licensed under the GNU General Public License version 3 (GPLv3), with the exception of certain parts where a different license is specified. Please refer to the individual source files for details on specific licensing exceptions. See LICENSE.md file for details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This is free software, and you are welcome to redistribute it under certain conditions; this software code is licensed under the GNU General Public License version 3 or later (GPLv3+), with the exception of certain parts where a different license is specified. Please refer to the individual source files for details on specific licensing exceptions. See LICENSE.md file for details.
 
 
 

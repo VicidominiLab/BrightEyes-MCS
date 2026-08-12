@@ -131,6 +131,7 @@ class TestMcsManager(unittest.TestCase):
 
             self.assertTrue(instance.is_connected)
             instance.fpga_handle.run.assert_called()
+            instance.fpga_handle.runfpga.assert_called_once_with()
             instance.update_chuck.assert_called()
 
     def test_connect_pi23_disables_nifpga_fifos(self):

@@ -113,10 +113,10 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_4.addWidget(self.label_60, 0, 2, 1, 1)
 
-        self.checkBox_lockMove = QCheckBox(self.tab_preview)
-        self.checkBox_lockMove.setObjectName(u"checkBox_lockMove")
+        self.checkBox_invertPreviewCtrl = QCheckBox(self.tab_preview)
+        self.checkBox_invertPreviewCtrl.setObjectName(u"checkBox_invertPreviewCtrl")
 
-        self.gridLayout_4.addWidget(self.checkBox_lockMove, 0, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.checkBox_invertPreviewCtrl, 0, 0, 1, 1)
 
         self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -601,25 +601,6 @@ class Ui_MainWindowDesign(object):
         self.tab_2.setObjectName(u"tab_2")
         self.gridLayout_36 = QGridLayout(self.tab_2)
         self.gridLayout_36.setObjectName(u"gridLayout_36")
-        self.horizontalLayout_boardActions = QHBoxLayout()
-        self.horizontalLayout_boardActions.setObjectName(u"horizontalLayout_boardActions")
-        self.pushButton_stopAll = QPushButton(self.tab_2)
-        self.pushButton_stopAll.setObjectName(u"pushButton_stopAll")
-
-        self.horizontalLayout_boardActions.addWidget(self.pushButton_stopAll)
-
-        self.checkBox_loadFirmwareOnce = QCheckBox(self.tab_2)
-        self.checkBox_loadFirmwareOnce.setObjectName(u"checkBox_loadFirmwareOnce")
-
-        self.horizontalLayout_boardActions.addWidget(self.checkBox_loadFirmwareOnce)
-
-        self.horizontalSpacer_boardActions = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_boardActions.addItem(self.horizontalSpacer_boardActions)
-
-
-        self.gridLayout_36.addLayout(self.horizontalLayout_boardActions, 0, 0, 1, 1)
-
         self.gridLayout_24 = QGridLayout()
         self.gridLayout_24.setObjectName(u"gridLayout_24")
         self.label_92 = QLabel(self.tab_2)
@@ -749,7 +730,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_24.addWidget(self.label_bitfile_signature_2, 11, 1, 1, 1)
 
 
-        self.gridLayout_36.addLayout(self.gridLayout_24, 1, 0, 1, 1)
+        self.gridLayout_36.addLayout(self.gridLayout_24, 0, 0, 1, 1)
 
         self.tabWidget_2.addTab(self.tab_2, "")
         self.tab = QWidget()
@@ -1549,24 +1530,121 @@ class Ui_MainWindowDesign(object):
         self.dockWidgetContents_8.setObjectName(u"dockWidgetContents_8")
         self.gridLayout_15 = QGridLayout(self.dockWidgetContents_8)
         self.gridLayout_15.setObjectName(u"gridLayout_15")
-        self.verticalSpacer_21 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_20 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_15.addItem(self.verticalSpacer_21, 9, 0, 1, 1)
-
-        self.pushButton_14 = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_14.setObjectName(u"pushButton_14")
-
-        self.gridLayout_15.addWidget(self.pushButton_14, 2, 0, 1, 1)
+        self.gridLayout_15.addItem(self.verticalSpacer_20, 10, 3, 1, 1)
 
         self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_15.addItem(self.verticalSpacer_17, 6, 0, 1, 1)
+        self.gridLayout_15.addItem(self.verticalSpacer_17, 5, 0, 1, 1)
 
-        self.checkBox_showPreview = QCheckBox(self.dockWidgetContents_8)
+        self.groupBox_18 = QGroupBox(self.dockWidgetContents_8)
+        self.groupBox_18.setObjectName(u"groupBox_18")
+        self.gridLayout_89 = QGridLayout(self.groupBox_18)
+        self.gridLayout_89.setObjectName(u"gridLayout_89")
+        self.pushButton_14 = QPushButton(self.groupBox_18)
+        self.pushButton_14.setObjectName(u"pushButton_14")
+
+        self.gridLayout_89.addWidget(self.pushButton_14, 0, 0, 1, 1)
+
+        self.pushButton_externalProgram = QPushButton(self.groupBox_18)
+        self.pushButton_externalProgram.setObjectName(u"pushButton_externalProgram")
+        self.pushButton_externalProgram.setEnabled(False)
+
+        self.gridLayout_89.addWidget(self.pushButton_externalProgram, 0, 1, 1, 1)
+
+
+        self.gridLayout_15.addWidget(self.groupBox_18, 3, 0, 1, 3)
+
+        self.groupBox_11 = QGroupBox(self.dockWidgetContents_8)
+        self.groupBox_11.setObjectName(u"groupBox_11")
+        sizePolicy1.setHeightForWidth(self.groupBox_11.sizePolicy().hasHeightForWidth())
+        self.groupBox_11.setSizePolicy(sizePolicy1)
+        self.gridLayout_81 = QGridLayout(self.groupBox_11)
+        self.gridLayout_81.setObjectName(u"gridLayout_81")
+        self.pushButton_acquisitionStart = QPushButton(self.groupBox_11)
+        self.pushButton_acquisitionStart.setObjectName(u"pushButton_acquisitionStart")
+        font1 = QFont()
+        font1.setPointSize(20)
+        self.pushButton_acquisitionStart.setFont(font1)
+        self.pushButton_acquisitionStart.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaRecord))
+        self.pushButton_acquisitionStart.setIcon(icon)
+        self.pushButton_acquisitionStart.setIconSize(QSize(32, 32))
+        self.pushButton_acquisitionStart.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_acquisitionStart, 0, 2, 1, 1)
+
+        self.pushButton_previewStart = QPushButton(self.groupBox_11)
+        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
+        self.pushButton_previewStart.setFont(font1)
+        self.pushButton_previewStart.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
+        self.pushButton_previewStart.setIcon(icon1)
+        self.pushButton_previewStart.setIconSize(QSize(32, 32))
+        self.pushButton_previewStart.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_previewStart, 0, 1, 1, 1)
+
+        self.pushButton_stop = QPushButton(self.groupBox_11)
+        self.pushButton_stop.setObjectName(u"pushButton_stop")
+        self.pushButton_stop.setEnabled(False)
+        sizePolicy2.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
+        self.pushButton_stop.setSizePolicy(sizePolicy2)
+        self.pushButton_stop.setFont(font1)
+        self.pushButton_stop.setStyleSheet(u"QPushButton:disabled {\n"
+"    qproperty-iconOpacity: 0.05;\n"
+"}\n"
+"")
+        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStop))
+        self.pushButton_stop.setIcon(icon2)
+        self.pushButton_stop.setIconSize(QSize(32, 32))
+        self.pushButton_stop.setFlat(True)
+
+        self.gridLayout_81.addWidget(self.pushButton_stop, 0, 4, 1, 1)
+
+
+        self.gridLayout_15.addWidget(self.groupBox_11, 2, 0, 1, 3)
+
+        self.groupBox_19 = QGroupBox(self.dockWidgetContents_8)
+        self.groupBox_19.setObjectName(u"groupBox_19")
+        self.gridLayout_90 = QGridLayout(self.groupBox_19)
+        self.gridLayout_90.setObjectName(u"gridLayout_90")
+        self.checkBox_showPreview = QCheckBox(self.groupBox_19)
         self.checkBox_showPreview.setObjectName(u"checkBox_showPreview")
         self.checkBox_showPreview.setChecked(True)
 
-        self.gridLayout_15.addWidget(self.checkBox_showPreview, 4, 0, 1, 1)
+        self.gridLayout_90.addWidget(self.checkBox_showPreview, 0, 0, 1, 1)
+
+
+        self.gridLayout_15.addWidget(self.groupBox_19, 4, 2, 1, 1)
+
+        self.groupBox_16 = QGroupBox(self.dockWidgetContents_8)
+        self.groupBox_16.setObjectName(u"groupBox_16")
+        self.gridLayout_87 = QGridLayout(self.groupBox_16)
+        self.gridLayout_87.setObjectName(u"gridLayout_87")
+        self.pushButton_fpga_connection_cmd = QPushButton(self.groupBox_16)
+        self.pushButton_fpga_connection_cmd.setObjectName(u"pushButton_fpga_connection_cmd")
+        self.pushButton_fpga_connection_cmd.setCheckable(True)
+
+        self.gridLayout_87.addWidget(self.pushButton_fpga_connection_cmd, 1, 1, 1, 1)
+
+        self.label_FPGA_status = QLabel(self.groupBox_16)
+        self.label_FPGA_status.setObjectName(u"label_FPGA_status")
+#if QT_CONFIG(tooltip)
+        self.label_FPGA_status.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Waiting for a Preview / Acquisition or the Keep FPGA On button.", None))
+#endif // QT_CONFIG(tooltip)
+
+        self.gridLayout_87.addWidget(self.label_FPGA_status, 0, 1, 1, 1)
+
+
+        self.gridLayout_15.addWidget(self.groupBox_16, 4, 0, 1, 2)
 
         self.groupBox_9 = QGroupBox(self.dockWidgetContents_8)
         self.groupBox_9.setObjectName(u"groupBox_9")
@@ -1633,73 +1711,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_30.addWidget(self.checkBox_fifo_digital, 1, 0, 1, 1)
 
 
-        self.gridLayout_15.addWidget(self.groupBox_9, 1, 1, 9, 1)
-
-        self.pushButton_externalProgram = QPushButton(self.dockWidgetContents_8)
-        self.pushButton_externalProgram.setObjectName(u"pushButton_externalProgram")
-        self.pushButton_externalProgram.setEnabled(False)
-
-        self.gridLayout_15.addWidget(self.pushButton_externalProgram, 3, 0, 1, 1)
-
-        self.groupBox_11 = QGroupBox(self.dockWidgetContents_8)
-        self.groupBox_11.setObjectName(u"groupBox_11")
-        sizePolicy1.setHeightForWidth(self.groupBox_11.sizePolicy().hasHeightForWidth())
-        self.groupBox_11.setSizePolicy(sizePolicy1)
-        self.gridLayout_81 = QGridLayout(self.groupBox_11)
-        self.gridLayout_81.setObjectName(u"gridLayout_81")
-        self.pushButton_acquisitionStart = QPushButton(self.groupBox_11)
-        self.pushButton_acquisitionStart.setObjectName(u"pushButton_acquisitionStart")
-        font1 = QFont()
-        font1.setPointSize(20)
-        self.pushButton_acquisitionStart.setFont(font1)
-        self.pushButton_acquisitionStart.setStyleSheet(u"QPushButton:disabled {\n"
-"    qproperty-iconOpacity: 0.05;\n"
-"}\n"
-"")
-        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaRecord))
-        self.pushButton_acquisitionStart.setIcon(icon)
-        self.pushButton_acquisitionStart.setIconSize(QSize(32, 32))
-        self.pushButton_acquisitionStart.setFlat(True)
-
-        self.gridLayout_81.addWidget(self.pushButton_acquisitionStart, 0, 2, 1, 1)
-
-        self.pushButton_previewStart = QPushButton(self.groupBox_11)
-        self.pushButton_previewStart.setObjectName(u"pushButton_previewStart")
-        self.pushButton_previewStart.setFont(font1)
-        self.pushButton_previewStart.setStyleSheet(u"QPushButton:disabled {\n"
-"    qproperty-iconOpacity: 0.05;\n"
-"}\n"
-"")
-        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart))
-        self.pushButton_previewStart.setIcon(icon1)
-        self.pushButton_previewStart.setIconSize(QSize(32, 32))
-        self.pushButton_previewStart.setFlat(True)
-
-        self.gridLayout_81.addWidget(self.pushButton_previewStart, 0, 1, 1, 1)
-
-        self.pushButton_stop = QPushButton(self.groupBox_11)
-        self.pushButton_stop.setObjectName(u"pushButton_stop")
-        self.pushButton_stop.setEnabled(False)
-        sizePolicy2.setHeightForWidth(self.pushButton_stop.sizePolicy().hasHeightForWidth())
-        self.pushButton_stop.setSizePolicy(sizePolicy2)
-        self.pushButton_stop.setFont(font1)
-        self.pushButton_stop.setStyleSheet(u"QPushButton:disabled {\n"
-"    qproperty-iconOpacity: 0.05;\n"
-"}\n"
-"")
-        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStop))
-        self.pushButton_stop.setIcon(icon2)
-        self.pushButton_stop.setIconSize(QSize(32, 32))
-        self.pushButton_stop.setFlat(True)
-
-        self.gridLayout_81.addWidget(self.pushButton_stop, 0, 4, 1, 1)
-
-
-        self.gridLayout_15.addWidget(self.groupBox_11, 1, 0, 1, 1)
-
-        self.verticalSpacer_22 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_15.addItem(self.verticalSpacer_22, 5, 0, 1, 1)
+        self.gridLayout_15.addWidget(self.groupBox_9, 2, 3, 3, 1)
 
         self.dockWidget_preview.setWidget(self.dockWidgetContents_8)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_preview)
@@ -2590,29 +2602,41 @@ class Ui_MainWindowDesign(object):
         self.groupBox_3.setSizePolicy(sizePolicy)
         self.gridLayout_75 = QGridLayout(self.groupBox_3)
         self.gridLayout_75.setObjectName(u"gridLayout_75")
-        self.checkBox_laser1 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser1.setObjectName(u"checkBox_laser1")
-
-        self.gridLayout_75.addWidget(self.checkBox_laser1, 0, 1, 1, 1)
-
-        self.checkBox_laser2 = QCheckBox(self.groupBox_3)
-        self.checkBox_laser2.setObjectName(u"checkBox_laser2")
-
-        self.gridLayout_75.addWidget(self.checkBox_laser2, 0, 2, 1, 1)
-
         self.checkBox_laser0 = QCheckBox(self.groupBox_3)
         self.checkBox_laser0.setObjectName(u"checkBox_laser0")
         self.checkBox_laser0.setChecked(True)
 
         self.gridLayout_75.addWidget(self.checkBox_laser0, 0, 0, 1, 1)
 
+        self.checkBox_laser2 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser2.setObjectName(u"checkBox_laser2")
+
+        self.gridLayout_75.addWidget(self.checkBox_laser2, 2, 0, 1, 1)
+
+        self.checkBox_laser1 = QCheckBox(self.groupBox_3)
+        self.checkBox_laser1.setObjectName(u"checkBox_laser1")
+
+        self.gridLayout_75.addWidget(self.checkBox_laser1, 1, 0, 1, 1)
+
         self.checkBox_laser3 = QCheckBox(self.groupBox_3)
         self.checkBox_laser3.setObjectName(u"checkBox_laser3")
 
-        self.gridLayout_75.addWidget(self.checkBox_laser3, 0, 3, 1, 1)
+        self.gridLayout_75.addWidget(self.checkBox_laser3, 3, 0, 1, 1)
 
 
-        self.gridLayout_42.addWidget(self.groupBox_3, 0, 0, 1, 1)
+        self.gridLayout_42.addWidget(self.groupBox_3, 0, 1, 3, 1)
+
+        self.groupBox_17 = QGroupBox(self.dockWidgetContents_13)
+        self.groupBox_17.setObjectName(u"groupBox_17")
+        self.gridLayout_88 = QGridLayout(self.groupBox_17)
+        self.gridLayout_88.setObjectName(u"gridLayout_88")
+        self.checkBox_pulsing_forced = QCheckBox(self.groupBox_17)
+        self.checkBox_pulsing_forced.setObjectName(u"checkBox_pulsing_forced")
+
+        self.gridLayout_88.addWidget(self.checkBox_pulsing_forced, 0, 0, 1, 1)
+
+
+        self.gridLayout_42.addWidget(self.groupBox_17, 0, 3, 1, 1)
 
         self.groupBox_7 = QGroupBox(self.dockWidgetContents_13)
         self.groupBox_7.setObjectName(u"groupBox_7")
@@ -2635,7 +2659,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_7.addWidget(self.label_120, 0, 0, 1, 1)
 
 
-        self.gridLayout_42.addWidget(self.groupBox_7, 0, 1, 1, 1)
+        self.gridLayout_42.addWidget(self.groupBox_7, 0, 2, 1, 1)
 
         self.groupBox_6 = QGroupBox(self.dockWidgetContents_13)
         self.groupBox_6.setObjectName(u"groupBox_6")
@@ -2643,42 +2667,6 @@ class Ui_MainWindowDesign(object):
         self.groupBox_6.setSizePolicy(sizePolicy6)
         self.gridLayout_41 = QGridLayout(self.groupBox_6)
         self.gridLayout_41.setObjectName(u"gridLayout_41")
-        self.comboLaserSeq_4 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.addItem("")
-        self.comboLaserSeq_4.setObjectName(u"comboLaserSeq_4")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_4.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_4.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_4, 0, 4, 1, 1)
-
-        self.comboLaserSeq_6 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.addItem("")
-        self.comboLaserSeq_6.setObjectName(u"comboLaserSeq_6")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_6.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_6, 0, 6, 1, 1)
-
-        self.comboLaserSeq_2 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.addItem("")
-        self.comboLaserSeq_2.setObjectName(u"comboLaserSeq_2")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_2.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_2.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_2, 0, 1, 1, 1)
-
         self.comboLaserSeq_3 = QComboBox(self.groupBox_6)
         self.comboLaserSeq_3.addItem("")
         self.comboLaserSeq_3.addItem("")
@@ -2689,19 +2677,7 @@ class Ui_MainWindowDesign(object):
         sizePolicy2.setHeightForWidth(self.comboLaserSeq_3.sizePolicy().hasHeightForWidth())
         self.comboLaserSeq_3.setSizePolicy(sizePolicy2)
 
-        self.gridLayout_41.addWidget(self.comboLaserSeq_3, 0, 3, 1, 1)
-
-        self.comboLaserSeq_12 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.addItem("")
-        self.comboLaserSeq_12.setObjectName(u"comboLaserSeq_12")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_12.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_12.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_12, 1, 6, 1, 1)
+        self.gridLayout_41.addWidget(self.comboLaserSeq_3, 0, 4, 1, 1)
 
         self.comboLaserSeq_11 = QComboBox(self.groupBox_6)
         self.comboLaserSeq_11.addItem("")
@@ -2713,67 +2689,7 @@ class Ui_MainWindowDesign(object):
         sizePolicy2.setHeightForWidth(self.comboLaserSeq_11.sizePolicy().hasHeightForWidth())
         self.comboLaserSeq_11.setSizePolicy(sizePolicy2)
 
-        self.gridLayout_41.addWidget(self.comboLaserSeq_11, 1, 5, 1, 1)
-
-        self.comboLaserSeq_1 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.addItem("")
-        self.comboLaserSeq_1.setObjectName(u"comboLaserSeq_1")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_1.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_1, 0, 0, 1, 1)
-
-        self.comboLaserSeq_7 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.addItem("")
-        self.comboLaserSeq_7.setObjectName(u"comboLaserSeq_7")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_7.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_7.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_7, 1, 0, 1, 1)
-
-        self.comboLaserSeq_8 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.addItem("")
-        self.comboLaserSeq_8.setObjectName(u"comboLaserSeq_8")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_8.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_8.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_8, 1, 1, 1, 1)
-
-        self.comboLaserSeq_5 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.addItem("")
-        self.comboLaserSeq_5.setObjectName(u"comboLaserSeq_5")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_5.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_5, 0, 5, 1, 1)
-
-        self.comboLaserSeq_10 = QComboBox(self.groupBox_6)
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.addItem("")
-        self.comboLaserSeq_10.setObjectName(u"comboLaserSeq_10")
-        sizePolicy2.setHeightForWidth(self.comboLaserSeq_10.sizePolicy().hasHeightForWidth())
-        self.comboLaserSeq_10.setSizePolicy(sizePolicy2)
-
-        self.gridLayout_41.addWidget(self.comboLaserSeq_10, 1, 4, 1, 1)
+        self.gridLayout_41.addWidget(self.comboLaserSeq_11, 1, 6, 1, 1)
 
         self.comboLaserSeq_9 = QComboBox(self.groupBox_6)
         self.comboLaserSeq_9.addItem("")
@@ -2785,14 +2701,122 @@ class Ui_MainWindowDesign(object):
         sizePolicy2.setHeightForWidth(self.comboLaserSeq_9.sizePolicy().hasHeightForWidth())
         self.comboLaserSeq_9.setSizePolicy(sizePolicy2)
 
-        self.gridLayout_41.addWidget(self.comboLaserSeq_9, 1, 3, 1, 1)
+        self.gridLayout_41.addWidget(self.comboLaserSeq_9, 1, 4, 1, 1)
+
+        self.comboLaserSeq_8 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.addItem("")
+        self.comboLaserSeq_8.setObjectName(u"comboLaserSeq_8")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_8.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_8.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_8, 1, 2, 1, 1)
+
+        self.comboLaserSeq_10 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.addItem("")
+        self.comboLaserSeq_10.setObjectName(u"comboLaserSeq_10")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_10.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_10.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_10, 1, 5, 1, 1)
+
+        self.comboLaserSeq_1 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.addItem("")
+        self.comboLaserSeq_1.setObjectName(u"comboLaserSeq_1")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_1.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_1.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_1, 0, 1, 1, 1)
+
+        self.comboLaserSeq_2 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.addItem("")
+        self.comboLaserSeq_2.setObjectName(u"comboLaserSeq_2")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_2.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_2.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_2, 0, 2, 1, 1)
+
+        self.comboLaserSeq_6 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.addItem("")
+        self.comboLaserSeq_6.setObjectName(u"comboLaserSeq_6")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_6.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_6.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_6, 0, 7, 1, 1)
+
+        self.comboLaserSeq_7 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.addItem("")
+        self.comboLaserSeq_7.setObjectName(u"comboLaserSeq_7")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_7.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_7.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_7, 1, 1, 1, 1)
+
+        self.comboLaserSeq_5 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.addItem("")
+        self.comboLaserSeq_5.setObjectName(u"comboLaserSeq_5")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_5.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_5.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_5, 0, 6, 1, 1)
+
+        self.comboLaserSeq_12 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.addItem("")
+        self.comboLaserSeq_12.setObjectName(u"comboLaserSeq_12")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_12.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_12.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_12, 1, 7, 1, 1)
+
+        self.comboLaserSeq_4 = QComboBox(self.groupBox_6)
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.addItem("")
+        self.comboLaserSeq_4.setObjectName(u"comboLaserSeq_4")
+        sizePolicy2.setHeightForWidth(self.comboLaserSeq_4.sizePolicy().hasHeightForWidth())
+        self.comboLaserSeq_4.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_41.addWidget(self.comboLaserSeq_4, 0, 5, 1, 1)
 
 
-        self.gridLayout_42.addWidget(self.groupBox_6, 2, 0, 1, 2)
+        self.gridLayout_42.addWidget(self.groupBox_6, 2, 2, 1, 2)
 
-        self.verticalSpacer_24 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_19 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_42.addItem(self.verticalSpacer_24, 3, 0, 1, 1)
+        self.gridLayout_42.addItem(self.verticalSpacer_19, 3, 1, 1, 1)
 
         self.dockWidget_laser.setWidget(self.dockWidgetContents_13)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_laser)
@@ -3689,11 +3713,11 @@ class Ui_MainWindowDesign(object):
 
         self.label_60.setText(QCoreApplication.translate("MainWindowDesign", u"View Projection", None))
 #if QT_CONFIG(tooltip)
-        self.checkBox_lockMove.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>It is locking the autorange of the image.</p></body></html>", None))
+        self.checkBox_invertPreviewCtrl.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Pan and zoom always affect the displayed image. When enabled, changes apply to the microscope without Ctrl; adding a marker requires Ctrl instead.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.checkBox_lockMove.setText(QCoreApplication.translate("MainWindowDesign", u"Lock Move", None))
-        self.label_106.setText(QCoreApplication.translate("MainWindowDesign", u"Double-Click: move to position", None))
-        self.label_107.setText(QCoreApplication.translate("MainWindowDesign", u"Ctrl+Double-Click: set a Marker", None))
+        self.checkBox_invertPreviewCtrl.setText(QCoreApplication.translate("MainWindowDesign", u"Invert Ctrl behavior", None))
+        self.label_106.setText(QCoreApplication.translate("MainWindowDesign", u"Drag/Wheel: image only; Ctrl+Drag/Wheel/Double-Click: microscope", None))
+        self.label_107.setText(QCoreApplication.translate("MainWindowDesign", u"Double-Click: set a Marker", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_preview), QCoreApplication.translate("MainWindowDesign", u"Preview", None))
         self.pushButton_13.setText(QCoreApplication.translate("MainWindowDesign", u"Move to selected offset", None))
         self.pushButton_copyPositionsMarkersFCS.setText(QCoreApplication.translate("MainWindowDesign", u"Add Markers in Batch acq. (FCS)", None))
@@ -3759,14 +3783,6 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_16), QCoreApplication.translate("MainWindowDesign", u"u(TTM)", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_pi_timetagging), QCoreApplication.translate("MainWindowDesign", u"PI-Timetagging", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"TimeTagging", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_stopAll.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Pulse the FPGA stop register and wait for FSM Status 0", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_stopAll.setText(QCoreApplication.translate("MainWindowDesign", u"Stop All", None))
-#if QT_CONFIG(tooltip)
-        self.checkBox_loadFirmwareOnce.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Keep the FPGA firmware loaded between preview and acquisition runs", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_loadFirmwareOnce.setText(QCoreApplication.translate("MainWindowDesign", u"Experimental: load the firmware only once", None))
         self.label_92.setText(QCoreApplication.translate("MainWindowDesign", u"FPGA 2nd Addr.", None))
         self.pushButton_FPGA2_file_selection.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
         self.lineEdit_fpga2bitfile.setText("")
@@ -3889,14 +3905,39 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_5), QCoreApplication.translate("MainWindowDesign", u"Acquisition", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_config), QCoreApplication.translate("MainWindowDesign", u"Config", None))
         self.dockWidget_preview.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Commands", None))
+        self.groupBox_18.setTitle("")
 #if QT_CONFIG(tooltip)
         self.pushButton_14.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Add the current configuration to the Batch acquisition table</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_14.setText(QCoreApplication.translate("MainWindowDesign", u"Add to Batch", None))
 #if QT_CONFIG(tooltip)
+        self.pushButton_externalProgram.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Open the last saved file with Napari or another viewer as selected in the configuration</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"Ext. Viewer/Analysis", None))
+        self.groupBox_11.setTitle("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_acquisitionStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning saving data</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_acquisitionStart.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_previewStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning without storing data</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_previewStart.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_stop.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Stop the scan</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_stop.setText("")
+        self.groupBox_19.setTitle(QCoreApplication.translate("MainWindowDesign", u"Preview", None))
+#if QT_CONFIG(tooltip)
         self.checkBox_showPreview.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>The live-preview can be disabled.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.checkBox_showPreview.setText(QCoreApplication.translate("MainWindowDesign", u"Show Image Preview", None))
+        self.checkBox_showPreview.setText(QCoreApplication.translate("MainWindowDesign", u"Show Image", None))
+        self.groupBox_16.setTitle(QCoreApplication.translate("MainWindowDesign", u"FPGA", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_fpga_connection_cmd.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Keep the FPGA connected between acquisitions", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_fpga_connection_cmd.setText(QCoreApplication.translate("MainWindowDesign", u"Keep FPGA On", None))
+        self.label_FPGA_status.setText(QCoreApplication.translate("MainWindowDesign", u" ", None))
         self.groupBox_9.setTitle("")
         self.groupBox_12.setTitle(QCoreApplication.translate("MainWindowDesign", u"TCSPC", None))
 #if QT_CONFIG(tooltip)
@@ -3918,23 +3959,6 @@ class Ui_MainWindowDesign(object):
         self.comboBox_spad_channels.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"49", None))
 
         self.checkBox_fifo_digital.setText(QCoreApplication.translate("MainWindowDesign", u"Digital", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_externalProgram.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Open the last saved file with Napari or another viewer as selected in the configuration</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_externalProgram.setText(QCoreApplication.translate("MainWindowDesign", u"Ext. Viewer/Analysis", None))
-        self.groupBox_11.setTitle("")
-#if QT_CONFIG(tooltip)
-        self.pushButton_acquisitionStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning saving data</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_acquisitionStart.setText("")
-#if QT_CONFIG(tooltip)
-        self.pushButton_previewStart.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Start the scanning without storing data</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_previewStart.setText("")
-#if QT_CONFIG(tooltip)
-        self.pushButton_stop.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Stop the scan</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_stop.setText("")
         self.dockWidget_temporal.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Temporal settings", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_waitAfterFrame.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Delay betweent two repetition in second.</p></body></html>", None))
@@ -4128,42 +4152,20 @@ class Ui_MainWindowDesign(object):
         self.checkBox_lissajous_opencurve.setText(QCoreApplication.translate("MainWindowDesign", u"Open curve", None))
         self.dockWidget_laser.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Laser configuration", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("MainWindowDesign", u"Activate", None))
-        self.checkBox_laser1.setText(QCoreApplication.translate("MainWindowDesign", u"L2", None))
-        self.checkBox_laser2.setText(QCoreApplication.translate("MainWindowDesign", u"L3", None))
         self.checkBox_laser0.setText(QCoreApplication.translate("MainWindowDesign", u"L1", None))
+        self.checkBox_laser2.setText(QCoreApplication.translate("MainWindowDesign", u"L3", None))
+        self.checkBox_laser1.setText(QCoreApplication.translate("MainWindowDesign", u"L2", None))
         self.checkBox_laser3.setText(QCoreApplication.translate("MainWindowDesign", u"L4", None))
+        self.groupBox_17.setTitle(QCoreApplication.translate("MainWindowDesign", u"Adv.", None))
+        self.checkBox_pulsing_forced.setText(QCoreApplication.translate("MainWindowDesign", u"Pulsing Forced", None))
         self.groupBox_7.setTitle(QCoreApplication.translate("MainWindowDesign", u"Laser Frequency", None))
         self.label_120.setText(QCoreApplication.translate("MainWindowDesign", u"Clock Base \u00d7", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("MainWindowDesign", u"Sequence", None))
-        self.comboLaserSeq_4.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_4.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_4.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_4.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_4.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
-        self.comboLaserSeq_6.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_6.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_6.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_6.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_6.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
-        self.comboLaserSeq_2.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_2.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_2.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_2.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_2.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
         self.comboLaserSeq_3.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.comboLaserSeq_3.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
         self.comboLaserSeq_3.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
         self.comboLaserSeq_3.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
         self.comboLaserSeq_3.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
-        self.comboLaserSeq_12.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_12.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_12.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_12.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_12.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
 
         self.comboLaserSeq_11.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.comboLaserSeq_11.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
@@ -4171,17 +4173,11 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_11.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
         self.comboLaserSeq_11.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
 
-        self.comboLaserSeq_1.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_1.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_1.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_1.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_1.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
-        self.comboLaserSeq_7.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_7.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_7.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_7.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_7.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+        self.comboLaserSeq_9.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_9.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_9.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_9.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_9.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
 
         self.comboLaserSeq_8.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.comboLaserSeq_8.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
@@ -4189,23 +4185,53 @@ class Ui_MainWindowDesign(object):
         self.comboLaserSeq_8.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
         self.comboLaserSeq_8.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
 
-        self.comboLaserSeq_5.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_5.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_5.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_5.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_5.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
-
         self.comboLaserSeq_10.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
         self.comboLaserSeq_10.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
         self.comboLaserSeq_10.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
         self.comboLaserSeq_10.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
         self.comboLaserSeq_10.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
 
-        self.comboLaserSeq_9.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
-        self.comboLaserSeq_9.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
-        self.comboLaserSeq_9.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
-        self.comboLaserSeq_9.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
-        self.comboLaserSeq_9.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+        self.comboLaserSeq_1.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_1.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_1.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_1.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_1.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_2.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_2.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_2.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_2.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_2.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_6.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_6.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_6.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_6.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_6.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_7.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_7.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_7.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_7.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_7.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_5.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_5.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_5.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_5.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_5.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_12.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_12.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_12.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_12.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_12.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
+
+        self.comboLaserSeq_4.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.comboLaserSeq_4.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"1", None))
+        self.comboLaserSeq_4.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"2", None))
+        self.comboLaserSeq_4.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"3", None))
+        self.comboLaserSeq_4.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"4", None))
 
         self.dockWidget_debug.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Menu && Debug", None))
         self.checkBox_correlationMatrix.setText(QCoreApplication.translate("MainWindowDesign", u"Activate Corr. Matrix", None))

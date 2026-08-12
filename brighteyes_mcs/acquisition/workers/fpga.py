@@ -11,6 +11,32 @@ from ..detectors.models import (
 
 import os, psutil
 
+
+REQUIRED_FPGA_CONTROL_REGISTERS = frozenset(
+    ("stop_command", "start_command", "debug_scan_fsm_status")
+)
+
+
+def validate_fpga_interface(available_registers, available_fifos, required_fifos):
+    """Reject a bitfile that does not expose the interface used by the app."""
+    missing_registers = sorted(
+        REQUIRED_FPGA_CONTROL_REGISTERS.difference(available_registers)
+    )
+    missing_fifos = sorted(set(required_fifos).difference(available_fifos))
+    if not missing_registers and not missing_fifos:
+        return
+
+    details = []
+    if missing_registers:
+        details.append("missing registers: " + ", ".join(missing_registers))
+    if missing_fifos:
+        details.append("missing DMA FIFOs: " + ", ".join(missing_fifos))
+    raise RuntimeError(
+        "The selected FPGA firmware is incompatible with BrightEyes-MCS ("
+        + "; ".join(details)
+        + ")."
+    )
+
 def emptyQueue(queue):
     while not queue.empty():
         _ = queue.get()
@@ -41,9 +67,11 @@ class FpgaHandleProcess(mp.Process):
         self.queueFifoRead = self.configuration["queueFifoRead"]
         self.is_connected = self.configuration["is_connected"]
         self.is_readytorun = self.configuration["is_readytorun"]
+        self.initialization_error = self.configuration["initialization_error"]
         self.list_registers = self.configuration["list_registers"]
         self.actual_fifo_depth = self.configuration["actual_fifo_depth"]
         self.fpgarunning = self.configuration["fpgarunning"]
+        self.fpga_started = self.configuration["fpga_started"]
         self.list_fifos_to_read_continously = self.configuration[
             "list_fifos_to_read_continously"
         ]
@@ -108,6 +136,7 @@ class FpgaHandleProcess(mp.Process):
             if self.fpgarunning.is_set() and not self.fpgarunning_internal:
                 self.nifpga_session.run()
                 self.fpgarunning_internal = True
+                self.fpga_started.set()
                 logger.debug("%s %s", self.process_label, "nifpga_session.run()")
                 self.fpgarunning.clear()                
         logger.debug("self.stop_event.is_set()")
@@ -331,17 +360,28 @@ class FpgaHandleProcess(mp.Process):
         try:
             self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address)
             logger.debug("nifpga.Session(self.bitfile, self.ni_address) DONE!")
+            available_registers = set(self.nifpga_session.registers.keys())
+            available_fifos = set(self.nifpga_session.fifos.keys())
+            required_fifos = (
+                list(self.list_fifos_to_read_continously)
+                if self._uses_nifpga_fifo()
+                else []
+            )
+            validate_fpga_interface(
+                available_registers,
+                available_fifos,
+                required_fifos,
+            )
             self.is_connected.set()
 
         except Exception as e:
-            logger.debug("%s %s", "FPGA Connection failed Error", repr(e))
+            message = str(e) or repr(e)
+            self.initialization_error["message"] = message
+            logger.exception("FPGA initialization failed: %s", message)
             self.is_connected.clear()
-
-            import traceback
-
-            print("Error while creating RustFastFifoReader:")
-            print(f"{type(e).__name__}: {e}")
-            traceback.print_exc()
+            # Wake the parent handshake immediately so the GUI can report the
+            # real error instead of waiting for an opaque timeout.
+            self.is_readytorun.set()
 
         if self.is_connected.is_set():
 
@@ -466,6 +506,7 @@ class FpgaHandleProcess(mp.Process):
         logger.debug("self.nifpga_session.reset()\nself.nifpga_session.close()")
         self.is_connected.clear()
         self.fpgarunning_internal = False
+        self.fpga_started.clear()
         self.fpgarunning.clear()
         self.stop_event.clear()
         logger.debug("%s %s", self.process_label, "stopped")
@@ -493,4 +534,3 @@ class FpgaHandleProcess(mp.Process):
 
 class NiFpgaControlProcess(FpgaHandleProcess):
     """NI-FPGA register/control process, with FIFO reading enabled for SPAD data."""
-
