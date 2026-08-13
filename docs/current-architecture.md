@@ -123,8 +123,9 @@ flowchart TD
     Entry[brighteyes_mcs.__main__] --> Bootstrap[application.bootstrap.main]
     Bootstrap --> Log[Configure logging]
     Bootstrap --> QtApp[Create QApplication]
-    Bootstrap --> Setup{First run on Windows?}
-    Setup -->|yes| Shortcut[Offer Desktop shortcut]
+    Bootstrap --> Setup{First run?}
+    Setup -->|yes| Profile[Select microscope profile]
+    Profile --> Shortcut[Offer Desktop shortcut on Windows]
     Setup -->|no| Window
     Shortcut --> Window[Construct MainWindow]
     Window --> Config[Copy/load user configuration]
@@ -137,11 +138,22 @@ flowchart TD
 
 Startup flags:
 
-- `--setup`: show the Windows shortcut setup again.
-- `--no-first-run`: skip first-run shortcut setup.
+- `--help` / `-h`: print launcher usage without importing or starting Qt.
+- `--setup`: show system-profile and shortcut setup again.
+- `--no-first-run`: skip first-run setup.
 
-The shortcut launches the environment's `pythonw.exe -m brighteyes_mcs`; the
-normal PyPI workflow does not install or build a BrightEyes-MCS application EXE.
+The application shortcut launches the environment's
+`pythonw.exe -m brighteyes_mcs`. A default-enabled second shortcut launches
+`cmd.exe /K <environment>\Scripts\activate.bat` and uses `python.exe` as its
+icon, providing a shell in the correct environment. A third default-enabled
+shortcut targets the selected profile's expanded system-root directory and uses
+the standard Windows folder icon. The normal PyPI workflow does not install or
+build a BrightEyes-MCS application EXE.
+
+The final central **About** tab contains project credits and citation details,
+the BrightEyes-MCS GPL notice and full license, third-party licensing guidance,
+and the separate BrightEyes-MCSLL firmware license and credits. Dynamically
+loaded plug-in tabs are inserted immediately before About so it remains last.
 
 ## Configuration and runtime paths
 
@@ -151,9 +163,55 @@ There are two different kinds of configuration location:
 2. Writable user configuration is copied to `%APPDATA%/BrightEyes-MCS` on first
    run. `%LOCALAPPDATA%` is the fallback if `APPDATA` is unavailable.
 
-`current_system` selects the active configuration. Existing absolute paths,
-paths relative to the pointer file, old working-directory paths, user-config
-paths, and old package-relative paths are resolved for compatibility.
+The pointer `%APPDATA%/BrightEyes-MCS/current_system` is always per-user. It
+selects a complete microscope profile, whose root may itself be per-user or
+shared. The first-run dialog and the GUI's **System…** button edit this file.
+For example:
+
+```ini
+[BrightEyes-MCS]
+root = %PROGRAMDATA%\BrightEyes-MCS\systems\microscope-1
+configuration_dir = cfg
+default_configuration = default.cfg
+plugins_dir = cfg\plugins_cfg
+scripts_dir = scripts
+bitfiles_dir = firmware
+```
+
+All directory settings may be absolute or relative to `root`. `%NAME%`,
+`$NAME`, and `${NAME}` environment-variable notation is expanded. A profile's
+configuration directory may contain any number of `.cfg` files; only
+`default_configuration` is loaded automatically. Paths beginning with `cfg/`,
+`cfg/plugins_cfg/`, `scripts/`, `bitfiles/`, or `firmware/` are redirected to
+the corresponding selected folder. Historical `current_system` files pointing
+directly to one `.cfg` remain supported.
+
+The shared `SystemProfileEditor` used by both first-run setup and the main
+window can create the configured root and subfolders. It copies the packaged
+`default.cfg` and plug-in defaults only when their destination files are
+missing, so an existing microscope configuration is not overwritten.
+
+It can also download any explicitly selected branch of the official
+`BrightEyes-MCSLL` repository as a GitHub ZIP. Archive paths are validated
+before extraction, the generated GitHub root directory is removed, and files
+are written into the profile's `bitfiles_dir`. Firmware remains outside the
+wheel and subject to the separate BrightEyes-MCSLL license; the GUI requires
+confirmation before downloading it.
+
+First-run setup is a `QWizard` with Welcome, Profile, Structure, Firmware,
+Shortcuts, and Finish pages. The Structure page checks every configured
+directory plus the default `.cfg`; missing items are displayed and creation is
+selected by default. Existing files are never overwritten. Firmware download
+is opt-in and retains its separate license confirmation. Each Windows shortcut
+is independently selectable and enabled by default. Firmware branch selection,
+license acceptance, progress, success, and errors are embedded in the wizard
+page. Its worker thread disables wizard navigation during transfer and advances
+only after a successful extraction; it does not open the standalone firmware
+dialog used by the main System editor.
+
+Shared profiles should normally be read-only for ordinary users, particularly
+when they contain Python scripts. Logs, shortcut state, and other runtime state
+remain per-user.
 
 Logs normally go to `%LOCALAPPDATA%/BrightEyes-MCS/log`; `BRIGHTEYES_LOG_DIR`
 can override the location.
@@ -445,4 +503,3 @@ and RAW acquisition, stop/reconnect, HDF5 conversion, TTM, plug-ins and REST.
   and FIFO map.
 - [`PyPI release guide`](pypi-release.md): build and publication procedure.
 - [`Plug-in README`](../brighteyes_mcs/plugins/README.md): minimal plug-in contract.
-

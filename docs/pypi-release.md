@@ -12,9 +12,10 @@ of the distributions.
 
 BrightEyes-MCS intentionally declares no console or GUI script entry point.
 This prevents pip from generating `brighteyes-mcs.exe` on Windows. Users launch
-the installed package with `python -m brighteyes_mcs`; the optional Desktop
-shortcut targets the selected environment's `pythonw.exe` with those module
-arguments.
+the installed package with `python -m brighteyes_mcs`; the optional application
+Desktop shortcut targets the selected environment's `pythonw.exe` with those
+module arguments. A second optional shortcut opens `cmd.exe` and activates the
+same Python environment; it does not install an executable or entry point.
 
 ## One-time setup
 

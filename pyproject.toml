@@ -101,6 +101,7 @@ brighteyes_mcs = [
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
+norecursedirs = ["test/Sandbox"]
 addopts = ["-m", "not qt_isolated"]
 markers = [
     "integration: process or storage integration tests",

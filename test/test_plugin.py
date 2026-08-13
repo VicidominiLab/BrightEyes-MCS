@@ -55,10 +55,12 @@ class TestPluginManager(unittest.TestCase):
 
     def test_add_tab_delegates_to_main_window(self):
         widget = MagicMock()
+        self.main_window.addCentralTab = MagicMock(return_value=7)
 
-        self.manager.add_tab(widget, "Test Tab")
+        result = self.manager.add_tab(widget, "Test Tab")
 
-        self.main_window.ui.tabWidget.addTab.assert_called_once_with(widget, "Test Tab")
+        self.main_window.addCentralTab.assert_called_once_with(widget, "Test Tab")
+        self.assertEqual(result, 7)
 
     def test_load_once_reuses_existing_instance(self):
         self.manager.instances["plugin_0"] = {}

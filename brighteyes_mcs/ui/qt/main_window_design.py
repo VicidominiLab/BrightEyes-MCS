@@ -2907,11 +2907,6 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_23.addWidget(self.pushButton_7, 2, 1, 1, 1)
 
-        self.pushButton_about = QPushButton(self.scrollAreaWidgetContents_6)
-        self.pushButton_about.setObjectName(u"pushButton_about")
-
-        self.gridLayout_23.addWidget(self.pushButton_about, 0, 0, 1, 1)
-
         self.pushButton_19 = QPushButton(self.scrollAreaWidgetContents_6)
         self.pushButton_19.setObjectName(u"pushButton_19")
 
@@ -3630,7 +3625,6 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_maxlength.valueChanged.connect(MainWindowDesign.trace_parameters_changed)
         self.checkBox_trace_autorange.clicked.connect(MainWindowDesign.trace_parameters_changed)
         self.checkBox_trace_on.clicked.connect(MainWindowDesign.trace_parameters_changed)
-        self.pushButton_about.clicked.connect(MainWindowDesign.about)
         self.checkBox_circular.clicked.connect(MainWindowDesign.circularMotionActivateChanged)
         self.spinBox_circular_points.valueChanged.connect(MainWindowDesign.circularMotionActivateChanged)
         self.pushButton_19.clicked.connect(MainWindowDesign.test_analog_digital)
@@ -4249,7 +4243,6 @@ class Ui_MainWindowDesign(object):
         self.pushButton_10.setText(QCoreApplication.translate("MainWindowDesign", u"Test8", None))
         self.pushButton_9.setText(QCoreApplication.translate("MainWindowDesign", u"Test7", None))
         self.pushButton_7.setText(QCoreApplication.translate("MainWindowDesign", u"Test5", None))
-        self.pushButton_about.setText(QCoreApplication.translate("MainWindowDesign", u"LICENSE", None))
         self.pushButton_19.setText(QCoreApplication.translate("MainWindowDesign", u"Set Analog+Digital", None))
         self.checkBox_snake_z.setText(QCoreApplication.translate("MainWindowDesign", u"Snake on Z", None))
         self.dockWidget_panorama.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Panorama", None))

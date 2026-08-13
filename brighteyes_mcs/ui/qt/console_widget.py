@@ -5,11 +5,15 @@
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole.inprocess import QtInProcessKernelManager
 
+
 class ConsoleWidget(RichJupyterWidget):
     """ """
 
-    def __init__(self, namespace={}, customBanner=None, *args, **kwargs):
+    def __init__(self, namespace=None, customBanner=None, *args, **kwargs):
         super(ConsoleWidget, self).__init__(*args, **kwargs)
+        self._kernel_shutdown_complete = False
+        if namespace is None:
+            namespace = {}
 
         if customBanner is not None:
             self.banner = customBanner
@@ -31,11 +35,21 @@ class ConsoleWidget(RichJupyterWidget):
         )
 
         def stop():
-            self.kernel_client.stop_channels()
-            self.kernel_manager.shutdown_kernel()
+            self.shutdown_kernel()
             self.guisupport.get_app_qt().exit()
 
         self.exit_requested.connect(stop)
+
+    def shutdown_kernel(self):
+        """Stop the embedded kernel once while Qt objects are still valid."""
+
+        if self._kernel_shutdown_complete:
+            return
+        self._kernel_shutdown_complete = True
+        try:
+            self.kernel_client.stop_channels()
+        finally:
+            self.kernel_manager.shutdown_kernel()
 
     def _banner_default(self):
         return super()._banner_default()

@@ -4960,13 +4960,6 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="0">
-            <widget class="QPushButton" name="pushButton_about">
-             <property name="text">
-              <string>LICENSE</string>
-             </property>
-            </widget>
-           </item>
            <item row="4" column="0">
             <widget class="QPushButton" name="pushButton_19">
              <property name="text">
@@ -7324,22 +7317,6 @@
     <hint type="destinationlabel">
      <x>1208</x>
      <y>1650</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton_about</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>about()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1417</x>
-     <y>687</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>1255</x>
-     <y>829</y>
     </hint>
    </hints>
   </connection>

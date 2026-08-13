@@ -1,0 +1,31 @@
+<Configuration>
+
+    <MemoryInMB>8192</MemoryInMB>
+
+    <ClipboardRedirection>Enable</ClipboardRedirection>
+    <AudioInput>Disable</AudioInput>
+    <VideoInput>Disable</VideoInput>
+    <ProtectedClient>Disable</ProtectedClient>
+    <PrinterRedirection>Disable</PrinterRedirection>
+
+    <MappedFolders>
+
+        <MappedFolder>
+            <HostFolder>BrightEyes-MCS</HostFolder>
+            <SandboxFolder>C:\Users\WDAGUtilityAccount\Desktop\BrightEyes-MCS-ReadOnly</SandboxFolder>
+            <ReadOnly>true</ReadOnly>
+        </MappedFolder>
+
+        <MappedFolder>
+            <HostFolder>SandBox-Installers</HostFolder>
+            <SandboxFolder>C:\Users\WDAGUtilityAccount\Desktop\SandBox-Installers</SandboxFolder>
+            <ReadOnly>true</ReadOnly>
+        </MappedFolder>
+
+    </MappedFolders>
+
+    <LogonCommand>
+        <Command>cmd.exe /c start "BrightEyes install" powershell.exe -NoExit -ExecutionPolicy Bypass -NoProfile -File "C:\Users\WDAGUtilityAccount\Desktop\SandBox-Installers\install_dev.ps1"</Command>
+    </LogonCommand>
+
+</Configuration>

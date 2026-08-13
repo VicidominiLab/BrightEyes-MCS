@@ -100,6 +100,9 @@ class PluginManager:
         return [name for name in self.instances if name.startswith(prefix)]
 
     def add_tab(self, widget, caption: str):
+        add_central_tab = getattr(self.main_window, "addCentralTab", None)
+        if callable(add_central_tab):
+            return add_central_tab(widget, caption)
         return self.main_window.ui.tabWidget.addTab(widget, caption)
 
     def on(self, event: str, callback: Callable):

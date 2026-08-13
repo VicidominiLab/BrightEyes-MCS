@@ -52,3 +52,18 @@ brighteyes_mcs/cfg/*
 # Downloaded firmware assets
 brighteyes_mcs/bitfiles/
 
+# Windows Sandbox: keep only scripts and human-readable test instructions
+/test/Sandbox/**
+!/test/Sandbox/**/
+!/test/Sandbox/**/*.wsb
+!/test/Sandbox/**/*.txt
+!/test/Sandbox/**/*.ps1
+!/test/Sandbox/**/*.bat
+!/test/Sandbox/**/*.md
+
+# Never track the installed application tree or generated installer outputs
+/test/Sandbox/BrightEyes-MCS/
+/test/Sandbox/SandBox-Installers/**
+!/test/Sandbox/SandBox-Installers/
+!/test/Sandbox/SandBox-Installers/install_dev.ps1
+

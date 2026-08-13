@@ -15,6 +15,23 @@ from brighteyes_mcs.ui.qt.flim_image_view import (
 
 class TestMyClass(unittest.TestCase):
 
+    def test_central_tabs_are_inserted_before_about(self):
+        about_widget = object()
+        plugin_widget = object()
+        tab_widget = MagicMock()
+        tab_widget.indexOf.return_value = 7
+        tab_widget.insertTab.return_value = 7
+        instance = SimpleNamespace(
+            ui=SimpleNamespace(tabWidget=tab_widget),
+            about_widget=about_widget,
+        )
+
+        result = MainWindow.addCentralTab(instance, plugin_widget, "Plugin")
+
+        tab_widget.insertTab.assert_called_once_with(7, plugin_widget, "Plugin")
+        tab_widget.addTab.assert_not_called()
+        self.assertEqual(result, 7)
+
     def test_preview_ctrl_modifier_selects_navigation_by_default(self):
         self.assertTrue(
             control_modifier_selects_navigation(

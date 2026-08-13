@@ -2,11 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BrightEyes-MCS License</title>
+    <title>About BrightEyes-MCS</title>
+    <style>
+        body { background: #202124; color: #e8eaed; font-family: sans-serif; line-height: 1.35; margin: 18px; }
+        h1, h2, h3 { color: #2d9cdb; }
+        a { color: #70b7ff; }
+        .summary { font-size: 1.05em; }
+        .notice { border-left: 4px solid #d89b00; padding: 8px 12px; margin: 12px 0; }
+        .license { background: #171717; border: 1px solid #444; padding: 10px; white-space: normal; }
+    </style>
 </head>
 <body>
-<h3>BrightEyes-MCS</h3>
-<pre>BrightEyes-MCS - The microscope control software for image-scanning microscopy.
+<h1>BrightEyes-MCS</h1>
+<p class="summary"><strong>Version {{BRIGHTEYES_MCS_VERSION}}</strong></p>
+<p class="summary">Microscope control software for image-scanning microscopy,
+designed by the Molecular Microscopy and Spectroscopy group of the
+Istituto Italiano di Tecnologia.</p>
+
+<h2>Credits and citation</h2>
+<p><strong>Author:</strong> Mattia Donato<br>
+<strong>Institution:</strong> Istituto Italiano di Tecnologia<br>
+<strong>Project contributors:</strong>
+<a href="https://github.com/VicidominiLab/BrightEyes-MCS/graphs/contributors">BrightEyes-MCS contributors</a></p>
+<p>If BrightEyes-MCS is part of your research, please cite:</p>
+<p><em>BrightEyes-MCS: a control software for multichannel scanning microscopy.</em><br>
+Donato et al., Journal of Open Source Software (2024), 9(103), 7125.<br>
+<a href="https://doi.org/10.21105/joss.07125">https://doi.org/10.21105/joss.07125</a></p>
+<p>
+<a href="https://github.com/VicidominiLab/BrightEyes-MCS">Source code</a> &middot;
+<a href="https://github.com/VicidominiLab/BrightEyes-MCS/wiki">Documentation</a> &middot;
+<a href="https://github.com/VicidominiLab/BrightEyes-MCS/issues">Report an issue</a>
+</p>
+
+<h2>BrightEyes-MCS software license</h2>
+<pre class="license">BrightEyes-MCS - The microscope control software for image-scanning microscopy.
 Copyright (C) 2023 Istituto Italiano di Tecnologia
 
     This program is free software: you can redistribute it and/or modify
@@ -20,15 +49,44 @@ Copyright (C) 2023 Istituto Italiano di Tecnologia
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program. If not, see <a href="https://www.gnu.org/licenses/">https://www.gnu.org/licenses/</a>..
+    along with this program. If not, see https://www.gnu.org/licenses/.
+</pre>
 
+<h2>BrightEyes-MCSLL firmware: separate license</h2>
+<div class="notice">
+<p><strong>The FPGA <code>.lvbitx</code> firmware is not part of BrightEyes-MCS
+and is not covered by the GPL license below.</strong> It is distributed separately
+by <a href="https://github.com/VicidominiLab/BrightEyes-MCSLL">BrightEyes-MCSLL</a>
+under its own closed-source firmware license. Downloading or using that firmware
+signifies agreement to those separate terms.</p>
+</div>
+<p><strong>BrightEyes-MCSLL copyright:</strong> Copyright (C) 2023 Istituto Italiano di Tecnologia<br>
+<strong>Author:</strong> Mattia Donato<br>
+<strong>Firmware credits:</strong> Marco Castello, Giorgio Tortarolo,
+Simonluca Piazza, Eli Slenders</p>
+<p><strong>Closed-Source Firmware License Agreement:</strong> This license grants
+you a non-exclusive, non-transferable permission to download and utilize our
+proprietary firmware free of charge. However, you are required to use this
+firmware exclusively in conjunction with open-source software, such as
+BrightEyes-MCS. Modifying, distributing, or employing it with closed-source
+software is strictly prohibited. We actively endorse and support the use of
+this firmware in educational institutions, including schools, universities,
+as well as in both public and private research organizations. All rights to the
+firmware are retained by us. The firmware is provided “as is” with absolutely
+no warranty. We disclaim all liability for any damages. This license may be
+terminated at your discretion or by us. Your use of the firmware signifies your
+agreement to this Agreement.</p>
+<p>Always review the authoritative current
+<a href="https://github.com/VicidominiLab/BrightEyes-MCSLL/blob/main/LICENSE.md">BrightEyes-MCSLL license</a>
+before downloading or using firmware.</p>
 
-    The firmwares bit-files ".lvbitx" needed for programming the FPGA are NOT part
-    of this project. They are part of BrightEyes-MCSLL which is not open-source.
-    Form more details see the <a href="https://github.com/VicidominiLab/BrightEyes-MCSLL/">https://github.com/VicidominiLab/BrightEyes-MCSLL/</a>
-
-  </pre>
+<h2>Third-party software</h2>
+<p>BrightEyes-MCS uses third-party Python and native packages distributed under
+their own licenses. The license and notice files installed with each package
+(normally under its <code>*.dist-info</code> directory) are authoritative for
+those components.</p>
 <hr>
+<h2>Full GNU General Public License</h2>
 <h3>GNU GENERAL PUBLIC LICENSE</h3>
 <p>Version 3, 29 June 2007</p>
 <p>Copyright &copy; 2007 Free Software Foundation, Inc. &lt;<a href="https://fsf.org/">https://fsf.org/</a>&gt;</p>

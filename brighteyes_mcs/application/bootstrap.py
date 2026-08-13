@@ -3,9 +3,40 @@
 from __future__ import annotations
 
 import atexit
+import argparse
 import os
 import platform
 import sys
+
+
+def _argument_parser() -> argparse.ArgumentParser:
+    """Build launcher help without importing Qt."""
+
+    parser = argparse.ArgumentParser(
+        prog="python -m brighteyes_mcs",
+        description="Launch BrightEyes-MCS microscope control software.",
+        epilog=(
+            "BrightEyes-MCS is installed as a Python module and deliberately does not "
+            "create a brighteyes-mcs.exe. Run this command from its activated Python "
+            "environment."
+        ),
+    )
+    parser.add_argument(
+        "--setup",
+        action="store_true",
+        help="reopen system-profile and Windows Desktop shortcut setup",
+    )
+    parser.add_argument(
+        "--no-first-run",
+        action="store_true",
+        help="start without displaying first-run setup",
+    )
+    parser.add_argument(
+        "debug",
+        nargs="?",
+        help="use the legacy unstable/debug window mode",
+    )
+    return parser
 
 
 def _startup_options(argv):
@@ -18,6 +49,11 @@ def _startup_options(argv):
 
 
 def main(argv=None):
+    argv = list(sys.argv if argv is None else argv)
+    if any(argument in {"-h", "--help"} for argument in argv[1:]):
+        _argument_parser().print_help()
+        return 0
+
     from ..logging_setup import configure_logging
 
     configure_logging()
@@ -28,10 +64,10 @@ def main(argv=None):
 
     from .paths import resource_path
     from ..ui.qt import MainWindow
-    from ..ui.qt.first_run import maybe_run_shortcut_setup
+    from ..ui.qt.first_run import maybe_run_first_run_setup
     from ..ui.qt.qt_locale import install_scientific_locale
 
-    argv, force_setup, skip_setup = _startup_options(list(sys.argv if argv is None else argv))
+    argv, force_setup, skip_setup = _startup_options(argv)
     if any(platform.win32_ver()):
         import ctypes
 
@@ -47,7 +83,7 @@ def main(argv=None):
     app.setStyle("Fusion")
     app.styleHints().setColorScheme(Qt.ColorScheme.Dark)
     if not skip_setup:
-        maybe_run_shortcut_setup(force=force_setup)
+        maybe_run_first_run_setup(force=force_setup)
     window = MainWindow(argv)
     original_excepthook = sys.excepthook
 

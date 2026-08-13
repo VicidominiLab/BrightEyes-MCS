@@ -52,6 +52,8 @@ from .qt_locale import install_scientific_locale
 from .support import DoubleClickDoubleSpinBox, PluginSignals, RectROIWithoutHandles
 
 from .console_widget import ConsoleWidget
+from .graphics_shutdown import disable_viewbox_item_change_callbacks
+from .system_profile_dialog import SystemProfileDialog
 from ...acquisition.manager import McsManager
 from ..table_manager import TableManager
 
@@ -72,6 +74,7 @@ from ...storage.legacy_names import LEGACY_H5_REGISTER_NAME_MAP
 from ..controllers import ConfigurationController, LifecycleController, PreviewController
 from ...application.paths import (
     ensure_user_configuration,
+    profile_directory,
     resource_path,
     resolve_legacy_path,
     writable_config_path,
@@ -386,6 +389,14 @@ class MainWindow(QMainWindow):
 
         self.ui.pushButton_loadCfg.clicked.connect(self.LoadConfigurationCmd)
         self.ui.pushButton_saveCfg.clicked.connect(self.SaveConfigurationCmd)
+        self.ui.pushButton_systemProfile = QPushButton("System…", self)
+        self.ui.pushButton_systemProfile.setToolTip(
+            "Select the active microscope profile and its resource folders"
+        )
+        self.ui.gridLayout_24.addWidget(
+            self.ui.pushButton_systemProfile, 4, 2, 1, 1
+        )
+        self.ui.pushButton_systemProfile.clicked.connect(self.editSystemProfile)
         self.ui.pushButton_convertRawAcquisition.clicked.connect(
             self.cmd_convertRawAcquisition
         )
@@ -492,6 +503,7 @@ class MainWindow(QMainWindow):
 
         self.webcam_widget = pg.ImageView(self)
         self.ui.tabWidget.addTab(self.webcam_widget, "Cam")
+        self._createAboutTab()
         self.ui.tabWidget.show()
         self.webcam_widget.setImage(np.zeros((15, 15)))
 
@@ -1909,7 +1921,17 @@ class MainWindow(QMainWindow):
             if widget.isMinimized():
                 logger.debug("minimize")
                 widget.setWindowFlags(Qt.Widget)
-                self.ui.tabWidget.addTab(widget, widget.windowTitle())
+                self.addCentralTab(widget, widget.windowTitle())
+
+    def addCentralTab(self, widget, caption):
+        """Add a central tab immediately before the permanent About tab."""
+
+        about_widget = getattr(self, "about_widget", None)
+        if about_widget is not None:
+            about_index = self.ui.tabWidget.indexOf(about_widget)
+            if about_index >= 0:
+                return self.ui.tabWidget.insertTab(about_index, widget, caption)
+        return self.ui.tabWidget.addTab(widget, caption)
 
     @Slot()
     def tabDoubleClick(self, number):
@@ -1918,6 +1940,8 @@ class MainWindow(QMainWindow):
         """
         logger.debug("%s %s", "tabDoubleClick", number)
         w = self.ui.tabWidget.widget(number)
+        if w is getattr(self, "about_widget", None):
+            return
         pos = w.mapToGlobal(w.pos())
         size = w.frameSize()
         title = self.ui.tabWidget.tabText(number)
@@ -2079,7 +2103,7 @@ class MainWindow(QMainWindow):
             self,
             caption="FPGA Bit File",
             filter="FPGA Bit File (*.lvbitx)",
-            dir=str(resource_path("bitfiles")),
+            dir=str(profile_directory("bitfiles")),
         )[0]
         current_folder = QDir.fromNativeSeparators(os.getcwd()) + "/"
         if file_bit != "":
@@ -2099,7 +2123,7 @@ class MainWindow(QMainWindow):
             self,
             caption="FPGA Bit File",
             filter="FPGA Bit File (*.lvbitx)",
-            dir=str(resource_path("bitfiles")),
+            dir=str(profile_directory("bitfiles")),
         )[0]
         current_folder = QDir.fromNativeSeparators(os.getcwd()) + "/"
         if file_bit != "":
@@ -2147,6 +2171,21 @@ class MainWindow(QMainWindow):
                 + default_cfg
                 + "' is selected.")
         return default_cfg
+
+    @Slot()
+    def editSystemProfile(self):
+        """Edit ``current_system`` and load the newly selected default config."""
+
+        dialog = SystemProfileDialog(self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        default_cfg = str(ensure_user_configuration())
+        self.ui.lineEdit_configurationfile.setText(default_cfg)
+        self.LoadConfiguration(default_cfg)
+        self.ui.statusBar.showMessage(
+            "System profile updated. Plug-ins may require an application restart.",
+            8000,
+        )
 
     def getGUI_data(self):
         """
@@ -2684,6 +2723,12 @@ class MainWindow(QMainWindow):
             logger.exception("Could not stop the preview timer")
 
         try:
+            if self.console_widget is not None:
+                self.console_widget.shutdown_kernel()
+        except Exception:
+            logger.exception("Could not stop the embedded console kernel")
+
+        try:
             self.timerFPGAWatchdog.stop()
         except (AttributeError, RuntimeError):
             logger.debug("FPGA watchdog timer was not active during shutdown")
@@ -2705,6 +2750,11 @@ class MainWindow(QMainWindow):
         except Exception:
             logger.exception("FPGA session shutdown reported errors")
         finally:
+            disabled_view_boxes = disable_viewbox_item_change_callbacks()
+            logger.debug(
+                "Disabled teardown callbacks for %d PyQtGraph ViewBoxes",
+                disabled_view_boxes,
+            )
             self.mcs_manager.is_connected = False
             self._shutdown_complete = True
             self._shutdown_started = False
@@ -3043,23 +3093,27 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def about(self):
-        """
-        Show the about dialog box with license
-        """
+        """Select the permanent central About tab."""
 
-        self.textBrowser = QTextBrowser(None)
-        self.textBrowser.setObjectName("textBrowser")
-        self.textBrowser.setHtml(
-            resource_path("ui/qt/about.html").read_text(encoding="utf-8")
+        if getattr(self, "about_widget", None) is not None:
+            self.ui.tabWidget.setCurrentWidget(self.about_widget)
+
+    def _createAboutTab(self):
+        """Create the credits and licenses page as the final central tab."""
+
+        self.about_widget = QWidget(self.ui.tabWidget)
+        self.about_widget.setObjectName("tab_about")
+        layout = QVBoxLayout(self.about_widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        self.about_browser = QTextBrowser(self.about_widget)
+        self.about_browser.setObjectName("about_browser")
+        self.about_browser.setOpenExternalLinks(True)
+        about_html = resource_path("ui/qt/about.html").read_text(encoding="utf-8")
+        self.about_browser.setHtml(
+            about_html.replace("{{BRIGHTEYES_MCS_VERSION}}", __version__)
         )
-        # retranslateUi
-        self.textBrowser.show()
-        self.textBrowser.setWindowTitle("About")
-
-        desktop = QDesktopWidget()
-        half_desktop = desktop.size() / 2
-        self.textBrowser.resize(half_desktop * 1.5)
-        self.textBrowser.move(60, 60)
+        layout.addWidget(self.about_browser)
+        self.ui.tabWidget.addTab(self.about_widget, "About")
 
     def imageMoved(self, event):
         """

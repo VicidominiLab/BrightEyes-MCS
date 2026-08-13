@@ -30,13 +30,47 @@ $BrightEyesPython = "$env:LOCALAPPDATA\BrightEyes-MCS\venv\Scripts\python.exe"
 & $BrightEyesPython -m brighteyes_mcs
 ```
 
-The first launch offers to create a Desktop shortcut for that environment. The
-shortcut uses `pythonw.exe -m brighteyes_mcs`; BrightEyes-MCS
-does not build or install an application executable. To reopen shortcut setup:
+The first launch opens a Next/Back/Finish setup wizard for the microscope
+profile, missing folder/configuration structure, optional firmware download,
+and Desktop shortcuts. When the selected root is incomplete, the wizard lists
+the missing items and defaults to safely creating them without overwriting
+existing files. On Windows, the application
+shortcut launches BrightEyes-MCS; a second, default-enabled **BrightEyes-MCS
+Python** shortcut opens Command Prompt with the same virtual environment
+activated and uses the environment's Python icon. A third default-enabled
+**BrightEyes-MCS System** shortcut opens the selected microscope system root.
+A profile may be in a private user folder or in a shared folder such as
+`%PROGRAMDATA%\BrightEyes-MCS\systems\microscope-1`. The application shortcut uses
+`pythonw.exe -m brighteyes_mcs`; BrightEyes-MCS does not build or install an
+application executable. To reopen first-run settings:
 
 ```powershell
 & $BrightEyesPython -m brighteyes_mcs --setup
 ```
+
+To display all launcher options without starting the GUI:
+
+```powershell
+& $BrightEyesPython -m brighteyes_mcs --help
+```
+
+The active profile can also be changed later with the **System…** button beside
+**Default .cfg File**. A profile can hold multiple `.cfg` files and custom
+configuration, plug-in, scripts, and bitfiles/firmware subfolders. In first-run
+setup or the **System…** dialog, **Create folders and default configuration**
+creates the selected tree and copies missing packaged defaults without replacing
+existing files.
+
+The same profile editor provides **Download firmware…**. Enter a branch from
+[BrightEyes-MCSLL](https://github.com/VicidominiLab/BrightEyes-MCSLL); the
+application downloads that branch as a ZIP and safely extracts it into the
+profile's selected bitfiles/firmware folder. Existing matching firmware files
+are updated. The firmware has a separate closed-source license, which is shown
+for acceptance before the download starts.
+
+In first-run setup, branch selection, license acceptance, download progress,
+and errors stay inside the Firmware wizard page; no second download window is
+opened.
 
 To upgrade later:
 
@@ -52,8 +86,9 @@ Optional built-in plugin dependencies can be installed with extras:
 ```
 
 The NI drivers and FPGA firmware used for physical acquisition remain separate
-from the PyPI package. Follow the hardware setup instructions in the project
-Wiki after installing the application.
+from the PyPI package. Firmware may be fetched with the profile editor described
+above; follow the hardware setup instructions in the project Wiki for the NI
+drivers and hardware configuration.
 
 ## Compiled Extensions
 
