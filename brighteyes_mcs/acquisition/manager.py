@@ -168,10 +168,6 @@ class McsManager():
             "max_frame": 1,
             "stop_command": False,
             "start_command": False,
-            "L1": 1,
-            "L2": 0,
-            "L3": 0,
-            "L4": 0,
             # 'laser_off_after_measurement_enable' : False,
         }
         self.requested_fifo_depth = 100000

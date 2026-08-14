@@ -64,6 +64,10 @@ dependencies = [
 [project.optional-dependencies]
 ao = ["pyserial"]
 flim = ["brighteyes-flim>=0.9.4"]
+all = [
+    "pyserial",
+    "brighteyes-flim>=0.9.4",
+]
 dev = [
     "build>=1.2",
     "mypy>=1.11",

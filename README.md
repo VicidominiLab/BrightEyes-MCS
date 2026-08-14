@@ -11,84 +11,69 @@ For complete documentation, please visit our [Wiki page](https://github.com/Vici
 
 ## Quick Start
 
-To get started, refer to the detailed instructions and guidelines available on the [Wiki](https://github.com/VicidominiLab/BrightEyes-MCS/wiki).
+BrightEyes-MCS requires **Python 3.10 or newer**. Python **3.12 (64-bit)** is
+recommended, although any compatible Python version from 3.10 onward should be
+sufficient.
 
-BrightEyes-MCS is a Windows-focused application. Python 3.13 (64-bit) is the
-recommended runtime; the package metadata permits Python 3.10 and newer. The NI
-drivers and FPGA firmware required for physical acquisition are installed
-separately and are not distributed in the Python package.
+Use any environment manager you prefer, such as Python `venv`, Conda, uv, or
+virtualenv. The following examples use the standard `venv` module.
 
-Install Python 3.13 (64-bit) from
-[python.org](https://www.python.org/downloads/windows/), then create a dedicated
-environment and install BrightEyes-MCS from PyPI:
+### Install the `on_the_road_v2` version
 
-```powershell
-py -3.13 -m venv "$env:LOCALAPPDATA\BrightEyes-MCS\venv"
-$BrightEyesPython = "$env:LOCALAPPDATA\BrightEyes-MCS\venv\Scripts\python.exe"
-& $BrightEyesPython -m pip install --upgrade pip
-& $BrightEyesPython -m pip install brighteyes-mcs
-& $BrightEyesPython -m brighteyes_mcs
-```
+To install the current `on_the_road_v2` branch directly from GitHub, make sure
+Git is installed and use one of the following complete examples.
 
-The first launch opens a Next/Back/Finish setup wizard for the microscope
-profile, missing folder/configuration structure, optional firmware download,
-and Desktop shortcuts. When the selected root is incomplete, the wizard lists
-the missing items and defaults to safely creating them without overwriting
-existing files. On Windows, the application
-shortcut launches BrightEyes-MCS; a second, default-enabled **BrightEyes-MCS
-Python** shortcut opens Command Prompt with the same virtual environment
-activated and uses the environment's Python icon. A third default-enabled
-**BrightEyes-MCS System** shortcut opens the selected microscope system root.
-A profile may be in a private user folder or in a shared folder such as
-`%PROGRAMDATA%\BrightEyes-MCS\systems\microscope-1`. The application shortcut uses
-`pythonw.exe -m brighteyes_mcs`; BrightEyes-MCS does not build or install an
-application executable. To reopen first-run settings:
+**PowerShell:**
 
 ```powershell
-& $BrightEyesPython -m brighteyes_mcs --setup
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install "git+https://github.com/VicidominiLab/BrightEyes-MCS.git@on_the_road_v2"
+python -m brighteyes_mcs
 ```
 
-To display all launcher options without starting the GUI:
+**Command Prompt (`cmd.exe`):**
 
-```powershell
-& $BrightEyesPython -m brighteyes_mcs --help
+```bat
+py -3.12 -m venv .venv
+.venv\Scripts\activate.bat
+python -m pip install --upgrade pip
+pip install "git+https://github.com/VicidominiLab/BrightEyes-MCS.git@on_the_road_v2"
+python -m brighteyes_mcs
 ```
 
-The active profile can also be changed later with the **System…** button beside
-**Default .cfg File**. A profile can hold multiple `.cfg` files and custom
-configuration, plug-in, scripts, and bitfiles/firmware subfolders. In first-run
-setup or the **System…** dialog, **Create folders and default configuration**
-creates the selected tree and copies missing packaged defaults without replacing
-existing files.
+### Install the PyPI release instead (AT MOMENT NOT AVAILABLE)
 
-The same profile editor provides **Download firmware…**. Enter a branch from
-[BrightEyes-MCSLL](https://github.com/VicidominiLab/BrightEyes-MCSLL); the
-application downloads that branch as a ZIP and safely extracts it into the
-profile's selected bitfiles/firmware folder. Existing matching firmware files
-are updated. The firmware has a separate closed-source license, which is shown
-for acceptance before the download starts.
+After creating and activating an environment as shown above, install the latest
+published release with:
 
-In first-run setup, branch selection, license acceptance, download progress,
-and errors stay inside the Firmware wizard page; no second download window is
-opened.
-
-To upgrade later:
-
-```powershell
-& $BrightEyesPython -m pip install --upgrade brighteyes-mcs
+```console
+python -m pip install brighteyes-mcs
+python -m brighteyes_mcs
 ```
 
-Optional built-in plugin dependencies can be installed with extras:
+The remaining commands also work in either PowerShell or Command Prompt.
 
-```powershell
-& $BrightEyesPython -m pip install "brighteyes-mcs[ao]"    # serial-controlled AO hardware
-& $BrightEyesPython -m pip install "brighteyes-mcs[flim]"  # FLIM/DFD analysis
+The first launch guides you through microscope-profile setup, optional firmware
+download, and Desktop shortcut creation. To open the setup again later:
+
+```console
+python -m brighteyes_mcs --setup
 ```
 
-The NI drivers and FPGA firmware used for physical acquisition remain separate
-from the PyPI package. Firmware may be fetched with the profile editor described
-above; follow the hardware setup instructions in the project Wiki for the NI
-drivers and hardware configuration.
+Optional plug-in dependencies can be installed with:
+
+```console
+python -m pip install "brighteyes-mcs[ao]"    # serial-controlled AO hardware
+python -m pip install "brighteyes-mcs[flim]"  # FLIM/DFD analysis
+python -m pip install "brighteyes-mcs[all]"   # all optional plug-in dependencies
+```
+
+NI drivers and FPGA firmware are required for physical acquisition but are not
+included in the Python package. See the
+[Wiki](https://github.com/VicidominiLab/BrightEyes-MCS/wiki) for hardware setup
+instructions.
 
 ## Compiled Extensions
 

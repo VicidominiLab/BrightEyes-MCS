@@ -15,7 +15,7 @@ import requests
 
 FIRMWARE_REPOSITORY = "https://github.com/VicidominiLab/BrightEyes-MCSLL"
 FIRMWARE_LICENSE_URL = f"{FIRMWARE_REPOSITORY}/blob/main/LICENSE.md"
-DEFAULT_FIRMWARE_BRANCH = "main"
+DEFAULT_FIRMWARE_BRANCH = "v2"
 _BRANCH_PATTERN = re.compile(r"[A-Za-z0-9._/-]+")
 
 
