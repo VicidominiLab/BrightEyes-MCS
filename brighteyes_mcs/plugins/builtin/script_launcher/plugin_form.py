@@ -13,7 +13,7 @@ import os
 
 from PySide6.QtCore import Slot, QDir
 from PySide6.QtWidgets import QApplication, QFileDialog, QWidget
-from ....application.paths import profile_directory
+from ....application.paths import profile_directory, resource_path
 
 
 class myForm(Ui_Form, QWidget):
@@ -44,18 +44,29 @@ class myForm(Ui_Form, QWidget):
 
         self.pushButton_cmd1.setText("Grid Calibration")
 
-        mypath = profile_directory("scripts")
-        available_files = (
-            [path.name for path in mypath.iterdir() if path.is_file()]
-            if mypath.is_dir()
-            else []
-        )
-        list_dir = []
-        for i in available_files:
-            if not i.startswith("__") and i.endswith(".py"):
-                list_dir.append(i)
+        self.refresh_scripts()
 
-        self.comboBox_script.addItems(list_dir)
+    def refresh_scripts(self):
+        """Merge bundled scripts with scripts from the active profile."""
+
+        selected_script = self.comboBox_script.currentText()
+        self.script_paths = {}
+        # Bundled scripts are always available. A profile script with the same
+        # filename intentionally overrides its bundled counterpart.
+        for scripts_directory in (
+            resource_path("scripts"),
+            profile_directory("scripts"),
+        ):
+            if not scripts_directory.is_dir():
+                continue
+            for path in scripts_directory.iterdir():
+                if path.is_file() and not path.name.startswith("__") and path.suffix == ".py":
+                    self.script_paths[path.name] = path
+
+        self.comboBox_script.clear()
+        self.comboBox_script.addItems(sorted(self.script_paths))
+        if selected_script in self.script_paths:
+            self.comboBox_script.setCurrentText(selected_script)
 
 
     @Slot()
@@ -79,18 +90,19 @@ class myForm(Ui_Form, QWidget):
         # self.console.execute_command("%maplotlib inline")
         self.console.push_vars({"filename": self.lineEdit.text()})
         self.console.execute_command("print('filename = ', filename)")
-        self.console.run_script(
-            str(profile_directory("scripts") / "grid_calibration.py")
-        )
+        script_path = self.script_paths.get("grid_calibration.py")
+        if script_path is not None:
+            self.console.run_script(str(script_path))
 
     @Slot()
     def cmd_load(self):
+        self.refresh_scripts()
         scriptname = self.comboBox_script.currentText()
         if not scriptname:
             return
-        self.console.run_script(
-            str(profile_directory("scripts") / scriptname)
-        )
+        script_path = self.script_paths.get(scriptname)
+        if script_path is not None:
+            self.console.run_script(str(script_path))
 
     def after_acquisition(self, txt):
         self.lineEdit.setText("%s" % os.path.abspath(txt))

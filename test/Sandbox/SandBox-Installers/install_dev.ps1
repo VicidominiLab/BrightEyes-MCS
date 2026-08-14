@@ -419,11 +419,15 @@ try {
     # Start BrightEyes-MCS
     # ------------------------------------------------------------
 
-    Write-Host "Starting BrightEyes-MCS..."
+    Write-Host "Starting the installation of BrightEyes-MCS..."
     Write-Host ""
 
     & "$Venv312\Scripts\python.exe" `
+        -m pip install "https://github.com/VicidominiLab/BrightEyes-MCS/archive/refs/heads/on_the_road_v2.zip"
+
+    & "$Venv312\Scripts\python.exe" `
         -m brighteyes_mcs
+
 
     if ($LASTEXITCODE -ne 0) {
         throw "BrightEyes-MCS exited with code $LASTEXITCODE"

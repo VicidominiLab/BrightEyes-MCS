@@ -2,7 +2,7 @@
 """Plug-in entrypoint for the channel delay skew editor."""
 
 from .channel_delay_skew_widget import ChannelDelaySkewWidget
-from ...api import PluginMetadata
+from brighteyes_mcs.plugins.api import PluginMetadata
 from brighteyes_mcs.logging_setup import logger
 
 

@@ -23,11 +23,21 @@ from brighteyes_mcs.application.paths import (
 class TestSystemProfilePaths(unittest.TestCase):
     def _profile_tree(self, base: Path) -> tuple[Path, SystemProfile]:
         root = base / "microscope-1"
-        for relative in ("configurations", "settings/plugins", "automation", "firmware"):
+        for relative in (
+            "configurations",
+            "settings/plugins",
+            "extensions",
+            "automation",
+            "firmware",
+        ):
             (root / relative).mkdir(parents=True, exist_ok=True)
         (root / "configurations/main.cfg").write_text("{}", encoding="utf-8")
         (root / "configurations/secondary.cfg").write_text("{}", encoding="utf-8")
         (root / "settings/plugins/dfd.cfg").write_text("{}", encoding="utf-8")
+        (root / "extensions/custom_plugin").mkdir()
+        (root / "extensions/custom_plugin/plugin.py").write_text(
+            "def setup(context): pass\n", encoding="utf-8"
+        )
         (root / "automation/calibrate.py").write_text("pass", encoding="utf-8")
         (root / "firmware/device.lvbitx").write_text("firmware", encoding="utf-8")
         return root, SystemProfile(
@@ -35,6 +45,7 @@ class TestSystemProfilePaths(unittest.TestCase):
             configuration_dir="configurations",
             default_configuration="main.cfg",
             plugins_dir="settings/plugins",
+            plugin_packages_dir="${PROFILE_ROOT}/extensions",
             scripts_dir="${PROFILE_ROOT}/automation",
             bitfiles_dir="$PROFILE_ROOT/firmware",
         )
@@ -52,6 +63,7 @@ class TestSystemProfilePaths(unittest.TestCase):
                 self.assertEqual(load_system_profile(), profile)
                 self.assertEqual(system_root(), root)
                 self.assertEqual(default_configuration_path(), root / "configurations/main.cfg")
+                self.assertEqual(profile_directory("plugin_packages"), root / "extensions")
                 self.assertEqual(profile_directory("scripts"), root / "automation")
                 self.assertEqual(profile_directory("bitfiles"), root / "firmware")
                 self.assertEqual(
@@ -71,6 +83,10 @@ class TestSystemProfilePaths(unittest.TestCase):
                 self.assertEqual(
                     resolve_legacy_path("cfg/secondary.cfg"),
                     root / "configurations/secondary.cfg",
+                )
+                self.assertEqual(
+                    resolve_legacy_path("plugins/custom_plugin/plugin.py"),
+                    root / "extensions/custom_plugin/plugin.py",
                 )
                 self.assertEqual(
                     resolve_legacy_path("scripts/calibrate.py"),
@@ -114,6 +130,10 @@ class TestSystemProfilePaths(unittest.TestCase):
                 updated = load_system_profile()
                 self.assertEqual(updated.root, profile.root)
                 self.assertEqual(updated.plugins_dir, profile.plugins_dir)
+                self.assertEqual(
+                    updated.plugin_packages_dir,
+                    profile.plugin_packages_dir,
+                )
                 self.assertEqual(updated.scripts_dir, profile.scripts_dir)
                 self.assertEqual(updated.bitfiles_dir, profile.bitfiles_dir)
                 self.assertEqual(updated.default_configuration, "secondary.cfg")
@@ -137,6 +157,7 @@ class TestSystemProfilePaths(unittest.TestCase):
                 configuration_dir="configurations",
                 default_configuration="startup/default.cfg",
                 plugins_dir="settings/plugins",
+                plugin_packages_dir="extensions",
                 scripts_dir="automation",
                 bitfiles_dir="firmware",
             )
@@ -145,6 +166,7 @@ class TestSystemProfilePaths(unittest.TestCase):
             self.assertIn(root / "configurations/startup/default.cfg", copied)
             self.assertTrue((root / "configurations/startup/default.cfg").is_file())
             self.assertTrue((root / "settings/plugins").is_dir())
+            self.assertTrue((root / "extensions").is_dir())
             self.assertTrue((root / "automation").is_dir())
             self.assertTrue((root / "firmware").is_dir())
 

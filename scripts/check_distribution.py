@@ -12,6 +12,9 @@ import zipfile
 
 REQUIRED_WHEEL_FILES = {
     "brighteyes_mcs/__main__.py",
+    "brighteyes_mcs/scripts/ffs_analysis_script.py",
+    "brighteyes_mcs/scripts/grid_calibration.py",
+    "brighteyes_mcs/scripts/shift_vectors.py",
     "brighteyes_mcs/cfg/default.cfg",
     "brighteyes_mcs/cfg/plugins_cfg/channel_delay_skew.cfg",
     "brighteyes_mcs/cfg/plugins_cfg/dfd.cfg",

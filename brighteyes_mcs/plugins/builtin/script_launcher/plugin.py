@@ -3,7 +3,7 @@
 
 from .plugin_form import myForm
 from PySide6.QtWidgets import QWidget
-from ...api import PluginMetadata
+from brighteyes_mcs.plugins.api import PluginMetadata
 from brighteyes_mcs.logging_setup import logger
 
 
@@ -34,6 +34,7 @@ def setup(context):
 
     context.add_tab(widget, "ScriptLauncher")
     context.on("acquisitionDone", form.after_acquisition)
+    context.on("configurationLoaded", form.refresh_scripts)
 
     logger.debug("%s %s", "script_launcher loaded", context)
     return widget

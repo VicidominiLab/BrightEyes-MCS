@@ -4,7 +4,7 @@ import sys
 sys.path.insert(1, os.getcwd())
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 from types import SimpleNamespace
 from PySide6.QtCore import Qt
 
@@ -180,6 +180,110 @@ class TestMyClass(unittest.TestCase):
 
         force_pulsing.setChecked.assert_called_once_with(False)
         force_pulsing.setEnabled.assert_called_once_with(False)
+
+    @staticmethod
+    def _auto_lifetime_fixture(channel="LIFETIME_HSV"):
+        instance = SimpleNamespace(
+            started_normal=False,
+            started_preview=True,
+            raw_stream_mode=False,
+            _auto_lifetime_correction_pending=True,
+            _auto_lifetime_correction_completed=False,
+            ui=SimpleNamespace(
+                checkBox_DFD=SimpleNamespace(isChecked=lambda: True),
+                comboBox_plot_channel=SimpleNamespace(
+                    currentText=lambda: channel
+                ),
+            ),
+            colorLifetimeDeltaTauUseHistogramMean=MagicMock(
+                return_value=True
+            ),
+        )
+        instance._syncAutoLifetimeCorrectionWithPlotSelection = (
+            lambda: MainWindow._syncAutoLifetimeCorrectionWithPlotSelection(
+                instance
+            )
+        )
+        return instance
+
+    def test_auto_lifetime_correction_waits_for_twenty_percent(self):
+        instance = self._auto_lifetime_fixture()
+
+        result_before = MainWindow._maybeAutoCorrectLifetimeAfterFirstFrameProgress(
+            instance, 19, 100
+        )
+        result_at_threshold = MainWindow._maybeAutoCorrectLifetimeAfterFirstFrameProgress(
+            instance, 20, 100
+        )
+
+        self.assertFalse(result_before)
+        self.assertTrue(result_at_threshold)
+        instance.colorLifetimeDeltaTauUseHistogramMean.assert_called_once_with()
+
+    def test_auto_lifetime_correction_retries_until_data_are_valid(self):
+        instance = self._auto_lifetime_fixture()
+        instance.colorLifetimeDeltaTauUseHistogramMean.side_effect = [False, True]
+
+        first_attempt = MainWindow._maybeAutoCorrectLifetimeAfterFirstFrameProgress(
+            instance, 20, 100
+        )
+        second_attempt = MainWindow._maybeAutoCorrectLifetimeAfterFirstFrameProgress(
+            instance, 25, 100
+        )
+
+        self.assertFalse(first_attempt)
+        self.assertTrue(second_attempt)
+        self.assertEqual(
+            instance.colorLifetimeDeltaTauUseHistogramMean.call_count, 2
+        )
+
+    def test_auto_lifetime_correction_only_runs_once(self):
+        instance = self._auto_lifetime_fixture()
+
+        def complete_correction():
+            instance._auto_lifetime_correction_pending = False
+            instance._auto_lifetime_correction_completed = True
+            return True
+
+        instance.colorLifetimeDeltaTauUseHistogramMean.side_effect = (
+            complete_correction
+        )
+
+        first_attempt = MainWindow._maybeAutoCorrectLifetimeAfterFirstFrameProgress(
+            instance, 20, 100
+        )
+        second_attempt = MainWindow._maybeAutoCorrectLifetimeAfterFirstFrameProgress(
+            instance, 40, 100
+        )
+
+        self.assertTrue(first_attempt)
+        self.assertFalse(second_attempt)
+        instance.colorLifetimeDeltaTauUseHistogramMean.assert_called_once_with()
+
+    def test_auto_lifetime_correction_disarms_outside_hsv(self):
+        instance = self._auto_lifetime_fixture(channel="LIFETIME_HSL")
+
+        result = MainWindow._maybeAutoCorrectLifetimeAfterFirstFrameProgress(
+            instance, 20, 100
+        )
+
+        self.assertFalse(result)
+        self.assertFalse(instance._auto_lifetime_correction_pending)
+        instance.colorLifetimeDeltaTauUseHistogramMean.assert_not_called()
+
+    def test_circular_view_button_follows_circular_activation(self):
+        button = MagicMock()
+        instance = SimpleNamespace(
+            ui=SimpleNamespace(pushButton_updateCircularView=button)
+        )
+
+        MainWindow.updateCircularViewAvailability(instance, False)
+        MainWindow.updateCircularViewAvailability(instance, True)
+
+        self.assertEqual(
+            button.setEnabled.call_args_list,
+            [call(False), call(True)],
+        )
 
     def temporalSettingsChanged_updates_registers(self):
         instance = MyClass()

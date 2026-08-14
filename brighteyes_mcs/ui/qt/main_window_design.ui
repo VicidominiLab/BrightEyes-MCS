@@ -951,6 +951,13 @@
                 <string>Board Configuration</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_36">
+                <item row="0" column="1">
+                 <widget class="Line" name="line">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Vertical</enum>
+                  </property>
+                 </widget>
+                </item>
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_24">
                   <item row="12" column="0">
@@ -1139,6 +1146,19 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="8" column="1">
+                   <spacer name="horizontalSpacer_24">
+                    <property name="orientation">
+                     <enum>Qt::Orientation::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
                  </layout>
                 </item>
                </layout>
@@ -1148,35 +1168,27 @@
                 <string>SPAD</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_61">
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_detector_model">
-                  <property name="text">
-                   <string>Detector</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QComboBox" name="comboBox_detector_model">
-                  <item>
-                   <property name="text">
-                    <string>SPAD</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>PI23</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-                <item row="6" column="0">
+                <item row="7" column="0">
                  <widget class="QLabel" name="label_119">
                   <property name="text">
                    <string>(Legacy feature to program the old SPAD array prototype)</string>
                   </property>
                  </widget>
                 </item>
-                <item row="7" column="0">
+                <item row="4" column="1">
+                 <spacer name="horizontalSpacer_21">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="8" column="0">
                  <layout class="QGridLayout" name="gridLayout_59">
                   <item row="1" column="2">
                    <widget class="QLineEdit" name="lineEdit_spad_data">
@@ -1215,29 +1227,54 @@
                   </item>
                  </layout>
                 </item>
-                <item row="2" column="0">
-                 <widget class="QCheckBox" name="checkBox_SPAD_VR0">
-                  <property name="text">
-                   <string>VR0</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_124">
-                  <property name="text">
-                   <string>SPAD 7x7 hold-off configuration:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QCheckBox" name="checkBox_SPAD_VR1">
-                  <property name="text">
-                   <string>VR1</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="4" column="0">
-                 <spacer name="verticalSpacer_12">
+                 <layout class="QGridLayout" name="gridLayout_97">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_detector_model">
+                    <property name="text">
+                     <string>Detector</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_124">
+                    <property name="text">
+                     <string>SPAD 7x7 hold-off configuration:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QCheckBox" name="checkBox_SPAD_VR1">
+                    <property name="text">
+                     <string>VR1</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="checkBox_SPAD_VR0">
+                    <property name="text">
+                     <string>VR0</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="comboBox_detector_model">
+                    <item>
+                     <property name="text">
+                      <string>SPAD</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>PI23</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="9" column="0">
+                 <spacer name="verticalSpacer_8">
                   <property name="orientation">
                    <enum>Qt::Orientation::Vertical</enum>
                   </property>
@@ -1256,6 +1293,19 @@
                 <string>Default FOV</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_43">
+                <item row="1" column="0">
+                 <spacer name="verticalSpacer_6">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_33">
                   <item row="3" column="2">
@@ -1431,268 +1481,15 @@
                   </item>
                  </layout>
                 </item>
-                <item row="1" column="0">
-                 <spacer name="verticalSpacer_6">
+                <item row="0" column="1">
+                 <spacer name="horizontalSpacer_22">
                   <property name="orientation">
-                   <enum>Qt::Orientation::Vertical</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </widget>
-              <widget class="QWidget" name="tab_7">
-               <attribute name="title">
-                <string>Limits</string>
-               </attribute>
-               <layout class="QGridLayout" name="gridLayout_45">
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_17">
-                  <property name="text">
-                   <string>Offset [V]</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <layout class="QGridLayout" name="gridLayout_25">
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_30">
-                    <property name="text">
-                     <string>[V]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="sciSpinBox" name="spinBox_offExtra_y_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="sciSpinBox" name="spinBox_offExtra_z_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_31">
-                    <property name="text">
-                     <string>Y</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="2">
-                   <widget class="QLabel" name="label_32">
-                    <property name="text">
-                     <string>[V]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_33">
-                    <property name="text">
-                     <string>Z</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QLabel" name="label_34">
-                    <property name="text">
-                     <string>[V]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="3">
-                   <spacer name="horizontalSpacer_5">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="sciSpinBox" name="spinBox_offExtra_x_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_45">
-                    <property name="text">
-                     <string>X</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item row="3" column="0">
-                 <layout class="QGridLayout" name="gridLayout_26">
-                  <item row="1" column="1">
-                   <widget class="sciSpinBox" name="spinBox_min_x_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>-10.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="2">
-                   <widget class="sciSpinBox" name="spinBox_max_z_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>5.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_38">
-                    <property name="text">
-                     <string>X</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_39">
-                    <property name="text">
-                     <string>Y</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="sciSpinBox" name="spinBox_max_y_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>10.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_41">
-                    <property name="text">
-                     <string>Min.</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="2">
-                   <widget class="sciSpinBox" name="spinBox_max_x_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>10.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_42">
-                    <property name="text">
-                     <string>Max.</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="sciSpinBox" name="spinBox_min_z_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>-5.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_40">
-                    <property name="text">
-                     <string>Z</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="sciSpinBox" name="spinBox_min_y_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>-10.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="3">
-                   <spacer name="horizontalSpacer_6">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item row="2" column="0">
-                 <widget class="QLabel" name="label_37">
-                  <property name="text">
-                   <string>Set Voltages Range [V]</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="0">
-                 <spacer name="verticalSpacer_8">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
+                    <width>40</width>
+                    <height>20</height>
                    </size>
                   </property>
                  </spacer>
@@ -1753,10 +1550,16 @@
                 </item>
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_72">
-                  <item row="1" column="1">
-                   <widget class="QCheckBox" name="checkBox_httpServer">
+                  <item row="2" column="1">
+                   <widget class="QLineEdit" name="lineEdit_httpAddr">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
                     <property name="text">
-                     <string>http API Server</string>
+                     <string>127.0.0.1</string>
                     </property>
                    </widget>
                   </item>
@@ -1780,37 +1583,10 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="1">
-                   <widget class="QLineEdit" name="lineEdit_httpAddr">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>127.0.0.1</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_99">
-                    <property name="text">
-                     <string>Port</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="2" column="0">
                    <widget class="QLabel" name="label_44">
                     <property name="text">
                      <string>Address</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QLabel" name="label_102">
-                    <property name="text">
-                     <string>Link</string>
                     </property>
                    </widget>
                   </item>
@@ -1821,226 +1597,63 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="label_102">
+                    <property name="text">
+                     <string>Link</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QCheckBox" name="checkBox_httpServer">
+                    <property name="text">
+                     <string>http API Server</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_99">
+                    <property name="text">
+                     <string>Port</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1">
+                   <spacer name="horizontalSpacer_23">
+                    <property name="orientation">
+                     <enum>Qt::Orientation::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
                  </layout>
                 </item>
                </layout>
               </widget>
               <widget class="QWidget" name="tab_8">
                <attribute name="title">
-                <string>Calibration</string>
+                <string>Calibration &amp;&amp; Limits</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_46">
-                <item row="3" column="0">
-                 <layout class="QGridLayout" name="gridLayout_21">
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_10">
-                    <property name="text">
-                     <string>[V]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QDoubleSpinBox" name="spinBox_off_x_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QDoubleSpinBox" name="spinBox_off_y_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QDoubleSpinBox" name="spinBox_off_z_V">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-99.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_8">
-                    <property name="text">
-                     <string>Y</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="2">
-                   <widget class="QLabel" name="label_11">
-                    <property name="text">
-                     <string>[V]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_9">
-                    <property name="text">
-                     <string>Z</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QLabel" name="label_12">
-                    <property name="text">
-                     <string>[V]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_7">
-                    <property name="text">
-                     <string>X</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="3">
-                   <spacer name="horizontalSpacer_2">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_16">
-                  <property name="text">
-                   <string>CalibrationFactors </string>
+                <item row="4" column="1">
+                 <spacer name="horizontalSpacer_15">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
-                 </widget>
-                </item>
-                <item row="2" column="0">
-                 <widget class="QLabel" name="label_36">
-                  <property name="text">
-                   <string>Current Position in [V]</string>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
                   </property>
-                 </widget>
+                 </spacer>
                 </item>
-                <item row="1" column="0">
-                 <layout class="QGridLayout" name="gridLayout_16">
-                  <item row="0" column="1">
-                   <widget class="QDoubleSpinBox" name="spinBox_calib_x">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-1000.000000000000000</double>
-                    </property>
-                    <property name="maximum">
-                     <double>1000.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>8.900000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="2">
-                   <widget class="QLabel" name="label_19">
-                    <property name="text">
-                     <string>[µm/V]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
-                   <widget class="QLabel" name="label_18">
-                    <property name="text">
-                     <string>[µm/V]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="label_6">
-                    <property name="text">
-                     <string>Z</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_2">
-                    <property name="text">
-                     <string>X</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QDoubleSpinBox" name="spinBox_calib_z">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-1000.000000000000000</double>
-                    </property>
-                    <property name="maximum">
-                     <double>1000.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>10.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QLabel" name="label_20">
-                    <property name="text">
-                     <string>[µm/V]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_5">
-                    <property name="text">
-                     <string>Y</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QDoubleSpinBox" name="spinBox_calib_y">
-                    <property name="decimals">
-                     <number>6</number>
-                    </property>
-                    <property name="minimum">
-                     <double>-1000.000000000000000</double>
-                    </property>
-                    <property name="maximum">
-                     <double>1000.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>8.900000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="3">
-                   <spacer name="horizontalSpacer">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item row="4" column="0">
+                <item row="6" column="0">
                  <spacer name="verticalSpacer_4">
                   <property name="orientation">
                    <enum>Qt::Orientation::Vertical</enum>
@@ -2052,6 +1665,910 @@
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QGroupBox" name="groupBox_20">
+                  <property name="title">
+                   <string>Main X Y Z</string>
+                  </property>
+                  <layout class="QGridLayout" name="gridLayout_45">
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_16">
+                     <property name="text">
+                      <string>CalibrationFactors </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0">
+                    <layout class="QGridLayout" name="gridLayout_25">
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_45">
+                       <property name="text">
+                        <string>X</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_33">
+                       <property name="text">
+                        <string>Z</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="sciSpinBox" name="spinBox_offExtra_z_V">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="sciSpinBox" name="spinBox_offExtra_x_V">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="label_30">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="3">
+                      <spacer name="horizontalSpacer_5">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QLabel" name="label_34">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_31">
+                       <property name="text">
+                        <string>Y</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="label_32">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="sciSpinBox" name="spinBox_offExtra_y_V">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item row="1" column="1">
+                    <layout class="QGridLayout" name="gridLayout_21">
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="label_10">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QLabel" name="label_off_x_V">
+                       <property name="text">
+                        <string>0.000000</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QLabel" name="label_off_y_V">
+                       <property name="text">
+                        <string>0.000000</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QLabel" name="label_off_z_V">
+                       <property name="text">
+                        <string>0.000000</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_8">
+                       <property name="text">
+                        <string>Y</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="label_11">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_9">
+                       <property name="text">
+                        <string>Z</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QLabel" name="label_12">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_7">
+                       <property name="text">
+                        <string>X</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="3">
+                      <spacer name="horizontalSpacer_2">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                   <item row="3" column="1">
+                    <layout class="QGridLayout" name="gridLayout_26">
+                     <item row="1" column="1">
+                      <widget class="sciSpinBox" name="spinBox_min_x_V">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>-10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="2">
+                      <widget class="sciSpinBox" name="spinBox_max_z_V">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>5.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_38">
+                       <property name="text">
+                        <string>X</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_39">
+                       <property name="text">
+                        <string>Y</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="sciSpinBox" name="spinBox_max_y_V">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QLabel" name="label_41">
+                       <property name="text">
+                        <string>Min.</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="sciSpinBox" name="spinBox_max_x_V">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="label_42">
+                       <property name="text">
+                        <string>Max.</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="1">
+                      <widget class="sciSpinBox" name="spinBox_min_z_V">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>-5.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="0">
+                      <widget class="QLabel" name="label_40">
+                       <property name="text">
+                        <string>Z</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="sciSpinBox" name="spinBox_min_y_V">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>-10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="3">
+                      <spacer name="horizontalSpacer_6">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QLabel" name="label_17">
+                     <property name="text">
+                      <string>Offset [V]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QLabel" name="label_37">
+                     <property name="text">
+                      <string>Set Voltages Range [V]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QLabel" name="label_36">
+                     <property name="text">
+                      <string>Central Position in [V]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <layout class="QGridLayout" name="gridLayout_16">
+                     <item row="0" column="1">
+                      <widget class="QDoubleSpinBox" name="spinBox_calib_x">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-1000.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>1000.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>8.900000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="label_19">
+                       <property name="text">
+                        <string>[µm/V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="label_18">
+                       <property name="text">
+                        <string>[µm/V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_6">
+                       <property name="text">
+                        <string>Z</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_2">
+                       <property name="text">
+                        <string>X</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QDoubleSpinBox" name="spinBox_calib_z">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-1000.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>1000.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QLabel" name="label_20">
+                       <property name="text">
+                        <string>[µm/V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_5">
+                       <property name="text">
+                        <string>Y</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QDoubleSpinBox" name="spinBox_calib_y">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-1000.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>1000.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>8.900000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="3">
+                      <spacer name="horizontalSpacer">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item row="5" column="0">
+                 <widget class="QGroupBox" name="groupBox_21">
+                  <property name="title">
+                   <string>Main X2 Y2 Z2 </string>
+                  </property>
+                  <layout class="QGridLayout" name="gridLayout_91">
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_126">
+                     <property name="text">
+                      <string>CalibrationFactors </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0">
+                    <layout class="QGridLayout" name="gridLayout_92">
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_127">
+                       <property name="text">
+                        <string>X</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_128">
+                       <property name="text">
+                        <string>Z</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="sciSpinBox" name="spinBox_offExtra_z_V_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="sciSpinBox" name="spinBox_offExtra_x_V_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="label_129">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="3">
+                      <spacer name="horizontalSpacer_17">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QLabel" name="label_130">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_131">
+                       <property name="text">
+                        <string>Y</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="label_132">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="sciSpinBox" name="spinBox_offExtra_y_V_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item row="1" column="1">
+                    <layout class="QGridLayout" name="gridLayout_93">
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="label_133">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QLabel" name="label_off_x_V_2">
+                       <property name="text">
+                        <string>0.000000</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QLabel" name="label_off_y_V_2">
+                       <property name="text">
+                        <string>0.000000</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QLabel" name="label_off_z_V_2">
+                       <property name="text">
+                        <string>0.000000</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_134">
+                       <property name="text">
+                        <string>Y</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="label_135">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_136">
+                       <property name="text">
+                        <string>Z</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QLabel" name="label_137">
+                       <property name="text">
+                        <string>[V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_138">
+                       <property name="text">
+                        <string>X</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="3">
+                      <spacer name="horizontalSpacer_18">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                   <item row="3" column="1">
+                    <layout class="QGridLayout" name="gridLayout_94">
+                     <item row="1" column="1">
+                      <widget class="sciSpinBox" name="spinBox_min_x_V_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>-10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="2">
+                      <widget class="sciSpinBox" name="spinBox_max_z_V_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>5.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_139">
+                       <property name="text">
+                        <string>X</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_140">
+                       <property name="text">
+                        <string>Y</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="sciSpinBox" name="spinBox_max_y_V_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QLabel" name="label_141">
+                       <property name="text">
+                        <string>Min.</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="sciSpinBox" name="spinBox_max_x_V_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="label_142">
+                       <property name="text">
+                        <string>Max.</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="1">
+                      <widget class="sciSpinBox" name="spinBox_min_z_V_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>-5.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="0">
+                      <widget class="QLabel" name="label_143">
+                       <property name="text">
+                        <string>Z</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="sciSpinBox" name="spinBox_min_y_V_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-99.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>-10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="3">
+                      <spacer name="horizontalSpacer_19">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QLabel" name="label_144">
+                     <property name="text">
+                      <string>Offset [V]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QLabel" name="label_145">
+                     <property name="text">
+                      <string>Set Voltages Range [V]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QLabel" name="label_146">
+                     <property name="text">
+                      <string>Central Position in [V]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <layout class="QGridLayout" name="gridLayout_95">
+                     <item row="0" column="1">
+                      <widget class="QDoubleSpinBox" name="spinBox_calib_x_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-1000.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>1000.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>8.900000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="label_147">
+                       <property name="text">
+                        <string>[µm/V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="label_148">
+                       <property name="text">
+                        <string>[µm/V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_149">
+                       <property name="text">
+                        <string>Z</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_150">
+                       <property name="text">
+                        <string>X</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QDoubleSpinBox" name="spinBox_calib_z_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-1000.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>1000.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>10.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QLabel" name="label_151">
+                       <property name="text">
+                        <string>[µm/V]</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_152">
+                       <property name="text">
+                        <string>Y</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QDoubleSpinBox" name="spinBox_calib_y_2">
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-1000.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>1000.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>8.900000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="3">
+                      <spacer name="horizontalSpacer_20">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                </layout>
               </widget>
@@ -2332,19 +2849,6 @@
               </widget>
              </widget>
             </item>
-            <item row="1" column="0">
-             <spacer name="verticalSpacer_23">
-              <property name="orientation">
-               <enum>Qt::Orientation::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
            </layout>
           </item>
          </layout>
@@ -2373,31 +2877,37 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_8">
     <layout class="QGridLayout" name="gridLayout_15">
-     <item row="10" column="3">
-      <spacer name="verticalSpacer_20">
-       <property name="orientation">
-        <enum>Qt::Orientation::Vertical</enum>
+     <item row="5" column="0" colspan="2">
+      <widget class="QGroupBox" name="groupBox_16">
+       <property name="title">
+        <string>FPGA</string>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="5" column="0">
-      <spacer name="verticalSpacer_17">
-       <property name="orientation">
-        <enum>Qt::Orientation::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
+       <layout class="QGridLayout" name="gridLayout_87">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="pushButton_fpga_connection_cmd">
+          <property name="toolTip">
+           <string>Keep the FPGA connected between acquisitions</string>
+          </property>
+          <property name="text">
+           <string>Keep FPGA On</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="label_FPGA_status">
+          <property name="toolTip">
+           <string>Waiting for a Preview / Acquisition or the Keep FPGA On button.</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </item>
      <item row="3" column="0" colspan="3">
       <widget class="QGroupBox" name="groupBox_18">
@@ -2425,6 +2935,169 @@
           </property>
           <property name="text">
            <string>Ext. Viewer/Analysis</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <spacer name="verticalSpacer_17">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="11" column="3">
+      <spacer name="verticalSpacer_20">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="5" column="2">
+      <widget class="QGroupBox" name="groupBox_19">
+       <property name="title">
+        <string>Preview</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_90">
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="checkBox_showPreview">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Show Image</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="2" column="3" rowspan="4">
+      <widget class="QGroupBox" name="groupBox_9">
+       <property name="title">
+        <string/>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_30">
+        <item row="3" column="1">
+         <widget class="QGroupBox" name="groupBox_12">
+          <property name="title">
+           <string>TCSPC</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_85">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="checkBox_DFD">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the Digital Frequency Domain data acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>DFD</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QGroupBox" name="groupBox_10">
+          <property name="title">
+           <string>Time Tagging</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_80">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="checkBox_ttmActivate">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>TTM</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="checkBox_uttmActivate">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>uTTM</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="checkBox_fifo_analog">
+          <property name="text">
+           <string>Analog</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" rowspan="2">
+         <widget class="QGroupBox" name="groupBox_13">
+          <property name="title">
+           <string>Channels</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_86">
+           <item row="0" column="0">
+            <widget class="QComboBox" name="comboBox_spad_channels">
+             <item>
+              <property name="text">
+               <string>25</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>49</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="checkBox_fifo_digital">
+          <property name="text">
+           <string>Digital</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -2547,175 +3220,6 @@
            </size>
           </property>
           <property name="flat">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="4" column="2">
-      <widget class="QGroupBox" name="groupBox_19">
-       <property name="title">
-        <string>Preview</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_90">
-        <item row="0" column="0">
-         <widget class="QCheckBox" name="checkBox_showPreview">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The live-preview can be disabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Show Image</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="4" column="0" colspan="2">
-      <widget class="QGroupBox" name="groupBox_16">
-       <property name="title">
-        <string>FPGA</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_87">
-        <item row="1" column="1">
-         <widget class="QPushButton" name="pushButton_fpga_connection_cmd">
-          <property name="toolTip">
-           <string>Keep the FPGA connected between acquisitions</string>
-          </property>
-          <property name="text">
-           <string>Keep FPGA On</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="label_FPGA_status">
-          <property name="toolTip">
-           <string>Waiting for a Preview / Acquisition or the Keep FPGA On button.</string>
-          </property>
-          <property name="text">
-           <string> </string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="2" column="3" rowspan="3">
-      <widget class="QGroupBox" name="groupBox_9">
-       <property name="title">
-        <string/>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_30">
-        <item row="3" column="1">
-         <widget class="QGroupBox" name="groupBox_12">
-          <property name="title">
-           <string>TCSPC</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_85">
-           <item row="0" column="0">
-            <widget class="QCheckBox" name="checkBox_DFD">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the Digital Frequency Domain data acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>DFD</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QGroupBox" name="groupBox_10">
-          <property name="title">
-           <string>Time Tagging</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_80">
-           <item row="0" column="0">
-            <widget class="QCheckBox" name="checkBox_ttmActivate">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>TTM</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QCheckBox" name="checkBox_uttmActivate">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activate the TTM data receiver (external software) when start the acquisition&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>uTTM</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QCheckBox" name="checkBox_fifo_analog">
-          <property name="text">
-           <string>Analog</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1" rowspan="2">
-         <widget class="QGroupBox" name="groupBox_13">
-          <property name="title">
-           <string>Channels</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_86">
-           <item row="0" column="0">
-            <widget class="QComboBox" name="comboBox_spad_channels">
-             <item>
-              <property name="text">
-               <string>25</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>49</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="checkBox_fifo_digital">
-          <property name="text">
-           <string>Digital</string>
-          </property>
-          <property name="checked">
            <bool>true</bool>
           </property>
          </widget>
@@ -4844,7 +5348,7 @@
           <x>0</x>
           <y>0</y>
           <width>466</width>
-          <height>322</height>
+          <height>290</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_67">
@@ -5540,7 +6044,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>466</width>
+          <width>478</width>
           <height>108</height>
          </rect>
         </property>
@@ -6095,9 +6599,6 @@
   <tabstop>spinBox_off_z_um</tabstop>
   <tabstop>spinBox_off_y_um</tabstop>
   <tabstop>spinBox_off_x_um</tabstop>
-  <tabstop>spinBox_off_x_V</tabstop>
-  <tabstop>spinBox_off_y_V</tabstop>
-  <tabstop>spinBox_off_z_V</tabstop>
   <tabstop>spinBox_calib_x</tabstop>
   <tabstop>spinBox_calib_z</tabstop>
   <tabstop>spinBox_calib_y</tabstop>
@@ -6181,102 +6682,6 @@
     <hint type="destinationlabel">
      <x>751</x>
      <y>639</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_calib_x</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>calibrationFactorChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>145</x>
-     <y>900</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>239</x>
-     <y>764</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_calib_y</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>calibrationFactorChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>145</x>
-     <y>930</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>237</x>
-     <y>794</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_calib_z</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>calibrationFactorChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>145</x>
-     <y>960</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>237</x>
-     <y>823</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_off_x_V</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>offset_V_Changed()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>141</x>
-     <y>1014</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>237</x>
-     <y>856</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_off_y_V</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>offset_V_Changed()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>141</x>
-     <y>1044</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>237</x>
-     <y>896</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_off_z_V</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>offset_V_Changed()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>141</x>
-     <y>1074</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>235</x>
-     <y>923</y>
     </hint>
    </hints>
   </connection>
@@ -6437,54 +6842,6 @@
     <hint type="destinationlabel">
      <x>250</x>
      <y>637</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_offExtra_x_V</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>positionSettingsChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>141</x>
-     <y>900</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>244</x>
-     <y>1103</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_offExtra_y_V</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>positionSettingsChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>141</x>
-     <y>930</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>246</x>
-     <y>1139</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_offExtra_z_V</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>positionSettingsChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>141</x>
-     <y>960</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>248</x>
-     <y>1185</y>
     </hint>
    </hints>
   </connection>
@@ -6809,22 +7166,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton_FPGA_file_selection</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>bit_file_clicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>402</x>
-     <y>988</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>357</x>
-     <y>1436</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>pushButton_grabPanorama</sender>
    <signal>clicked()</signal>
    <receiver>MainWindowDesign</receiver>
@@ -7113,22 +7454,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton_FPGA2_file_selection</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>bit_file_clicked2()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>402</x>
-     <y>1085</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>349</x>
-     <y>1246</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>comboBox_fingerprint</sender>
    <signal>currentIndexChanged(QString)</signal>
    <receiver>MainWindowDesign</receiver>
@@ -7365,22 +7690,6 @@
     <hint type="destinationlabel">
      <x>1255</x>
      <y>869</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBox_httpServer</sender>
-   <signal>stateChanged(int)</signal>
-   <receiver>MainWindowDesign</receiver>
-   <slot>httpServerCheckBoxChanged()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>321</x>
-     <y>874</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>427</x>
-     <y>1179</y>
     </hint>
    </hints>
   </connection>
@@ -7705,6 +8014,54 @@
    </hints>
   </connection>
   <connection>
+   <sender>spinBox_offExtra_x_V</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>positionSettingsChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>141</x>
+     <y>900</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>244</x>
+     <y>1103</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_offExtra_y_V</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>positionSettingsChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>141</x>
+     <y>930</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>246</x>
+     <y>1139</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_offExtra_z_V</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>positionSettingsChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>141</x>
+     <y>960</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>248</x>
+     <y>1185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>lineEdit_fpgabitfile</sender>
    <signal>textChanged(QString)</signal>
    <receiver>MainWindowDesign</receiver>
@@ -7736,6 +8093,102 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushButton_FPGA2_file_selection</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>bit_file_clicked2()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>402</x>
+     <y>1085</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>349</x>
+     <y>1246</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_calib_z</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>calibrationFactorChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>145</x>
+     <y>960</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>237</x>
+     <y>823</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_httpServer</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>httpServerCheckBoxChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>321</x>
+     <y>874</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>427</x>
+     <y>1179</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_calib_x</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>calibrationFactorChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>145</x>
+     <y>900</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>239</x>
+     <y>764</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_FPGA_file_selection</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>bit_file_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>402</x>
+     <y>988</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>357</x>
+     <y>1436</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBox_calib_y</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>MainWindowDesign</receiver>
+   <slot>calibrationFactorChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>145</x>
+     <y>930</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>237</x>
+     <y>794</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>temporalSettingsChanged()</slot>
@@ -7747,7 +8200,6 @@
   <slot>selectedAutoscaleImg()</slot>
   <slot>selectedAutoscaleFingerprint()</slot>
   <slot>calibrationFactorChanged()</slot>
-  <slot>offset_V_Changed()</slot>
   <slot>offset_um_Changed()</slot>
   <slot>test4()</slot>
   <slot>test5()</slot>

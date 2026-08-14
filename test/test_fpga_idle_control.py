@@ -699,7 +699,6 @@ def test_circular_points_replicate_at_each_raster_pixel_center():
     window.currentImage_pos = np.asarray([10.0, 20.0, 30.0])
     window.currentImage_size = np.asarray([4.0, 2.0, 0.0])
     window.currentImage_pixels = np.asarray([2, 1, 1])
-    window._last_circular_debug_signature = None
     window.ui = SimpleNamespace(
         comboBox_view_projection=MagicMock(
             currentText=MagicMock(return_value="xy")

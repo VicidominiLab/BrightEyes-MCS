@@ -78,6 +78,12 @@ class SystemProfileEditor(QWidget):
         self._add_directory_row(
             form, "Plug-in configuration folder", "plugins_dir", self._browse_plugins_dir
         )
+        self._add_directory_row(
+            form,
+            "Plug-ins folder",
+            "plugin_packages_dir",
+            self._browse_plugin_packages_dir,
+        )
         self._add_directory_row(form, "Scripts folder", "scripts_dir", self._browse_scripts_dir)
         self._add_directory_row(
             form, "Bitfiles / firmware folder", "bitfiles_dir", self._browse_bitfiles_dir
@@ -166,6 +172,9 @@ class SystemProfileEditor(QWidget):
             configuration_dir=self._fields["configuration_dir"].text().strip() or ".",
             default_configuration=self._fields["default_configuration"].text().strip(),
             plugins_dir=self._fields["plugins_dir"].text().strip() or "plugins_cfg",
+            plugin_packages_dir=(
+                self._fields["plugin_packages_dir"].text().strip() or "plugins"
+            ),
             scripts_dir=self._fields["scripts_dir"].text().strip() or "scripts",
             bitfiles_dir=self._fields["bitfiles_dir"].text().strip() or "bitfiles",
         )
@@ -205,6 +214,13 @@ class SystemProfileEditor(QWidget):
 
     def _browse_plugins_dir(self):
         self._browse_profile_directory("Select plug-in configuration folder", "plugins", "plugins_dir")
+
+    def _browse_plugin_packages_dir(self):
+        self._browse_profile_directory(
+            "Select plug-ins folder",
+            "plugin_packages",
+            "plugin_packages_dir",
+        )
 
     def _browse_scripts_dir(self):
         self._browse_profile_directory("Select scripts folder", "scripts", "scripts_dir")

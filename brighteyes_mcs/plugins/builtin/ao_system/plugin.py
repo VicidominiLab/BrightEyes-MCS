@@ -1,7 +1,7 @@
 """Cobolt laser lifecycle plug-in."""
 
 from .cobolt_ctl import turn_on_laser, turn_off_laser
-from ...api import PluginMetadata
+from brighteyes_mcs.plugins.api import PluginMetadata
 
 
 PLUGIN = PluginMetadata(
