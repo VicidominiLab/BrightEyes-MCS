@@ -125,6 +125,7 @@ def _profile_structure_paths(profile: SystemProfile) -> list[tuple[str, Path, bo
         ("Configuration folder", profile_directory("configuration", profile), True),
         ("Default configuration", default_configuration_path(profile), True),
         ("Plug-in configuration folder", profile_directory("plugins", profile), False),
+        ("Plug-ins folder", profile_directory("plugin_packages", profile), False),
         ("Scripts folder", profile_directory("scripts", profile), False),
         ("Bitfiles / firmware folder", profile_directory("bitfiles", profile), False),
     ]
@@ -465,6 +466,7 @@ class _FinishPage(QWizardPage):
         self.summary.setText(
             f"System root:\n{system_root(profile)}\n\n"
             f"Default configuration:\n{default_configuration_path(profile)}\n\n"
+            f"Plug-ins folder:\n{profile_directory('plugin_packages', profile)}\n\n"
             f"Firmware: {firmware}\nDesktop shortcuts: {shortcuts}"
         )
 

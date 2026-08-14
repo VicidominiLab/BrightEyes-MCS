@@ -29,7 +29,7 @@ Git is installed and use one of the following complete examples.
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install "git+https://github.com/VicidominiLab/BrightEyes-MCS.git@on_the_road_v2"
+pip install "https://github.com/VicidominiLab/BrightEyes-MCS/archive/refs/heads/on_the_road_v2.zip"
 python -m brighteyes_mcs
 ```
 
@@ -39,7 +39,7 @@ python -m brighteyes_mcs
 py -3.12 -m venv .venv
 .venv\Scripts\activate.bat
 python -m pip install --upgrade pip
-pip install "git+https://github.com/VicidominiLab/BrightEyes-MCS.git@on_the_road_v2"
+pip install "https://github.com/VicidominiLab/BrightEyes-MCS/archive/refs/heads/on_the_road_v2.zip"
 python -m brighteyes_mcs
 ```
 
@@ -55,8 +55,9 @@ python -m brighteyes_mcs
 
 The remaining commands also work in either PowerShell or Command Prompt.
 
-The first launch guides you through microscope-profile setup, optional firmware
-download, and Desktop shortcut creation. To open the setup again later:
+The first launch guides you through microscope-profile setup—including custom
+plug-ins and scripts folders—optional firmware download, and Desktop shortcut
+creation. To open the setup again later:
 
 ```console
 python -m brighteyes_mcs --setup

@@ -1,4 +1,7 @@
 import unittest
+from pathlib import Path
+import sys
+import tempfile
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -33,6 +36,68 @@ class TestPluginManager(unittest.TestCase):
         self.assertIn("dfd", plugins)
         self.assertIn("channel_delay_skew", plugins)
         self.assertNotIn("__pycache__", plugins)
+
+    def test_user_plugins_are_discovered_and_support_local_imports(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            user_plugins = Path(temporary) / "plugins"
+            plugin = user_plugins / "external_example"
+            plugin.mkdir(parents=True)
+            (plugin / "helper.py").write_text("VALUE = 42\n", encoding="utf-8")
+            entrypoint = plugin / "plugin.py"
+            entrypoint.write_text(
+                "from brighteyes_mcs.plugins.api import PluginMetadata\n"
+                "from .helper import VALUE\n\n"
+                "PLUGIN = PluginMetadata(\n"
+                "    name='external_example',\n"
+                "    display_name='External Example',\n"
+                "    allow_multiple=False,\n"
+                ")\n\n"
+                "def setup(context):\n"
+                "    context['value'] = VALUE\n",
+                encoding="utf-8",
+            )
+            manager = PluginManager(
+                self.main_window,
+                user_plugin_directory=user_plugins,
+            )
+
+            plugins = manager.available_plugins()
+            self.assertIn("external_example", plugins)
+            self.assertIn("script_launcher", plugins)
+
+            instance_id = manager.load("external_example")
+            self.assertEqual(manager.instances[instance_id]["value"], 42)
+
+            module_name = manager._user_module_name("external_example", entrypoint)
+            sys.modules.pop(module_name + ".helper", None)
+            sys.modules.pop(module_name, None)
+
+    def test_user_plugin_overrides_bundled_plugin_with_the_same_name(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            user_plugins = Path(temporary) / "plugins"
+            plugin = user_plugins / "script_launcher"
+            plugin.mkdir(parents=True)
+            entrypoint = plugin / "plugin.py"
+            entrypoint.write_text(
+                "from brighteyes_mcs.plugins.api import PluginMetadata\n\n"
+                "PLUGIN = PluginMetadata(\n"
+                "    name='script_launcher',\n"
+                "    display_name='Profile Script Launcher',\n"
+                ")\n\n"
+                "def setup(context):\n"
+                "    context['source'] = 'profile'\n",
+                encoding="utf-8",
+            )
+            manager = PluginManager(
+                self.main_window,
+                user_plugin_directory=user_plugins,
+            )
+
+            instance_id = manager.load("script_launcher")
+
+            self.assertEqual(manager.instances[instance_id]["source"], "profile")
+            module_name = manager._user_module_name("script_launcher", entrypoint)
+            sys.modules.pop(module_name, None)
 
     def test_load_calls_single_context_entrypoint(self):
         setup = MagicMock(return_value="plugin-object")

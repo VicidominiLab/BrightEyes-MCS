@@ -61,12 +61,13 @@ BrightEyes-MCS/
 │   │   ├── controllers/     Small extracted UI-independent behaviors
 │   │   └── qt/              Main window, widgets, generated Designer code
 │   ├── plugins/             Plug-in API, template and built-in plug-ins
+│   ├── scripts/             Bundled ScriptLauncher analysis/calibration scripts
 │   ├── cfg/                 Packaged default and plug-in configurations
 │   ├── images/              Packaged icon and splash resources
 │   └── bitfiles/            Local firmware area; firmware is not packaged
 ├── test/                    Unit, integration, Qt and hardware-facing tests
 ├── docs/                    Architecture, register and HDF5 documentation
-├── scripts/                 Stand-alone analysis/conversion/calibration tools
+├── scripts/                 Developer distribution and conversion tools
 ├── raw-fpga-converter/      Stand-alone SPAD RAW-to-HDF5 converter copy
 ├── blueskyproject_mcs/      Separate Bluesky/Ophyd register-map project
 ├── notebook/                Experiments, analysis notebooks and local data
@@ -78,8 +79,9 @@ BrightEyes-MCS/
 ```
 
 Only packages matching `brighteyes_mcs*` are included by the root build.
-`blueskyproject_mcs`, `raw-fpga-converter`, notebooks, scripts, tests, and local
-build output are not importable parts of the installed application package.
+`blueskyproject_mcs`, `raw-fpga-converter`, notebooks, the top-level `scripts/`
+directory, tests, and local build output are not importable parts of the
+installed application package.
 
 ## Package ownership
 
@@ -174,6 +176,7 @@ root = %PROGRAMDATA%\BrightEyes-MCS\systems\microscope-1
 configuration_dir = cfg
 default_configuration = default.cfg
 plugins_dir = cfg\plugins_cfg
+plugin_packages_dir = plugins
 scripts_dir = scripts
 bitfiles_dir = firmware
 ```
@@ -182,9 +185,11 @@ All directory settings may be absolute or relative to `root`. `%NAME%`,
 `$NAME`, and `${NAME}` environment-variable notation is expanded. A profile's
 configuration directory may contain any number of `.cfg` files; only
 `default_configuration` is loaded automatically. Paths beginning with `cfg/`,
-`cfg/plugins_cfg/`, `scripts/`, `bitfiles/`, or `firmware/` are redirected to
-the corresponding selected folder. Historical `current_system` files pointing
-directly to one `.cfg` remain supported.
+`cfg/plugins_cfg/`, `plugins/`, `scripts/`, `bitfiles/`, or `firmware/` are
+redirected to the corresponding selected folder. `plugins_dir` stores plug-in
+configuration files; `plugin_packages_dir` stores executable plug-in packages.
+Historical `current_system` files pointing directly to one `.cfg` remain
+supported.
 
 The shared `SystemProfileEditor` used by both first-run setup and the main
 window can create the configured root and subfolders. It copies the packaged
@@ -210,8 +215,8 @@ only after a successful extraction; it does not open the standalone firmware
 dialog used by the main System editor.
 
 Shared profiles should normally be read-only for ordinary users, particularly
-when they contain Python scripts. Logs, shortcut state, and other runtime state
-remain per-user.
+when they contain Python scripts or plug-ins. Logs, shortcut state, and other
+runtime state remain per-user.
 
 Logs normally go to `%LOCALAPPDATA%/BrightEyes-MCS/log`; `BRIGHTEYES_LOG_DIR`
 can override the location.
@@ -389,6 +394,11 @@ Commands cross from the server thread into the Qt application through signals.
 
 The plug-in contract is `PLUGIN = PluginMetadata(...)` plus `setup(context)`.
 `PluginContext` offers tabs, events, named services and per-instance state.
+Plug-ins are discovered from both `brighteyes_mcs/plugins/builtin/` and the
+active profile's `plugin_packages_dir`; a profile package overrides a bundled
+package with the same directory name. External plug-ins import the stable API
+with `from brighteyes_mcs.plugins.api import PluginMetadata`. Their internal
+modules may use local relative imports such as `from .widget import Widget`.
 
 | Built-in | Role | Extra dependency |
 | --- | --- | --- |
@@ -410,7 +420,7 @@ not yet a complete isolation boundary.
 | `BrightEyes-MCS-libs-rs` sibling repository | Experimental Rust/PyO3 replacement for the Cython package. It deliberately exposes the same `brighteyes_mcs_cylibs.*` compatibility imports, but the root project does not currently depend on this distribution. |
 | `nifpga-fast-fifo-recv` | Required native Rust FIFO receiver used by the SPAD NI-FPGA path. This is separate from the Rust Cython-replacement repository. |
 | `nifpga` and NI drivers | Required hardware interface. Drivers and bitfiles are installed/provided separately and are not distributed in the Python wheel. |
-| `brighteyes-mcs-reader` | Listed by the root package; application code does not import it directly. `scripts/shift_vectors.py` uses it. |
+| `brighteyes-mcs-reader` | Listed by the root package; the bundled `brighteyes_mcs/scripts/shift_vectors.py` ScriptLauncher utility uses it. |
 | `blueskyproject_mcs/` | Stand-alone `brighteyes-bluesky` package exposing the low-level register map as an Ophyd device. It does not implement or currently drive the main acquisition orchestration. |
 
 Although local bitfiles may appear under `brighteyes_mcs/bitfiles`, only the

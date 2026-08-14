@@ -23,6 +23,7 @@ class SystemProfile:
     configuration_dir: str = "."
     default_configuration: str = "default.cfg"
     plugins_dir: str = "plugins_cfg"
+    plugin_packages_dir: str = "plugins"
     scripts_dir: str = "scripts"
     bitfiles_dir: str = "bitfiles"
 
@@ -115,6 +116,9 @@ def load_system_profile(pointer: str | Path | None = None) -> SystemProfile:
                 "default_configuration", "default.cfg"
             ).strip(),
             plugins_dir=section.get("plugins_dir", "plugins_cfg").strip(),
+            plugin_packages_dir=section.get(
+                "plugin_packages_dir", "plugins"
+            ).strip(),
             scripts_dir=section.get("scripts_dir", "scripts").strip(),
             bitfiles_dir=section.get("bitfiles_dir", "bitfiles").strip(),
         )
@@ -143,6 +147,7 @@ def write_system_profile(
         "configuration_dir": profile.configuration_dir,
         "default_configuration": profile.default_configuration,
         "plugins_dir": profile.plugins_dir,
+        "plugin_packages_dir": profile.plugin_packages_dir,
         "scripts_dir": profile.scripts_dir,
         "bitfiles_dir": profile.bitfiles_dir,
     }
@@ -173,6 +178,8 @@ def profile_directory(kind: str, profile: SystemProfile | None = None) -> Path:
         "config": selected.configuration_dir,
         "plugins": selected.plugins_dir,
         "plugins_config": selected.plugins_dir,
+        "plugin_packages": selected.plugin_packages_dir,
+        "plugin_modules": selected.plugin_packages_dir,
         "scripts": selected.scripts_dir,
         "bitfiles": selected.bitfiles_dir,
         "firmware": selected.bitfiles_dir,
@@ -225,6 +232,7 @@ def generate_system_configuration(
         system_root(profile),
         profile_directory("configuration", profile),
         profile_directory("plugins", profile),
+        profile_directory("plugin_packages", profile),
         profile_directory("scripts", profile),
         profile_directory("bitfiles", profile),
     }
@@ -262,6 +270,7 @@ def _profile_alias(path: Path, profile: SystemProfile) -> Path | None:
         return profile_directory("configuration", profile).joinpath(*remainder)
     aliases = {
         "plugins_cfg": "plugins",
+        "plugins": "plugin_packages",
         "scripts": "scripts",
         "bitfiles": "bitfiles",
         "firmware": "bitfiles",

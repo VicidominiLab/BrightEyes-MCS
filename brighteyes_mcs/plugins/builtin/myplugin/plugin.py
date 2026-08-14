@@ -2,7 +2,7 @@
 
 from .plugin_form import myForm
 from PySide6.QtWidgets import QWidget
-from ...api import PluginMetadata
+from brighteyes_mcs.plugins.api import PluginMetadata
 
 
 PLUGIN = PluginMetadata(

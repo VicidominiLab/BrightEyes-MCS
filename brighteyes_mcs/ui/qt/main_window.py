@@ -213,6 +213,8 @@ class MainWindow(QMainWindow):
         self._shutdown_complete = False
         self.raw_stream_mode = False
         self.raw_stream_output_files = {}
+        self._auto_lifetime_correction_pending = False
+        self._auto_lifetime_correction_completed = False
         self.console_widget = None
         self.selected_channel = None
         self.webcam_capture = None
@@ -221,8 +223,6 @@ class MainWindow(QMainWindow):
         self._latest_status_registers = {}
         self._monitored_registers = {}
         self._monitor_started_at = time.monotonic()
-        self._last_circular_debug_signature = None
-
         self.monitor_plot_widget = pg.PlotWidget(self)
         self.monitor_plot_widget.setLabel("bottom", "Time", units="s")
         self.monitor_plot_widget.setLabel("left", "Register value")
@@ -259,6 +259,12 @@ class MainWindow(QMainWindow):
         )
         self.ui.pushButton_updateCircularView.clicked.connect(
             self.updateCircularPreview
+        )
+        self.ui.checkBox_circular.toggled.connect(
+            self.updateCircularViewAvailability
+        )
+        self.updateCircularViewAvailability(
+            self.ui.checkBox_circular.isChecked()
         )
         self.lissajous_mini_plot = pg.PlotWidget(self)
         self.lissajous_mini_plot.setFixedHeight(105)
@@ -340,7 +346,10 @@ class MainWindow(QMainWindow):
         self.ui.doubleSpinBox_delta_tau_ns.setSingleStep(0.1)
         self.ui.doubleSpinBox_delta_tau_ns.setSuffix(" ns")
         self.ui.pushButton_delta_tau_auto = QPushButton("A", self)
-        self.ui.pushButton_delta_tau_auto.setToolTip("Automatic lifetime correction from the cumulative fit")
+        self.ui.pushButton_delta_tau_auto.setToolTip(
+            "Automatic lifetime correction from the cumulative fit. "
+            "In DFD LIFETIME_HSV mode it runs once after 20% of the first frame."
+        )
         self.ui.pushButton_delta_tau_auto.setFixedWidth(28)
         self.ui.gridLayout_4.addWidget(self.ui.label_delta_tau_ns, 2, 6, 1, 1)
         self.ui.gridLayout_4.addWidget(self.ui.doubleSpinBox_delta_tau_ns, 2, 7, 1, 1)
@@ -2182,8 +2191,10 @@ class MainWindow(QMainWindow):
         default_cfg = str(ensure_user_configuration())
         self.ui.lineEdit_configurationfile.setText(default_cfg)
         self.LoadConfiguration(default_cfg)
+        self.cmd_update_plugin_list()
         self.ui.statusBar.showMessage(
-            "System profile updated. Plug-ins may require an application restart.",
+            "System profile updated. Plug-in and script folders refreshed; "
+            "already loaded plug-ins may require an application restart.",
             8000,
         )
 
@@ -3703,36 +3714,6 @@ class MainWindow(QMainWindow):
             pixel_counts=pixel_counts,
         )
 
-        debug_payload = {
-            "projection": projection,
-            "point_count": point_count,
-            "lissajous_active": self.ui.checkBox_lissajous.isChecked(),
-            "lissajous_open_curve": (
-                self.ui.checkBox_lissajous_opencurve.isChecked()
-            ),
-            "omega_x": self.ui.spinBox_lissajous_omega_x.value(),
-            "omega_y": self.ui.spinBox_lissajous_omega_y.value(),
-            "phase_deg": self.ui.spinBox_lissajous_phase_deg.value(),
-            "first_position": (
-                self.ui.spinBox_lissajous_firstposition.value()
-            ),
-            "circular_scan_x_volts": repr(registers.get("circular_scan_x_volts")),
-            "circular_scan_y_volts": repr(registers.get("circular_scan_y_volts")),
-            "circular_scan_z_volts": repr(registers.get("circular_scan_z_volts")),
-            "calibration_um_per_v": calibration,
-            "offset_um": offset,
-            "scan_range_um": scan_range,
-            "pixel_counts": pixel_counts,
-            "replicated_points": len(x_points),
-            "projected_x_um": x_points.tolist(),
-            "projected_y_um": y_points.tolist(),
-        }
-        debug_signature = repr(debug_payload)
-        if debug_signature != self._last_circular_debug_signature:
-            # TEMP DEBUG: remove after the Circular overlay is verified.
-            print("[Circular debug]", debug_payload)
-            self._last_circular_debug_signature = debug_signature
-
         self.circular_scan_points.setData(x=x_points, y=y_points)
         try:
             trajectory_point_count = min(
@@ -3815,6 +3796,10 @@ class MainWindow(QMainWindow):
                 )
         except Exception:
             logger.exception("Could not update the Circular status preview")
+
+    def updateCircularViewAvailability(self, active):
+        """Enable the circular-view refresh only while Circular is active."""
+        self.ui.pushButton_updateCircularView.setEnabled(bool(active))
 
     @Slot()
     def updateTables(self):
@@ -4864,6 +4849,18 @@ class MainWindow(QMainWindow):
         # print(self.ui.comboBox_view_projection.currentText())
         self.plotPreviewImage()
 
+        if "stream_out_main" in fifo_activated:
+            # Wait for both acquisition and preview processing to reach the
+            # threshold so the correction never uses a stale displayed image.
+            first_frame_progress = min(
+                fifo_elements["stream_out_main"],
+                current_preview_element["stream_out_main"],
+            )
+            self._maybeAutoCorrectLifetimeAfterFirstFrameProgress(
+                first_frame_progress,
+                expected_fifo_elements_per_frame["stream_out_main"],
+            )
+
         # result = self.calculateAutoCorrelation(self.getPreviewFlatData())
         # self.fcs_widget.plot(result, clear=True)
         time_res = self.ui.spinBox_timeresolution.value()
@@ -5829,9 +5826,55 @@ Have fun!
 
         """
         logger.debug("plotSettingsChanged")
+        self._syncAutoLifetimeCorrectionWithPlotSelection()
         self.updateColorLifetimeShiftControls()
         self.updatePreviewConfiguration()
         self.checkAlerts()
+
+    def _syncAutoLifetimeCorrectionWithPlotSelection(self):
+        """Arm the one-shot HSV correction while an acquisition is running."""
+        acquisition_active = bool(
+            getattr(self, "started_normal", False)
+            or getattr(self, "started_preview", False)
+        )
+        eligible = bool(
+            acquisition_active
+            and not getattr(self, "raw_stream_mode", False)
+            and self.ui.checkBox_DFD.isChecked()
+            and self.ui.comboBox_plot_channel.currentText() == "LIFETIME_HSV"
+        )
+        self._auto_lifetime_correction_pending = bool(
+            eligible
+            and not getattr(self, "_auto_lifetime_correction_completed", False)
+        )
+
+    def _maybeAutoCorrectLifetimeAfterFirstFrameProgress(
+        self,
+        processed_elements,
+        expected_elements_per_frame,
+    ):
+        """Apply correction once at or after 20% of the first processed frame."""
+        if (
+            not getattr(self, "_auto_lifetime_correction_pending", False)
+            or getattr(self, "_auto_lifetime_correction_completed", False)
+        ):
+            return False
+
+        self._syncAutoLifetimeCorrectionWithPlotSelection()
+        if not self._auto_lifetime_correction_pending:
+            return False
+
+        expected_elements_per_frame = int(expected_elements_per_frame)
+        processed_elements = int(processed_elements)
+        if (
+            expected_elements_per_frame <= 0
+            or processed_elements * 5 < expected_elements_per_frame
+        ):
+            return False
+
+        # A failed attempt remains pending. This lets the next preview tick retry
+        # when the displayed lifetime mean and cumulative DFD fit are both valid.
+        return bool(self.colorLifetimeDeltaTauUseHistogramMean())
 
     def estimateDfdDecayLifetimeNs(
         self,
@@ -5966,7 +6009,7 @@ Have fun!
     @Slot()
     def colorLifetimeDeltaTauUseHistogramMean(self):
         if not self.isLifetimeColorChannel():
-            return
+            return False
 
         tcycle_ns = 1e3 / (
             max(float(self.dfd_cycle_mhz), 1e-12)
@@ -5975,7 +6018,7 @@ Have fun!
         h_mean = self.im_widget.getDisplayedHMean()
         tau_fit_ns = self.latest_dfd_tau_fit_ns
         if h_mean is None or tau_fit_ns is None:
-            return
+            return False
 
         current_mean_ns = float(h_mean) * tcycle_ns
         corrected_value = (
@@ -5987,7 +6030,10 @@ Have fun!
         self.ui.doubleSpinBox_delta_tau_ns.blockSignals(True)
         self.ui.doubleSpinBox_delta_tau_ns.setValue(corrected_value)
         self.ui.doubleSpinBox_delta_tau_ns.blockSignals(False)
+        self._auto_lifetime_correction_pending = False
+        self._auto_lifetime_correction_completed = True
         self.plotPreviewImage()
+        return True
 
     def getLifetimeColorRenderMode(self, channel_name=None):
         if channel_name is None:
@@ -6826,6 +6872,8 @@ Have fun!
         self._pending_program_state_after_stop = None
         raw_stream_mode = (not is_preview) and self.ui.checkBox_rawStreamAcquisition.isChecked()
         self.raw_stream_mode = raw_stream_mode
+        self._auto_lifetime_correction_completed = False
+        self._syncAutoLifetimeCorrectionWithPlotSelection()
 
         # Hide ROI and reset progress bars
         self.rect_roi.hide()

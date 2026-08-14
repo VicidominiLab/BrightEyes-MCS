@@ -9,6 +9,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QLabel
 
+from brighteyes_mcs.application.firmware_download import DEFAULT_FIRMWARE_BRANCH
 from brighteyes_mcs.application.paths import SystemProfile
 from brighteyes_mcs.ui.qt.first_run import ShortcutSetupDialog
 
@@ -36,6 +37,10 @@ class TestFirstRunWizard(unittest.TestCase):
             ],
         )
         self.assertFalse(wizard.firmware_page.download_checkbox.isChecked())
+        self.assertIn(
+            "plugin_packages_dir",
+            wizard.profile_page.editor._fields,
+        )
         welcome_text = " ".join(
             label.text()
             for label in wizard.welcome_page.findChildren(QLabel)
@@ -44,7 +49,10 @@ class TestFirstRunWizard(unittest.TestCase):
         self.assertIn("GNU General Public License", welcome_text)
         self.assertIn("ABSOLUTELY NO WARRANTY", welcome_text)
         self.assertIn("LICENSE.md", welcome_text)
-        self.assertEqual(wizard.firmware_page.branch.text(), "main")
+        self.assertEqual(
+            wizard.firmware_page.branch.text(),
+            DEFAULT_FIRMWARE_BRANCH,
+        )
         self.assertFalse(wizard.firmware_page.progress.isVisible())
         self.assertFalse(wizard.firmware_page.license_checkbox.isEnabled())
         self.assertEqual(
@@ -123,6 +131,7 @@ class TestFirstRunWizard(unittest.TestCase):
                     configuration_dir="cfg",
                     default_configuration="default.cfg",
                     plugins_dir="cfg/plugins_cfg",
+                    plugin_packages_dir="plugins",
                     scripts_dir="scripts",
                     bitfiles_dir="firmware",
                 )
@@ -132,10 +141,12 @@ class TestFirstRunWizard(unittest.TestCase):
 
             self.assertTrue(wizard.structure_page.create_missing.isChecked())
             self.assertIn("does not yet contain", wizard.structure_page.status.text())
+            self.assertIn("Plug-ins folder", wizard.structure_page.status.text())
             self.assertIn(str(root), wizard.structure_page.status.text())
             self.assertTrue(wizard.structure_page.validatePage())
             self.assertTrue((root / "cfg/default.cfg").is_file())
             self.assertTrue((root / "cfg/plugins_cfg").is_dir())
+            self.assertTrue((root / "plugins").is_dir())
             self.assertTrue((root / "scripts").is_dir())
             self.assertTrue((root / "firmware").is_dir())
             wizard.close()

@@ -41,7 +41,7 @@ except:
 
 
 time = int(meta.pxdwelltime)
-clabel = f"Counts /  {time} $\mu s$"
+clabel = rf"Counts /  {time} $\mu s$"
 
 try:
     main_window.script_plot_fingerprint(fingerprint)

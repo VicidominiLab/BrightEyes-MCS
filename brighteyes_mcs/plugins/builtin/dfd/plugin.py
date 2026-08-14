@@ -1,7 +1,7 @@
 """Plug-in entrypoint for the DFD preview widget."""
 
 from .dfd_widget import DfdWidget
-from ...api import PluginMetadata
+from brighteyes_mcs.plugins.api import PluginMetadata
 
 
 PLUGIN = PluginMetadata(
