@@ -16,6 +16,15 @@ def control_modifier_selects_navigation(modifiers, inverted=False):
     return control_pressed != bool(inverted)
 
 
+def auxiliary_modifier_selects_navigation(modifiers):
+    """Return whether Ctrl+Shift selects auxiliary-position dragging."""
+    required = (
+        QtCore.Qt.KeyboardModifier.ControlModifier
+        | QtCore.Qt.KeyboardModifier.ShiftModifier
+    )
+    return modifiers & required == required
+
+
 def _lab_f_inv(t):
     delta = 6.0 / 29.0
     return np.where(
@@ -175,6 +184,8 @@ class ZoomableHistogramViewBox(pg.ViewBox):
 class ModifierGatedViewBox(pg.ViewBox):
     """ViewBox that tracks when navigation should affect the microscope."""
 
+    sigAuxiliaryDrag = QtCore.Signal(float, float, bool)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._invert_control = False
@@ -207,6 +218,22 @@ class ModifierGatedViewBox(pg.ViewBox):
             self._navigation_event_active = False
 
     def mouseDragEvent(self, ev, axis=None):
+        if (
+            ev.button() == QtCore.Qt.MouseButton.LeftButton
+            and auxiliary_modifier_selects_navigation(ev.modifiers())
+        ):
+            # Match the displacement that ViewBox panning would produce, but
+            # leave the displayed image range untouched.
+            current = self.mapToView(ev.pos())
+            previous = self.mapToView(ev.lastPos())
+            self._navigation_event_active = False
+            self.sigAuxiliaryDrag.emit(
+                previous.x() - current.x(),
+                previous.y() - current.y(),
+                ev.isFinish(),
+            )
+            ev.accept()
+            return
         self._handle_navigation_event(ev, super().mouseDragEvent, axis)
 
     def wheelEvent(self, ev, axis=None):

@@ -135,6 +135,15 @@ class MainWindow(QMainWindow):
         PROGRAM_STATE_PREVIEW,
         PROGRAM_STATE_ACQUISITION_DONE,
     )
+    AUXILIARY_DRAG_WRITE_INTERVAL_MS = 30
+    AUXILIARY_PROJECTION_AXES = {
+        "xy": ("x", "y"),
+        "zy": ("z", "y"),
+        "xz": ("x", "z"),
+        "yx": ("y", "x"),
+        "yz": ("y", "z"),
+        "zx": ("z", "x"),
+    }
     FPGA_IDLE_TIMEOUT_SECONDS = 5.0
     FPGA_WATCHDOG_INTERVAL_MS = 500
 
@@ -431,7 +440,17 @@ class MainWindow(QMainWindow):
         self.timerConfigurationViewer.setInterval(500)
         self.timerConfigurationViewer.start()
 
+        self._auxiliary_drag_write_timer = QTimer(self)
+        self._auxiliary_drag_write_timer.setSingleShot(True)
+        self._auxiliary_drag_write_timer.setInterval(
+            self.AUXILIARY_DRAG_WRITE_INTERVAL_MS
+        )
+        self._auxiliary_drag_write_timer.timeout.connect(
+            self.auxiliaryPositionChanged
+        )
+
         self.preview_view_box = ModifierGatedViewBox()
+        self.preview_view_box.sigAuxiliaryDrag.connect(self.auxiliaryPreviewDrag)
         self.im_widget_plot_item = pg.PlotItem(viewBox=self.preview_view_box)
         self.im_widget_plot_item.setLabel("left", "y (um)")
         self.im_widget_plot_item.setLabel("bottom", "x (um)")
@@ -457,11 +476,9 @@ class MainWindow(QMainWindow):
             self.ui.checkBox_invertPreviewCtrl.isChecked()
         )
 
-        im_widget_view_left_ax = self.im_widget.getView().getAxis("left")
-        im_widget_view_bottom_ax = self.im_widget.getView().getAxis("bottom")
-
-        im_widget_view_left_ax.setZValue(-1)
-        im_widget_view_bottom_ax.setZValue(-1)
+        self.previewGridOverImageChanged(
+            self.ui.checkBox_gridOverImage.isChecked()
+        )
 
         self.im_panorama_widget_plot_item = pg.PlotItem()
 
@@ -699,6 +716,7 @@ class MainWindow(QMainWindow):
 
         # self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_markers)
         self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_filename)
+        self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_pos_aux)        
         self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_listfile)
 
         self.tabifyDockWidget(
@@ -1095,6 +1113,12 @@ class MainWindow(QMainWindow):
             "Invert Preview Ctrl Behavior",
             bool,
             self.ui.checkBox_invertPreviewCtrl,
+            False,
+        )
+        configuration_helper["preview_grid_over_image"] = (
+            "Grid Over Preview Image",
+            bool,
+            self.ui.checkBox_gridOverImage,
             False,
         )
         configuration_helper["projection"] = (
@@ -1627,6 +1651,11 @@ class MainWindow(QMainWindow):
         """
         logger.debug("analogOutChanged()")
 
+        # Selecting X2/Y2/Z2 makes that output use the calibrated auxiliary
+        # position as its DC value. Keep the displayed DC controls in sync
+        # before sending the complete analog-output configuration.
+        self._sync_auxiliary_position_outputs()
+
         mydict = {}
         for ch in range(0, 8):
             sel = self.ui.comboBox_AnalogOut[ch].currentIndex()
@@ -1637,6 +1666,112 @@ class MainWindow(QMainWindow):
             mydict["analog_output_%d_dc_volts" % ch] = self.ui.spinBox_AnalogOut[ch].value()
 
         self.setRegistersDict(mydict)
+
+    def _auxiliary_axis_voltages(self):
+        """Calculate constrained auxiliary X2/Y2/Z2 output voltages."""
+        axis_widgets = {
+            "X2": (
+                self.ui.spinBox_off_x2_um,
+                self.ui.spinBox_calib_x_2,
+                self.ui.spinBox_offExtra_x_V_2,
+                self.ui.spinBox_min_x_V_2,
+                self.ui.spinBox_max_x_V_2,
+                self.ui.label_off_x_V_2,
+            ),
+            "Y2": (
+                self.ui.spinBox_off_y2_um,
+                self.ui.spinBox_calib_y_2,
+                self.ui.spinBox_offExtra_y_V_2,
+                self.ui.spinBox_min_y_V_2,
+                self.ui.spinBox_max_y_V_2,
+                self.ui.label_off_y_V_2,
+            ),
+            "Z2": (
+                self.ui.spinBox_off_z2_um,
+                self.ui.spinBox_calib_z_2,
+                self.ui.spinBox_offExtra_z_V_2,
+                self.ui.spinBox_min_z_V_2,
+                self.ui.spinBox_max_z_V_2,
+                self.ui.label_off_z_V_2,
+            ),
+        }
+
+        voltages = {}
+        for axis, widgets in axis_widgets.items():
+            position, calibration, offset, minimum, maximum, label = widgets
+            calibration_value = calibration.value()
+            if calibration_value == 0:
+                label.setText("invalid")
+                logger.warning("Cannot update %s: calibration factor is zero", axis)
+                continue
+
+            voltage = position.value() / calibration_value + offset.value()
+            lower, upper = sorted((minimum.value(), maximum.value()))
+            voltage = min(max(voltage, lower), upper)
+            label.setText(f"{voltage:.6f}")
+            voltages[axis] = voltage
+
+        return voltages
+
+    def _sync_auxiliary_position_outputs(self):
+        """Copy X2/Y2/Z2 voltages to every analog output selecting that axis."""
+        voltages = self._auxiliary_axis_voltages()
+        selectors = getattr(self.ui, "comboBox_AnalogOut", None)
+        dc_controls = getattr(self.ui, "spinBox_AnalogOut", None)
+        if not isinstance(selectors, dict) or not isinstance(dc_controls, dict):
+            return {}
+
+        register_values = {}
+        for channel in range(8):
+            axis = selectors[channel].currentText()
+            if axis not in voltages:
+                continue
+
+            control = dc_controls[channel]
+            signals_were_blocked = control.blockSignals(True)
+            control.setValue(voltages[axis])
+            control.blockSignals(signals_were_blocked)
+            register_values[f"analog_output_{channel}_dc_volts"] = control.value()
+
+        return register_values
+
+    @Slot()
+    def auxiliaryPositionChanged(self):
+        """Apply a changed auxiliary position to its selected analog outputs."""
+        register_values = self._sync_auxiliary_position_outputs()
+        if register_values:
+            self.setRegistersDict(register_values)
+
+    @Slot(float, float, bool)
+    def auxiliaryPreviewDrag(self, horizontal_delta, vertical_delta, finished):
+        """Move auxiliary axes without panning the main preview image."""
+        projection = self.ui.comboBox_view_projection.currentText()
+        axes = self.AUXILIARY_PROJECTION_AXES.get(projection)
+        if axes is None:
+            logger.warning("Cannot apply auxiliary drag for projection %r", projection)
+            return
+
+        controls = {
+            "x": self.ui.spinBox_off_x2_um,
+            "y": self.ui.spinBox_off_y2_um,
+            "z": self.ui.spinBox_off_z2_um,
+        }
+
+        for axis, delta in zip(axes, (horizontal_delta, vertical_delta)):
+            control = controls[axis]
+            signals_were_blocked = control.blockSignals(True)
+            control.setValue(control.value() + delta)
+            control.blockSignals(signals_were_blocked)
+
+        register_values = self._sync_auxiliary_position_outputs()
+        if not register_values:
+            return
+
+        if finished:
+            self._auxiliary_drag_write_timer.stop()
+            self.setRegistersDict(register_values)
+        elif not self._auxiliary_drag_write_timer.isActive():
+            self._auxiliary_drag_write_timer.start()
 
     @Slot()
     def laserChanged(self):
@@ -3200,14 +3335,28 @@ class MainWindow(QMainWindow):
         self.preview_view_box.set_control_inverted(inverted)
         if inverted:
             self.ui.label_106.setText(
-                "Ctrl+Drag/Wheel: image only; Drag/Wheel/Double-Click: microscope"
+                "Ctrl+Drag/Wheel: image only\n"
+                "Drag/Wheel/Double-Click: microscope"
             )
-            self.ui.label_107.setText("Ctrl+Double-Click: set a Marker")
+            self.ui.label_107.setText(
+                "Ctrl+Shift+Drag: Aux position; Ctrl+Double-Click: set a Marker"
+            )
         else:
             self.ui.label_106.setText(
-                "Drag/Wheel: image only; Ctrl+Drag/Wheel/Double-Click: microscope"
+                "Drag/Wheel: image only\n"
+                "Ctrl+Drag/Wheel/Double-Click: microscope"
             )
-            self.ui.label_107.setText("Double-Click: set a Marker")
+            self.ui.label_107.setText(
+                "Ctrl+Shift+Drag: Aux position; Double-Click: set a Marker"
+            )
+
+    @Slot(bool)
+    def previewGridOverImageChanged(self, enabled):
+        """Draw the main-preview grid either above or below the image."""
+        z_value = 1.0 if enabled else -1.0
+        view = self.im_widget.getView()
+        view.getAxis("left").setZValue(z_value)
+        view.getAxis("bottom").setZValue(z_value)
 
 
     def drawMarkers(self):
@@ -5286,8 +5435,14 @@ Have fun!
         """
         self.positionSettingsChanged_apply()
 
-    def _offset_volts(self):
+    def _offset_volts(self, add_offset_extra_V = False):
         """Return the displayed X/Y/Z scan-centre offsets in volts."""
+        offset_extra_V  = (
+                    self.ui.spinBox_offExtra_x_V.value(),
+                    self.ui.spinBox_offExtra_y_V.value(),
+                    self.ui.spinBox_offExtra_z_V.value(),
+                    )
+               
         offsets_um = (
             self.ui.spinBox_off_x_um.value(),
             self.ui.spinBox_off_y_um.value(),
@@ -5298,20 +5453,30 @@ Have fun!
             self.ui.spinBox_calib_y.value(),
             self.ui.spinBox_calib_z.value(),
         )
-        return tuple(
-            offset / calibration
-            for offset, calibration in zip(offsets_um, calibrations)
-        )
+
+        if add_offset_extra_V:
+            return tuple(
+                offset / calibration + extra_offset
+                for offset, calibration, extra_offset in zip(offsets_um, calibrations, offset_extra_V)
+            )
+        else:
+            return tuple(
+                offset / calibration
+                for offset, calibration in zip(offsets_um, calibrations)
+            )
 
     def _update_offset_voltage_labels(self):
         """Refresh the derived X/Y/Z voltage labels and return their values."""
-        values = self._offset_volts()
+        values = self._offset_volts(add_offset_extra_V=True)
+        
         for label, value in zip(
             (self.ui.label_off_x_V, self.ui.label_off_y_V, self.ui.label_off_z_V),
             values,
         ):
-            label.setText(f"{value:.6f}")
-        return values
+            label.setText(f"{value:.6f}")    
+
+        # return the central position for the scanning (NO offset extra)
+        return self._offset_volts() 
 
     @Slot()
     def offset_um_Changed(self, force=False):

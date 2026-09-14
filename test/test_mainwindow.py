@@ -10,10 +10,81 @@ from PySide6.QtCore import Qt
 
 from brighteyes_mcs.ui.qt.main_window import MainWindow
 from brighteyes_mcs.ui.qt.flim_image_view import (
+    auxiliary_modifier_selects_navigation,
     control_modifier_selects_navigation,
 )
 
 class TestMyClass(unittest.TestCase):
+
+    def test_auxiliary_position_updates_selected_analog_outputs(self):
+        class ValueControl:
+            def __init__(self, value):
+                self._value = value
+                self._signals_blocked = False
+
+            def value(self):
+                return self._value
+
+            def setValue(self, value):
+                self._value = value
+
+            def blockSignals(self, blocked):
+                previous = self._signals_blocked
+                self._signals_blocked = blocked
+                return previous
+
+        def selector(text):
+            return SimpleNamespace(currentText=lambda: text)
+
+        ui = SimpleNamespace(
+            spinBox_off_x2_um=ValueControl(30.0),
+            spinBox_off_y2_um=ValueControl(8.0),
+            spinBox_off_z2_um=ValueControl(-12.0),
+            spinBox_calib_x_2=ValueControl(2.0),
+            spinBox_calib_y_2=ValueControl(4.0),
+            spinBox_calib_z_2=ValueControl(2.0),
+            spinBox_offExtra_x_V_2=ValueControl(1.0),
+            spinBox_offExtra_y_V_2=ValueControl(-0.5),
+            spinBox_offExtra_z_V_2=ValueControl(0.0),
+            spinBox_min_x_V_2=ValueControl(-10.0),
+            spinBox_max_x_V_2=ValueControl(10.0),
+            spinBox_min_y_V_2=ValueControl(-10.0),
+            spinBox_max_y_V_2=ValueControl(10.0),
+            spinBox_min_z_V_2=ValueControl(-5.0),
+            spinBox_max_z_V_2=ValueControl(5.0),
+            label_off_x_V_2=MagicMock(),
+            label_off_y_V_2=MagicMock(),
+            label_off_z_V_2=MagicMock(),
+            comboBox_AnalogOut={
+                channel: selector(text)
+                for channel, text in enumerate(
+                    ("X2", "Y2", "X2", "Constant", "Z2", "X", "Y", "Z")
+                )
+            },
+            spinBox_AnalogOut={channel: ValueControl(0.0) for channel in range(8)},
+        )
+        instance = SimpleNamespace(ui=ui, setRegistersDict=MagicMock())
+        instance._auxiliary_axis_voltages = lambda: MainWindow._auxiliary_axis_voltages(instance)
+        instance._sync_auxiliary_position_outputs = lambda: MainWindow._sync_auxiliary_position_outputs(instance)
+
+        MainWindow.auxiliaryPositionChanged(instance)
+
+        # X2 is 30/2+1 = 16 V and is constrained to +10 V.
+        self.assertEqual(ui.spinBox_AnalogOut[0].value(), 10.0)
+        self.assertEqual(ui.spinBox_AnalogOut[2].value(), 10.0)
+        self.assertEqual(ui.spinBox_AnalogOut[1].value(), 1.5)
+        self.assertEqual(ui.spinBox_AnalogOut[4].value(), -5.0)
+        instance.setRegistersDict.assert_called_once_with(
+            {
+                "analog_output_0_dc_volts": 10.0,
+                "analog_output_1_dc_volts": 1.5,
+                "analog_output_2_dc_volts": 10.0,
+                "analog_output_4_dc_volts": -5.0,
+            }
+        )
+        ui.label_off_x_V_2.setText.assert_called_once_with("10.000000")
+        ui.label_off_y_V_2.setText.assert_called_once_with("1.500000")
+        ui.label_off_z_V_2.setText.assert_called_once_with("-5.000000")
 
     def test_central_tabs_are_inserted_before_about(self):
         about_widget = object()
@@ -57,6 +128,121 @@ class TestMyClass(unittest.TestCase):
                 inverted=True,
             )
         )
+
+    def test_preview_grid_can_be_moved_above_or_below_image(self):
+        axes = {"left": MagicMock(), "bottom": MagicMock()}
+        instance = SimpleNamespace(
+            im_widget=SimpleNamespace(
+                getView=lambda: SimpleNamespace(getAxis=lambda name: axes[name])
+            )
+        )
+
+        MainWindow.previewGridOverImageChanged(instance, True)
+        axes["left"].setZValue.assert_called_once_with(1.0)
+        axes["bottom"].setZValue.assert_called_once_with(1.0)
+
+        axes["left"].reset_mock()
+        axes["bottom"].reset_mock()
+        MainWindow.previewGridOverImageChanged(instance, False)
+        axes["left"].setZValue.assert_called_once_with(-1.0)
+        axes["bottom"].setZValue.assert_called_once_with(-1.0)
+
+    def test_ctrl_shift_selects_auxiliary_preview_drag(self):
+        self.assertTrue(
+            auxiliary_modifier_selects_navigation(
+                Qt.KeyboardModifier.ControlModifier
+                | Qt.KeyboardModifier.ShiftModifier
+            )
+        )
+        self.assertFalse(
+            auxiliary_modifier_selects_navigation(
+                Qt.KeyboardModifier.ControlModifier
+            )
+        )
+        self.assertFalse(
+            auxiliary_modifier_selects_navigation(
+                Qt.KeyboardModifier.ShiftModifier
+            )
+        )
+
+    def test_auxiliary_preview_drag_uses_projection_axes(self):
+        class ValueControl:
+            def __init__(self, value):
+                self._value = value
+                self._signals_blocked = False
+
+            def value(self):
+                return self._value
+
+            def setValue(self, value):
+                self._value = value
+
+            def blockSignals(self, blocked):
+                previous = self._signals_blocked
+                self._signals_blocked = blocked
+                return previous
+
+        expected = {
+            "xy": (5.0, 7.0, 3.0),
+            "zy": (1.0, 7.0, 7.0),
+            "xz": (5.0, 2.0, 8.0),
+            "yx": (6.0, 6.0, 3.0),
+            "yz": (1.0, 6.0, 8.0),
+            "zx": (6.0, 2.0, 7.0),
+        }
+        for projection, expected_values in expected.items():
+            controls = [ValueControl(1.0), ValueControl(2.0), ValueControl(3.0)]
+            instance = SimpleNamespace(
+                ui=SimpleNamespace(
+                    comboBox_view_projection=SimpleNamespace(
+                        currentText=lambda projection=projection: projection
+                    ),
+                    spinBox_off_x2_um=controls[0],
+                    spinBox_off_y2_um=controls[1],
+                    spinBox_off_z2_um=controls[2],
+                ),
+                AUXILIARY_PROJECTION_AXES=MainWindow.AUXILIARY_PROJECTION_AXES,
+                _sync_auxiliary_position_outputs=MagicMock(
+                    return_value={"analog_output_0_dc_volts": 1.0}
+                ),
+                _auxiliary_drag_write_timer=MagicMock(
+                    isActive=MagicMock(return_value=False)
+                ),
+                setRegistersDict=MagicMock(),
+            )
+
+            MainWindow.auxiliaryPreviewDrag(instance, 4.0, 5.0, False)
+
+            self.assertEqual(tuple(control.value() for control in controls), expected_values)
+            instance._sync_auxiliary_position_outputs.assert_called_once_with()
+            instance._auxiliary_drag_write_timer.start.assert_called_once_with()
+            instance.setRegistersDict.assert_not_called()
+
+    def test_auxiliary_preview_drag_flushes_final_value(self):
+        controls = []
+        for value in (1.0, 2.0, 3.0):
+            control = MagicMock()
+            control.value.return_value = value
+            controls.append(control)
+
+        registers = {"analog_output_0_dc_volts": 4.0}
+        instance = SimpleNamespace(
+            ui=SimpleNamespace(
+                comboBox_view_projection=SimpleNamespace(currentText=lambda: "xy"),
+                spinBox_off_x2_um=controls[0],
+                spinBox_off_y2_um=controls[1],
+                spinBox_off_z2_um=controls[2],
+            ),
+            AUXILIARY_PROJECTION_AXES=MainWindow.AUXILIARY_PROJECTION_AXES,
+            _sync_auxiliary_position_outputs=MagicMock(return_value=registers),
+            _auxiliary_drag_write_timer=MagicMock(),
+            setRegistersDict=MagicMock(),
+        )
+
+        MainWindow.auxiliaryPreviewDrag(instance, 0.0, 0.0, True)
+
+        instance._auxiliary_drag_write_timer.stop.assert_called_once_with()
+        instance.setRegistersDict.assert_called_once_with(registers)
 
     @staticmethod
     def _preview_click_fixture(modifiers, inverted=False):

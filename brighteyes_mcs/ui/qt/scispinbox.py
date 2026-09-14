@@ -122,7 +122,7 @@ class sciSpinBox(QDoubleSpinBox):
         self.setMaximum(1e99)
         self.setMinimum(-1e99)
         self.setSingleStep(1e-6)
-        self.setValue(12.3)
+        self.setValue(0.0)
         self.setObjectName("doubleSpinBox")
         self.setGeometry(QRect(125, 90, 122, 22))
         # With keyboard tracking disabled, valueChanged() is emitted on commit.
