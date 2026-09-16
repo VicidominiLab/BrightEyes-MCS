@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import unittest
 
 from brighteyes_mcs.acquisition.detectors import create_detector_pipeline
@@ -12,6 +14,20 @@ from brighteyes_mcs.acquisition.detectors.backends import (
 
 
 class TestDetectorPipelines(unittest.TestCase):
+    def test_pi23_acquisition_loop_imports_in_a_clean_interpreter(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "from brighteyes_mcs.acquisition.workers.detectors.pi23.acquisition_loop "
+                "import Pi23AcquisitionLoopProcess",
+            ],
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_factory_selects_spad_pipeline_by_default(self):
         spad_pipeline = create_detector_pipeline(DETECTOR_SPAD_ARRAY)
         spad_ttm_pipeline = create_detector_pipeline(DETECTOR_SPAD_TTM)
@@ -32,4 +48,3 @@ class TestDetectorPipelines(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

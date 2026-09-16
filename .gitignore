@@ -69,3 +69,4 @@ brighteyes_mcs/bitfiles/
 
 
 notebook/
+.python*/**
