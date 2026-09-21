@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import numpy as np
 from brighteyes_mcs.acquisition.detectors.models import (
+    DETECTOR_DISABLED,
     DETECTOR_PI23_TT,
     DETECTOR_PI_23,
     DETECTOR_SPAD_ARRAY,
@@ -17,6 +18,47 @@ from brighteyes_mcs.acquisition.detectors.models import (
 from brighteyes_mcs.acquisition.manager import McsManager
 
 class TestMcsManager(unittest.TestCase):
+
+    def test_disabled_runs_fpga_without_data_workers_or_storage(self):
+        for preview, raw in ((True, False), (False, False), (False, True)):
+            with self.subTest(preview=preview, raw=raw):
+                instance = McsManager()
+                instance.set_detector_model(DETECTOR_DISABLED)
+                instance.fpga_handle = MagicMock()
+                instance.readRegistersDict = MagicMock()
+                instance.set_do_not_save(preview)
+                instance.raw_stream_mode = raw
+                instance.acquisition_storage.start = MagicMock()
+
+                instance.run()
+
+                instance.fpga_handle.set_list_fifos_to_read_continously.assert_called_once_with([])
+                instance.fpga_handle.runfpga.assert_called_once_with()
+                instance.acquisition_storage.start.assert_not_called()
+                self.assertIsNone(instance.dataProcess)
+                self.assertIsNone(instance.previewProcess)
+                self.assertIsNone(instance.raw_writer_process)
+                self.assertIsNone(instance.detector_receiver_process)
+                self.assertIsNone(instance.detector_receiver_queue)
+                instance.stopPreview()
+                instance.stopAcquisition()
+
+    def test_disabled_keeps_scan_configuration_and_disables_fifo_output(self):
+        instance = McsManager()
+        instance.set_detector_model(DETECTOR_DISABLED)
+        instance.is_connected = True
+        instance.fpga_handle = MagicMock()
+        instance.setRegistersDict({
+            "max_pixel": 100, "max_line": 200, "max_frame": 3,
+            "stream_out_main_enable": True, "stream_out_aux_enable": True,
+            "start_command": True,
+        })
+        for name, value in (
+            ("max_pixel", 100), ("max_line", 200), ("max_frame", 3),
+            ("stream_out_main_enable", False), ("stream_out_aux_enable", False),
+            ("start_command", True),
+        ):
+            instance.fpga_handle.register_write_checked.assert_any_call(name, value)
 
     def test_pi23_keeps_nifpga_control_without_nifpga_fifo_data(self):
         self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_ARRAY))
@@ -213,9 +255,9 @@ class TestMcsManager(unittest.TestCase):
             }
         )
 
-        instance.fpga_handle.register_write.assert_any_call("stream_out_main_enable", False)
-        instance.fpga_handle.register_write.assert_any_call("stream_out_aux_enable", False)
-        instance.fpga_handle.register_write.assert_any_call("dfd_enable", False)
+        instance.fpga_handle.register_write_checked.assert_any_call("stream_out_main_enable", False)
+        instance.fpga_handle.register_write_checked.assert_any_call("stream_out_aux_enable", False)
+        instance.fpga_handle.register_write_checked.assert_any_call("dfd_enable", False)
 
     def test_set_registers_dict_pi23_offsets_nifpga_scan_dimensions_only(self):
         instance = McsManager()
@@ -231,9 +273,9 @@ class TestMcsManager(unittest.TestCase):
             }
         )
 
-        instance.fpga_handle.register_write.assert_any_call("max_pixel", 101)
-        instance.fpga_handle.register_write.assert_any_call("max_line", 201)
-        instance.fpga_handle.register_write.assert_any_call("max_frame", 4)
+        instance.fpga_handle.register_write_checked.assert_any_call("max_pixel", 101)
+        instance.fpga_handle.register_write_checked.assert_any_call("max_line", 201)
+        instance.fpga_handle.register_write_checked.assert_any_call("max_frame", 4)
         self.assertEqual(instance.registers_configuration["max_pixel"], 100)
         self.assertEqual(instance.registers_configuration["max_line"], 200)
         self.assertEqual(instance.registers_configuration["max_frame"], 3)

@@ -47,7 +47,7 @@ requests==2.34.2
 # Add and audit those distributions only when those features will be shipped.
 #
 # Deliberately removed from the normal requirements:
-# - brighteyes-mcs-reader: used by scripts/shift_vectors.py, not the application.
+# - brighteyes-mcs-reader: used by brighteyes_mcs/scripts/shift_vectors.py.
 # - scipy, pyqtdarktheme, atomics, markdown, importlib-metadata: no application
 #   imports found during the audit.
 # - setuptools: build tooling, not a frozen runtime dependency.

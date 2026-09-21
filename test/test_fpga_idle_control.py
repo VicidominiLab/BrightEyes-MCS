@@ -182,11 +182,19 @@ def test_cold_acquisition_connects_then_resets_fpga_before_first_run():
         window.mcs_manager.is_connected = True
 
     window.connectFPGA = MagicMock(side_effect=connect)
+    window.configurationFPGA_dict = {"laser_force_pulsing_enable": True, "start_command": True}
+    window.ui = SimpleNamespace(
+        checkBox_pulsing_forced=MagicMock(isChecked=MagicMock(return_value=True)),
+        checkBox_DFD=MagicMock(isChecked=MagicMock(return_value=False)),
+    )
 
     window._prepare_fpga_for_acquisition()
 
     window.connectFPGA.assert_called_once_with()
     window.mcs_manager.quick_reset_fpga.assert_called_once_with(timeout=5.0)
+    window.mcs_manager.setRegistersDict.assert_any_call({"laser_force_pulsing_enable": True})
+    window.mcs_manager.setRegistersDict.assert_any_call({"laser_time_bin_mode_enable": True, "max_laser_time_bin": 1})
+    assert all("start_command" not in c.args[0] for c in window.mcs_manager.setRegistersDict.call_args_list)
 
 
 def test_reused_fpga_is_reset_before_another_run():
@@ -195,6 +203,11 @@ def test_reused_fpga_is_reset_before_another_run():
     window.mcs_manager = MagicMock(is_connected=True)
     window.connectFPGA = MagicMock()
 
+    window.configurationFPGA_dict = {"time_bin_dwell_cycles": 123}
+    window.ui = SimpleNamespace(
+        checkBox_pulsing_forced=MagicMock(isChecked=MagicMock(return_value=False)),
+        checkBox_DFD=MagicMock(isChecked=MagicMock(return_value=False)),
+    )
     window._prepare_fpga_for_acquisition()
 
     window.connectFPGA.assert_not_called()
@@ -420,7 +433,9 @@ def test_legacy_keep_connected_settings_do_not_fake_live_connection_state():
 
 def test_acquisition_start_failure_restores_controls_and_shows_popup():
     window = MainWindow.__new__(MainWindow)
+    window.pi23_timetagging = SimpleNamespace(active=False)
     window.ui = SimpleNamespace(
+        checkBox_pi23ttmActivate=MagicMock(isChecked=MagicMock(return_value=False)),
         checkBox_ttmActivate=MagicMock(
             isChecked=MagicMock(return_value=False)
         ),

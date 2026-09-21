@@ -29,6 +29,8 @@ class TestDetectorBackends(unittest.TestCase):
         self.assertEqual(normalize_detector_model(DETECTOR_SPAD_TTM), DETECTOR_SPAD_TTM)
         self.assertEqual(normalize_detector_model("PI23"), DETECTOR_PI_23)
         self.assertEqual(normalize_detector_model("SPAD"), DETECTOR_SPAD_ARRAY)
+        self.assertEqual(normalize_detector_model("TCP/IP - PI23"), DETECTOR_PI_23)
+        self.assertEqual(normalize_detector_model("FPGA - SPAD"), DETECTOR_SPAD_ARRAY)
         self.assertEqual(normalize_detector_model("unknown"), DETECTOR_SPAD_ARRAY)
         self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_ARRAY))
         self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_TTM))

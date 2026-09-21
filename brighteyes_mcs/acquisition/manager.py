@@ -10,6 +10,7 @@ import time
 from ..hardware.fpga import FpgaHandle
 from brighteyes_mcs.logging_setup import logger
 from ..acquisition.detectors.models import (
+    DETECTOR_DISABLED,
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_fifo,
     detector_uses_pi23_pipeline,
@@ -525,6 +526,9 @@ class McsManager():
             self.fpga_handle.runfpga()
             logger.debug("self.fpga_handle.runfpga()")
             self.is_connected = True
+            # Firmware initialization can reset controls written before run().
+            # Reapply requested settings once the VI is actually running.
+            self.setRegistersDict(initial_registers_for_detector)
             logger.debug("%s %s", "is_connected", self.is_connected)
         except Exception as e:
             self.is_connected = False
@@ -660,7 +664,7 @@ class McsManager():
         self.detector_receiver_queue = self.detector_pipeline.make_receiver_queue(self)
 
         self.number_of_threads_h5 = mp.Value("i", 0)
-        if not do_not_save and not self.raw_stream_mode:
+        if not do_not_save and not self.raw_stream_mode and self.detector_model != DETECTOR_DISABLED:
             (
                 self.h5_command_queue,
                 self.h5_response_queue,
@@ -692,8 +696,9 @@ class McsManager():
                 self.detector_receiver_queue,
             )
 
-            self.dataProcess.daemon = True
-            self.process_supervisor.register("preprocess", self.dataProcess)
+            if self.dataProcess is not None:
+                self.dataProcess.daemon = True
+                self.process_supervisor.register("preprocess", self.dataProcess)
         else:
             self.dataProcess = None
 
@@ -768,8 +773,9 @@ class McsManager():
                 self,
                 self.detector_receiver_queue,
             )
-            self.raw_writer_process.daemon = True
-            self.process_supervisor.register("raw_writer", self.raw_writer_process)
+            if self.raw_writer_process is not None:
+                self.raw_writer_process.daemon = True
+                self.process_supervisor.register("raw_writer", self.raw_writer_process)
             self.previewProcess = None
         else:
             logger.debug("self.previewProcess()")
@@ -777,8 +783,9 @@ class McsManager():
                 self,
                 do_not_save,
             )
-            self.previewProcess.daemon = True
-            self.process_supervisor.register("preview", self.previewProcess)
+            if self.previewProcess is not None:
+                self.previewProcess.daemon = True
+                self.process_supervisor.register("preview", self.previewProcess)
 
         self.detector_receiver_process = self.detector_pipeline.make_receiver_process(
             self,
@@ -848,8 +855,8 @@ class McsManager():
                 register_set += "%s %s " % (i, myconf[i])
                 # self.nifpga_session.registers[i].write(myconf[i])
                 if self.is_connected:
-                    self.fpga_handle.register_write(i, nifpga_conf[i])
-                    temp_dict[i] = myconf[i]
+                    self.fpga_handle.register_write_checked(i, nifpga_conf[i])
+                temp_dict[i] = myconf[i]
             else:
                 logger.debug("myconf is None")
         logger.debug(register_set)

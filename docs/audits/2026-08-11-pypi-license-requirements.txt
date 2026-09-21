@@ -1,0 +1,488 @@
+ARCHIVED HISTORICAL AUDIT
+Archived on 2026-09-23. Findings below describe the 2026-08-11 environment
+and may no longer match the code, dependencies, or packaging configuration.
+For current release instructions, see ../pypi-release.md; for current package
+metadata and dependencies, see ../../pyproject.toml.
+
+BRIGHTEYES-MCS REQUIREMENTS, LICENSE, AND PYPI READINESS AUDIT
+======================================================================
+
+Audit date: 2026-08-11
+Repository: C:\BrightEyes-MCS
+Package metadata reviewed: pyproject.toml, requirements.txt, LICENSE.md,
+README.md, package source/imports, package data, and GitHub workflows.
+
+SHORT ANSWER
+------------
+
+Yes, the project is technically capable of being published to PyPI. A clean
+wheel and source distribution were built, both passed "twine check", pip
+successfully resolved the declared dependencies, and the PyPI index currently
+reports no published distribution named "brighteyes-mcs".
+
+However, I recommend NOT publishing the current metadata unchanged. Before the
+first public release, address the direct-dependency omissions and make the GPL
+grant unambiguous. These are small packaging changes, not a fundamental legal
+or technical obstacle.
+
+This is an engineering/license-metadata audit, not legal advice. Publication
+also assumes that the uploader or organization owns the relevant copyrights or
+has permission from all contributors to distribute the code under the selected
+GPL terms.
+
+
+1. VALIDATION RESULTS
+---------------------
+
+PASS  Package version/name: brighteyes-mcs 1.1.1.
+PASS  Declared Python support: Python >=3.10.
+PASS  Isolated PEP 517 build produced:
+      - brighteyes_mcs-1.1.1-py3-none-any.whl
+      - brighteyes_mcs-1.1.1.tar.gz
+PASS  "python -m twine check" accepted both artifacts.
+PASS  Wheel includes LICENSE.md.
+PASS  Wheel includes the expected five .cfg files, five .ui files, one HTML
+      license/about file, two PNG files, and one ICO file.
+PASS  The GUI entry point is valid:
+      brighteyes-mcs = brighteyes_mcs.application.bootstrap:main
+PASS  Package/bootstrap smoke import succeeded.
+PASS  Test result: 119 passed, 4 deselected, 9 subtests passed.
+PASS  A pip dry run resolved all declared dependencies on Windows/Python 3.13.
+PASS  nifpga-fast-fifo-recv 0.102.0 exists on PyPI and satisfies the declared
+      >=0.102.0 constraint.
+INFO  The local virtual environment still has fast-FIFO 0.101.11; a real
+      install/update would upgrade it to 0.102.0.
+INFO  "pip index versions brighteyes-mcs" returned no matching distribution on
+      2026-08-11. This strongly suggests that no release currently exists, but
+      final name ownership/availability is only confirmed when the PyPI project
+      is registered or the first upload is accepted.
+
+
+2. REQUIREMENTS REVIEW
+----------------------
+
+The authoritative PyPI runtime requirements are the dependencies in
+pyproject.toml. They are syntactically valid and pip can resolve them.
+
+Important findings:
+
+A. psutil is directly imported by multiple core modules but is not declared.
+   It is currently installed transitively through qtconsole -> ipykernel, so a
+   fresh install works today. Relying on another package's dependency is brittle.
+   Add "psutil" as a direct runtime dependency.
+
+B. The bundled ao_system plugin directly imports the "serial" module, supplied
+   by the "pyserial" distribution, but pyserial is not declared. The plugin is
+   not autoloaded by the default configuration, so this does not break normal
+   startup. Add an optional extra such as:
+       ao = ["pyserial"]
+   or make pyserial a runtime dependency if the plugin is expected to work in a
+   standard installation.
+
+C. The bundled DFD plugin optionally imports brighteyes_flim and handles its
+   absence. Document it as an optional extra if users are expected to install
+   this functionality, for example:
+       flim = ["brighteyes-flim"]
+   Confirm the exact distribution name/version before adding it.
+
+D. atomics, importlib-metadata, and markdown are declared but no imports or API
+   use were found in the packaged source. They may be historical requirements.
+   Confirm by testing a clean environment, then remove them if unused. Python
+   >=3.10 already provides importlib.metadata in the standard library.
+
+E. requirements.txt and pyproject.toml describe nearly the same environment but
+   are not identical:
+   - requirements.txt additionally lists setuptools, PySide6_Addons, and
+     PySide6_Essentials.
+   - The Addons and Essentials packages are already exact dependencies of
+     PySide6 and normally should not be independently constrained.
+   - setuptools is a build tool, not an application runtime dependency.
+   - requirements.txt installs pywin32 unconditionally, while pyproject.toml
+     correctly limits it to Windows.
+   Prefer installing the project ("pip install ." or "pip install -e .") and
+   generate any lock/constraints file from the project metadata. If the text
+   file is retained, align its platform marker and explain its purpose.
+
+F. Many scientific/runtime dependencies have no upper or lower bounds. This is
+   legal and resolvable but increases reproducibility risk. Test the supported
+   Python versions in CI and add bounds only where compatibility is known.
+
+G. The project declares Python >=3.10 without platform restrictions, while the
+   documented installer and NI hardware path are Windows-focused. Decide whether
+   non-Windows installations are supported. Add platform classifiers and/or
+   dependency markers if Windows is the only supported runtime.
+
+H. Python minimum-version audit:
+   - General PyPI package: Python 3.10 is the effective declared minimum. A
+     no-install resolver check found compatible Windows CPython 3.10 wheels for
+     the complete unpinned pyproject.toml dependency set, including both native
+     BrightEyes packages and fast-FIFO 0.102.0. Do not lower the declaration
+     below 3.10 because several current direct dependencies require >=3.10.
+   - Lean requirements-pyinstaller.txt: Python 3.12 is the actual minimum for
+     the exact pinned set. numpy 2.5.0 requires >=3.12 (and Matplotlib 3.11.0
+     requires >=3.11). The full pinned set was successfully cross-resolved for
+     Windows CPython 3.12 using binary wheels only.
+   - Tested/supported release configuration: Python 3.13. The available local
+     interpreter, test workflow, installer, and installer-EXE workflow all use
+     3.13. Python 3.10/3.11/3.12 compatibility was resolved statically but was
+     not executed here. Therefore, 3.13 should remain the recommended production
+     build version until CI actually runs the test suite on older versions.
+   - The native packages are not the restriction: brighteyes-mcs-cylibs 1.0.2
+     and nifpga-fast-fifo-recv 0.102.0 publish win_amd64 wheels for CPython
+     3.10, 3.11, 3.12, 3.13, and 3.14.
+
+
+3. DIRECT RUNTIME DEPENDENCY LICENSES
+-------------------------------------
+
+The following licenses were determined from installed distribution metadata and
+license files. This is a direct-dependency audit, not a complete transitive SBOM.
+Some packages contain separately licensed bundled components; their own
+dist-info license directories remain authoritative.
+
+Distribution                    Observed primary license(s)
+------------------------------  ----------------------------------------------
+brighteyes-mcs-cylibs           GPL-3.0
+brighteyes-mcs-reader           BSD-3-Clause
+pyqtdarktheme                   MIT
+pyqtgraph                       MIT; bundled CET color-map data is CC-BY
+PySide6                         LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only,
+                                with a separate Qt commercial-license option
+numpy                           BSD-3-Clause plus bundled 0BSD/MIT/Zlib/CC0
+nifpga                          MIT
+h5py                            BSD-3-Clause plus bundled HDF5 notices/licenses
+scipy                           BSD-3-Clause plus bundled component licenses
+imageio                         BSD-2-Clause
+qtconsole                       BSD-3-Clause
+uvicorn                         BSD-3-Clause
+importlib-metadata              Apache-2.0
+nifpga-fast-fifo-recv           MIT (verified from 0.101.11 license file;
+                                recheck the 0.102.0 artifact at release time)
+atomics                         GPL-3.0
+matplotlib                      Matplotlib/PSF-based license plus bundled
+                                third-party licenses (including font licenses)
+fastapi                         MIT
+markdown (Python-Markdown)      BSD-3-Clause
+requests                        Apache-2.0 (includes NOTICE)
+python-multipart                Apache-2.0
+pywin32                         PSF license plus component-specific licenses
+
+Relevant undeclared/optional imports:
+
+psutil                          BSD-3-Clause
+pyserial                        BSD-3-Clause
+
+Direct development dependencies:
+
+pytest                          MIT
+pytest-cov                      MIT
+ruff                            MIT
+mypy                            MIT
+
+
+4. LICENSE COMPATIBILITY ASSESSMENT
+-----------------------------------
+
+No obvious direct-dependency license incompatibility was found for distributing
+BrightEyes-MCS under GPL version 3. In particular:
+
+- The GPL-3.0 licenses of brighteyes-mcs-cylibs and atomics align with a GPLv3
+  application.
+- MIT, BSD, PSF-style, and Apache-2.0 dependencies are generally compatible
+  with GPLv3 when their copyright, attribution, license, and NOTICE conditions
+  are preserved as applicable.
+- PySide6 offers LGPL-3.0/GPL options compatible with an open-source GPLv3
+  application, subject to the selected Qt/PySide terms. Do not imply that the
+  commercial Qt license applies unless one has been purchased.
+
+For a normal PyPI installation, dependencies are downloaded as separate wheels,
+and their license files are carried in their own distributions. If you publish a
+standalone executable/installer that bundles those libraries, perform a separate
+binary-distribution audit and include all required third-party licenses and
+NOTICE files. This report assesses the PyPI package, not the standalone installer.
+
+
+5. PROJECT LICENSE METADATA ISSUES
+----------------------------------
+
+A. The repository clearly intends a GNU GPL license, but the exact grant is not
+   fully consistent:
+   - LICENSE.md contains the GPL version 3 license text.
+   - README.md calls it GPLv3.
+   - brighteyes_mcs/ui/qt/about.html says version 3 "or later".
+   Decide whether the project is GPL-3.0-only or GPL-3.0-or-later, confirm that
+   all copyright holders authorize that choice, and use the same wording
+   everywhere.
+
+B. pyproject.toml uses the deprecated form:
+       license = { file = "LICENSE.md" }
+   The build succeeds but setuptools warns that this table form is deprecated
+   and is scheduled to become unsupported after 2027-02-18. With setuptools
+   >=77, use PEP 639 metadata, for example:
+       license = "GPL-3.0-only"
+       license-files = ["LICENSE.md"]
+   or use GPL-3.0-or-later if that is the authorized intended grant. Raise the
+   setuptools build requirement to >=77.0.3 when adopting this syntax.
+
+C. Add normal PyPI metadata before release: authors/maintainers, project URLs
+   (repository, documentation, issues), keywords, development status, intended
+   audience, operating-system support, and supported Python classifiers. These
+   fields are not mandatory for upload, but their absence makes the package less
+   trustworthy and discoverable.
+
+D. Consider adding a THIRD_PARTY_LICENSES or NOTICE document for the standalone
+   application distribution. It is especially useful for Apache NOTICE content,
+   PySide/Qt terms, pyqtgraph color-map data, fonts, and compiled extensions.
+
+
+6. RECOMMENDED RELEASE CHECKLIST
+--------------------------------
+
+Required/recommended before the first production upload:
+
+[ ] Confirm contributor/copyright authority to publish under GPLv3.
+[ ] Choose GPL-3.0-only or GPL-3.0-or-later and make all notices consistent.
+[ ] Add psutil as a direct dependency.
+[ ] Declare pyserial and brighteyes-flim as optional extras, or document them.
+[ ] Remove confirmed-unused dependencies and align requirements.txt.
+[ ] Add authors/maintainers, project URLs, classifiers, and keywords.
+[ ] Test at least Windows/Python 3.10-3.14 if all are claimed; otherwise narrow
+    the declared support to the combinations actually tested.
+[ ] Update the local environment to nifpga-fast-fifo-recv 0.102.0 and run the
+    hardware-relevant smoke tests available to the project.
+[ ] Build in a clean environment and rerun tests plus "twine check".
+[ ] Upload to TestPyPI first and install that artifact into a fresh environment.
+[ ] Configure PyPI Trusted Publishing for the GitHub repository and add a
+    dedicated release workflow; this repository currently has installer-release
+    and test workflows but no PyPI publishing workflow.
+[ ] Ensure version 1.1.1 has never been uploaded; PyPI files/versions cannot be
+    replaced. Bump the version for every subsequent upload.
+
+Suggested commands after the metadata is corrected:
+
+    python -m pip install --upgrade build twine
+    python -m pytest -q
+    python -m build
+    python -m twine check dist/*
+    python -m twine upload --repository testpypi dist/*
+
+For production, prefer a GitHub Actions Trusted Publisher rather than a long-
+lived API token.
+
+
+7. WINDOWS EXECUTABLE FEASIBILITY AND LICENSE REQUIREMENTS
+----------------------------------------------------------
+
+SHORT ANSWER
+
+Yes. There are two materially different executable options:
+
+1. Small installer executable: ALREADY IMPLEMENTED and suitable as the lowest-
+   risk distribution method. It installs Python, the repository, a virtual
+   environment, and dependencies rather than bundling the full application.
+
+2. Self-contained BrightEyes-MCS application executable: FEASIBLE, but it needs
+   a dedicated freeze/build configuration, hardware testing, and a more complete
+   third-party license bundle. It should not be confused with the existing
+   installer executable.
+
+
+7.1 Existing installer executable
+
+The repository already contains:
+
+- installer/build_installer_exe.bat
+- installer/brighteyes_mcs_installer.py
+- .github/workflows/build-installer-release.yml
+
+The batch file and tag-triggered GitHub workflow use Python 3.13 and PyInstaller
+in one-file/windowed mode to create:
+
+    brighteyes_mcs_installer.exe
+
+The installer is mostly Python standard-library code (tkinter, urllib,
+subprocess, zipfile, and related modules). It does not freeze the large Qt,
+NumPy/SciPy, NI FPGA, or BrightEyes acquisition stack into the installer. It
+instead creates a .venv and installs requirements, so its size and native-binary
+licensing surface are much smaller.
+
+The installer already displays notices for BrightEyes-MCS, Python, Tcl/Tk, and
+the PyInstaller bootloader. This is a useful start. Before public distribution,
+also do the following:
+
+[ ] Pin the PyInstaller version in the build script/workflow for reproducible
+    releases instead of always installing the newest version.
+[ ] Attach LICENSE.md and an installer THIRD_PARTY_LICENSES.txt beside the EXE
+    in every GitHub release, even though notices are also shown inside the GUI.
+[ ] Publish the exact installer source and build script for each binary release.
+[ ] Record the Python, Tcl/Tk, PyInstaller, and Windows architecture versions
+    used for the build; preferably generate an SBOM and checksums.
+[ ] Code-sign the final executable with an Authenticode certificate if it is
+    distributed to laboratory users. This is not a license requirement, but it
+    materially improves Windows trust and reduces security warnings.
+[ ] Scan the release artifact and test it on a clean Windows virtual machine.
+[ ] Keep Git, Python, NI drivers, and firmware as separately downloaded/vendor-
+    installed components unless their redistribution licenses have been checked.
+
+
+7.2 Full self-contained application executable
+
+The full BrightEyes-MCS GUI can in principle be frozen with PyInstaller on
+Windows. Qt for Python also documents PyInstaller as a supported deployment
+option, although Qt recommends its own pyside6-deploy tool for optimized Qt
+deployments.
+
+Start with a one-directory build, not one-file. One-directory mode makes missing
+DLLs/plugins easier to diagnose and makes Qt shared libraries visible and
+replaceable. After it is tested, a one-file build can be evaluated, accepting
+slower startup, temporary extraction, larger antivirus risk, and more difficult
+license inspection.
+
+A first experimental command would be similar to:
+
+    python -m PyInstaller --clean --noconfirm --onedir --windowed \
+      --name BrightEyes-MCS \
+      --icon brighteyes_mcs/images/icon.ico \
+      --collect-data brighteyes_mcs \
+      --collect-submodules brighteyes_mcs.plugins.builtin \
+      brighteyes_mcs/__main__.py
+
+For a production build, replace this command with a committed .spec file. The
+specification and CI job should explicitly verify inclusion of:
+
+- All cfg, plugins_cfg, .ui, HTML, PNG, and ICO package data.
+- Built-in plugins, which are imported dynamically by name and may otherwise be
+  missed by static analysis.
+- PySide6 Qt plugins required at runtime (especially platform/image plugins).
+- brighteyes_mcs_cylibs native .pyd modules.
+- nifpga_fast_fifo_recv native .pyd/DLL content.
+- NumPy, SciPy, h5py/HDF5, Matplotlib, imageio/Pillow, qtconsole/ipykernel, and
+  their required data/native libraries.
+- pyserial if the ao_system plugin is included as working functionality.
+- brighteyes-flim only if the optional DFD functionality is intentionally
+  included and its license/dependencies have been audited.
+- Application version information, icon, crash logging, and an accessible
+  license/about dialog.
+
+Do not assume that freezing Python removes hardware prerequisites. NI device
+drivers/runtime components and NiFpga.dll may still need to be installed by the
+NI installer. Do not copy NI DLLs, drivers, firmware, or bitfiles into the EXE
+until the applicable NI and firmware redistribution terms have been reviewed.
+The most conservative design is to detect them at startup, show a clear message,
+and direct the user to the official vendor installer.
+
+The full frozen build must be tested on a clean Windows machine without the
+development .venv. Test at least:
+
+- GUI startup and Qt platform/image plugins.
+- Built-in plugin discovery and each advertised optional plugin.
+- NI driver absence (friendly failure) and presence.
+- Both NI FIFO backends and the compiled Cython acquisition paths.
+- REST server, embedded Qt console, HDF5 read/write, image export, plotting,
+  multiprocessing workers, and clean process shutdown.
+- Installation to a path containing spaces and execution as a non-admin user.
+
+
+7.3 What must be added for a distributed full EXE
+
+Unlike a PyPI wheel, a frozen EXE/one-directory bundle physically redistributes
+Python and third-party libraries. Add a release-level licenses directory or
+archive that users can access without running the program. At minimum include:
+
+- BrightEyes-MCS GPL license, copyright notice, exact release version, and a
+  durable URL/directions for obtaining the Corresponding Source.
+- The exact BrightEyes-MCS source, build specification, and scripts used to
+  produce the executable. For an object-code network download under GPLv3, make
+  equivalent Corresponding Source access available and clearly identify it.
+- Corresponding source/access information for bundled GPL components such as
+  brighteyes-mcs-cylibs and atomics, including any build scripts needed by the
+  applicable GPL terms.
+- Python PSF license and notices.
+- Tcl/Tk license if tkinter is bundled.
+- PyInstaller license and bootloader exception text.
+- PySide6, Shiboken6, and Qt LGPL/GPL license texts and Qt third-party
+  attributions for the modules actually shipped.
+- License/NOTICE files for every bundled Python distribution and native library,
+  including Requests' Apache NOTICE and the component licenses shipped by NumPy,
+  SciPy, h5py/HDF5, Matplotlib/fonts, pyqtgraph color maps, Pillow, pywin32, and
+  other resolved transitive dependencies.
+- A machine-readable SBOM (SPDX or CycloneDX recommended) containing exact
+  versions and a human-readable THIRD_PARTY_LICENSES.txt index.
+
+If relying on the Qt/PySide LGPL option, keep Qt dynamically linked, preserve
+notices, do not prohibit reverse engineering required for debugging Qt
+modifications, and provide the materials/instructions required by the LGPL for
+users to replace or relink the Qt libraries. Since BrightEyes-MCS itself is GPL,
+publishing its complete corresponding source helps, but it does not eliminate
+Qt's separate notices, source/access, or relinking obligations. Alternatively,
+use the GPL-covered Qt/PySide terms consistently, or use properly licensed Qt
+commercial packages. Do not label the pip Community Edition as commercially
+licensed merely because the application is used in a commercial setting.
+
+The license inventory must be generated from the final frozen artifact, not
+only from pyproject.toml: PyInstaller includes transitive packages, DLLs, Qt
+plugins, fonts, and data files that are not all direct project dependencies.
+
+
+7.4 Recommended executable release layout
+
+For the existing installer:
+
+    brighteyes_mcs_installer.exe
+    LICENSE.md
+    THIRD_PARTY_LICENSES.txt
+    SHA256SUMS.txt
+    SBOM.spdx.json
+
+For a full one-directory application:
+
+    BrightEyes-MCS/
+      BrightEyes-MCS.exe
+      _internal/                 (PyInstaller libraries and Qt/native DLLs)
+      licenses/                  (all license and NOTICE texts)
+      THIRD_PARTY_LICENSES.txt
+      SOURCE_OFFER.txt           (exact source/build-material directions)
+      SBOM.spdx.json
+
+Executable conclusion: distributing the existing installer EXE is already
+practical and is the recommended first approach. A full standalone application
+EXE is technically possible, but should be treated as a separate release
+engineering and binary-license project rather than a simple switch in the PyPI
+build.
+
+
+8. SOURCES AND EVIDENCE
+-----------------------
+
+Local evidence:
+- C:\BrightEyes-MCS\pyproject.toml
+- C:\BrightEyes-MCS\requirements.txt
+- C:\BrightEyes-MCS\LICENSE.md
+- Installed package metadata/license files in C:\BrightEyes-MCS\.venv
+- Static import scan of C:\BrightEyes-MCS\brighteyes_mcs
+- Successful isolated build, Twine check, pip dry run, smoke import, and tests
+
+External references checked on 2026-08-11:
+- https://pypi.org/project/nifpga-fast-fifo-recv/
+- https://pypi.org/project/brighteyes-mcs-cylibs/
+- https://pypi.org/project/brighteyes-mcs-reader/
+- https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+- https://docs.pypi.org/trusted-publishers/
+- https://pyinstaller.org/en/stable/license.html
+- https://pyinstaller.org/en/stable/
+- https://doc.qt.io/qtforpython-6/deployment/index.html
+- https://doc.qt.io/qtforpython-6/licenses.html
+- https://doc.qt.io/qt-6/licensing.html
+- https://www.qt.io/development/open-source-lgpl-obligations
+
+
+FINAL VERDICT
+-------------
+
+Technically uploadable: YES.
+Dependency license conflict found: NO obvious conflict among direct dependencies.
+Recommended to publish the current tree unchanged: NO.
+
+After clarifying the GPL variant, declaring the direct/optional dependencies,
+and adding ordinary project metadata, BrightEyes-MCS is a reasonable candidate
+for a first TestPyPI upload followed by PyPI publication.

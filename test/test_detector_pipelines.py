@@ -4,6 +4,13 @@ import unittest
 
 from brighteyes_mcs.acquisition.detectors import create_detector_pipeline
 from brighteyes_mcs.acquisition.detectors.pi23.pipeline import Pi23DetectorPipeline
+from brighteyes_mcs.acquisition.detectors.disabled import DisabledDetectorPipeline
+from brighteyes_mcs.acquisition.detectors.models import (
+    DETECTOR_DISABLED,
+    detector_uses_nifpga_control,
+    detector_uses_nifpga_fifo,
+    detector_uses_pi23_pipeline,
+)
 from brighteyes_mcs.acquisition.detectors.spad.pipeline import SpadDetectorPipeline
 from brighteyes_mcs.acquisition.detectors.backends import (
     DETECTOR_PI23_TT,
@@ -14,6 +21,12 @@ from brighteyes_mcs.acquisition.detectors.backends import (
 
 
 class TestDetectorPipelines(unittest.TestCase):
+    def test_disabled_retains_fpga_control_without_a_data_source(self):
+        self.assertIsInstance(create_detector_pipeline("Disable"), DisabledDetectorPipeline)
+        self.assertTrue(detector_uses_nifpga_control(DETECTOR_DISABLED))
+        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_DISABLED))
+        self.assertFalse(detector_uses_pi23_pipeline(DETECTOR_DISABLED))
+
     def test_pi23_acquisition_loop_imports_in_a_clean_interpreter(self):
         result = subprocess.run(
             [

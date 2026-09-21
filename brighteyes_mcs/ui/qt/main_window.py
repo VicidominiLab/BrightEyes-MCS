@@ -47,6 +47,20 @@ from PySide6.QtGui import QPixmap, QIcon, QGuiApplication, QDesktopServices
 from datetime import datetime
 
 from .main_window_design import Ui_MainWindowDesign
+from .pi23_timetagging import Pi23Timetagging
+
+PI23_TIMETAGGING_CONFIGURATION_KEYS = (
+    "pi23ttm_enabled",
+    "pi23ttm_h5_executable",
+    "pi23ttm_raw_executable",
+    "pi23ttm_folder",
+    "pi23ttm_format",
+    "pi23ttm_address",
+    "pi23ttm_margin",
+    "pi23ttm_settle",
+    "pi23ttm_timeout",
+    "no_mcs_save_with_ttm",
+)
 from .flim_image_view import FlimImageView, ModifierGatedViewBox
 from .qt_locale import install_scientific_locale
 from .support import DoubleClickDoubleSpinBox, PluginSignals, RectROIWithoutHandles
@@ -64,8 +78,12 @@ from ...application.plugin_service import PluginManager
 from ...api import FastAPIServerThread
 from ...storage.raw import convert_raw_acquisition, metadata_filename, raw_output_files
 from ...acquisition.detectors.models import (
+    DETECTOR_DISABLED,
+    DETECTOR_PI23_UI,
     DETECTOR_SPAD_ARRAY,
+    DETECTOR_SPAD_UI,
     detector_uses_pi23_pipeline,
+    detector_uses_nifpga_fifo,
     normalize_detector_model,
 )
 from ...storage.legacy_config import LegacyConfigurationCodec, NumpyJSONEncoder
@@ -229,6 +247,25 @@ class MainWindow(QMainWindow):
         self.webcam_capture = None
         self.ui = Ui_MainWindowDesign()
         self.ui.setupUi(self)
+        self.pi23_timetagging = Pi23Timetagging(self.ui, self)
+        self.pi23_timetagging.ready.connect(self._start_after_pi23_ready)
+        self.pi23_timetagging.failed.connect(self._pi23_recording_failed)
+        self.pi23_timetagging.finished.connect(self._pi23_recording_finished)
+        self.ui.pushButton_pi23ttm_force_calibration.clicked.connect(
+            self.pi23_timetagging.force_calibration
+        )
+        self._mcs_saving_suppressed = False
+        self._waiting_for_pi23 = False
+        self.ui.checkBox_pi23ttmActivate.toggled.connect(self._sync_pi23_ttm_detector)
+        for button, field, directory in (
+            (self.ui.toolButton_pi23ttm_h5, self.ui.lineEdit_pi23ttm_h5_executable, False),
+            (self.ui.toolButton_pi23ttm_raw, self.ui.lineEdit_pi23ttm_raw_executable, False),
+            (self.ui.toolButton_pi23ttm_folder, self.ui.lineEdit_pi23ttm_folder, True),
+        ):
+            button.clicked.connect(
+                lambda checked=False, field=field, directory=directory:
+                self._browse_pi23_path(field, directory)
+            )
         self._latest_status_registers = {}
         self._monitored_registers = {}
         self._monitor_started_at = time.monotonic()
@@ -407,13 +444,6 @@ class MainWindow(QMainWindow):
 
         self.ui.pushButton_loadCfg.clicked.connect(self.LoadConfigurationCmd)
         self.ui.pushButton_saveCfg.clicked.connect(self.SaveConfigurationCmd)
-        self.ui.pushButton_systemProfile = QPushButton("System…", self)
-        self.ui.pushButton_systemProfile.setToolTip(
-            "Select the active microscope profile and its resource folders"
-        )
-        self.ui.gridLayout_24.addWidget(
-            self.ui.pushButton_systemProfile, 4, 2, 1, 1
-        )
         self.ui.pushButton_systemProfile.clicked.connect(self.editSystemProfile)
         self.ui.pushButton_convertRawAcquisition.clicked.connect(
             self.cmd_convertRawAcquisition
@@ -715,6 +745,7 @@ class MainWindow(QMainWindow):
         self.fingerprint_widget.addItem(self.fingerprint_saturation_mask)
 
         # self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_markers)
+        self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_scan_preset)
         self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_filename)
         self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_pos_aux)        
         self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_listfile)
@@ -748,6 +779,10 @@ class MainWindow(QMainWindow):
         self.ui.dockWidget_pos.raise_()
         self.ui.dockWidget_trace.raise_()
         self.ui.dockWidget_panorama.raise_()
+
+        # Size the shared left column after its tab groups are assembled.
+        # Qt can still expand it for larger fonts and user resizing.
+        self.resizeDocks([self.ui.dockWidget_preview], [340], Qt.Horizontal)
 
         self.ui.tabWidget.tabBarDoubleClicked.connect(self.tabDoubleClick)
 
@@ -802,6 +837,7 @@ class MainWindow(QMainWindow):
         self.plugin_configuration_files = {
             "channel_delay_skew": "cfg/plugins_cfg/channel_delay_skew.cfg",
             "dfd": "cfg/plugins_cfg/dfd.cfg",
+            "pi23_timetagging": "cfg/plugins_cfg/pi23_timetagging.cfg",
         }
         self._loading_configuration_file = ""
 
@@ -1558,8 +1594,19 @@ class MainWindow(QMainWindow):
         self.mcs_manager.set_detector_model(detector_model)
         if hasattr(self.ui, "comboBox_fifobackend"):
             self.ui.comboBox_fifobackend.setEnabled(
-                not detector_uses_pi23_pipeline(detector_model)
+                detector_uses_nifpga_fifo(detector_model)
             )
+        self._sync_pi23_ttm_detector()
+
+    def _sync_pi23_ttm_detector(self, _checked=None):
+        """The PI23 CS image receiver and SB timetagger cannot run together."""
+        combo = self.ui.comboBox_detector_model
+        ttm = self.ui.checkBox_pi23ttmActivate
+        busy = self.pi23_timetagging.active or getattr(self, "started_normal", False) or getattr(self, "started_preview", False)
+        ttm.setEnabled(not busy and detector_uses_nifpga_fifo(combo.currentText()))
+        for index in range(combo.count()):
+            if detector_uses_pi23_pipeline(combo.itemText(index)):
+                combo.model().item(index).setEnabled(not ttm.isChecked())
 
     def _current_detector_model(self):
         if getattr(self.ui, "comboBox_detector_model", None) is not None:
@@ -1568,7 +1615,13 @@ class MainWindow(QMainWindow):
 
     def _set_detector_model_combo(self, detector_model):
         detector_model = normalize_detector_model(detector_model)
-        combo_text = "PI23" if detector_uses_pi23_pipeline(detector_model) else "SPAD"
+        combo_text = (
+            DETECTOR_PI23_UI
+            if detector_uses_pi23_pipeline(detector_model)
+            else DETECTOR_SPAD_UI
+        )
+        if detector_model == DETECTOR_DISABLED:
+            combo_text = DETECTOR_DISABLED
         self.ui.comboBox_detector_model.blockSignals(True)
         self.ui.comboBox_detector_model.setCurrentText(combo_text)
         self.ui.comboBox_detector_model.blockSignals(False)
@@ -2435,13 +2488,62 @@ class MainWindow(QMainWindow):
 
         if isinstance(payload, dict):
             self.plugin_configuration[plugin_name] = payload
+            if plugin_name == "pi23_timetagging":
+                self._apply_pi23_timetagging_configuration(payload)
             logger.debug("%s %s %s", "Loaded plugin configuration", plugin_name, str(path))
+
+    def _pi23_timetagging_bindings(self):
+        return {
+            "pi23ttm_enabled": (bool, self.ui.checkBox_pi23ttmActivate),
+            "pi23ttm_h5_executable": (str, self.ui.lineEdit_pi23ttm_h5_executable),
+            "pi23ttm_raw_executable": (str, self.ui.lineEdit_pi23ttm_raw_executable),
+            "pi23ttm_folder": (str, self.ui.lineEdit_pi23ttm_folder),
+            "pi23ttm_format": (str, self.ui.comboBox_pi23ttm_format),
+            "pi23ttm_address": (str, self.ui.lineEdit_pi23ttm_address),
+            "pi23ttm_margin": (float, self.ui.doubleSpinBox_pi23ttm_margin),
+            "pi23ttm_settle": (float, self.ui.doubleSpinBox_pi23ttm_settle),
+            "pi23ttm_timeout": (float, self.ui.doubleSpinBox_pi23ttm_timeout),
+            "no_mcs_save_with_ttm": (bool, self.ui.checkBox_noMcsSaveWithTtm),
+        }
+
+    def _apply_pi23_timetagging_configuration(self, configuration):
+        bindings = self._pi23_timetagging_bindings()
+        for name, value in configuration.items():
+            if name not in bindings:
+                continue
+            kind, widget = bindings[name]
+            if kind in (int, float):
+                widget.setValue(value)
+            elif kind is bool:
+                widget.setChecked(value)
+            elif hasattr(widget, "setCurrentText"):
+                widget.setCurrentText(value)
+            else:
+                widget.setText(value)
+
+    def _get_pi23_timetagging_configuration(self):
+        configuration = {}
+        for name, (kind, widget) in self._pi23_timetagging_bindings().items():
+            if kind in (int, float):
+                configuration[name] = widget.value()
+            elif kind is bool:
+                configuration[name] = widget.isChecked()
+            elif hasattr(widget, "currentText"):
+                configuration[name] = widget.currentText()
+            else:
+                configuration[name] = widget.text()
+        return configuration
 
     def _save_plugin_configuration_files(self, plugin_names=None):
         if plugin_names is None:
             plugin_names = list(self.plugin_configuration_files)
         elif isinstance(plugin_names, str):
             plugin_names = [plugin_names]
+
+        if "pi23_timetagging" in plugin_names:
+            self.plugin_configuration["pi23_timetagging"] = (
+                self._get_pi23_timetagging_configuration()
+            )
 
         for plugin_name in plugin_names:
             config_file = self.plugin_configuration_files.get(
@@ -2538,6 +2640,13 @@ class MainWindow(QMainWindow):
         Set the GUI data from a dictionary (it can be also a partial configuration)
         """
         configuration = dict(configuration)
+        # PI-Timetagging settings moved to plugins_cfg. Keep accepting old
+        # top-level settings and let them override the external defaults.
+        legacy_pi23_timetagging = {
+            name: configuration.pop(name)
+            for name in PI23_TIMETAGGING_CONFIGURATION_KEYS
+            if name in configuration
+        }
         # FPGA connection is live hardware state, not a saved GUI preference.
         configuration.pop("load_firmware_once", None)
         configuration.pop("keep_fpga_connected", None)
@@ -2579,6 +2688,8 @@ class MainWindow(QMainWindow):
                 logger.debug("ERROR setGUI_data")
                 logger.debug("%s %s", name, (caption, mtype, ref_obj, visible))
                 logger.debug(repr(e))
+        if legacy_pi23_timetagging:
+            self._apply_pi23_timetagging_configuration(legacy_pi23_timetagging)
         self.plugin_signals.signal.emit("configurationLoaded")
         #
         # self.lock_parameters_changed_call = lock_old
@@ -2852,6 +2963,9 @@ class MainWindow(QMainWindow):
         if self._shutdown_complete or self._shutdown_started:
             return
         self._shutdown_started = True
+        self._waiting_for_pi23 = False
+        if hasattr(self, "pi23_timetagging"):
+            self.pi23_timetagging.close()
 
         logger.debug("=======================")
         logger.debug("   CLOSE EVERYTHING")
@@ -4706,6 +4820,11 @@ class MainWindow(QMainWindow):
             logger.debug("self.timerPreviewImg_tick_lock called but busy")
             return
 
+        if self._current_detector_model() == DETECTOR_DISABLED:
+            self.ui.label_tot_num_dat_point_val.setText("Detector disabled")
+            self.timerPreviewImg_tick_mutex.unlock()
+            return
+
         time_res = self.ui.spinBox_timeresolution.value()
         time_bin = self.ui.spinBox_time_bin_per_px.value()
         frames = self.ui.spinBox_nframe.value()
@@ -5409,7 +5528,7 @@ Have fun!
         logger.debug("loadPreset")
         combo_str = self.ui.comboBox_preset.currentText()
         self.setGUI_data(self.preset_dict[combo_str])
-        logger.debug("preset %d loaded" % combo_str)
+        logger.debug("preset %s loaded" % combo_str)
 
     @Slot()
     def savePreset(self):
@@ -5419,7 +5538,7 @@ Have fun!
         logger.debug("savePreset")
         combo_str = self.ui.comboBox_preset.currentText()
         self.preset_dict[combo_str] = self.getGUI_data()
-        logger.debug("preset %d saved" % combo_str)
+        logger.debug("preset %s saved" % combo_str)
 
     # @Slot()
     # def removeMarkerCmd(self):
@@ -6605,9 +6724,8 @@ Have fun!
 
         # self.pmtThresholdChanged()
 
-        self.configurationFPGA_dict.update(
-            self.mcs_manager.registers_configuration
-        )
+        # Keep requested settings separate from hardware read-back. Read-back
+        # contains indicators and can contain reset defaults from the last run.
         self.current_plot_size_x_um = self.ui.spinBox_range_x.value()
         self.current_plot_size_y_um = self.ui.spinBox_range_y.value()
         self.current_plot_size_z_um = self.ui.spinBox_range_z.value()
@@ -6645,7 +6763,7 @@ Have fun!
         self.activateShowPreview(self.ui.checkBox_showPreview.isChecked() and not raw_stream_mode)
 
 
-        self.mcs_manager.set_do_not_save(do_not_save)
+        self.mcs_manager.set_do_not_save(do_not_save or self._mcs_saving_suppressed)
         self.mcs_manager.set_raw_stream_mode(raw_stream_mode)
 
         filename_for_ttm = self.defineFilename(with_folder=False)
@@ -6721,7 +6839,12 @@ Have fun!
         self.plugin_signals.signal.emit("beforeRun")
 
         if do_run:
-            self.sendCmdRun()
+            if (not do_not_save and self.ui.checkBox_pi23ttmActivate.isChecked()
+                    and self._current_detector_model() != DETECTOR_DISABLED):
+                self._waiting_for_pi23 = True
+                self.pi23_timetagging.start(filename)
+            else:
+                self.sendCmdRun()
 
         self.update_fingerprint_mask()
 
@@ -6988,6 +7111,18 @@ Have fun!
         self.mcs_manager.quick_reset_fpga(
             timeout=self.FPGA_IDLE_TIMEOUT_SECONDS
         )
+        # Replay requested controls after VI startup/reset, never stale command
+        # edges or read-back indicators from a previous acquisition.
+        self.setRegistersDict({
+            key: value for key, value in self.configurationFPGA_dict.items()
+            if key not in ("start_command", "stop_command")
+        })
+        forced = self.ui.checkBox_pulsing_forced.isChecked() and not self.ui.checkBox_DFD.isChecked()
+        if forced:
+            self.setRegistersDict({"laser_time_bin_mode_enable": True, "max_laser_time_bin": 1})
+            self.setRegistersDict({"laser_force_pulsing_enable": True})
+        elif "laser_force_pulsing_enable" in self.configurationFPGA_dict:
+            self.setRegistersDict({"laser_force_pulsing_enable": False})
 
     @Slot()
     def beginAcquisition(self, is_preview=False):
@@ -6999,6 +7134,20 @@ Have fun!
                              If False, run in normal acquisition mode.
         """
         logger.debug("beginAcquisition(is_preview=%s)" % is_preview)
+
+        if self.pi23_timetagging.active:
+            self.ui.statusBar.showMessage("Wait for PI23 TTM to finish closing its recording.", 5000)
+            return
+        self._mcs_saving_suppressed = not is_preview and self.ui.checkBox_noMcsSaveWithTtm.isChecked() and (
+            self.ui.checkBox_ttmActivate.isChecked()
+            or (self.ui.checkBox_uttmActivate.isChecked() and self.ui.checkBox_uttm_auto.isChecked())
+            or self.ui.checkBox_pi23ttmActivate.isChecked()
+        )
+        if self._current_detector_model() == DETECTOR_DISABLED:
+            self._mcs_saving_suppressed = True
+        if self.ui.checkBox_pi23ttmActivate.isChecked() and detector_uses_pi23_pipeline(self._current_detector_model()):
+            QMessageBox.warning(self, "Conflicting PI23 modes", "PI23 imaging and PI23TTM cannot be selected together. Select SPAD imaging or uncheck PI23TTM.")
+            return
 
         # Enable TTM if requested
         if self.ui.checkBox_ttmActivate.isChecked():
@@ -7043,8 +7192,10 @@ Have fun!
         # Set acquisition mode flags
         self.started_normal = not is_preview
         self.started_preview = is_preview
+        self._sync_pi23_ttm_detector()
+        self.ui.comboBox_detector_model.setEnabled(False)
         self._pending_program_state_after_stop = None
-        raw_stream_mode = (not is_preview) and self.ui.checkBox_rawStreamAcquisition.isChecked()
+        raw_stream_mode = (not is_preview) and not self._mcs_saving_suppressed and self.ui.checkBox_rawStreamAcquisition.isChecked()
         self.raw_stream_mode = raw_stream_mode
         self._auto_lifetime_correction_completed = False
         self._syncAutoLifetimeCorrectionWithPlotSelection()
@@ -7086,11 +7237,18 @@ Have fun!
             self.ui.pushButton_externalProgram.setEnabled(False)
 
         # Initialize acquisition with appropriate mode flag
-        self.initializeAcquisition(
-            do_not_save=is_preview,
-            do_run=True,
-            raw_stream_mode=raw_stream_mode,
-        )
+        try:
+            self.initializeAcquisition(
+                do_not_save=is_preview,
+                do_run=True,
+                raw_stream_mode=raw_stream_mode,
+            )
+        except Exception as error:
+            logger.exception("Acquisition startup failed")
+            self.stop()
+            self.ui.statusBar.showMessage(str(error), 10000)
+            QMessageBox.warning(self, "Acquisition startup failed", str(error))
+            return
 
         if is_preview:
             self.preview_run_id += 1
@@ -7104,6 +7262,36 @@ Have fun!
             self._set_program_state(
                 self.PROGRAM_STATE_ACQUISITION, "acquisition_started"
             )
+
+    def _browse_pi23_path(self, field, directory):
+        if directory:
+            path = QFileDialog.getExistingDirectory(self, "PI23 data folder", field.text())
+        else:
+            path, _ = QFileDialog.getOpenFileName(self, "PI23 recorder", field.text(), "Executables (*.exe);;All files (*)")
+        if path:
+            field.setText(path)
+
+    def _start_after_pi23_ready(self):
+        if self._waiting_for_pi23 and self.started_normal:
+            self._waiting_for_pi23 = False
+            try:
+                self.sendCmdRun()
+            except Exception as error:
+                self._pi23_recording_failed(str(error))
+
+    def _pi23_recording_failed(self, message):
+        self.pi23_timetagging.log(message)
+        if self.started_normal or self._waiting_for_pi23:
+            self.stop()
+        self.ui.statusBar.showMessage(message, 15000)
+
+    def _pi23_recording_finished(self):
+        if not self.started_normal and not self.started_preview:
+            self.ui.pushButton_previewStart.setEnabled(True)
+            self.ui.pushButton_acquisitionStart.setEnabled(True)
+            self.ui.pushButton_stop.setEnabled(False)
+            self.ui.comboBox_detector_model.setEnabled(True)
+            self._sync_pi23_ttm_detector()
 
     @Slot()
     def ttm_activate_change_state(self):
@@ -7441,6 +7629,16 @@ Have fun!
             self.ui.checkBox_uttm_auto.isChecked():
                     self.pushButton_uttm_stop_clicked()
 
+            if self._mcs_saving_suppressed:
+                self.completed_acquisition_count += 1
+                self.last_acquisition_completed_at = self._make_status_timestamp()
+                self.last_saved_filename = ""
+                self.last_completed_filename = ""
+                self._pending_program_state_after_stop = self.PROGRAM_STATE_ACQUISITION_DONE
+                self.stop()
+                self.plugin_signals.signal.emit("acquisitionDone")
+                return
+
             logger.debug(self.mcs_manager.shared_dict)
             self.last_saved_filename = self.mcs_manager.shared_dict["filenameh5"]
             self.last_completed_filename = self.last_saved_filename
@@ -7599,11 +7797,21 @@ Have fun!
         """
         stop the acquisition clicked event
         """
+        self._waiting_for_pi23 = False
+        recorder = getattr(self, "pi23_timetagging", None)
+        if recorder is not None and self._pending_program_state_after_stop is None:
+            recorder.stop()
+        # A manual stop during the recorder's tail has no MCS workers to stop.
+        if recorder is not None and recorder.active and not (self.started_normal or self.started_preview):
+            return
         self.analog_before_stop()
         logger.debug("GUI.Stop")
 
         if self.ttm_remote_is_up() and not self.do_not_save:
             self.ttm_remote_manager.stop_ttm_recv()
+
+        if self.started_normal and self._pending_program_state_after_stop is None and self.ui.checkBox_uttmActivate.isChecked() and self.ui.checkBox_uttm_auto.isChecked():
+            self.pushButton_uttm_stop_clicked()
 
         if self.started_preview:
             # self.ui.spinBox_nframe.setValue(self.nframe_before_run_preview)
@@ -7639,6 +7847,13 @@ Have fun!
         self.started_normal = False
         self.started_preview = False
         self.raw_stream_mode = False
+        self.ui.comboBox_detector_model.setEnabled(True)
+        if recorder is not None:
+            self._sync_pi23_ttm_detector()
+        if recorder is not None and recorder.active:
+            self.ui.pushButton_previewStart.setEnabled(False)
+            self.ui.pushButton_acquisitionStart.setEnabled(False)
+            self.ui.pushButton_stop.setEnabled(True)
         next_state = self._pending_program_state_after_stop
         self._pending_program_state_after_stop = None
 
@@ -8087,6 +8302,8 @@ Have fun!
                 getattr(self, "_loaded_configuration_payload", {}),
                 self.getGUI_data(),
             )
+            for name in PI23_TIMETAGGING_CONFIGURATION_KEYS:
+                configuration.pop(name, None)
             if preserve_default_fov:
                 configuration = self._preserve_default_fov_settings(
                     configuration,
@@ -8134,7 +8351,7 @@ Have fun!
         if filecfg == "":
             filecfg = QFileDialog.getOpenFileName(
                 self,
-                caption="Save Configuration",
+                caption="Load Configuration",
                 filter="Config File (*.cfg)",
                 dir=self.ui.lineEdit_configurationfile.text(),
             )[0]

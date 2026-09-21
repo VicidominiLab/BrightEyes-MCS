@@ -4,6 +4,9 @@
 > the current working tree, including modifications that are not yet committed.
 > It is a map of what exists now, not a proposal for a future rewrite.
 
+Repository map, RAW conversion instructions, and dependency-file guidance
+updated on **23 September 2026**; the remaining architecture snapshot is dated above.
+
 ## One-page view
 
 BrightEyes-MCS is a Windows-focused PySide6 desktop application for controlling
@@ -68,19 +71,16 @@ BrightEyes-MCS/
 ├── test/                    Unit, integration, Qt and hardware-facing tests
 ├── docs/                    Architecture, register and HDF5 documentation
 ├── scripts/                 Developer distribution and conversion tools
-├── raw-fpga-converter/      Stand-alone SPAD RAW-to-HDF5 converter copy
 ├── blueskyproject_mcs/      Separate Bluesky/Ophyd register-map project
-├── notebook/                Experiments, analysis notebooks and local data
 ├── data/                    Placeholder data directory
-├── installer/               Currently empty after installer removal
 ├── dist/                    Local wheel and source-distribution build output
 ├── pyproject.toml           Authoritative package metadata and dependencies
 └── README.md                Installation and development entry point
 ```
 
 Only packages matching `brighteyes_mcs*` are included by the root build.
-`blueskyproject_mcs`, `raw-fpga-converter`, notebooks, the top-level `scripts/`
-directory, tests, and local build output are not importable parts of the
+`blueskyproject_mcs`, the top-level `scripts/` directory, tests, and local build
+output are not importable parts of the
 installed application package.
 
 ## Package ownership
@@ -370,9 +370,17 @@ legacy public attribute names through `storage/legacy_names.py`. See the full
 
 RAW mode produces a metadata-only HDF5 file plus detector stream files. The
 in-package converter supports SPAD RAW reconstruction through
-`storage/converters/spad.py`; PI23 has a separate converter module. The
-`raw-fpga-converter/` directory is a stand-alone SPAD-only copy intended to run
-without the BrightEyes-MCS GUI/package.
+`storage/converters/spad.py`; PI23 uses `storage/converters/pi23.py`. The
+source-checkout CLI wrapper `scripts/convert_raw_acquisition_to_h5.py` calls the
+package converter for either detector. With BrightEyes-MCS installed, run it
+from the repository root:
+
+```powershell
+python scripts/convert_raw_acquisition_to_h5.py path/to/metadata.h5 -o path/to/converted.h5
+```
+
+Keep the accompanying RAW stream files available at the locations described by
+the acquisition metadata.
 
 ## HTTP API
 
@@ -502,7 +510,7 @@ and RAW acquisition, stop/reconnect, HDF5 conversion, TTM, plug-ins and REST.
 | Plug-in framework or loading | `plugins/api.py`, `application/plugin_service.py` |
 | One built-in plug-in | only its package under `plugins/builtin/` where possible |
 | Qt layout | edit `main_window_design.ui`, regenerate `main_window_design.py` |
-| Distribution/dependencies | `pyproject.toml`; `requirements.txt` is a convenience mirror |
+| Distribution/dependencies | `pyproject.toml`; `requirements.txt` installs the local project and its declared dependencies |
 
 ## Related documentation
 

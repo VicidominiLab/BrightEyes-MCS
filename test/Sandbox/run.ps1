@@ -5,12 +5,25 @@ if ($currentFolder -ne 'Sandbox') {
     exit 1
 }
 
-Remove-Item -Path '.\BrightEyes-MCS' -Recurse -Force -ErrorAction SilentlyContinue
+$sourceRepo = Resolve-Path '..\..'
+$destinationRepo = '.\BrightEyes-MCS'
 
-git clone '..\..\' '.\BrightEyes-MCS'
+$currentBranch = git -C $sourceRepo branch --show-current
+
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($currentBranch)) {
+    Write-Error "Unable to determine the current Git branch in '$sourceRepo'."
+    exit 1
+}
+
+Write-Host "Source repository: $sourceRepo"
+Write-Host "Current branch: $currentBranch"
+
+Remove-Item -Path $destinationRepo -Recurse -Force -ErrorAction SilentlyContinue
+
+git clone --branch $currentBranch $sourceRepo $destinationRepo
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Error 'git clone failed.'
+    Write-Error "git clone failed for branch '$currentBranch'."
     exit 1
 }
 

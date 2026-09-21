@@ -1,3 +1,0 @@
-h5py
-numpy
-brighteyes-mcs-cylibs>=1.0.0
