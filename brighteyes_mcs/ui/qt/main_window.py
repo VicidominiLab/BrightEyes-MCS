@@ -44,7 +44,7 @@ from PySide6.QtCore import (
 from PySide6.QtCore import QEvent, QRectF, QThread, QMutex, QMimeData, QUrl
 from PySide6.QtGui import QPixmap, QIcon, QGuiApplication, QDesktopServices
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .main_window_design import Ui_MainWindowDesign
 from .pi23_timetagging import Pi23Timetagging
@@ -435,6 +435,9 @@ class MainWindow(QMainWindow):
         self.updateColorLifetimeShiftControls()
         self.updateImageInteractionHints()
         self.latest_dfd_tau_fit_ns = None
+        self.ui.checkBox_accumulate_preview_photons.toggled.connect(
+            self.updatePreviewConfiguration
+        )
         self.ui.checkBox_trace_dfd_time_axis.toggled.connect(self.plotSettingsChanged)
         self.ui.checkBox_trace_dfd_align_peak.toggled.connect(self.plotSettingsChanged)
         self.ui.doubleSpinBox_trace_dfd_start_percent.valueChanged.connect(self.plotSettingsChanged)
@@ -4808,6 +4811,33 @@ class MainWindow(QMainWindow):
                 # print(n, type(n), i, type(i))
                 self.ui.tableWidget_markers.setItem(k, n, QTableWidgetItem(str(v[i])))
 
+    def set_expected_duration(self, seconds):
+        """Keep seconds for ETA calculations and display hours:seconds:minutes."""
+        self._expected_duration_seconds = max(0.0, float(seconds))
+        hours, remainder = divmod(int(self._expected_duration_seconds), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        self.ui.label_expected_dur_val.setText(f"{hours:02d}:{seconds:02d}:{minutes:02d}")
+
+    def update_acquisition_eta(self, fifo_elements, expected_fifo_elements):
+        """Show local completion time from the configured duration and FIFO progress."""
+        if not self.started_normal or not expected_fifo_elements:
+            self.ui.label_ETA.setText("--")
+            return
+
+        fractions = [
+            max(0.0, min(1.0, fifo_elements[fifo] / expected))
+            for fifo, expected in expected_fifo_elements.items()
+            if expected > 0
+        ]
+        if not fractions:
+            self.ui.label_ETA.setText("--")
+            return
+
+        duration = getattr(self, "_expected_duration_seconds", 0.0)
+        remaining = duration * (1.0 - min(fractions))
+        eta = datetime.now() + timedelta(seconds=remaining)
+        self.ui.label_ETA.setText(eta.strftime("%y/%m/%d %H:%M:%S"))
+
     @Slot()
     def timerPreviewImg_tick(self):
         """
@@ -4822,6 +4852,7 @@ class MainWindow(QMainWindow):
 
         if self._current_detector_model() == DETECTOR_DISABLED:
             self.ui.label_tot_num_dat_point_val.setText("Detector disabled")
+            self.ui.label_ETA.setText("--")
             self.timerPreviewImg_tick_mutex.unlock()
             return
 
@@ -4858,7 +4889,8 @@ class MainWindow(QMainWindow):
                 expected_fifo_elements[fifo],
             )
 
-        self.ui.label_tot_num_dat_point_val.setText(data_point_str)
+        self.ui.label_tot_num_dat_point_val.setText(data_point_str.rstrip())
+        self.update_acquisition_eta(fifo_elements, expected_fifo_elements)
 
         self.ui.progressBar_repetition.setMaximum(100.0)
 
@@ -5504,9 +5536,8 @@ Have fun!
         self.ui.label_frame_time_val.setText(
             "%0.3f" % (time_res * time_bin * circ_points * circ_repetition * numbers_xx * numbers_yy * 1e-6)
         )
-        self.ui.label_expected_dur_val.setText(
-            "%0.3f"
-            % (time_res * time_bin * circ_points * circ_repetition * numbers_xx * numbers_yy * numbers_ff * rep * 1e-6)
+        self.set_expected_duration(
+            (time_res * time_bin * circ_points * circ_repetition * numbers_xx * numbers_yy * numbers_ff * rep * 1e-6)
         )
 
         self.checkAlerts()
@@ -5910,9 +5941,8 @@ Have fun!
             self.ui.label_frame_time_val.setText(
                 "%0.3f" % (time_res * time_bin * numbers_xx * numbers_yy * 1e-6)
             )
-            self.ui.label_expected_dur_val.setText(
-                "%0.3f"
-                % (
+            self.set_expected_duration(
+                (
                         time_res
                         * time_bin
                         * numbers_xx
@@ -7041,6 +7071,7 @@ Have fun!
                 "channel": self.selected_channel,
                 "activate_autocorrelation": self.ui.checkBox_fcs_preview.isChecked(),
                 "activate_trace": self.ui.checkBox_trace_on.isChecked(),
+                "accumulate_preview_photons": self.ui.checkBox_accumulate_preview_photons.isChecked(),
             }
         )
         logger.debug(self.mcs_manager.read_shared_dict())
@@ -7190,6 +7221,7 @@ Have fun!
         self.mcs_manager.acquisition_almost_done_reset()
 
         # Set acquisition mode flags
+        self.ui.label_ETA.setText("--")
         self.started_normal = not is_preview
         self.started_preview = is_preview
         self._sync_pi23_ttm_detector()
@@ -7846,6 +7878,7 @@ Have fun!
 
         self.started_normal = False
         self.started_preview = False
+        self.ui.label_ETA.setText("--")
         self.raw_stream_mode = False
         self.ui.comboBox_detector_model.setEnabled(True)
         if recorder is not None:

@@ -584,6 +584,9 @@ class BaseAcquisitionLoopProcess(mp.Process):
         self.activate_show_preview = self.shared_dict["activate_show_preview"]
         self.active_autocorrelation = self.shared_dict["activate_autocorrelation"]
         self.activate_trace = self.shared_dict["activate_trace"]
+        self.accumulate_preview_photons = self.shared_dict.get(
+            "accumulate_preview_photons", False
+        )
 
         selected_channel = self.shared_dict["channel"]
         correlator = Autocorrelator(maxx=self.autocorrelation_maxx, log_step=2)
@@ -959,11 +962,13 @@ class BaseAcquisitionLoopProcess(mp.Process):
                         buffer_up_to_gap_digital = self.buffer_digital[: self.gap_digital_in_sample]
 
                         if buffer_up_to_gap_digital.size != 0:
+                            accumulate_preview_photons = self.accumulate_preview_photons
                             if isinstance(selected_channel, int):
                                 if (selected_channel < (spad_channels + 2)):
                                     if (self.activate_show_preview == True):
                                         self.image_xy_lock.acquire()
-                                        self.image_xy[list_y_digital, list_x_digital] = 0
+                                        if not accumulate_preview_photons:
+                                            self.image_xy[list_y_digital, list_x_digital] = 0
                                         np.add.at(
                                             self.image_xy,
                                             (list_y_digital, list_x_digital),
@@ -973,9 +978,10 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
                                         cond_x_central = list_x_digital == (self.shape[0] // 2)
                                         self.image_zy_lock.acquire()
-                                        self.image_zy[
-                                            list_y_digital[cond_x_central], list_z_digital[cond_x_central]
-                                        ] = 0
+                                        if not accumulate_preview_photons:
+                                            self.image_zy[
+                                                list_y_digital[cond_x_central], list_z_digital[cond_x_central]
+                                            ] = 0
                                         np.add.at(
                                             self.image_zy,
                                             (list_y_digital[cond_x_central], list_z_digital[cond_x_central]),
@@ -985,9 +991,10 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
                                         cond_y_central = list_y_digital == (self.shape[1] // 2)
                                         self.image_xz_lock.acquire()
-                                        self.image_xz[
-                                            list_z_digital[cond_y_central], list_x_digital[cond_y_central]
-                                        ] = 0
+                                        if not accumulate_preview_photons:
+                                            self.image_xz[
+                                                list_z_digital[cond_y_central], list_x_digital[cond_y_central]
+                                            ] = 0
                                         np.add.at(
                                             self.image_xz,
                                             (list_z_digital[cond_y_central], list_x_digital[cond_y_central]),
@@ -1009,7 +1016,8 @@ class BaseAcquisitionLoopProcess(mp.Process):
                             elif selected_channel.startswith("Sum"):
                                 if self.activate_show_preview == True:
                                     self.image_xy_lock.acquire()
-                                    self.image_xy[list_y_digital, list_x_digital] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy[list_y_digital, list_x_digital] = 0
                                     np.add.at(
                                         self.image_xy,
                                         (list_y_digital, list_x_digital),
@@ -1019,9 +1027,10 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
                                     cond_x_central = list_x_digital == (self.shape[0] // 2)
                                     self.image_zy_lock.acquire()
-                                    self.image_zy[
-                                        list_y_digital[cond_x_central], list_z_digital[cond_x_central]
-                                    ] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_zy[
+                                            list_y_digital[cond_x_central], list_z_digital[cond_x_central]
+                                        ] = 0
                                     np.add.at(
                                         self.image_zy,
                                         (list_y_digital[cond_x_central], list_z_digital[cond_x_central]),
@@ -1031,9 +1040,10 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
                                     cond_y_central = list_y_digital == (self.shape[1] // 2)
                                     self.image_xz_lock.acquire()
-                                    self.image_xz[
-                                        list_z_digital[cond_y_central], list_x_digital[cond_y_central]
-                                    ] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xz[
+                                            list_z_digital[cond_y_central], list_x_digital[cond_y_central]
+                                        ] = 0
                                     np.add.at(
                                         self.image_xz,
                                         (list_z_digital[cond_y_central], list_x_digital[cond_y_central]),
@@ -1069,9 +1079,12 @@ class BaseAcquisitionLoopProcess(mp.Process):
                                         channelC = int(selected_channel.split(" ")[3])
 
                                         self.image_xy_rgb_lock.acquire()
-                                        self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
-                                        self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
-                                        self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
+                                        if not accumulate_preview_photons:
+                                            self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
+                                        if not accumulate_preview_photons:
+                                            self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
+                                        if not accumulate_preview_photons:
+                                            self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
 
                                         np.add.at(
                                             self.image_xy_rgb[:, :, 0],
@@ -1092,9 +1105,12 @@ class BaseAcquisitionLoopProcess(mp.Process):
                                 if selected_channel.startswith("RGB2"):
                                     if self.activate_show_preview == True:
                                         self.image_xy_rgb_lock.acquire()
-                                        self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
-                                        self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
-                                        self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
+                                        if not accumulate_preview_photons:
+                                            self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
+                                        if not accumulate_preview_photons:
+                                            self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
+                                        if not accumulate_preview_photons:
+                                            self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
 
                                         if self.spad_channel_sum_buffer.shape[0] > 2:
                                             np.add.at(
@@ -1118,9 +1134,12 @@ class BaseAcquisitionLoopProcess(mp.Process):
                                         self.image_xy_rgb_lock.release()
                                 if selected_channel.startswith("RGB3"):
                                     self.image_xy_rgb_lock.acquire()
-                                    self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
-                                    self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
-                                    self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
                                     if self.spad_channel_sum_buffer.shape[0] > 2:
                                         np.add.at(
                                             self.image_xy_rgb[:, :, 0],
@@ -1144,9 +1163,12 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
                                 if selected_channel.startswith("RGBDFD"):
                                     self.image_xy_rgb_lock.acquire()
-                                    self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
-                                    self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
-                                    self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
 
                                     tparts = 3
                                     tbins = self.timebinsPerPixel
@@ -1194,9 +1216,12 @@ class BaseAcquisitionLoopProcess(mp.Process):
                                     gbins = max(tbins // tparts, 1)
 
                                     self.image_xy_rgb_lock.acquire()
-                                    self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
-                                    self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
-                                    self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy_rgb[list_y_digital, list_x_digital, 0] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy_rgb[list_y_digital, list_x_digital, 1] = 0
+                                    if not accumulate_preview_photons:
+                                        self.image_xy_rgb[list_y_digital, list_x_digital, 2] = 0
 
                                     cond0 = list_b_digital < gbins
                                     np.add.at(
@@ -1610,6 +1635,9 @@ class BaseAcquisitionLoopProcess(mp.Process):
         while not (self.stop_event.is_set() or self.thread_for_dict_stop.is_set()):
             # print(self.shared_dict_proxy)
             self.selected_channel = self.shared_dict["channel"]
+            self.accumulate_preview_photons = self.shared_dict.get(
+                "accumulate_preview_photons", False
+            )
             self.shared_dict.update(self.shared_dict_proxy)
             time.sleep(timeout)
             # print("updated")

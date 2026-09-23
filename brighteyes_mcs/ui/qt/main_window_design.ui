@@ -4030,7 +4030,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
           <x>0</x>
           <y>0</y>
           <width>478</width>
-          <height>122</height>
+          <height>132</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_68">
@@ -4150,15 +4150,33 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_6">
     <layout class="QGridLayout" name="gridLayout_14">
+     <property name="leftMargin">
+      <number>6</number>
+     </property>
+     <property name="topMargin">
+      <number>6</number>
+     </property>
+     <property name="rightMargin">
+      <number>6</number>
+     </property>
+     <property name="bottomMargin">
+      <number>6</number>
+     </property>
      <item row="4" column="0">
-      <layout class="QGridLayout" name="gridLayout_13">
-       <property name="sizeConstraint">
-        <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+      <layout class="QGridLayout" name="gridLayout_statistics" columnstretch="0,0,0,1">
+       <property name="horizontalSpacing">
+        <number>4</number>
        </property>
-       <item row="9" column="2" colspan="10">
+       <property name="verticalSpacing">
+        <number>3</number>
+       </property>
+       <property name="sizeConstraint">
+        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+       </property>
+       <item row="8" column="2" colspan="2">
         <widget class="QProgressBar" name="progressBar_repetition">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -4174,17 +4192,23 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
+       <item row="7" column="0">
         <widget class="QLabel" name="label_70">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Frame status</string>
          </property>
         </widget>
        </item>
-       <item row="9" column="1">
+       <item row="8" column="1">
         <widget class="QLabel" name="label_current_repetition_val">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -4197,37 +4221,39 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
+       <item row="2" column="0">
         <widget class="QLabel" name="label_expected_dur">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
-          <string>Frame Duration  [s]</string>
+          <string>Frame time [s]</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="9" column="0">
+       <item row="8" column="0">
         <widget class="QLabel" name="label_71">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Repetition status</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="9" colspan="3">
-        <widget class="QLabel" name="label_expected_dur_val">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="2" colspan="10">
+       <item row="4" column="1" colspan="3">
         <widget class="QProgressBar" name="progressBar_saving">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -4243,10 +4269,10 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="2" colspan="10">
+       <item row="5" column="1" colspan="3">
         <widget class="QProgressBar" name="progressBar_fifo_digital">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -4265,10 +4291,10 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="1">
+       <item row="7" column="1">
         <widget class="QLabel" name="label_current_frame_val">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -4281,10 +4307,10 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="2" colspan="10">
+       <item row="7" column="2" colspan="2">
         <widget class="QProgressBar" name="progressBar_frame">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -4300,37 +4326,23 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="9" colspan="3">
-        <widget class="QLabel" name="label_preview_delay">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="label_72">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Digital FIFO Queues</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="6" colspan="3">
-        <widget class="QLabel" name="label_current_time_3">
-         <property name="text">
-          <string>Expected Total Time [s]</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="2" colspan="10">
+       <item row="6" column="1" colspan="3">
         <widget class="QProgressBar" name="progressBar_fifo_analog">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -4346,34 +4358,36 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
         </widget>
        </item>
-       <item row="7" column="0">
+       <item row="6" column="0">
         <widget class="QLabel" name="label_85">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Analog FIFO Queues</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="label_87">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Saving Queues</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="6" colspan="3">
-        <widget class="QLabel" name="label_preview_delay_label">
-         <property name="text">
-          <string>Visualization delay [s]</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
+       <item row="0" column="0">
         <widget class="QLabel" name="label_tot_num_dat_point">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+          <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -4386,8 +4400,14 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="1" column="0">
         <widget class="QLabel" name="label_current_time">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Time [s]</string>
          </property>
@@ -4396,30 +4416,10 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1" colspan="3">
+       <item row="1" column="1">
         <widget class="QLabel" name="label_current_time_val">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1" colspan="3">
-        <widget class="QLabel" name="label_frame_time_val">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1" colspan="11">
-        <widget class="QLabel" name="label_tot_num_dat_point_val">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -4429,6 +4429,137 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="label_frame_time_val">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="3">
+        <widget class="QLabel" name="label_tot_num_dat_point_val">
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="label_current_time_3">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Total time</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_preview_delay_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Preview delay [s]</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_preview_delay">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLabel" name="label_expected_dur_val">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>00:00:00</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLabel" name="label_ETA">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>--</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLabel" name="label_ETA_2">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>ETA</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -6593,7 +6724,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
           <x>0</x>
           <y>0</y>
           <width>478</width>
-          <height>193</height>
+          <height>208</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -6664,7 +6795,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
           <x>0</x>
           <y>0</y>
           <width>478</width>
-          <height>88</height>
+          <height>95</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_65">
@@ -7010,117 +7141,202 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
      <property name="spacing">
       <number>4</number>
      </property>
-     <item row="2" column="0">
-      <widget class="QGroupBox" name="groupBox_ttm_saving">
-       <property name="title">
-        <string>Time tagging / MCS saving</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_ttm_saving">
-        <property name="spacing">
-         <number>4</number>
-        </property>
-        <property name="leftMargin">
-         <number>4</number>
-        </property>
-        <property name="topMargin">
-         <number>4</number>
-        </property>
-        <property name="rightMargin">
-         <number>4</number>
-        </property>
-        <property name="bottomMargin">
-         <number>4</number>
-        </property>
-        <item>
-         <widget class="QCheckBox" name="checkBox_noMcsSaveWithTtm">
-          <property name="toolTip">
-           <string>Run the scan without saving MCS HDF5 or RAW data when TTM, automatic uTTM, or PI23 TTM recording is enabled.</string>
+     <item row="0" column="0">
+      <layout class="QGridLayout" name="gridLayout_111">
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="title">
+          <string>Slave Mode</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_28">
+          <property name="leftMargin">
+           <number>4</number>
           </property>
-          <property name="text">
-           <string>Do not save MCS data
+          <property name="topMargin">
+           <number>4</number>
+          </property>
+          <property name="rightMargin">
+           <number>4</number>
+          </property>
+          <property name="bottomMargin">
+           <number>4</number>
+          </property>
+          <property name="spacing">
+           <number>4</number>
+          </property>
+          <item row="0" column="0" rowspan="2" colspan="2">
+           <widget class="QCheckBox" name="checkBox_slavemode_enable">
+            <property name="text">
+             <string>Activate</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QComboBox" name="comboBox_slavemode_type">
+            <property name="currentIndex">
+             <number>2</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>Circ. Pos.</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Circ. Rep.</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Pixel</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Line</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Frame</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Repetition</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_112">
+            <property name="text">
+             <string>Wait a trigger for:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_15">
+         <property name="title">
+          <string>DFD</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_78">
+          <property name="leftMargin">
+           <number>4</number>
+          </property>
+          <property name="topMargin">
+           <number>4</number>
+          </property>
+          <property name="rightMargin">
+           <number>4</number>
+          </property>
+          <property name="bottomMargin">
+           <number>4</number>
+          </property>
+          <property name="spacing">
+           <number>4</number>
+          </property>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="spinBox_DFD_nbins">
+            <property name="maximum">
+             <number>1023</number>
+            </property>
+            <property name="value">
+             <number>81</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Laser Ref. in CH26 (for DFD)</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_111">
+            <property name="text">
+             <string>DFD N. Bins</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_25">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Special</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_112">
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="checkBox_noMcsSaveWithTtm">
+            <property name="toolTip">
+             <string>Run the scan without saving MCS HDF5 or RAW data when TTM, automatic uTTM, or PI23 TTM recording is enabled.</string>
+            </property>
+            <property name="text">
+             <string>Do not save MCS data
 when TTM is active</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="checkBox_rawStreamAcquisition">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bypass preview, conversion, traces, autocorrelation, and H5 image datasets. FIFO payloads are streamed directly to raw files and metadata are saved in a small H5 file at the end.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>RAW acquisition (No preview)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="checkBox_accumulate_preview_photons">
+            <property name="toolTip">
+             <string>Accumulate SPAD preview photon counts across frames instead of resetting pixels on each update.</string>
+            </property>
+            <property name="text">
+             <string>Accumulate preview photons</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <spacer name="verticalSpacer_9">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
      </item>
-     <item row="1" column="0">
-      <widget class="QGroupBox" name="groupBox_8">
-       <property name="title">
-        <string>Slave Mode</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_28">
-        <property name="leftMargin">
-         <number>4</number>
-        </property>
-        <property name="topMargin">
-         <number>4</number>
-        </property>
-        <property name="rightMargin">
-         <number>4</number>
-        </property>
-        <property name="bottomMargin">
-         <number>4</number>
-        </property>
-        <property name="spacing">
-         <number>4</number>
-        </property>
-        <item row="0" column="0" rowspan="2" colspan="2">
-         <widget class="QCheckBox" name="checkBox_slavemode_enable">
-          <property name="text">
-           <string>Activate</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QComboBox" name="comboBox_slavemode_type">
-          <property name="currentIndex">
-           <number>2</number>
-          </property>
-          <item>
-           <property name="text">
-            <string>Circ. Pos.</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Circ. Rep.</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Pixel</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Line</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Frame</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Repetition</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_112">
-          <property name="text">
-           <string>Wait a trigger for:</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="3" column="0">
+     <item row="4" column="0">
       <spacer name="verticalSpacer_18">
        <property name="orientation">
         <enum>Qt::Orientation::Vertical</enum>
@@ -7132,70 +7348,6 @@ when TTM is active</string>
         </size>
        </property>
       </spacer>
-     </item>
-     <item row="0" column="0">
-      <widget class="QGroupBox" name="groupBox_15">
-       <property name="title">
-        <string>DFD</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_78">
-        <property name="leftMargin">
-         <number>4</number>
-        </property>
-        <property name="topMargin">
-         <number>4</number>
-        </property>
-        <property name="rightMargin">
-         <number>4</number>
-        </property>
-        <property name="bottomMargin">
-         <number>4</number>
-        </property>
-        <property name="spacing">
-         <number>4</number>
-        </property>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_111">
-          <property name="text">
-           <string>DFD N. Bins</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QSpinBox" name="spinBox_DFD_nbins">
-          <property name="maximum">
-           <number>1023</number>
-          </property>
-          <property name="value">
-           <number>81</number>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0" colspan="2">
-         <widget class="QCheckBox" name="checkBox_DFD_LaserDebug">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The laser clock is internally to the FPGA send also to channel 26. This must be activated to perform a proper time reallignment of the DFD histogram.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Laser Ref. in CH26 (for DFD)</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0" colspan="2">
-         <widget class="QCheckBox" name="checkBox_rawStreamAcquisition">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bypass preview, conversion, traces, autocorrelation, and H5 image datasets. FIFO payloads are streamed directly to raw files and metadata are saved in a small H5 file at the end.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>RAW acquisition (No preview)</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
      </item>
     </layout>
    </widget>
@@ -7411,8 +7563,8 @@ when TTM is active</string>
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>433</width>
-          <height>76</height>
+          <width>445</width>
+          <height>87</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_74">
