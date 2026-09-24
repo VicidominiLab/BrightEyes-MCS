@@ -73,13 +73,13 @@ dev = [
     "mypy>=1.11",
     "pytest>=8",
     "pytest-cov>=5",
-    "ruff>=0.6",
+    "ruff==0.16.2",
     "twine>=6",
 ]
 
 [project.urls]
 Homepage = "https://github.com/VicidominiLab/BrightEyes-MCS"
-Documentation = "https://github.com/VicidominiLab/BrightEyes-MCS/wiki"
+Documentation = "https://github.com/VicidominiLab/BrightEyes-MCS/blob/HEAD/docs/README.md"
 Repository = "https://github.com/VicidominiLab/BrightEyes-MCS.git"
 Issues = "https://github.com/VicidominiLab/BrightEyes-MCS/issues"
 

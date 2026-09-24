@@ -31,3 +31,21 @@ jobs:
         run: python -m unittest test.test_channel_delay_skew_plugin -v
       - name: Compile package
         run: python -m compileall -q brighteyes_mcs scripts
+      - name: Check documentation and lint baseline
+        if: matrix.python-version == '3.12'
+        run: |
+          python scripts/check_docs.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/check_lint.py
+
+  external-links:
+    name: External documentation links (advisory)
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Report external link failures
+        run: python scripts/check_docs.py --external

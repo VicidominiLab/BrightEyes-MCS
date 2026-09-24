@@ -16,6 +16,81 @@ from brighteyes_mcs.ui.qt.flim_image_view import (
 
 class TestMyClass(unittest.TestCase):
 
+    def test_idle_eta_tracks_clock_and_configuration(self):
+        from datetime import datetime
+
+        label = MagicMock()
+        instance = SimpleNamespace(
+            started_normal=False,
+            started_preview=False,
+            _expected_duration_seconds=20,
+            ui=SimpleNamespace(label_ETA=label),
+        )
+        with patch("brighteyes_mcs.ui.qt.main_window.datetime") as clock:
+            clock.now.return_value = datetime(2026, 9, 24, 23, 59, 50)
+            MainWindow.update_idle_eta(instance)
+            label.setText.assert_called_with("26/09/25 00:00:10")
+            clock.now.return_value = datetime(2026, 9, 24, 23, 59, 51)
+            MainWindow.update_idle_eta(instance)
+            label.setText.assert_called_with("26/09/25 00:00:11")
+            instance._expected_duration_seconds = 60
+            MainWindow.update_idle_eta(instance)
+            label.setText.assert_called_with("26/09/25 00:00:51")
+
+    def test_idle_eta_does_not_overwrite_preview_or_acquisition(self):
+        for acquiring, previewing in ((True, False), (False, True)):
+            with self.subTest(acquiring=acquiring, previewing=previewing):
+                label = MagicMock()
+                instance = SimpleNamespace(
+                    started_normal=acquiring,
+                    started_preview=previewing,
+                    _expected_duration_seconds=20,
+                    ui=SimpleNamespace(label_ETA=label),
+                )
+                MainWindow.update_idle_eta(instance)
+                label.setText.assert_not_called()
+
+    def test_configuration_without_arguments_still_emits_loaded(self):
+        instance = SimpleNamespace(plugin_signals=SimpleNamespace(signal=MagicMock()))
+        MainWindow.setGUI_data(instance)
+        MainWindow.setGUI_data(instance)
+        self.assertEqual(instance.plugin_signals.signal.emit.call_count, 2)
+        instance.plugin_signals.signal.emit.assert_called_with("configurationLoaded")
+
+    def test_configuration_text_accessors_keep_widget_fallbacks(self):
+        widget = SimpleNamespace(text=lambda: "scan")
+        instance = SimpleNamespace(configuration_helper={
+            "name": ("Name", str, widget, True),
+        })
+        self.assertEqual(MainWindow.getGUI_data(instance), {"name": "scan"})
+
+    def test_failed_laser_preview_does_not_use_an_undefined_response(self):
+        import requests
+
+        ui = MagicMock()
+        ui.lineEdit_uttm_addr.text.return_value = "localhost:8000"
+        instance = SimpleNamespace(ui=ui)
+        with patch("brighteyes_mcs.ui.qt.main_window.pg.PlotWidget"), patch(
+            "brighteyes_mcs.ui.qt.main_window.requests.get",
+            side_effect=requests.ConnectionError("offline"),
+        ):
+            MainWindow.pushButton_uttm_check_laser_clicked(instance)
+        ui.label_uttm_laser_freq.setText.assert_not_called()
+
+    def test_failed_fingerprint_analysis_keeps_previous_statistics(self):
+        import numpy as np
+
+        instance = SimpleNamespace(
+            fingerprint_markers_centroid=MagicMock(),
+            ui=SimpleNamespace(label_dummy=MagicMock()),
+        )
+        with patch(
+            "brighteyes_mcs.ui.qt.main_window.np.linalg.eig",
+            side_effect=np.linalg.LinAlgError("no convergence"),
+        ):
+            MainWindow.microimage_analysis(instance, np.ones((5, 5)))
+        instance.ui.label_dummy.setText.assert_not_called()
+
     def test_auxiliary_position_updates_selected_analog_outputs(self):
         class ValueControl:
             def __init__(self, value):

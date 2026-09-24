@@ -1,11 +1,8 @@
 # BrightEyes-MCS: current architecture and repository map
 
-> Snapshot: **12 August 2026**, BrightEyes-MCS **1.1.1**. This document describes
-> the current working tree, including modifications that are not yet committed.
-> It is a map of what exists now, not a proposal for a future rewrite.
-
-Repository map, RAW conversion instructions, and dependency-file guidance
-updated on **23 September 2026**; the remaining architecture snapshot is dated above.
+This guide describes the implementation in this checkout. For dependency rules
+and compatibility requirements, see [refactoring boundaries](refactoring-architecture.md).
+For setup, validation, and UI generation commands, see [Contributing](../CONTRIBUTING.md).
 
 ## One-page view
 
@@ -61,7 +58,7 @@ BrightEyes-MCS/
 │   ├── storage/             HDF5, RAW, legacy config and name translation
 │   ├── api/                 FastAPI/HTTP control surface
 │   ├── ui/
-│   │   ├── controllers/     Small extracted UI-independent behaviors
+│   │   ├── controllers/     Extracted UI-independent behaviors
 │   │   └── qt/              Main window, widgets, generated Designer code
 │   ├── plugins/             Plug-in API, template and built-in plug-ins
 │   ├── scripts/             Bundled ScriptLauncher analysis/calibration scripts
@@ -92,7 +89,7 @@ installed application package.
 | `hardware` | Hardware-facing NI-FPGA and TTM adapters | [`fpga.py`](../brighteyes_mcs/hardware/fpga.py), [`ttm.py`](../brighteyes_mcs/hardware/ttm.py) |
 | `storage` | Stable serialized formats and their legacy translations | [`h5.py`](../brighteyes_mcs/storage/h5.py), [`h5_schema.py`](../brighteyes_mcs/storage/h5_schema.py), [`legacy_config.py`](../brighteyes_mcs/storage/legacy_config.py), [`converters/`](../brighteyes_mcs/storage/converters) |
 | `api` | HTTP status, command, configuration and image endpoints | [`rest.py`](../brighteyes_mcs/api/rest.py) |
-| `ui/controllers` | Extracted configuration, lifecycle projection and preview selection | [`controllers/`](../brighteyes_mcs/ui/controllers) |
+| `ui/controllers` | Extracted configuration, lifecycle projection, preview selection, and statistics | [`controllers/`](../brighteyes_mcs/ui/controllers) |
 | `ui/qt` | Qt widgets and the current GUI composition root | [`main_window.py`](../brighteyes_mcs/ui/qt/main_window.py), [`main_window_design.ui`](../brighteyes_mcs/ui/qt/main_window_design.ui), [`flim_image_view.py`](../brighteyes_mcs/ui/qt/flim_image_view.py) |
 | `plugins` | Small public plug-in API and built-in feature packages | [`api.py`](../brighteyes_mcs/plugins/api.py), [`builtin/`](../brighteyes_mcs/plugins/builtin), [`_template/`](../brighteyes_mcs/plugins/_template) |
 | `logging_setup.py` | Process-wide standard-library logging setup | [`logging_setup.py`](../brighteyes_mcs/logging_setup.py) |
@@ -481,7 +478,7 @@ and RAW acquisition, stop/reconnect, HDF5 conversion, TTM, plug-ins and REST.
 
 ### Still transitional
 
-- `MainWindow` is still about 7,000 lines and owns many service, hardware,
+- `MainWindow` remains large and owns many service, hardware,
   configuration, rendering and finalization details.
 - `McsManager` is still a large mutable legacy backend, with newer coordinator,
   storage, process and detector abstractions embedded inside it.
@@ -511,6 +508,10 @@ and RAW acquisition, stop/reconnect, HDF5 conversion, TTM, plug-ins and REST.
 | One built-in plug-in | only its package under `plugins/builtin/` where possible |
 | Qt layout | edit `main_window_design.ui`, regenerate `main_window_design.py` |
 | Distribution/dependencies | `pyproject.toml`; `requirements.txt` installs the local project and its declared dependencies |
+
+The statistics controller owns scan-duration and ETA calculations; Qt timers and
+labels remain in `MainWindow`. See [Statistics and ETA](statistics.md) for display
+formats, update timing, and estimation limits.
 
 ## Related documentation
 

@@ -1,0 +1,2423 @@
+[
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/fifo.py",
+      "F841",
+      "Local variable `e` is assigned to but never used",
+      "except KeyError as e:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/manager.py",
+      "E711",
+      "Comparison to `None` should be `cond is None`",
+      "if fifo_name==None:"
+    ],
+    "count": 3
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/manager.py",
+      "E722",
+      "Do not use bare `except`",
+      "except:"
+    ],
+    "count": 3
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/memory/shared_array.py",
+      "F401",
+      "`multiprocessing.Array` imported but unused",
+      "from multiprocessing import shared_memory, Lock, Array"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/memory/shared_array.py",
+      "F811",
+      "Redefinition of unused `uuid` from line 6: `uuid` redefined here",
+      "import uuid"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...storage.h5 import H5ManagerProcessClient"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E402",
+      "Module level import not at top of file",
+      "from brighteyes_mcs.logging_setup import logger, set_debug"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E402",
+      "Module level import not at top of file",
+      "from numpy import sqrt"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E402",
+      "Module level import not at top of file",
+      "import numpy as np"
+    ],
+    "count": 2
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E402",
+      "Module level import not at top of file",
+      "import psutil"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E701",
+      "Multiple statements on one line (colon)",
+      "if VIZTRACER_ON: from viztracer import VizTracer"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E701",
+      "Multiple statements on one line (colon)",
+      "if VIZTRACER_ON: self.tracer = VizTracer(log_func_with_objprint=True)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E701",
+      "Multiple statements on one line (colon)",
+      "if VIZTRACER_ON: self.tracer.save()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E701",
+      "Multiple statements on one line (colon)",
+      "if VIZTRACER_ON: self.tracer.start()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E701",
+      "Multiple statements on one line (colon)",
+      "if VIZTRACER_ON: self.tracer.stop()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E712",
+      "Avoid equality comparisons to `True`; use `self.activate_show_preview:` for truth checks",
+      "if (self.activate_show_preview == True):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E712",
+      "Avoid equality comparisons to `True`; use `self.activate_show_preview:` for truth checks",
+      "if self.activate_show_preview == True:"
+    ],
+    "count": 4
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E722",
+      "Do not use bare `except`",
+      "except:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "def lch_to_srgb(l, c, h):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "h, c, l = flim_map_to_hcl("
+    ],
+    "count": 2
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "l = brightness.astype(float)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "F811",
+      "Redefinition of unused `np` from line 13: `np` redefined here",
+      "import numpy as np"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/acquisition_loop.py",
+      "F841",
+      "Local variable `e` is assigned to but never used",
+      "except Exception as e:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/detectors/pi23/raw_writer.py",
+      "F401",
+      "`numpy` imported but unused",
+      "import numpy as np"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/detectors/spad/preprocessor.py",
+      "E713",
+      "Test for membership should be `not in`",
+      "if not (fifo_name in pre_buffer_list):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/detectors/spad/preprocessor.py",
+      "F401",
+      "`psutil` imported but unused",
+      "import psutil"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/detectors/spad/raw_writer.py",
+      "F401",
+      "`time` imported but unused",
+      "import time"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "E401",
+      "Multiple imports on one line",
+      "import os, psutil"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "E712",
+      "Avoid equality comparisons to `False`; use `not self.use_rust_fifo:` for false checks",
+      "if self.use_rust_fifo == False:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "E712",
+      "Avoid equality comparisons to `True`; use `self.use_rust_fifo:` for truth checks",
+      "elif self.use_rust_fifo == True:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "E712",
+      "Avoid equality comparisons to `True`; use `self.use_rust_fifo:` for truth checks",
+      "return self._uses_nifpga_fifo() and self.use_rust_fifo == True"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "E722",
+      "Do not use bare `except`",
+      "except:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "F401",
+      "`time.sleep` imported but unused",
+      "from time import perf_counter_ns, sleep"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "F811",
+      "Redefinition of unused `loop_fifoReadContinously` from line 228: `loop_fifoReadContinously` redefined here",
+      "def loop_fifoReadContinously(self):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "W291",
+      "Trailing whitespace",
+      "self.fpgarunning.clear()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "W291",
+      "Trailing whitespace",
+      "self.rust_reader_ready.wait()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/acquisition/workers/fpga.py",
+      "W293",
+      "Blank line contains whitespace",
+      ""
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/api/rest.py",
+      "B008",
+      "Do not perform function call `File` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+      "async def receive_array(file: UploadFile = File(...), shape: str = \"\", dtype: str = \"float64\"):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/api/rest.py",
+      "B904",
+      "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+      "raise HTTPException(status_code=400, detail=str(e))"
+    ],
+    "count": 2
+  },
+  {
+    "key": [
+      "brighteyes_mcs/api/rest.py",
+      "B904",
+      "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+      "raise HTTPException(status_code=500, detail=str(e))"
+    ],
+    "count": 4
+  },
+  {
+    "key": [
+      "brighteyes_mcs/api/rest.py",
+      "F811",
+      "Redefinition of unused `send_array` from line 352: `send_array` redefined here",
+      "async def send_array():"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/api/rest.py",
+      "F811",
+      "Redefinition of unused `send_array` from line 376: `send_array` redefined here",
+      "async def send_array():"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/api/rest.py",
+      "F811",
+      "Redefinition of unused `send_array` from line 398: `send_array` redefined here",
+      "async def send_array():"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/hardware/fpga.py",
+      "B006",
+      "Do not use mutable data structures for argument defaults",
+      "self, list_fifos_to_read_continously=[\"stream_out_main\"]"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/hardware/fpga.py",
+      "B016",
+      "Cannot raise a literal. Did you intend to return it or raise an Exception?",
+      "raise(\"FPGA2 NOT STARTED\")"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/hardware/fpga.py",
+      "E722",
+      "Do not use bare `except`",
+      "except:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/hardware/fpga.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "l = list(ret.keys())"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/hardware/fpga.py",
+      "F401",
+      "`multiprocessing` imported but unused",
+      "import multiprocessing as mp"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/hardware/fpga.py",
+      "F401",
+      "`time` imported but unused",
+      "import time"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/hardware/ttm.py",
+      "F841",
+      "Local variable `error` is assigned to but never used",
+      "except socket.error as error:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/ao_system/cobolt_ctl.py",
+      "F821",
+      "Undefined name `com`",
+      "s = serial.Serial(com=com, baudrate=115200, timeout=1.0)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/ao_system/plugin.py",
+      "F401",
+      "`.cobolt_ctl.turn_off_laser` imported but unused",
+      "from .cobolt_ctl import turn_on_laser, turn_off_laser"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/channel_delay_skew/channel_delay_skew_extractor.py",
+      "W293",
+      "Blank line contains whitespace",
+      ""
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/channel_delay_skew/channel_delay_skew_widget.py",
+      "W293",
+      "Blank line contains whitespace",
+      ""
+    ],
+    "count": 4
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/dfd/dfd_widget.py",
+      "E712",
+      "Avoid equality comparisons to `True`; use `params[\"invertColormap\"]:` for truth checks",
+      "if params[\"invertColormap\"] == True:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/dfd/dfd_widget.py",
+      "E722",
+      "Do not use bare `except`",
+      "except:"
+    ],
+    "count": 4
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QDateTime` imported but unused",
+      "from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QDate` imported but unused",
+      "from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QLocale` imported but unused",
+      "from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QObject` imported but unused",
+      "QMetaObject, QObject, QPoint, QRect,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QPoint` imported but unused",
+      "QMetaObject, QObject, QPoint, QRect,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QRect` imported but unused",
+      "QMetaObject, QObject, QPoint, QRect,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QSize` imported but unused",
+      "QSize, QTime, QUrl, Qt)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QTime` imported but unused",
+      "QSize, QTime, QUrl, Qt)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QUrl` imported but unused",
+      "QSize, QTime, QUrl, Qt)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.Qt` imported but unused",
+      "QSize, QTime, QUrl, Qt)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QBrush` imported but unused",
+      "from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QColor` imported but unused",
+      "from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QConicalGradient` imported but unused",
+      "from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QCursor` imported but unused",
+      "from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QFontDatabase` imported but unused",
+      "QFont, QFontDatabase, QGradient, QIcon,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QFont` imported but unused",
+      "QFont, QFontDatabase, QGradient, QIcon,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QGradient` imported but unused",
+      "QFont, QFontDatabase, QGradient, QIcon,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QIcon` imported but unused",
+      "QFont, QFontDatabase, QGradient, QIcon,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QImage` imported but unused",
+      "QImage, QKeySequence, QLinearGradient, QPainter,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QKeySequence` imported but unused",
+      "QImage, QKeySequence, QLinearGradient, QPainter,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QLinearGradient` imported but unused",
+      "QImage, QKeySequence, QLinearGradient, QPainter,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QPainter` imported but unused",
+      "QImage, QKeySequence, QLinearGradient, QPainter,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QPalette` imported but unused",
+      "QPalette, QPixmap, QRadialGradient, QTransform)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QPixmap` imported but unused",
+      "QPalette, QPixmap, QRadialGradient, QTransform)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QRadialGradient` imported but unused",
+      "QPalette, QPixmap, QRadialGradient, QTransform)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QTransform` imported but unused",
+      "QPalette, QPixmap, QRadialGradient, QTransform)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtWidgets.QApplication` imported but unused",
+      "from PySide6.QtWidgets import (QApplication, QGridLayout, QListView, QPushButton,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtWidgets.QSizePolicy` imported but unused",
+      "QSizePolicy, QWidget)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/myplugin/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtWidgets.QWidget` imported but unused",
+      "QSizePolicy, QWidget)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QDateTime` imported but unused",
+      "from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QDate` imported but unused",
+      "from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QLocale` imported but unused",
+      "from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QObject` imported but unused",
+      "QMetaObject, QObject, QPoint, QRect,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QPoint` imported but unused",
+      "QMetaObject, QObject, QPoint, QRect,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QRect` imported but unused",
+      "QMetaObject, QObject, QPoint, QRect,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QSize` imported but unused",
+      "QSize, QTime, QUrl, Qt)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QTime` imported but unused",
+      "QSize, QTime, QUrl, Qt)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.QUrl` imported but unused",
+      "QSize, QTime, QUrl, Qt)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtCore.Qt` imported but unused",
+      "QSize, QTime, QUrl, Qt)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QBrush` imported but unused",
+      "from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QColor` imported but unused",
+      "from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QConicalGradient` imported but unused",
+      "from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QCursor` imported but unused",
+      "from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QFontDatabase` imported but unused",
+      "QFont, QFontDatabase, QGradient, QIcon,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QFont` imported but unused",
+      "QFont, QFontDatabase, QGradient, QIcon,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QGradient` imported but unused",
+      "QFont, QFontDatabase, QGradient, QIcon,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QIcon` imported but unused",
+      "QFont, QFontDatabase, QGradient, QIcon,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QImage` imported but unused",
+      "QImage, QKeySequence, QLinearGradient, QPainter,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QKeySequence` imported but unused",
+      "QImage, QKeySequence, QLinearGradient, QPainter,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QLinearGradient` imported but unused",
+      "QImage, QKeySequence, QLinearGradient, QPainter,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QPainter` imported but unused",
+      "QImage, QKeySequence, QLinearGradient, QPainter,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QPalette` imported but unused",
+      "QPalette, QPixmap, QRadialGradient, QTransform)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QPixmap` imported but unused",
+      "QPalette, QPixmap, QRadialGradient, QTransform)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QRadialGradient` imported but unused",
+      "QPalette, QPixmap, QRadialGradient, QTransform)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtGui.QTransform` imported but unused",
+      "QPalette, QPixmap, QRadialGradient, QTransform)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtWidgets.QApplication` imported but unused",
+      "from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QGridLayout,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtWidgets.QSizePolicy` imported but unused",
+      "QLabel, QLineEdit, QPushButton, QSizePolicy,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/plugins/builtin/script_launcher/gui/plugin_gui.py",
+      "F401",
+      "`PySide6.QtWidgets.QWidget` imported but unused",
+      "QWidget)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`h5py` imported but unused",
+      "import h5py"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`mpl_toolkits.mplot3d.axes3d` imported but unused",
+      "from mpl_toolkits.mplot3d import axes3d"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.FCS.FCS2Corr.FCSCrossCenterAv` imported but unused",
+      "FCSCrossCenterAv,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.FCS.FCS2Corr.FCSSpatialCorrAv` imported but unused",
+      "FCSSpatialCorrAv,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.FCS.FCSLoadG.FCSLoadG` imported but unused",
+      "from spad_ffs_eli.FCS.FCSLoadG import FCSLoadG"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.FCS.FCSfit.FCSfitDualFocus` imported but unused",
+      "from spad_ffs_eli.FCS.FCSfit import FCSfit, G2globalFitStruct, FCSfitDualFocus"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.FCS.FCSfit.G2globalFitStruct` imported but unused",
+      "from spad_ffs_eli.FCS.FCSfit import FCSfit, G2globalFitStruct, FCSfitDualFocus"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.FCS.binFile2Data.binFile2Data` imported but unused",
+      "from spad_ffs_eli.FCS.binFile2Data import binFile2Data"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.FCS.plotAiry.plotAiry` imported but unused",
+      "from spad_ffs_eli.FCS.plotAiry import plotAiry"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.FCS.plotIntensityTraces.plotIntensityTraces` imported but unused",
+      "from spad_ffs_eli.FCS.plotIntensityTraces import plotIntensityTraces"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.Tools.findNearest.findNearest` imported but unused",
+      "from spad_ffs_eli.Tools.findNearest import findNearest"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.Tools.fitGauss2D.fitGauss2D` imported but unused",
+      "from spad_ffs_eli.Tools.fitGauss2D import fitGauss2D"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F401",
+      "`spad_ffs_eli.Tools.np2hdf5.hdf5Read` imported but unused",
+      "from spad_ffs_eli.Tools.np2hdf5 import hdf5Read"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/ffs_analysis_script.py",
+      "F821",
+      "Undefined name `filename`",
+      "fname = filename"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/grid_calibration.py",
+      "B016",
+      "Cannot raise a literal. Did you intend to return it or raise an Exception?",
+      "raise (\"filename missing\")"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/grid_calibration.py",
+      "E402",
+      "Module level import not at top of file",
+      "from skimage.feature import peak_local_max"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/grid_calibration.py",
+      "F401",
+      "`os` imported but unused",
+      "import os"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/grid_calibration.py",
+      "F821",
+      "Undefined name `filename`",
+      "data = h5py.File(filename)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/grid_calibration.py",
+      "F821",
+      "Undefined name `filename`",
+      "if filename is None:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/shift_vectors.py",
+      "E722",
+      "Do not use bare `except`",
+      "except:"
+    ],
+    "count": 2
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/shift_vectors.py",
+      "F401",
+      "`numpy` imported but unused",
+      "import numpy as np"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/shift_vectors.py",
+      "F401",
+      "`os` imported but unused",
+      "import os"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/shift_vectors.py",
+      "F821",
+      "Undefined name `filename`",
+      "data, meta = mcs.load(filename)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/shift_vectors.py",
+      "F821",
+      "Undefined name `filename`",
+      "print(\"Calculating shift-vector \", filename)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/shift_vectors.py",
+      "F821",
+      "Undefined name `main_window`",
+      "main_window.script_plot_fingerprint(fingerprint)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/scripts/shift_vectors.py",
+      "F821",
+      "Undefined name `main_window`",
+      "main_window.script_plot_shiftvector(sv)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/storage/h5.py",
+      "E713",
+      "Test for membership should be `not in`",
+      "if not (group_name in self.h5file.keys()):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/storage/h5.py",
+      "E722",
+      "Do not use bare `except`",
+      "except:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/__init__.py",
+      "E402",
+      "Module level import not at top of file",
+      "from .main_window import MainWindow"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/__init__.py",
+      "F401",
+      "`.main_window.MainWindow` imported but unused; consider removing, adding to `__all__`, or using a redundant alias",
+      "from .main_window import MainWindow"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/dict_to_tree.py",
+      "B008",
+      "Do not perform function call `QModelIndex` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+      "def columnCount(self, index=QModelIndex()):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/dict_to_tree.py",
+      "B008",
+      "Do not perform function call `QModelIndex` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+      "def index(self, row, column, index=QModelIndex()):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/dict_to_tree.py",
+      "B008",
+      "Do not perform function call `QModelIndex` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+      "def recurse(parent_index=QModelIndex()):"
+    ],
+    "count": 2
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/dict_to_tree.py",
+      "B008",
+      "Do not perform function call `QModelIndex` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable",
+      "def rowCount(self, index=QModelIndex()):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/flim_image_view.py",
+      "B007",
+      "Loop control variable `idx` not used within loop body",
+      "for idx, key in enumerate((\"H\", \"C\", \"L\")):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/flim_image_view.py",
+      "B905",
+      "`zip()` without an explicit `strict=` parameter",
+      "axis.setTicks([list(zip(tick_values, tick_labels))])"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/flim_image_view.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "def hsl_to_rgb(h, s, l):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/flim_image_view.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "def lch_to_srgb(l, c, h):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/flim_image_view.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "def set_flim_data(self, h, c, l, valid=None, h_display_max=None):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/flim_image_view.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "l = np.clip(np.asarray(l, dtype=float), 0.0, 1.0)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/flim_image_view.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "l = np.zeros_like(l_raw, dtype=float)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/flim_image_view.py",
+      "F841",
+      "Local variable `base_row` is assigned to but never used",
+      "base_row = 4"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "B007",
+      "Loop control variable `n` not used within loop body",
+      "for n, k in enumerate(self.markers_list):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "B905",
+      "`zip()` without an explicit `strict=` parameter",
+      "for axis, delta in zip(axes, (horizontal_delta, vertical_delta)):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "B905",
+      "`zip()` without an explicit `strict=` parameter",
+      "for label, value in zip("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "B905",
+      "`zip()` without an explicit `strict=` parameter",
+      "for offset, calibration in zip(offsets_um, calibrations)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "B905",
+      "`zip()` without an explicit `strict=` parameter",
+      "for offset, calibration, extra_offset in zip(offsets_um, calibrations, offset_extra_V)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E401",
+      "Multiple imports on one line",
+      "import os, sys"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...acquisition.detectors.models import ("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...acquisition.manager import McsManager"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...api import FastAPIServerThread"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...application.paths import ("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...application.plugin_service import PluginManager"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...hardware.ttm import TtmRemoteManager"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...storage.h5 import H5Manager"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...storage.h5_schema import legacy_gui_metadata, legacy_raw_stream_metadata"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...storage.legacy_config import LegacyConfigurationCodec, NumpyJSONEncoder"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...storage.legacy_names import LEGACY_H5_REGISTER_NAME_MAP"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ...storage.raw import convert_raw_acquisition, metadata_filename, raw_output_files"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ..controllers import ConfigurationController, LifecycleController, PreviewController"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from ..table_manager import TableManager"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from .console_widget import ConsoleWidget"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from .dict_to_tree import TreeModel"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from .flim_image_view import FlimImageView, ModifierGatedViewBox"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from .graphics_shutdown import disable_viewbox_item_change_callbacks"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from .qt_locale import install_scientific_locale"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from .support import DoubleClickDoubleSpinBox, PluginSignals, RectROIWithoutHandles"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from .system_profile_dialog import SystemProfileDialog"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from brighteyes_mcs.logging_setup import logger"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "from pathlib import Path"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import h5py"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import json"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import numpy as np"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import os, sys"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import psutil"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import pyqtgraph as pg"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import requests"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import socket"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import time"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E402",
+      "Module level import not at top of file",
+      "import traceback"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E712",
+      "Avoid equality comparisons to `False`; use `not self.lockspatialSettingsChanged:` for false checks",
+      "if self.lockspatialSettingsChanged == False:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E712",
+      "Avoid equality comparisons to `True`; use `self.guiReadyFlag:` for truth checks",
+      "if self.guiReadyFlag == True:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E712",
+      "Avoid equality comparisons to `True`; use `self.init_ready:` for truth checks",
+      "if self.init_ready == True:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E712",
+      "Avoid equality comparisons to `True`; use `self.mcs_manager.is_connected:` for truth checks",
+      "if self.mcs_manager.is_connected == True:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E712",
+      "Avoid equality comparisons to `True`; use `self.ui.checkBox_AnalogOut[ch].isChecked():` for truth checks",
+      "if self.ui.checkBox_AnalogOut[ch].isChecked() == True:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E713",
+      "Test for membership should be `not in`",
+      "if not \".h5\" in filename:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E713",
+      "Test for membership should be `not in`",
+      "if not (\"analog\" in (self.ui.comboBox_plot_channel.currentText().lower())) and ("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "E741",
+      "Ambiguous variable name: `l`",
+      "l = self.plugin_manager.available_plugins()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `Cx` is assigned to but never used",
+      "Cx = time_res * self.clock_base"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `calib_xx` is assigned to but never used",
+      "calib_xx = self.ui.spinBox_calib_x.value()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `calib_yy` is assigned to but never used",
+      "calib_yy = self.ui.spinBox_calib_y.value()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `calib_zz` is assigned to but never used",
+      "calib_zz = self.ui.spinBox_calib_z.value()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `calibration_v_step` is assigned to but never used",
+      "calibration_v_step = ("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `clock_duration` is assigned to but never used",
+      "clock_duration = time_bin * time_res * self.clock_base/2"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `fff` is assigned to but never used",
+      "fff = a()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `frames` is assigned to but never used",
+      "frames = self.ui.spinBox_nframe.value()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `invert_sdata` is assigned to but never used",
+      "invert_sdata = (self.ui.checkBox_spad_invert.isChecked(),)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `laserEnable0` is assigned to but never used",
+      "laserEnable0 = self.ui.checkBox_laser0.isChecked()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `laserEnable1` is assigned to but never used",
+      "laserEnable1 = self.ui.checkBox_laser1.isChecked()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `laserEnable2` is assigned to but never used",
+      "laserEnable2 = self.ui.checkBox_laser2.isChecked()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `laserEnable3` is assigned to but never used",
+      "laserEnable3 = self.ui.checkBox_laser3.isChecked()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `mouse_point` is assigned to but never used",
+      "mouse_point = mouse_event.pos()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `numbers_repetition` is assigned to but never used",
+      "numbers_repetition = self.ui.spinBox_nrepetition.value()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `offset_xx_um` is assigned to but never used",
+      "offset_xx_um = self.ui.spinBox_off_x_um.value()"
+    ],
+    "count": 4
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `offset_yy_um` is assigned to but never used",
+      "offset_yy_um = self.ui.spinBox_off_y_um.value()"
+    ],
+    "count": 4
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `offset_zz_um` is assigned to but never used",
+      "offset_zz_um = self.ui.spinBox_off_z_um.value()"
+    ],
+    "count": 4
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `projection` is assigned to but never used",
+      "projection = self.ui.comboBox_view_projection.currentText()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `repetition` is assigned to but never used",
+      "repetition = self.ui.spinBox_nrepetition.value()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `sel` is assigned to but never used",
+      "sel = []"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `selected_end_level` is assigned to but never used",
+      "selected_end_level = candidate_end_level"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `start_offset` is assigned to but never used",
+      "start_offset = np.asarray("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "F841",
+      "Local variable `y_end` is assigned to but never used",
+      "y_end = y_end_candidate"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "\"\"\"BrightEyes-MCS (Version: %s)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "Author: Mattia Donato"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "In the current namespace to the following objects:"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "License: General Public License version 3 (GPL v3)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "QToolTip {"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "This program comes with ABSOLUTELY NO WARRANTY."
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "background-color: black;"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "color: white;"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "label.setText(f\"{value:.6f}\")"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "return self._offset_volts()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "self.tabifyDockWidget(self.ui.dockWidget_pos, self.ui.dockWidget_pos_aux)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W291",
+      "Trailing whitespace",
+      "self.ui.lineEdit_configurationfile.setText(default_cfg)"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/main_window.py",
+      "W293",
+      "Blank line contains whitespace",
+      ""
+    ],
+    "count": 6
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/ttm_widget.py",
+      "F401",
+      "`PySide6.QtCore.QAbstractTableModel` imported but unused",
+      "from PySide6.QtCore import Slot, Qt, QAbstractTableModel  # , QUrl, QObject,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/ttm_widget.py",
+      "F401",
+      "`PySide6.QtCore.Qt` imported but unused",
+      "from PySide6.QtCore import Slot, Qt, QAbstractTableModel  # , QUrl, QObject,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/ttm_widget.py",
+      "F401",
+      "`PySide6.QtGui.QFont` imported but unused",
+      "from PySide6.QtGui import QFont"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/ttm_widget.py",
+      "F401",
+      "`PySide6.QtWidgets.QFileDialog` imported but unused",
+      "QFileDialog,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/ttm_widget.py",
+      "F401",
+      "`matplotlib.pyplot` imported but unused",
+      "import matplotlib.pyplot as plt"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/qt/ttm_widget.py",
+      "F841",
+      "Local variable `order_channels` is assigned to but never used",
+      "order_channels = {}"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `caption` not used within loop body",
+      "for n, (name, (caption, mtype, obj, visible)) in enumerate("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `default` not used within loop body",
+      "for n, (i, mtype, default) in enumerate(self.table_footer):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `default` not used within loop body",
+      "for n, (i, mtype, default) in enumerate(self.table_header):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `mtype` not used within loop body",
+      "for n, (i, mtype, default) in enumerate(self.table_footer):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `mtype` not used within loop body",
+      "for n, (i, mtype, default) in enumerate(self.table_header):"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `mtype` not used within loop body",
+      "for n, (name, (caption, mtype, obj, visible)) in enumerate("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `n` not used within loop body",
+      "for n, (name, (caption, mtype, obj, visible)) in enumerate("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `name` not used within loop body",
+      "for n, (name, (caption, mtype, obj, visible)) in enumerate("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `obj` not used within loop body",
+      "for n, (name, (caption, mtype, obj, visible)) in enumerate("
+    ],
+    "count": 2
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "B007",
+      "Loop control variable `visible` not used within loop body",
+      "for n, (name, (caption, mtype, obj, visible)) in enumerate("
+    ],
+    "count": 2
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "F401",
+      "`PySide6.QtCore.Signal` imported but unused",
+      "from PySide6.QtCore import Qt, Signal, Slot"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "F841",
+      "Local variable `nrep` is assigned to but never used",
+      "nrep = int("
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "brighteyes_mcs/ui/table_manager.py",
+      "F841",
+      "Local variable `row_modified` is assigned to but never used",
+      "row_modified = item.row()"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/check_compiled_extensions.py",
+      "F401",
+      "`brighteyes_mcs_cylibs.fastconverter.convertDataFromAnalogFIFO` imported but unused",
+      "convertDataFromAnalogFIFO,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/check_compiled_extensions.py",
+      "F401",
+      "`brighteyes_mcs_cylibs.fastconverter.convertRawDataToCountsDirect49` imported but unused",
+      "convertRawDataToCountsDirect49,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/test_mainwindow.py",
+      "F821",
+      "Undefined name `Cx`",
+      "\"time_bin_dwell_cycles\": int(Cx),"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/test_mainwindow.py",
+      "F821",
+      "Undefined name `MyClass`",
+      "instance = MyClass()"
+    ],
+    "count": 31
+  },
+  {
+    "key": [
+      "test/test_mainwindow.py",
+      "F821",
+      "Undefined name `clock_duration`",
+      "\"tag_clock_duration_cycles\": int(clock_duration),"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/test_mainwindow.py",
+      "F821",
+      "Undefined name `np`",
+      "instance.currentImage = np.zeros((10, 10, 10, 10, 10))"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/test_mainwindow.py",
+      "F821",
+      "Undefined name `time_bin`",
+      "\"max_time_bins_per_pixel\": int(time_bin),"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/test_mainwindow.py",
+      "F821",
+      "Undefined name `waitAfterFrame`",
+      "\"wait_post_frame_cycles\": int(waitAfterFrame),"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/test_mainwindow.py",
+      "F821",
+      "Undefined name `waitForLaserInCycle`",
+      "\"wait_laser_startup_cycles\": int(waitForLaserInCycle),"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/test_mainwindow.py",
+      "F821",
+      "Undefined name `waitOnlyFirstTime`",
+      "\"wait_laser_first_time_only_enable\": waitOnlyFirstTime,"
+    ],
+    "count": 1
+  },
+  {
+    "key": [
+      "test/test_mcs_manager.py",
+      "B017",
+      "Do not assert blind exception: `Exception`",
+      "with self.assertRaises(Exception):"
+    ],
+    "count": 1
+  }
+]

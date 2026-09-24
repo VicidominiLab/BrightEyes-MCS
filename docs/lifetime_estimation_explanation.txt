@@ -105,7 +105,7 @@ Important implementation detail:
 -------------------------------------------------------------
 
 Code path:
-- brighteyes_mcs/acquisition/workers/spad/acquisition_loop_process.py
+- brighteyes_mcs/acquisition/workers/acquisition_loop.py
 - flim_parameters_from_3samples(...)
 - flim_map_to_hcl(...)
 - brighteyes_mcs/ui/qt/main_window.py -> plotPreviewImage(...)
@@ -392,5 +392,5 @@ Live LIFETIME_HSV/HSL/HCL image:
 
 - brighteyes_mcs/ui/qt/main_window.py
 - brighteyes_mcs/ui/qt/flim_image_view.py
-- brighteyes_mcs/acquisition/workers/spad/acquisition_loop_process.py
+- brighteyes_mcs/acquisition/workers/acquisition_loop.py
 - brighteyes_mcs/acquisition/manager.py

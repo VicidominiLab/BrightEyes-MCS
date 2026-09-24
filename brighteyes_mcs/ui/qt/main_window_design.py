@@ -113,6 +113,11 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_4.addWidget(self.comboBox_plot_channel, 2, 3, 1, 1)
 
+        self.pushButton_autoresize_img = QPushButton(self.tab_preview)
+        self.pushButton_autoresize_img.setObjectName(u"pushButton_autoresize_img")
+
+        self.gridLayout_4.addWidget(self.pushButton_autoresize_img, 0, 1, 1, 1)
+
         self.label_60 = QLabel(self.tab_preview)
         self.label_60.setObjectName(u"label_60")
 
@@ -2443,7 +2448,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_6.setWidgetResizable(True)
         self.scrollAreaWidgetContents_4 = QWidget()
         self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 478, 132))
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 478, 133))
         self.gridLayout_68 = QGridLayout(self.scrollAreaWidgetContents_4)
         self.gridLayout_68.setObjectName(u"gridLayout_68")
         self.gridLayout_3434 = QGridLayout()
@@ -2523,9 +2528,9 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_14.setContentsMargins(6, 6, 6, 6)
         self.gridLayout_statistics = QGridLayout()
         self.gridLayout_statistics.setObjectName(u"gridLayout_statistics")
+        self.gridLayout_statistics.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.gridLayout_statistics.setHorizontalSpacing(4)
         self.gridLayout_statistics.setVerticalSpacing(3)
-        self.gridLayout_statistics.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.progressBar_repetition = QProgressBar(self.dockWidgetContents_6)
         self.progressBar_repetition.setObjectName(u"progressBar_repetition")
         sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -2674,13 +2679,13 @@ class Ui_MainWindowDesign(object):
 
         self.label_tot_num_dat_point_val = QLabel(self.dockWidgetContents_6)
         self.label_tot_num_dat_point_val.setObjectName(u"label_tot_num_dat_point_val")
-        self.label_tot_num_dat_point_val.setWordWrap(True)
         sizePolicy7 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         sizePolicy7.setHorizontalStretch(0)
         sizePolicy7.setVerticalStretch(0)
         sizePolicy7.setHeightForWidth(self.label_tot_num_dat_point_val.sizePolicy().hasHeightForWidth())
         self.label_tot_num_dat_point_val.setSizePolicy(sizePolicy7)
         self.label_tot_num_dat_point_val.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+        self.label_tot_num_dat_point_val.setWordWrap(True)
 
         self.gridLayout_statistics.addWidget(self.label_tot_num_dat_point_val, 0, 1, 1, 3)
 
@@ -2723,7 +2728,7 @@ class Ui_MainWindowDesign(object):
         self.label_ETA.setObjectName(u"label_ETA")
         sizePolicy8.setHeightForWidth(self.label_ETA.sizePolicy().hasHeightForWidth())
         self.label_ETA.setSizePolicy(sizePolicy8)
-        self.label_ETA.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignVCenter)
+        self.label_ETA.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_statistics.addWidget(self.label_ETA, 2, 3, 1, 1)
 
@@ -2921,6 +2926,10 @@ class Ui_MainWindowDesign(object):
 
 
         self.gridLayout_17.addWidget(self.groupBox, 3, 1, 1, 1)
+
+        self.verticalSpacer_24 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_17.addItem(self.verticalSpacer_24, 5, 0, 1, 1)
 
         self.dockWidget_pos.setWidget(self.dockWidgetContents_9)
         MainWindowDesign.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockWidget_pos)
@@ -3773,7 +3782,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_4.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 478, 208))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 478, 209))
         self.gridLayout_66 = QGridLayout(self.scrollAreaWidgetContents_5)
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.pushButton_loadPlugin = QPushButton(self.scrollAreaWidgetContents_5)
@@ -3818,7 +3827,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 478, 95))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 478, 96))
         self.gridLayout_65 = QGridLayout(self.scrollAreaWidgetContents_3)
         self.gridLayout_65.setObjectName(u"gridLayout_65")
         self.gridLayout_AO = QGridLayout()
@@ -4227,7 +4236,7 @@ class Ui_MainWindowDesign(object):
         self.scrollArea_7.setWidgetResizable(True)
         self.scrollAreaWidgetContents_7 = QWidget()
         self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
-        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 445, 87))
+        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 445, 85))
         self.gridLayout_74 = QGridLayout(self.scrollAreaWidgetContents_7)
         self.gridLayout_74.setObjectName(u"gridLayout_74")
         self.tableWidget_markers = QTableWidget(self.scrollAreaWidgetContents_7)
@@ -4378,6 +4387,7 @@ class Ui_MainWindowDesign(object):
         self.groupBox_9.clicked.connect(MainWindowDesign.checkAlerts)
         self.comboBox_spad_channels.textActivated.connect(MainWindowDesign.spadChannelsChanged)
         self.pushButton_externalProgram.clicked.connect(MainWindowDesign.cmd_call_external)
+        self.pushButton_autoresize_img.clicked.connect(MainWindowDesign.AutoRange_im_widget)
 
         self.tabWidget.setCurrentIndex(4)
         self.tabWidget_circular.setCurrentIndex(2)
@@ -4436,6 +4446,10 @@ class Ui_MainWindowDesign(object):
         self.comboBox_plot_channel.setItemText(26, QCoreApplication.translate("MainWindowDesign", u"Analog A", None))
         self.comboBox_plot_channel.setItemText(27, QCoreApplication.translate("MainWindowDesign", u"Analog B", None))
 
+#if QT_CONFIG(tooltip)
+        self.pushButton_autoresize_img.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Fit the central image to the view without added margins.", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_autoresize_img.setText(QCoreApplication.translate("MainWindowDesign", u"Autoresize", None))
         self.label_60.setText(QCoreApplication.translate("MainWindowDesign", u"View Projection", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_invertPreviewCtrl.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Pan and zoom always affect the displayed image. When enabled, changes apply to the microscope without Ctrl; adding a marker requires Ctrl instead.</p></body></html>", None))

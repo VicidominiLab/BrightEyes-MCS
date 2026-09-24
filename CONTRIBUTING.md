@@ -1,20 +1,82 @@
-# Community Guidelines
+# Contributing to BrightEyes-MCS
 
-We welcome contributions to BrightEyes-MCS from the community. Below are the general guidelines for those who want to get involved:
+Report bugs with reproduction steps, operating system, Python version, detector,
+and firmware details. For a substantial feature, discuss the intended behavior
+with the maintainers before changing acquisition code.
 
-1. **Contributing**: If you want to contribute to the software, you can fork the repository, make your changes, and submit a pull request. We recommend getting in touch with the maintainers before starting work on major features to avoid duplicating efforts.
-2. **Reporting Issues**: You can report any bugs, issues, or feature requests by opening a new issue on the GitHub repository. Please ensure that you include as much detail as possible, including steps to reproduce the issue and your environment details (operating system, Python version, hardware setup).
-3. **Seeking Support**: For questions or technical assistance, you can start a discussion in the "Discussions" tab of the repository, or check the FAQ section in the project's documentation. For immediate support or collaborations, you can contact the developers through the contact information provided on the project website.
+## Development environment
 
-# Contributing
+Use a source checkout and Python 3.12 (64-bit) on Windows. From the repository root:
 
-Contributions are welcome in the form of code, documentation, testing, or suggestions. Here's how you can contribute:
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+```
 
-1. **Fork the Repository**: Create a personal copy of the BrightEyes-MCS repository by clicking on "Fork".
-2. **Clone the Repository**: Clone the forked repository to your local machine using `git clone`.
-3. **Create a Branch**: Create a new branch for your feature or bug fix.
-4. **Make Changes**: Implement your changes, ensuring that your code is well-documented and follows the project's coding guidelines.
-5. **Test Your Changes**: Ensure that all tests pass and add new ones if necessary.
-6. **Submit a Pull Request**: Once you're happy with your changes, submit a pull request to the main repository for review. Provide a clear description of the changes and reference any related issues.
+In Command Prompt use `.venv\Scripts\activate.bat`. Package metadata and
+runtime dependencies are defined in [pyproject.toml](pyproject.toml).
+NI drivers and matching firmware are needed for physical acquisition, not for
+the mocked unit tests. Do not commit local microscope profiles, data, or firmware.
 
-For detailed instructions on how to set up your development environment, please refer to the [Wiki](https://github.com/VicidominiLab/BrightEyes-MCS/wiki).
+## Validation
+
+Run from the repository root:
+
+```powershell
+$env:QT_QPA_PLATFORM = "offscreen"
+python -m pytest -q
+python -m unittest test.test_channel_delay_skew_plugin -v
+python scripts/check_docs.py
+python scripts/check_lint.py
+python -m compileall -q brighteyes_mcs scripts
+```
+
+The normal pytest command excludes `qt_isolated` tests. The channel-delay widget
+suite runs in a separate interpreter because mixing Qt finalizers and
+multiprocessing initialization can crash Windows/Python 3.13. The Windows CI
+matrix covers Python 3.10 through 3.14 and runs the isolated suite on 3.13.
+Tests requiring external tools may skip when those tools are unavailable;
+inspect the skip summary with `python -m pytest -q -rs`.
+
+The lint checker rejects findings beyond the reviewed legacy baseline in
+[scripts/lint_baseline.json](scripts/lint_baseline.json). Extracted statistics and
+new validation modules must be clean. Do not use blanket suppressions or unsafe
+automatic fixes. After removing legacy findings, regenerate the baseline with
+`python scripts/check_lint.py --write-baseline` and review the diff; never use
+that command simply to accept new findings. Ruff is pinned for reproducibility.
+
+For distribution changes also run `python -m build`, `python -m twine check dist/*`,
+and `python scripts/check_distribution.py dist`; use a clean output directory.
+See the [release guide](docs/pypi-release.md) before publishing. Publication is disabled.
+
+## Editing the Qt UI
+
+Edit the Designer `.ui` source, then regenerate its Python module. For the main window:
+
+```powershell
+pyside6-uic brighteyes_mcs/ui/qt/main_window_design.ui -o brighteyes_mcs/ui/qt/main_window_design.py
+```
+
+Use the compiler from the active environment and review the generated diff.
+Never hand-edit generated `*_design.py` modules. Commit the `.ui` and generated
+module together. Check dock resizing and representative populated values, not
+only the empty form.
+
+## Code and documentation changes
+
+Keep refactors small and preserve configuration, HDF5/RAW, REST, plug-in, and
+FPGA contracts. Follow the [architecture boundaries](docs/refactoring-architecture.md).
+Put calculations in Qt-independent controllers; keep timers, signals, and widgets
+in the UI. Add tests for behavior or failure paths, not implementation details.
+
+The [documentation index](docs/README.md) is the maintained entry point. Update
+related guides in the same change, use relative repository links, and distinguish
+current behavior from historical examples. The optional external link report is
+`python scripts/check_docs.py --external`; it does not make network failures a
+merge blocker.
+
+Submit a pull request describing the problem, resulting behavior, and validation.
+Instrument behavior remains unverified until a connected-hardware smoke test is
+performed. See the [hardware acceptance checklist](docs/refactoring-architecture.md#hardware-acceptance-checklist).

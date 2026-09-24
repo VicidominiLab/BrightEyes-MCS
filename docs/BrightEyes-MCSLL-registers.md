@@ -1,4 +1,13 @@
 # BrightEyes-MCSLL
+
+> Applicability: the register and FIFO tables use firmware v1 snake-case names.
+> Saved HDF5 files retain legacy names through
+> [legacy_names.py](../brighteyes_mcs/storage/legacy_names.py); see the
+> [HDF5 compatibility reference](h5_mcs_scheme_v0_0_1.md).
+> The historical board/pinout material does not identify an exact bitfile revision.
+> Confirm pin assignments and registers against the selected bitfile before using
+> it with an instrument; this document is not verification of connected hardware.
+
 The BrightEyes Microscope Control Software Low-Level is a collections of firmwares for NI FPGA in order to be used with BrightEyes-MCS.
 Documentation and usage you can find in [BrightEyes-MCS repository](https://github.com/VicidominiLab/BrightEyes-MCS).
 

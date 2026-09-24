@@ -1,5 +1,11 @@
 # Publishing BrightEyes-MCS to PyPI
 
+> Publishing is currently disabled. The template is
+> [release.yml.disable](../.github/workflows/release.yml.disable); pushing a tag
+> does not publish a package. The steps below describe a future maintainer release
+> after explicitly enabling the workflow and configuring the publisher.
+> Public release availability has not been verified for this guide.
+
 The repository uses a root package layout: the import package is
 `brighteyes_mcs/`, and `pyproject.toml` explicitly limits setuptools discovery
 to that package tree. A move to `src/brighteyes_mcs/` is not required for
@@ -32,7 +38,7 @@ same Python environment; it does not install an executable or entry point.
    - Workflow: `release.yml`
    - Environment: `pypi`
 
-The workflow uses OpenID Connect and does not require a stored PyPI API token.
+The workflow template uses OpenID Connect and does not require a stored PyPI API token.
 
 ## Preparing a release
 
@@ -49,13 +55,15 @@ python scripts/check_distribution.py dist
 python -m brighteyes_mcs --no-first-run
 ```
 
+Replace `VERSION` in the examples with the version being released.
+
 For a TestPyPI rehearsal, upload the same artifacts using a TestPyPI account
 and install them while allowing production PyPI to supply dependencies:
 
 ```powershell
 python -m twine upload --repository testpypi dist/*
 python -m pip install --index-url https://test.pypi.org/simple/ `
-  --extra-index-url https://pypi.org/simple/ brighteyes-mcs==1.1.1
+  --extra-index-url https://pypi.org/simple/ brighteyes-mcs==VERSION
 ```
 
 TestPyPI and PyPI do not permit replacing a file with the same project name and
@@ -64,15 +72,16 @@ already accepted.
 
 ## Publishing
 
-Commit and merge the release changes, then create and push a version tag that
+After configuring the publisher and explicitly enabling the release workflow,
+commit and merge the release changes, then create and push a version tag that
 exactly matches `brighteyes_mcs.__version__`:
 
 ```powershell
-git tag -a v1.1.1 -m "BrightEyes-MCS 1.1.1"
-git push origin v1.1.1
+git tag -a vVERSION -m "BrightEyes-MCS VERSION"
+git push origin vVERSION
 ```
 
-The `Publish Python package` workflow builds from the tag, verifies the version,
+Once enabled, the `Publish Python package` workflow builds from the tag, verifies the version,
 checks metadata and archive contents, and publishes through the configured
 PyPI Trusted Publisher. Never build a release from a working tree containing
 uncommitted changes.

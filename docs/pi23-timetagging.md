@@ -59,8 +59,4 @@ register startup. When the supplied recorder builds are available, the tests
 also run both real executables against a local fake TCP detector, including
 calibration and clean interruption; no microscope hardware is contacted.
 
-Regenerate the UI with:
-
-```
-pyside6-uic brighteyes_mcs/ui/qt/main_window_design.ui -o brighteyes_mcs/ui/qt/main_window_design.py
-```
+For UI changes, follow the central [Qt UI generation instructions](../CONTRIBUTING.md#editing-the-qt-ui).

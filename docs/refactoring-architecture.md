@@ -1,28 +1,14 @@
 # BrightEyes-MCS refactoring architecture
 
-The package is organized by responsibility. Python import compatibility is not
-a design constraint; the legacy `.cfg` schema and HDF5/RAW formats are the
-stable external contracts.
+The package is organized by responsibility. Internal imports may change during
+a focused refactor; published REST and plug-in interfaces must remain compatible.
+The legacy `.cfg` schema and HDF5/RAW formats are stable external contracts.
 
-## Active boundaries
+## Package boundaries
 
-- `application`: service contracts, GUI gateway, bootstrap, and path policy.
-- `acquisition`: acquisition settings and state, coordinator, worker processes,
-  FIFO access, shared memory, and canonical SPAD/PI23 detector pipelines.
-- `hardware`: NI-FPGA and TTM adapter surface.
-- `storage`: the legacy `.cfg` codec and translation boundary, HDF5 schema, and
-  RAW conversion.
-- `api`: external control surfaces.
-- `ui/controllers`: framework-independent configuration, lifecycle, and preview
-  behavior.
-- `ui/qt`: Qt widgets, generated Designer code, and the main-window adapter.
-- `plugins/api.py`: the small API available to plug-in authors.
-- `plugins/builtin`: isolated built-in plug-in implementations.
-- `logging_setup.py`: standard-library logging configuration shared by the
-  application and acquisition worker processes.
-
-The former mixed-purpose `brighteyes_mcs.libs` and `brighteyes_mcs.gui`
-packages have been removed. There are no compatibility import shims.
+The [current architecture](current-architecture.md#package-ownership) lists the
+implemented packages and their owners. Keep new code within those boundaries;
+do not reintroduce the removed mixed-purpose `libs` or `gui` packages.
 
 ## Dependency direction
 
@@ -56,6 +42,9 @@ point for new plug-ins.
 `MainWindow` remains the legacy composition root, but new behavior belongs in a
 controller or service. Continue extracting one user workflow at a time:
 
+Pure scan-duration and ETA calculations already live in the statistics controller.
+Timers and widget updates stay in `MainWindow`. Further extraction candidates are:
+
 1. acquisition setup/start/stop into an acquisition presenter;
 2. preview rendering into a preview presenter and focused Qt view;
 3. configuration widget mapping into a form adapter;
@@ -79,11 +68,9 @@ by multiprocessing primitive creation. The normal pytest run excludes the
 
 ## Runtime paths
 
-Immutable images and defaults are resolved relative to the installed package;
-the process working directory is no longer changed. On first run, default and
-plugin configuration files are copied to `%APPDATA%/BrightEyes-MCS`. An existing
-package-local `cfg/current_system` selection is imported. Explicit legacy paths
-remain valid and the copied JSON payload is not transformed.
+Use the existing application path helpers; do not change the working directory or
+write into installed package resources. The [current architecture](current-architecture.md)
+describes profile migration and user-writable paths.
 
 ## Hardware acceptance checklist
 

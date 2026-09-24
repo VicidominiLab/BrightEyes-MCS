@@ -2,7 +2,9 @@
 
 BrightEyes-MCS, a Microscope Control Software for image-scanning microscopy designed by the Molecular Microscopy and Spectroscopy group of the Italian Institute of Technology. 
 
-For complete documentation, please visit our [Wiki page](https://github.com/VicidominiLab/BrightEyes-MCS/wiki).
+Start with the [documentation index](docs/README.md) for user guides, developer
+instructions, and technical references. Versioned documentation in this repository
+is the source of truth.
 
 [docs_video_brighteyes-mcs.webm](https://user-images.githubusercontent.com/61466143/202733339-2524c826-74d9-4ebc-8885-56855706200f.webm)
 
@@ -18,40 +20,26 @@ sufficient.
 Use any environment manager you prefer, such as Python `venv`, Conda, uv, or
 virtualenv. The following examples use the standard `venv` module.
 
-### Install the `on_the_road_v2` version
+### Install from a source checkout
 
-To install the current `on_the_road_v2` branch directly from GitHub, make sure
-Git is installed and use one of the following complete examples.
-
-**PowerShell:**
+Install Git and Python 3.12 (64-bit), then run in PowerShell:
 
 ```powershell
+git clone https://github.com/VicidominiLab/BrightEyes-MCS.git
+cd BrightEyes-MCS
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install "https://github.com/VicidominiLab/BrightEyes-MCS/archive/refs/heads/on_the_road_v2.zip"
+python -m pip install .
 python -m brighteyes_mcs
 ```
 
-**Command Prompt (`cmd.exe`):**
+In Command Prompt, activate with `.venv\Scripts\activate.bat` instead.
+To use a particular development branch, check it out before installing.
 
-```bat
-py -3.12 -m venv .venv
-.venv\Scripts\activate.bat
-python -m pip install --upgrade pip
-pip install "https://github.com/VicidominiLab/BrightEyes-MCS/archive/refs/heads/on_the_road_v2.zip"
-python -m brighteyes_mcs
-```
-
-### Install the PyPI release instead (AT MOMENT NOT AVAILABLE)
-
-After creating and activating an environment as shown above, install the latest
-published release with:
-
-```console
-python -m pip install brighteyes-mcs
-python -m brighteyes_mcs
-```
+A published PyPI release has not been verified for this guide. Use the source
+installation above; the [release guide](docs/pypi-release.md) describes the
+maintainer publishing procedure, which is currently disabled.
 
 The remaining commands also work in either PowerShell or Command Prompt.
 
@@ -63,17 +51,17 @@ creation. To open the setup again later:
 python -m brighteyes_mcs --setup
 ```
 
-Optional plug-in dependencies can be installed with:
+From the source checkout, optional plug-in dependencies can be installed with:
 
 ```console
-python -m pip install "brighteyes-mcs[ao]"    # serial-controlled AO hardware
-python -m pip install "brighteyes-mcs[flim]"  # FLIM/DFD analysis
-python -m pip install "brighteyes-mcs[all]"   # all optional plug-in dependencies
+python -m pip install ".[ao]"    # serial-controlled AO hardware
+python -m pip install ".[flim]"  # FLIM/DFD analysis
+python -m pip install ".[all]"   # all optional plug-in dependencies
 ```
 
 NI drivers and FPGA firmware are required for physical acquisition but are not
 included in the Python package. See the
-[Wiki](https://github.com/VicidominiLab/BrightEyes-MCS/wiki) for hardware setup
+[hardware reference](docs/BrightEyes-MCSLL-registers.md) for hardware setup
 instructions.
 
 ## Compiled Extensions
@@ -85,29 +73,20 @@ installation.
 
 ## Development
 
-Project metadata and developer dependencies are defined in `pyproject.toml`:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for editable installation, test commands,
+Qt UI generation, and documentation/lint checks. The [architecture guide](docs/current-architecture.md)
+maps the code; [refactoring boundaries](docs/refactoring-architecture.md) describe
+compatibility requirements.
 
-```powershell
-python -m pip install -e ".[dev]"
-python -m pytest -q
-python -m unittest test.test_channel_delay_skew_plugin -v
-```
-
-The second test command intentionally runs the PySide channel-delay widget tests
-in a separate interpreter on Windows/Python 3.13. See
-`docs/refactoring-architecture.md` for the package boundaries and compatibility
-rules.
-
-Maintainers can find the complete build, validation, TestPyPI, and Trusted
-Publishing procedure in the
-[PyPI release guide](https://github.com/VicidominiLab/BrightEyes-MCS/blob/main/docs/pypi-release.md).
+Maintainers can find build validation and the proposed publishing procedure in
+the [release guide](docs/pypi-release.md). Automatic publishing is disabled.
 
 ## Development Notice
 
 **Important:** This software is currently under active development and may contain bugs or incomplete features. Please use it with caution and report any issues you encounter to help us improve the application. 
 
 For contribution guidelines, refer to
-[CONTRIBUTING.md](https://github.com/VicidominiLab/BrightEyes-MCS/blob/main/CONTRIBUTING.md).
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

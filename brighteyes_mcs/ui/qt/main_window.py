@@ -28,7 +28,6 @@ from PySide6.QtWidgets import (
     QProgressDialog,
     QMenu,
 )
-from PySide6.QtGui import QScreen  # Replaces QDesktopWidget
 
 from PySide6.QtCore import (
     Slot,
@@ -38,16 +37,22 @@ from PySide6.QtCore import (
     QFile,
     QCoreApplication,
     QElapsedTimer,
-    QIODevice,
-    QBuffer
 )
-from PySide6.QtCore import QEvent, QRectF, QThread, QMutex, QMimeData, QUrl
+from PySide6.QtCore import QEvent, QMutex, QMimeData, QUrl
 from PySide6.QtGui import QPixmap, QIcon, QGuiApplication, QDesktopServices
 
-from datetime import datetime, timedelta
+from datetime import datetime
+from xml.etree import ElementTree
 
 from .main_window_design import Ui_MainWindowDesign
 from .pi23_timetagging import Pi23Timetagging
+
+from ..controllers.statistics import (
+    acquisition_eta,
+    completion_eta,
+    format_total_duration,
+    scan_duration_seconds,
+)
 
 PI23_TIMETAGGING_CONFIGURATION_KEYS = (
     "pi23ttm_enabled",
@@ -119,11 +124,9 @@ import pyqtgraph as pg
 
 try:
     import imageio as iio
-except:
-    print(
-        "Warning: 'import imageio' failed. \n"
-        + "This function is optional so the software will run but some functions  not work.\n"
-    )
+except ImportError:
+    logger.warning("Image export is unavailable: imageio could not be imported", exc_info=True)
+
 
 
 # ================== end of imports ====================================
@@ -456,8 +459,6 @@ class MainWindow(QMainWindow):
         )
 
         # self.ui.listWidget.clicked.connect(self.listwidget_click)
-        # self.thread_timerPreviewImg_tick = Runnable(self.timerPreviewImg_tick)
-        # self.thread_timerConfigurationViewer_tick = Runnable(self.timerConfigurationViewer_tick)
 
         # The preview timer is the main GUI-side refresh loop for plots and images.
         self.timerPreviewImg = QTimer(None)
@@ -472,6 +473,11 @@ class MainWindow(QMainWindow):
         )
         self.timerConfigurationViewer.setInterval(500)
         self.timerConfigurationViewer.start()
+
+        self.timerIdleEta = QTimer(self)
+        self.timerIdleEta.setInterval(1000)
+        self.timerIdleEta.timeout.connect(self.update_idle_eta)
+        self.timerIdleEta.start()
 
         self._auxiliary_drag_write_timer = QTimer(self)
         self._auxiliary_drag_write_timer.setSingleShot(True)
@@ -2265,7 +2271,8 @@ class MainWindow(QMainWindow):
             try:
                 bitfile_reader = nifpga.Bitfile(str(resolved_bitfile))
                 bitfile_signature = bitfile_reader.signature
-            except:
+            except (OSError, ValueError, AttributeError, TypeError, KeyError, ElementTree.ParseError):
+                logger.debug('Could not read the primary bitfile signature', exc_info=True)
                 bitfile_signature = ""
             self.ui.label_bitfile_signature.setText(bitfile_signature)
         resolved_bitfile2 = resolve_legacy_path(bitfile2) if bitfile2 else None
@@ -2273,7 +2280,8 @@ class MainWindow(QMainWindow):
             try:
                 bitfile_reader = nifpga.Bitfile(str(resolved_bitfile2))
                 bitfile_signature = bitfile_reader.signature
-            except:
+            except (OSError, ValueError, AttributeError, TypeError, KeyError, ElementTree.ParseError):
+                logger.debug('Could not read the secondary bitfile signature', exc_info=True)
                 bitfile_signature = ""
             self.ui.label_bitfile_signature_2.setText(bitfile_signature)
 
@@ -2350,7 +2358,7 @@ class MainWindow(QMainWindow):
             file = self.setNewDefaultCfg(str(resource_path("cfg/default.cfg")), default_name)
             logger.debug("'current_system' file not found")
             return file
-        raise ("Error in checkDefaultCfg")
+        raise RuntimeError("Error in checkDefaultCfg")
 
     def setNewDefaultCfg(self, default_cfg, default_name=None):
         """
@@ -2414,13 +2422,14 @@ class MainWindow(QMainWindow):
                     elif mtype is str:
                         try:
                             configuration[name] = ref_obj.currentText()
-                        except:
+                        except AttributeError:
                             try:
                                 configuration[name] = ref_obj.text()
-                            except:
+                            except AttributeError:
                                 try:
                                     configuration[name] = ref_obj.toPlainText()
-                                except:
+                                except AttributeError:
+                                    logger.debug('Configuration widget has no supported text accessor', exc_info=True)
                                     logger.debug("%s %s %s", "Wrong methods to read str", n, (name, (caption, mtype, ref_obj, visible)))
                     elif mtype is bool:
                         configuration[name] = ref_obj.isChecked()
@@ -2638,11 +2647,11 @@ class MainWindow(QMainWindow):
         self._save_plugin_configuration_files(plugin_names)
         self.ui.statusBar.showMessage("Plugin configuration saved.", 5000)
 
-    def setGUI_data(self, configuration={}):
+    def setGUI_data(self, configuration=None):
         """
         Set the GUI data from a dictionary (it can be also a partial configuration)
         """
-        configuration = dict(configuration)
+        configuration = {} if configuration is None else dict(configuration)
         # PI-Timetagging settings moved to plugins_cfg. Keep accepting old
         # top-level settings and let them override the external defaults.
         legacy_pi23_timetagging = {
@@ -2654,8 +2663,6 @@ class MainWindow(QMainWindow):
         configuration.pop("load_firmware_once", None)
         configuration.pop("keep_fpga_connected", None)
 
-        # lock_old = self.lock_parameters_changed_call
-        # self.lock_parameters_changed_call = True
 
         for name in configuration:
             try:
@@ -2682,7 +2689,7 @@ class MainWindow(QMainWindow):
                     elif mtype is str:
                         try:
                             ref_obj.setCurrentText(configuration[name])
-                        except:
+                        except AttributeError:
                             ref_obj.setText(configuration[name])
                     elif mtype is bool:
                         ref_obj.setChecked(configuration[name])
@@ -2695,7 +2702,6 @@ class MainWindow(QMainWindow):
             self._apply_pi23_timetagging_configuration(legacy_pi23_timetagging)
         self.plugin_signals.signal.emit("configurationLoaded")
         #
-        # self.lock_parameters_changed_call = lock_old
         # self.positionSettingsChanged()
         # self.axesRangeChanged()
 
@@ -2947,7 +2953,6 @@ class MainWindow(QMainWindow):
                         )
                     )
 
-                # self.lock_parameters_changed_call = False
                 self.lock_parameters_changed_call = old_lock_parameters_changed_call
                 logger.debug("axesRangeChanged self.lock_parameters_changed_call UNSET False")
 
@@ -3001,6 +3006,11 @@ class MainWindow(QMainWindow):
                 self.console_widget.shutdown_kernel()
         except Exception:
             logger.exception("Could not stop the embedded console kernel")
+
+        try:
+            self.timerIdleEta.stop()
+        except (AttributeError, RuntimeError):
+            logger.debug("Idle ETA timer was not active during shutdown")
 
         try:
             self.timerFPGAWatchdog.stop()
@@ -3283,10 +3293,9 @@ class MainWindow(QMainWindow):
     #     else:
     #         debug("self.rect_roi_panorama_modified_lock")
 
+    @Slot()
     def AutoRange_im_widget(self):
-        """
-        Auto range the image widget
-        """
+        """Fit the central image without padding, excluding ROI and marker overlays."""
         lock_range_changing = self.lock_range_changing
         roi_visible = self.rect_roi.isVisible()
 
@@ -3331,7 +3340,6 @@ class MainWindow(QMainWindow):
         return
         # self.rect_roi_panorama.setPos(self.rect_roi.pos())
         # self.rect_roi_panorama.setSize(self.rect_roi.size())
-        # print(event)
         # debug(event.pos().x(), event.pos().y(), event.size().x(), event.size().y())
         # if not self.rect_roi_modified_lock:
         #     # print(event.pos().x(), event.pos().y(), event.size().x(), event.size().y())
@@ -4101,7 +4109,8 @@ class MainWindow(QMainWindow):
                     # "current_cycle",
                 )
             ]
-        except:
+        except KeyError:
+            logger.debug('Position registers are not available yet', exc_info=True)
             t = ["na"] * 5
 
         self.statusBar_currentPosition.setText(
@@ -4597,8 +4606,6 @@ class MainWindow(QMainWindow):
         # self.ui.pushButton_acquisitionStart.setEnabled(False)
         # self.ui.pushButton_stop.setEnabled(True)
         #
-        # self.started_normal = False
-        # self.started_preview = True
         #
         # self.rect_roi.hide()
         #
@@ -4672,7 +4679,8 @@ class MainWindow(QMainWindow):
                 delay_software = float(
                     self.table_manager.get_value("Delay Software (s)", i)
                 )
-            except:
+            except (TypeError, ValueError):
+                logger.debug('Invalid table software delay; using zero seconds', exc_info=True)
                 delay_software = 0.0
 
             active = self.ui.tableWidget.item(0, i).checkState() == Qt.Checked
@@ -4739,20 +4747,20 @@ class MainWindow(QMainWindow):
         try:
             if self.mcs_manager.previewProcess_isAlive():
                 P = "⏩"
-        except:
-            pass
+        except (AttributeError, ValueError, OSError):
+            logger.debug('Preview process status is unavailable', exc_info=True)
 
         try:
             if self.mcs_manager.dataProcess_isAlive():
                 D = "⏩"
-        except:
-            pass
+        except (AttributeError, ValueError, OSError):
+            logger.debug('Data process status is unavailable', exc_info=True)
 
         try:
             if self.mcs_manager.fpga_handle.fpga_handle_process_isAlive():
                 F = "⏩"
-        except:
-            pass
+        except (AttributeError, ValueError, OSError):
+            logger.debug('FPGA process status is unavailable', exc_info=True)
         self.updatePi23GreetingStatus()
         self.statusBar_cpu.setText("CPU: %d%%" % psutil.cpu_percent())
         self.statusBar_mem.setText("RAM: %d%%" % psutil.virtual_memory().percent)
@@ -4804,19 +4812,27 @@ class MainWindow(QMainWindow):
         self.ui.tableWidget_markers.setColumnCount(4)
 
         for k, v in enumerate(self.markers_list):
-            # print(k, type(k), v, type(v))
             for n, i in enumerate(
                     ["offset_x_um", "offset_y_um", "offset_z_um"]
             ):  # assumed to be length 3
-                # print(n, type(n), i, type(i))
                 self.ui.tableWidget_markers.setItem(k, n, QTableWidgetItem(str(v[i])))
 
     def set_expected_duration(self, seconds):
         """Keep seconds for ETA calculations and display hours:seconds:minutes."""
         self._expected_duration_seconds = max(0.0, float(seconds))
-        hours, remainder = divmod(int(self._expected_duration_seconds), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        self.ui.label_expected_dur_val.setText(f"{hours:02d}:{seconds:02d}:{minutes:02d}")
+        self.ui.label_expected_dur_val.setText(
+            format_total_duration(self._expected_duration_seconds)
+        )
+
+    @Slot()
+    def update_idle_eta(self):
+        """Show when the configured scan would finish if started now."""
+        if self.started_normal or self.started_preview:
+            return
+        duration = getattr(self, "_expected_duration_seconds", None)
+        if duration is None:
+            return
+        self.ui.label_ETA.setText(completion_eta(duration, now=datetime.now()))
 
     def update_acquisition_eta(self, fifo_elements, expected_fifo_elements):
         """Show local completion time from the configured duration and FIFO progress."""
@@ -4824,19 +4840,14 @@ class MainWindow(QMainWindow):
             self.ui.label_ETA.setText("--")
             return
 
-        fractions = [
-            max(0.0, min(1.0, fifo_elements[fifo] / expected))
-            for fifo, expected in expected_fifo_elements.items()
-            if expected > 0
-        ]
-        if not fractions:
-            self.ui.label_ETA.setText("--")
-            return
-
-        duration = getattr(self, "_expected_duration_seconds", 0.0)
-        remaining = duration * (1.0 - min(fractions))
-        eta = datetime.now() + timedelta(seconds=remaining)
-        self.ui.label_ETA.setText(eta.strftime("%y/%m/%d %H:%M:%S"))
+        self.ui.label_ETA.setText(
+            acquisition_eta(
+                getattr(self, "_expected_duration_seconds", 0.0),
+                fifo_elements,
+                expected_fifo_elements,
+                now=datetime.now(),
+            )
+        )
 
     @Slot()
     def timerPreviewImg_tick(self):
@@ -4871,7 +4882,6 @@ class MainWindow(QMainWindow):
         if not (self.ui.checkBox_fifo_analog.isChecked() or self.ui.checkBox_fifo_digital.isChecked()):
             logger.debug("Bug: No FIFO Selected")
 
-        #debug("fifo_activated", fifo_activated)
         #fifo_name is the "priority" fifo when two are activated
         
         fifo_elements = { fifo : self.mcs_manager.getCurrentAcquistionElement(fifo) for fifo in fifo_activated}
@@ -4941,22 +4951,22 @@ class MainWindow(QMainWindow):
                 self.ui.label_fifo_last_pkt_size.setText(
                     "%d" % self.mcs_manager.shared_dict["last_packet_size"]
                 )
-            except:
-                logger.debug("self.ui.last_packet_size FAIL")
+            except (AttributeError, KeyError, TypeError, OSError, EOFError):
+                logger.debug('RAW last packet size is unavailable', exc_info=True)
 
             try:
                 self.ui.label_last_preprocessed_size.setText(
                     "%d" % self.mcs_manager.last_preprocessed_len["stream_out_aux"].value
                 )
-            except:
-                pass
+            except (AttributeError, KeyError, OSError, EOFError):
+                logger.debug('RAW auxiliary preprocessor size is unavailable', exc_info=True)
 
             try:
                 self.ui.label_last_preprocessed_size.setText(
                     "%d" % self.mcs_manager.last_preprocessed_len["stream_out_main"].value
                 )
-            except:
-                pass
+            except (AttributeError, KeyError, OSError, EOFError):
+                logger.debug('RAW main preprocessor size is unavailable', exc_info=True)
 
             self.timerPreviewImg_tick_mutex.unlock()
             return
@@ -5157,7 +5167,6 @@ class MainWindow(QMainWindow):
         # numpy random.rand also much faster than list comprehension
         # img = np.random.rand(512, 512)
         # if self.previewEnabled:
-        # print(self.ui.comboBox_view_projection.currentText())
         self.plotPreviewImage()
 
         if "stream_out_main" in fifo_activated:
@@ -5262,7 +5271,6 @@ class MainWindow(QMainWindow):
             self.ui.progressBar_saving.setMaximum(number_of_threads_h5 * 1.2)
         self.ui.progressBar_saving.setValue(number_of_threads_h5)
 
-        # print("Digital: %d\nAnalog: %d" % (fifo1, fifo2))
         # self.ui.label_FIFOqueue.setText("Digital: %d\nAnalog: %d" % (, ))
 
         if fifo1 > 300:
@@ -5287,28 +5295,24 @@ class MainWindow(QMainWindow):
             self.ui.label_fifo_last_pkt_size.setText(
                 "%d" % self.mcs_manager.shared_dict["last_packet_size"]
             )
-        except:
-            logger.debug("self.ui.last_packet_size FAIL")
+        except (AttributeError, KeyError, TypeError, OSError, EOFError):
+            logger.debug('Last packet size is unavailable', exc_info=True)
 
         try:
-            # print(self.mcs_manager.last_preprocessed_len)
-            # print(self.mcs_manager.last_preprocessed_len["stream_out_main"].value)
             self.ui.label_last_preprocessed_size.setText(
                 "%d"
                 % self.mcs_manager.last_preprocessed_len["stream_out_aux"].value
             )
-        except:
-            logger.debug("self.ui.last_preprocessed_len stream_out_aux FAIL")
+        except (AttributeError, KeyError, OSError, EOFError):
+            logger.debug('Auxiliary preprocessor size is unavailable', exc_info=True)
 
         try:
-            # print(self.mcs_manager.last_preprocessed_len)
-            # print(self.mcs_manager.last_preprocessed_len["stream_out_main"].value)
             self.ui.label_last_preprocessed_size.setText(
                 "%d" % self.mcs_manager.last_preprocessed_len["stream_out_main"].value
             )
 
-        except:
-            logger.debug("self.ui.last_preprocessed_len stream_out_main FAIL")
+        except (AttributeError, KeyError, OSError, EOFError):
+            logger.debug('Main preprocessor size is unavailable', exc_info=True)
 
         self.timerPreviewImg_tick_mutex.unlock()
 
@@ -5358,7 +5362,6 @@ class MainWindow(QMainWindow):
                 if saturation_data[yyy, xxx] > 0:
                     v = self.mcs_manager.getFingerprintCumulative() * 1.
                     ratio = saturation_data[yyy, xxx] / v[yyy, xxx]
-                    # print(ratio)
                     size = 1 + min(ratio * 8 * 100, 8)
 
                     self.fingerprint_saturation_mask.addPoints(
@@ -5466,8 +5469,9 @@ Have fun!
                 eigenvalues, eigenvectors = np.linalg.eig(
                     np.matrix([[sigma_XX, sigma_XY], [sigma_XY, sigma_YY]])
                 )
-            except:
-                pass
+            except np.linalg.LinAlgError:
+                logger.debug('Could not calculate fingerprint eigenvectors', exc_info=True)
+                return
 
             theta = np.arctan2(eigenvectors[0, 1], eigenvectors[0, 0])
             self.ui.label_dummy.setText(
@@ -5532,13 +5536,13 @@ Have fun!
         numbers_ff = self.ui.spinBox_nframe.value()
         rep = self.ui.spinBox_nrepetition.value()
 
+        frame_seconds = scan_duration_seconds(
+            time_res, time_bin, numbers_xx, numbers_yy,
+            circular_points=circ_points, circular_repetitions=circ_repetition,
+        )
         self.ui.label_dwell_time_val.setText("%0.3f" % (time_res * time_bin))
-        self.ui.label_frame_time_val.setText(
-            "%0.3f" % (time_res * time_bin * circ_points * circ_repetition * numbers_xx * numbers_yy * 1e-6)
-        )
-        self.set_expected_duration(
-            (time_res * time_bin * circ_points * circ_repetition * numbers_xx * numbers_yy * numbers_ff * rep * 1e-6)
-        )
+        self.ui.label_frame_time_val.setText("%0.3f" % frame_seconds)
+        self.set_expected_duration(frame_seconds * numbers_ff * rep)
 
         self.checkAlerts()
 
@@ -5937,21 +5941,13 @@ Have fun!
             numbers_ff = self.ui.spinBox_nframe.value()
             rep = self.ui.spinBox_nrepetition.value()
 
+            frame_seconds = scan_duration_seconds(
+                time_res, time_bin, numbers_xx, numbers_yy,
+                circular_points=circ_points, circular_repetitions=circ_repetition,
+            )
             self.ui.label_dwell_time_val.setText("%0.3f" % (time_res * time_bin))
-            self.ui.label_frame_time_val.setText(
-                "%0.3f" % (time_res * time_bin * numbers_xx * numbers_yy * 1e-6)
-            )
-            self.set_expected_duration(
-                (
-                        time_res
-                        * time_bin
-                        * numbers_xx
-                        * numbers_yy
-                        * numbers_ff
-                        * rep
-                        * 1e-6
-                )
-            )
+            self.ui.label_frame_time_val.setText("%0.3f" % frame_seconds)
+            self.set_expected_duration(frame_seconds * numbers_ff * rep)
 
             self.checkAlerts()
 
@@ -6241,7 +6237,6 @@ Have fun!
 
         peak_value = float(trace_sum_peak0[0])
         if not np.isfinite(peak_value) or peak_value <= 0:
-            #debug("FIT: invalid peak value")
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
         y_start = start_level * peak_value
@@ -6262,30 +6257,24 @@ Have fun!
                 break
 
         if idx_start_candidates.size == 0 or idx_end_candidates.size == 0:
-            #debug("FIT: y_start, y_end, idx_start_candidates, idx_end_candidates", y_start, y_end, idx_start_candidates, idx_end_candidates)
-            #debug("FIT: no candidates for start or end indices")
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
-        #debug("FIT: start_level, selected_end_level", start_level, selected_end_level)
 
         start_idx = int(idx_start_candidates[0])
         end_idx = int(idx_end_candidates[0])
         if end_idx <= start_idx:
-            #debug("FIT: end_idx <= start_idx")
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
         y_section = trace_sum_peak0[start_idx : end_idx + 1]
         x_section_seconds = trace_x_peak0_seconds[start_idx : end_idx + 1]
         positive = y_section > 0
         if np.count_nonzero(positive) < 4:
-            #debug("FIT: np.count_nonzero(positive) < 4")
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
         x_fit_bins = np.arange(start_idx, end_idx + 1, dtype=float)[positive]
         x_fit_seconds = x_section_seconds[positive]
         y_fit_input = y_section[positive]
         slope, intercept = np.polyfit(x_fit_bins, np.log(y_fit_input), 1)
-        #debug("FIT: slope and intercept", slope, intercept)
         if not np.isfinite(slope) or slope >= 0:
             return None, None, peak_idx, trace_sum_peak0, trace_x_peak0_seconds
 
@@ -7384,7 +7373,8 @@ Have fun!
             if not self.ui.checkBox_uttm_watchdog.isChecked():
                 self.ui.checkBox_uttm_watchdog.setChecked(True)
                 self.checkBox_uttm_watchdog_clicked()
-        except:
+        except (requests.RequestException, ValueError):
+            logger.debug('Could not start the uTTM recorder', exc_info=True)
             logger.debug("Impossible to connect: " + url+"/start")
 
     @Slot()
@@ -7397,7 +7387,8 @@ Have fun!
         try:
             r = requests.post(url+"/stop", data=data)
             self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
-        except:
+        except (requests.RequestException, ValueError):
+            logger.debug('Could not stop the uTTM recorder', exc_info=True)
             logger.debug("Impossible to connect: " + url+"/stop")
 
     def sizeof_fmt(self, num, suffix="B"):
@@ -7465,18 +7456,20 @@ Have fun!
             data = r.json()
             try:
                 self.ui.textEdit_uttm_status.setHtml(self.pretty_html(data))
-            except:
+            except (KeyError, TypeError, ValueError):
+                logger.debug('uTTM status layout is unavailable; displaying JSON', exc_info=True)
                 self.ui.textEdit_uttm_status.setText(json.dumps(r.json(), indent=4))
-        except:
+        except (requests.RequestException, ValueError):
+            logger.debug('Could not read uTTM status', exc_info=True)
             self.timerUttmWatchDog = None
             logger.debug("%s %s", "Failed ", url+"/status")
             self.ui.checkBox_uttm_watchdog.setChecked(False)
 
         try:
             r = requests.get(url+"/log_last", timeout=0.5)
-            #print(r.text)
             self.ui.textEdit_uttm_log.setText(r.text)
-        except:
+        except requests.RequestException:
+            logger.debug('Could not read the uTTM log', exc_info=True)
             self.timerUttmWatchDog = None
             logger.debug("%s %s", "Failed ", url + "/log_last")
             self.ui.checkBox_uttm_watchdog.setChecked(False)
@@ -7503,8 +7496,10 @@ Have fun!
             r = requests.get(url + "/show_preview", timeout=1.1)
             j = r.json()
             #self.ui.textEdit_uttm_status.setText(json.dumps(j, indent=4))
-        except:
+        except (requests.RequestException, ValueError):
+            logger.debug('Could not load the uTTM laser preview', exc_info=True)
             logger.debug("%s %s", "Failed ", url + "/show_preview")
+            return
 
         self.ui.label_uttm_laser_freq.setText("Laser freq. found: %s MHz" % j["laser_frequency"])
 
@@ -7951,8 +7946,6 @@ Have fun!
         """
         get the current preview image
         """
-        # print("plotPreviewImage")
-        # print("self.autoscale_image", self.autoscale_image)
         proj = self.ui.comboBox_view_projection.currentText()
         ch = self.ui.comboBox_plot_channel.currentText()
         if preview_img is None:
@@ -8096,7 +8089,6 @@ Have fun!
          autoRange,
          pos,
          scale) = self.getCurrentPreviewImage(img)
-        #debug("preview_img",preview_img)
         if self.isLifetimeColorChannel(ch):
             preview_hcl = preview_img
             tcycle_ns = 1e3 / (
