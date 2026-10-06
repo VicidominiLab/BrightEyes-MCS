@@ -1,5 +1,6 @@
 """Process that streams FIFO payloads directly to raw files without conversion."""
 
+from brighteyes_mcs.logging_setup import logged_worker
 import multiprocessing as mp
 import os
 import queue
@@ -79,6 +80,7 @@ class RawStreamWriterProcess(mp.Process):
             self.shared_dict["current_z_analog"] = current_z
             self.shared_dict["current_rep_analog"] = current_rep
 
+    @logged_worker
     def run(self):
         logger.debug("%s %s", "RawStreamWriterProcess RUN", os.getpid())
         self.acquisition_done.clear()
@@ -152,7 +154,7 @@ class RawStreamWriterProcess(mp.Process):
             error_text = traceback.format_exc()
             self.shared_dict["raw_writer_error"] = error_text
             self.shared_dict["raw_writer_stop_reason"] = "error"
-            logger.debug("%s %s", "RawStreamWriterProcess ERROR", error_text)
+            logger.exception("SPAD raw writer failed: %s", error_text)
         finally:
             for handle in handles.values():
                 handle.close()

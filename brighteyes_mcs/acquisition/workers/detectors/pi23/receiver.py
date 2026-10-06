@@ -1,5 +1,6 @@
 """PI23 detector receiver."""
 
+from brighteyes_mcs.logging_setup import logged_worker
 import multiprocessing as mp
 import os
 from time import sleep
@@ -67,6 +68,7 @@ class Pi23ReceiverProcess(mp.Process):
         )
         self.debug = bool(debug)
 
+    @logged_worker
     def run(self):
         logger.debug("%s %s", "Pi23ReceiverProcess RUN - PID:", os.getpid())
         try:
@@ -85,7 +87,9 @@ class Pi23ReceiverProcess(mp.Process):
                 try:
                     bunch = self.source.read_bunch(fifo_name)
                 except Exception as exc:
-                    logger.debug("%s %s %s", "Pi23ReceiverProcess read error", fifo_name, repr(exc))
+                    logger.exception("PI23 receive failed fifo=%s endpoint=%s:%s scan=%sx%s frames=%s: %s",
+                                     fifo_name, self.source.host, self.source.port,
+                                     self.source.scan_x, self.source.scan_y, self.source.scan_frames, exc)
                     self.stop_event.set()
                     break
                 if bunch is None:

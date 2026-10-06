@@ -1,7 +1,7 @@
 import multiprocessing as mp
 from threading import Thread
 import nifpga
-from brighteyes_mcs.logging_setup import logger
+from brighteyes_mcs.logging_setup import logged_worker, logger
 from time import perf_counter_ns, sleep
 from ..detectors.models import (
     DETECTOR_SPAD_ARRAY,
@@ -348,6 +348,7 @@ class FpgaHandleProcess(mp.Process):
     def _uses_rust_fifo_reader(self):
         return self._uses_nifpga_fifo() and self.use_rust_fifo == True
 
+    @logged_worker
     def run(self):
         # self.thread_check_parent = CheckParentAlive(self, self.stop_event, note="FpgaHandleProcess")
 

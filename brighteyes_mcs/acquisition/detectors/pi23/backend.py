@@ -1,4 +1,10 @@
-"""PI23 detector TCP source and decoding helpers."""
+"""PI23 detector TCP source and decoding helpers.
+
+Device API reference: Pi Imaging Technology pSPAD system manual,
+https://piimaging.com/doc-pspad (Remote command interface / Command guide).
+This integration was built by our group at IIT for our own use. It is not an
+official Pi Imaging tool or presented as endorsed or supported by Pi Imaging.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +16,7 @@ from time import perf_counter_ns
 import numpy as np
 from numpy.random import default_rng
 
-from brighteyes_mcs.logging_setup import logger
+from brighteyes_mcs.logging_setup import VERBOSITY_ENV_VAR, data_debug_enabled, logger
 
 
 DONE_SENTINEL = b"DONE"
@@ -21,6 +27,8 @@ DEFAULT_PI23_CHANNELS = 23
 
 
 def pi23_debug_enabled(default=False):
+    if VERBOSITY_ENV_VAR in os.environ:
+        return data_debug_enabled()
     value = os.environ.get("PI23_DEBUG", os.environ.get("DEBUG"))
     if value is None:
         return bool(default)
@@ -29,7 +37,7 @@ def pi23_debug_enabled(default=False):
 
 def pi23_debug(*objects, enabled=False):
     if pi23_debug_enabled(enabled):
-        print("[PI23]", *objects, flush=True)
+        logger.debug("[PI23] %s", " ".join(map(str, objects)))
 
 
 @dataclass

@@ -9,6 +9,8 @@ import numpy as np
 from brighteyes_mcs.acquisition.detectors.models import (
     DETECTOR_DISABLED,
     DETECTOR_PI23_TT,
+    DETECTOR_PI23_TS,
+    DETECTOR_PI23_TS_UIMG,
     DETECTOR_PI_23,
     DETECTOR_SPAD_ARRAY,
     DETECTOR_SPAD_TTM,
@@ -18,6 +20,34 @@ from brighteyes_mcs.acquisition.detectors.models import (
 from brighteyes_mcs.acquisition.manager import McsManager
 
 class TestMcsManager(unittest.TestCase):
+
+    def test_timestamp_restart_never_starts_intensity_receiver_or_storage(self):
+        for model in (DETECTOR_PI23_TS, DETECTOR_PI23_TS_UIMG):
+            instance = McsManager()
+            instance.set_detector_model(model)
+            instance.dim_x, instance.dim_y, instance.dim_z = 3, 2, 1
+            instance.fpga_handle = MagicMock()
+            instance.readRegistersDict = MagicMock()
+            instance.set_do_not_save(True)
+            instance.acquisition_storage.start = MagicMock()
+            with patch("brighteyes_mcs.acquisition.detectors.pi23.pipeline.Pi23ReceiverProcess") as receiver:
+                for _ in range(2):
+                    instance.run()
+                    self.assertEqual(instance.detector_pipeline.detector_model, model)
+                    self.assertIsNone(instance.detector_receiver_process)
+                    self.assertIsNone(instance.detector_receiver_queue)
+                    self.assertIsNone(instance.dataProcess)
+                    if model != DETECTOR_PI23_TS_UIMG:
+                        self.assertIsNone(instance.previewProcess)
+                    self.assertIsNone(instance.raw_writer_process)
+                    instance.fpga_handle.set_list_fifos_to_read_continously.assert_called_with([])
+                    if model == DETECTOR_PI23_TS_UIMG:
+                        self.assertTrue(instance.previewProcess.is_alive())
+                        self.assertIn("shared_fingerprint", instance.detector_pipeline.worker.shared_objects)
+                    instance.stopPreview()
+                    instance.stopAcquisition()
+                receiver.assert_not_called()
+            instance.acquisition_storage.start.assert_not_called()
 
     def test_disabled_runs_fpga_without_data_workers_or_storage(self):
         for preview, raw in ((True, False), (False, False), (False, True)):

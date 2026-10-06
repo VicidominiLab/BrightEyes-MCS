@@ -29,6 +29,11 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: python -m unittest test.test_channel_delay_skew_plugin -v
+      - name: Run real console isolation tests
+        if: matrix.python-version == '3.13'
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m pytest -q -m qt_isolated test/test_console_widget.py
       - name: Compile package
         run: python -m compileall -q brighteyes_mcs scripts
       - name: Check documentation and lint baseline

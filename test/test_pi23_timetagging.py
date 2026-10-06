@@ -17,6 +17,7 @@ from brighteyes_mcs.ui.qt.main_window_design import Ui_MainWindowDesign
 from brighteyes_mcs.ui.qt.pi23_timetagging import Pi23Timetagging, measurement_ms, output_path
 from brighteyes_mcs.ui.qt.main_window import MainWindow
 from brighteyes_mcs.acquisition.manager import McsManager
+from brighteyes_mcs.acquisition.detectors.models import DETECTOR_PI23_TS, DETECTOR_PI23_TS_UIMG, normalize_detector_model
 
 
 @pytest.fixture
@@ -73,8 +74,35 @@ def test_timing_includes_circular_frames_waits_and_margin(ui):
     ui.doubleSpinBox_pi23ttm_settle.setValue(0.5)
     ui.doubleSpinBox_pi23ttm_margin.setValue(2)
     assert measurement_ms(ui) == 44500
+    assert measurement_ms(ui, preview=True) == 8000
     ui.checkBox_waitOnlyFirstTime.setChecked(True)
     assert measurement_ms(ui) == 34500
+    assert measurement_ms(ui, preview=True) == 8000
+
+
+def test_preview_budget_is_one_frame_even_with_30000_repetitions(ui):
+    ui.spinBox_timeresolution.setValue(5)
+    ui.spinBox_time_bin_per_px.setValue(2)
+    ui.spinBox_nx.setValue(200)
+    ui.spinBox_ny.setValue(200)
+    ui.spinBox_nframe.setValue(7)
+    ui.spinBox_nrepetition.setValue(30000)
+    ui.checkBox_circular.setChecked(False)
+    ui.spinBox_waitAfterFrame.setValue(3)
+    ui.spinBox_waitForLaser.setValue(2)
+    ui.doubleSpinBox_pi23ttm_settle.setValue(0.5)
+    ui.doubleSpinBox_pi23ttm_margin.setValue(10)
+    assert measurement_ms(ui, preview=True) == 6400
+    ui.doubleSpinBox_pi23ttm_preview_margin.setValue(1.25)
+    assert measurement_ms(ui, preview=True) == 7150
+    ui.spinBox_nx.setValue(1)
+    ui.spinBox_ny.setValue(1)
+    assert measurement_ms(ui, preview=True) == 6751
+    ui.spinBox_waitAfterFrame.setValue(0)
+    ui.spinBox_waitForLaser.setValue(0)
+    ui.doubleSpinBox_pi23ttm_settle.setValue(0)
+    ui.doubleSpinBox_pi23ttm_preview_margin.setValue(0.001)
+    assert measurement_ms(ui, preview=True) == 2
 
 
 def test_output_names_never_reuse_existing_file(tmp_path):
@@ -112,6 +140,7 @@ def test_timetagging_defaults_are_loaded_from_plugins_cfg(ui):
     assert ui.lineEdit_pi23ttm_address.text() == "127.0.0.1:9997"
     assert ui.doubleSpinBox_pi23ttm_margin.value() == 2.0
     assert ui.doubleSpinBox_pi23ttm_settle.value() == 0.5
+    assert ui.doubleSpinBox_pi23ttm_preview_margin.value() == 0.5
     assert ui.doubleSpinBox_pi23ttm_timeout.value() == 120.0
     assert (
         MainWindow._get_pi23_timetagging_configuration(window)
@@ -158,12 +187,205 @@ def test_pi23_imaging_and_timetagging_are_mutually_exclusive(ui):
     ui.comboBox_detector_model.setCurrentText("FPGA - SPAD")
     ui.checkBox_pi23ttmActivate.setChecked(True)
     MainWindow._sync_pi23_ttm_detector(window)
-    pi23_index = ui.comboBox_detector_model.findText("TCP/IP - PI23")
+    pi23_index = ui.comboBox_detector_model.findText("TCP/IP - PI23 (Intesity)")
     assert not ui.comboBox_detector_model.model().item(pi23_index).isEnabled()
     ui.checkBox_pi23ttmActivate.setChecked(False)
-    ui.comboBox_detector_model.setCurrentText("TCP/IP - PI23")
+    ui.comboBox_detector_model.setCurrentText("TCP/IP - PI23 (Intesity)")
     MainWindow._sync_pi23_ttm_detector(window)
     assert not ui.checkBox_pi23ttmActivate.isEnabled()
+
+
+@pytest.mark.parametrize("model", ["TCP/IP - PI23 (TS mode)", DETECTOR_PI23_TS, DETECTOR_PI23_TS_UIMG])
+def test_timestamp_detector_allows_recording_and_persists_stream_port(ui, model):
+
+    window = SimpleNamespace(ui=ui, pi23_timetagging=SimpleNamespace(active=False),
+                             detectorModelChanged=MagicMock())
+    window._current_detector_model = lambda: MainWindow._current_detector_model(window)
+    window._pi23_timetagging_bindings = lambda: MainWindow._pi23_timetagging_bindings(window)
+    MainWindow._set_detector_model_combo(window, model)
+    ui.checkBox_pi23ttmActivate.setChecked(True)
+    MainWindow._sync_pi23_ttm_detector(window)
+    assert window._current_detector_model() == normalize_detector_model(model)
+    assert ui.checkBox_pi23ttmActivate.isEnabled()
+    assert ui.comboBox_detector_model.model().item(ui.comboBox_detector_model.currentIndex()).isEnabled()
+    assert ui.comboBox_pi23ttm_format.currentText() == "RAW"
+    assert not ui.comboBox_pi23ttm_format.isEnabled()
+    assert ui.tab_pi_timetagging.isAncestorOf(ui.spinBox_pi23ttm_stream_port)
+    assert ui.spinBox_pi23ttm_stream_port.value() == 19000
+    MainWindow._apply_pi23_timetagging_configuration(window, {"pi23ttm_stream_port": 19234})
+    assert MainWindow._get_pi23_timetagging_configuration(window)["pi23ttm_stream_port"] == 19234
+    MainWindow._apply_pi23_timetagging_configuration(window, {"pi23ttm_preview_margin": 0.75})
+    assert MainWindow._get_pi23_timetagging_configuration(window)["pi23ttm_preview_margin"] == 0.75
+
+
+def test_microimage_preview_displays_worker_buffers_and_fingerprint(ui):
+    import numpy as np
+    from brighteyes_mcs.acquisition.shared_memory import SharedMemoryRegistry
+    from brighteyes_mcs.acquisition.preview import PreviewRepository
+    from brighteyes_mcs.acquisition.detectors.pi23.microimage import MicroimagePreview
+    from brighteyes_mcs.acquisition.detectors.pi23.stream_image import MicroimageSnapshot
+
+    arrays = SharedMemoryRegistry().allocate_preview(dim_x=3, dim_y=2, dim_z=1,
+        detector_dim=5, autocorrelation_maxx=2, trace_bins=2, dfd_bins=2)
+    repository = PreviewRepository()
+    repository.bind(arrays)
+    preview = MicroimagePreview(3, 2, shared_objects=arrays)
+    counts = np.zeros(25, dtype=np.uint32)
+    counts[0], counts[24] = 5, 2
+    preview.consume(MicroimageSnapshot(counts, 3, 2, 1, 7, 3))
+    preview.publish()
+    manager = SimpleNamespace(preview_repository=repository,
+        shared_dict={"pi23_uimg_status": dict(frame=3, frame_dwells=1, recent_dwells=1,
+                                           last_frame_dwells=0, total_dwells=1)},
+        getFingerprintSaturation=lambda: repository.get_fingerprint(4))
+    window = SimpleNamespace(ui=ui, _current_detector_model=lambda: DETECTOR_PI23_TS_UIMG,
+        mcs_manager=manager, im_widget=MagicMock(), autoscale_image=True,
+        fingerprint_mask=np.ones((5, 5), dtype=np.uint8), fingerprint_visualization=0,
+        draw_fingerprint=MagicMock(), microimage_analysis=MagicMock(),
+        currentImage_size=[30, 10, 1], currentImage_pos=[20, 10, 0], currentImage_pixels=[3, 2, 1])
+    window.getCurrentPreviewImage = lambda: MainWindow.getCurrentPreviewImage(window, repository.get_preview_image())
+    window.isLifetimeColorChannel = lambda ch: False
+    ui.checkBox_showPreview.setChecked(True)
+    ui.comboBox_plot_channel.setCurrentText("Sum")
+    ui.comboBox_view_projection.setCurrentText("xy")
+    MainWindow._plot_pi23_microimage(window)
+    args, kwargs = window.im_widget.setImage.call_args
+    assert args[0].shape == (3, 2) and args[0][2, 1] == 7
+    assert kwargs["scale"] == (10, 5)
+    assert window.draw_fingerprint.call_args.args[0][4, 4] > 0
+    preview.publish("24")
+    ui.comboBox_plot_channel.setCurrentText("24")
+    MainWindow._plot_pi23_microimage(window)
+    assert window.im_widget.setImage.call_args.args[0][2, 1] == 2
+    assert "1 dwells processed" in ui.label_tot_num_dat_point_val.text()
+
+
+@pytest.mark.parametrize("circular", [False, True])
+def test_microimage_preview_delay_blinks_above_threshold_and_clears(ui, monkeypatch, circular):
+    from brighteyes_mcs.ui.qt import main_window
+
+    ui.spinBox_timeresolution.setValue(100)
+    ui.spinBox_time_bin_per_px.setValue(10)
+    ui.checkBox_circular.setChecked(circular)
+    ui.spinBox_circular_points.setValue(2)
+    ui.spinBox_circular_repetition.setValue(5)
+    # Check before the first frame too, when data may already be queued.
+    status = {"pending_dwells": 2000 if not circular else 200}
+    window = SimpleNamespace(ui=ui, _current_detector_model=lambda: DETECTOR_PI23_TS_UIMG,
+        mcs_manager=SimpleNamespace(shared_dict={"pi23_uimg_status": status}))
+    monkeypatch.setattr(main_window, "time", SimpleNamespace(monotonic=lambda: 10.0))
+    MainWindow._plot_pi23_microimage(window)
+    assert ui.label_preview_delay.text() == "2.000"
+    assert "rgb(255,128,128)" in ui.label_preview_delay.styleSheet()
+    monkeypatch.setattr(main_window, "time", SimpleNamespace(monotonic=lambda: 10.5))
+    MainWindow._plot_pi23_microimage(window)
+    assert ui.label_preview_delay.text() == "2.000"
+    assert "rgb(255,128,128)" not in ui.label_preview_delay.styleSheet()
+    monkeypatch.setattr(main_window, "time", SimpleNamespace(monotonic=lambda: 11.0))
+    status["pending_dwells"] //= 2
+    MainWindow._plot_pi23_microimage(window)
+    assert ui.label_preview_delay.text() == "1.000"
+    assert "red" not in ui.label_preview_delay.styleSheet()
+    window.mcs_manager.shared_dict["pi23_uimg_status"] = {}
+    MainWindow._plot_pi23_microimage(window)
+    assert ui.label_preview_delay.text() == "0.000"
+    assert "red" not in ui.label_preview_delay.styleSheet()
+
+
+def test_timestamp_preview_waits_for_recorder_ready():
+    window = SimpleNamespace(_waiting_for_pi23=True, started_normal=False,
+                             started_preview=True, sendCmdRun=MagicMock())
+    MainWindow._start_after_pi23_ready(window)
+    assert not window._waiting_for_pi23
+    window.sendCmdRun.assert_called_once()
+
+
+def test_microimage_scan_waits_for_subscription_acknowledgement(ui):
+    recorder = Pi23Timetagging(ui)
+    recorder.process = MagicMock()
+    recorder.process.poll.return_value = None
+    recorder.pending = True
+    recorder.stream_microimage = True
+    recorder.require_armed = True
+    recorder.armed = True
+    ready = []
+    recorder.ready.connect(lambda: ready.append(True))
+    recorder._ready()
+    assert recorder.pending and not ready
+    recorder.image_connected.set()
+    recorder._ready()
+    assert not recorder.pending and ready == [True]
+    recorder.settle_timer.stop()
+    recorder.process = None
+
+
+def test_raw_scan_waits_for_sb_armed_and_cancels_stale_ready_timer(ui):
+    recorder = Pi23Timetagging(ui)
+    recorder.process = MagicMock()
+    recorder.process.poll.return_value = None
+    recorder.pending = True
+    recorder.require_armed = True
+    recorder.deadline = time.monotonic() + 10
+    window = SimpleNamespace(_waiting_for_pi23=True, started_preview=True,
+                             started_normal=False, sendCmdRun=MagicMock())
+    recorder.ready.connect(lambda: MainWindow._start_after_pi23_ready(window))
+    recorder.messages.put("Press Ctrl+C to stop.\n")
+    recorder.poll()
+    recorder._ready()
+    assert not recorder.settle_timer.isActive()
+    window.sendCmdRun.assert_not_called()
+    recorder.messages.put("PI23_ARMED SB,1000\n")
+    recorder.poll()
+    assert recorder.armed and recorder.settle_timer.isActive()
+    window.sendCmdRun.assert_not_called()  # Wait for the configured delay.
+    recorder.messages.put("PI23_DISARMED\n")
+    recorder._ready()
+    assert not recorder.armed and not recorder.settle_timer.isActive()
+    window.sendCmdRun.assert_not_called()
+    recorder.messages.put("PI23_ARMED SB,1000\n")
+    recorder.poll()
+    recorder._ready()
+    window.sendCmdRun.assert_called_once()
+    recorder.messages.put("PI23_DISARMED\n")
+    recorder.messages.put("PI23_ARMED SB,1000\n")
+    recorder.poll()
+    recorder._ready()
+    window.sendCmdRun.assert_called_once()  # Repeat SB does not restart the FPGA.
+    recorder.settle_timer.stop()
+    recorder.process = None
+
+
+@pytest.mark.parametrize("normal,stopping", [(True, False), (False, False), (True, True)])
+def test_timestamp_process_exit_finishes_scan_without_fifo_completion(ui, normal, stopping):
+    from brighteyes_mcs.acquisition.detectors.models import DETECTOR_PI23_TS
+
+    window = SimpleNamespace(
+        ui=ui, _current_detector_model=lambda: DETECTOR_PI23_TS,
+        pi23_timetagging=SimpleNamespace(stopping=stopping), started_normal=normal,
+        started_preview=not normal, finalizeAcquisition=MagicMock(), stop=MagicMock(),
+    )
+    MainWindow._pi23_recording_finished(window)
+    assert window.finalizeAcquisition.call_count == int(normal and not stopping)
+    assert window.stop.call_count == int(not normal and not stopping)
+
+
+def test_timestamp_snapshot_renders_with_scan_geometry(ui):
+    import numpy as np
+    from brighteyes_mcs.acquisition.detectors.models import DETECTOR_PI23_TS
+    from brighteyes_mcs.acquisition.detectors.pi23.stream_image import ImageSnapshot
+
+    window = SimpleNamespace(ui=ui, _current_detector_model=lambda: DETECTOR_PI23_TS,
+                             started_normal=False, started_preview=True, im_widget=MagicMock(),
+                             currentImage_size=[30, 10, 1], currentImage_pos=[20, 10, 0],
+                             autoscale_image=True)
+    ui.checkBox_showPreview.setChecked(True)
+    counts = np.arange(6, dtype=np.uint32).reshape(2, 3)
+    MainWindow._show_pi23_timestamp_image(window, ImageSnapshot(counts, 7, 15, 2))
+    args, kwargs = window.im_widget.setImage.call_args
+    np.testing.assert_array_equal(args[0], counts.T)
+    assert kwargs["scale"] == (10, 5)
+    assert kwargs["pos"] == (5, 5)
+    assert ui.label_current_frame_val.text() == "8"
 
 
 def test_disabled_detector_configuration_roundtrip_and_pi23_controls(ui):
@@ -192,8 +414,25 @@ def test_disabled_preview_tick_does_not_access_detector_data(ui):
     window.timerPreviewImg_tick_mutex.unlock.assert_called_once_with()
 
 
+@pytest.mark.parametrize("record,suppress,expected_suppressed", [
+    (False, False, False), (False, True, False), (True, False, False), (True, True, True),
+])
+def test_uimg_acquire_enables_h5_independently_of_timestamp_recording(ui, record, suppress, expected_suppressed):
+    ui.checkBox_pi23ttmActivate.setChecked(record)
+    ui.checkBox_noMcsSaveWithTtm.setChecked(suppress)
+    ui.checkBox_ttmActivate.setChecked(False)
+    ui.checkBox_uttmActivate.setChecked(False)
+    ui.checkBox_rawStreamAcquisition.setChecked(True)  # A saved intensity preference must not bypass uimg.
+    window = MagicMock(ui=ui)
+    window.pi23_timetagging.active = False
+    window._current_detector_model.return_value = DETECTOR_PI23_TS_UIMG
+    MainWindow.beginAcquisition(window)
+    assert window._mcs_saving_suppressed is expected_suppressed
+    window.initializeAcquisition.assert_called_once_with(do_not_save=False, do_run=True, raw_stream_mode=False)
+
+
 def test_conflicting_config_is_rejected_before_connecting(ui):
-    ui.comboBox_detector_model.setCurrentText("TCP/IP - PI23")
+    ui.comboBox_detector_model.setCurrentText("TCP/IP - PI23 (Intesity)")
     ui.checkBox_pi23ttmActivate.setChecked(True)
     window = SimpleNamespace(
         ui=ui, pi23_timetagging=SimpleNamespace(active=False),
@@ -284,6 +523,116 @@ def test_recorder_failure_before_ready_does_not_start_scan(ui):
     assert "Connection refused" in ui.plainTextEdit_pi23ttm_log.toPlainText()
 
 
+@pytest.mark.parametrize("code", [0, 1])
+def test_broken_stop_pipe_cannot_crash_cleanup_or_leave_recorder_active(ui, code):
+    recorder = Pi23Timetagging(ui)
+    process = MagicMock()
+    process.wait.return_value = code
+    process.stdin.flush.side_effect = OSError(22, "Invalid argument")
+    process.stdin.close.side_effect = OSError(22, "Invalid argument")
+    recorder.process = process
+    recorder.pending = True
+    recorder.timer.start()
+    recorder.settle_timer.start(500)
+    recorder._enable_settings(False)
+    finished = []
+    recorder.finished.connect(lambda: finished.append(True))
+    recorder.stop()
+    recorder.close()
+    recorder.messages.put(None)
+    recorder.poll()
+    assert not recorder.active and not recorder.pending
+    assert not recorder.timer.isActive() and not recorder.settle_timer.isActive()
+    assert recorder.image_stop.is_set()
+    assert ui.spinBox_pi23ttm_stream_port.isEnabled()
+    assert finished == [True]
+    # A queued tick after completion is harmless, including duplicate EOF.
+    recorder.messages.put(None)
+    recorder.poll()
+    assert finished == [True]
+
+
+def test_recorder_error_and_exit_are_persisted_in_log(ui, tmp_path):
+    import logging
+    from brighteyes_mcs.logging_setup import logger
+
+    path = tmp_path / "recorder.log"
+    handler = logging.FileHandler(path, encoding="utf-8")
+    old_level = logger.level
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
+    try:
+        recorder = Pi23Timetagging(ui)
+        recorder.process = MagicMock()
+        recorder.process.wait.return_value = 1
+        recorder.pending = True
+        recorder.messages.put("Error: image server port is already in use\n")
+        recorder.messages.put(None)
+        recorder.poll()
+        handler.flush()
+        saved = path.read_text(encoding="utf-8")
+        assert "image server port is already in use" in saved
+        assert "Image stream exited (1)" in saved
+    finally:
+        logger.removeHandler(handler)
+        handler.close()
+        logger.setLevel(old_level)
+
+
+@pytest.mark.parametrize("level", range(4))
+def test_raw_recorder_verbose_flag_only_at_level_three(ui, tmp_path, monkeypatch, level):
+    import brighteyes_mcs.ui.qt.pi23_timetagging as module
+    from brighteyes_mcs.logging_setup import VERBOSITY_ENV_VAR
+
+    executable = tmp_path / "recorder.exe"
+    executable.touch()
+    ui.lineEdit_pi23ttm_raw_executable.setText(str(executable))
+    ui.comboBox_pi23ttm_format.setCurrentText("RAW")
+    monkeypatch.setenv(VERBOSITY_ENV_VAR, str(level))
+    launch = MagicMock(side_effect=OSError("synthetic launch failure"))
+    monkeypatch.setattr(module.subprocess, "Popen", launch)
+    recorder = Pi23Timetagging(ui)
+    with pytest.raises(OSError, match="synthetic launch failure"):
+        recorder.start(str(tmp_path / "scan.h5"), record=False)
+    command = launch.call_args.args[0]
+    assert ("--verbose" in command) == (level == 3)
+
+
+def test_recorder_can_restart_after_failed_image_server_start(app, ui, tmp_path):
+    executable = Path(ui.lineEdit_pi23ttm_raw_executable.text())
+    if not executable.is_file():
+        pytest.skip("Local vendor recorder build is not available")
+    recorder = Pi23Timetagging(ui)
+    failures = []
+    recorder.failed.connect(failures.append)
+    # Occupying the image port causes startup to fail before connecting to
+    # any detector. Retry on the same controller to exercise the second start.
+    with socket.socket() as occupied:
+        occupied.bind(("127.0.0.1", 0))
+        occupied.listen(1)
+        ui.spinBox_pi23ttm_stream_port.setValue(occupied.getsockname()[1])
+        for attempt in range(2):
+            recorder.start(str(tmp_path / "image.h5"), stream_image=True, record=False)
+            wait_for(app, lambda: not recorder.active)
+            assert len(failures) == attempt + 1
+            assert not recorder.pending
+            assert ui.spinBox_pi23ttm_stream_port.isEnabled()
+
+
+def test_timestamp_socket_loss_is_failure_even_if_rust_exits_zero(ui):
+    recorder = Pi23Timetagging(ui)
+    recorder.process = MagicMock()
+    recorder.process.wait.return_value = 0
+    recorder.stream_image = True
+    recorder.messages.put("Socket closed by server.\n")
+    recorder.messages.put(None)
+    failures = []
+    recorder.failed.connect(failures.append)
+    recorder.poll()
+    assert failures == ["Socket closed by server."]
+    assert recorder.stopping and not recorder.active
+
+
 def test_suppressed_mcs_saving_finishes_without_creating_metadata_file():
     from unittest.mock import patch
 
@@ -319,6 +668,80 @@ def test_mcs_stop_interrupts_recorder_only_for_manual_stop(ui, natural):
     assert not window._waiting_for_pi23
     assert not ui.pushButton_acquisitionStart.isEnabled()
     assert ui.pushButton_stop.isEnabled()
+
+
+def test_stop_button_overrides_automatic_completion_tail():
+    window = SimpleNamespace(_pending_program_state_after_stop="done", stop=MagicMock())
+    MainWindow.stopButtonClicked(window)
+    assert window._pending_program_state_after_stop is None
+    window.stop.assert_called_once()
+
+
+@pytest.mark.parametrize("phase", ["calibration", "acquisition"])
+def test_stop_real_raw_recorder_during_blocked_device_read_and_restart(app, ui, tmp_path, phase):
+    executable = Path(ui.lineEdit_pi23ttm_raw_executable.text())
+    if not executable.is_file():
+        pytest.skip("Local vendor recorder build is not available")
+    with socket.socket() as port:
+        port.bind(("127.0.0.1", 0))
+        ui.spinBox_pi23ttm_stream_port.setValue(port.getsockname()[1])
+    with socket.socket() as server:
+        server.bind(("127.0.0.1", 0))
+        server.listen(2)
+        server.settimeout(10)
+        ui.lineEdit_pi23ttm_address.setText(f"127.0.0.1:{server.getsockname()[1]}")
+        reached = [threading.Event(), threading.Event()]
+        disconnected = [threading.Event(), threading.Event()]
+        errors = []
+
+        def device():
+            try:
+                for attempt in range(2):
+                    connection, _ = server.accept()
+                    with connection:
+                        connection.settimeout(10)
+                        connection.sendall(b"Fake PI23\n")
+                        with connection.makefile("rb") as stream:
+                            assert stream.readline() == b"T,v,1\n"
+                            connection.sendall(b"invalid\n" if phase == "calibration" else b"valid\n")
+                            command = stream.readline()
+                            if phase == "calibration":
+                                assert command == b"T,c,1\n"
+                            else:
+                                assert command.startswith(b"SB,")
+                            reached[attempt].set()
+                            # No response: calibration or acquisition is blocked.
+                            assert stream.read(1) == b""
+                            disconnected[attempt].set()
+            except Exception as error:
+                errors.append(error)
+
+        worker = threading.Thread(target=device, daemon=True)
+        worker.start()
+        recorder = Pi23Timetagging(ui)
+        failures, ready = [], []
+        recorder.failed.connect(failures.append)
+        recorder.ready.connect(lambda: ready.append(True))
+        try:
+            for attempt in range(2):
+                recorder.start(str(tmp_path / "stop.h5"), stream_image=True, record=False, preview=True)
+                wait_for(app, lambda attempt=attempt: reached[attempt].is_set() or errors)
+                assert not errors
+                recorder.stop()
+                # Do not pump Qt: cancellation must not depend on GUI timers.
+                recorder.process.wait(timeout=8)
+                recorder.reader.join(timeout=2)
+                recorder.poll()
+                assert not recorder.active and not recorder.pending
+                assert disconnected[attempt].wait(2)
+                assert not failures
+                assert ui.spinBox_pi23ttm_stream_port.isEnabled()
+            if phase == "calibration":
+                assert not ready
+            worker.join(timeout=2)
+            assert not errors
+        finally:
+            recorder.close()
 
 
 @pytest.mark.parametrize("raw", [False, True])
@@ -384,6 +807,10 @@ def test_vendor_recorder_calibration_record_and_clean_stop(app, ui, tmp_path, ra
         wait_for(app, lambda: ready or failures or errors)
         assert not failures and not errors
         assert ready == [True]
+        if raw:
+            assert recorder.armed
+            log = ui.plainTextEdit_pi23ttm_log.toPlainText()
+            assert log.index("PI23_ARMED SB,") < log.index("Recorder ready; starting the FPGA scan.")
         assert commands == [f"SB,{measurement_ms(ui)}\n".encode()]
         if manual_stop:
             recorder.stop()
@@ -405,3 +832,172 @@ def test_vendor_recorder_calibration_record_and_clean_stop(app, ui, tmp_path, ra
     finally:
         finish.set()
         recorder.close()
+
+
+@pytest.mark.parametrize("record,microimage,save_h5", [
+    (False, False, False), (True, False, False), (False, True, False),
+    (True, True, True), (False, True, True),
+])
+def test_vendor_timestamp_image_and_optional_raw_recording(app, ui, tmp_path, record, microimage, save_h5):
+    import subprocess
+    import numpy as np
+    preview = not record and not save_h5
+
+    executable = Path(ui.lineEdit_pi23ttm_raw_executable.text())
+    if not executable.is_file():
+        pytest.skip("Local vendor recorder build is not available")
+    help_result = subprocess.run([str(executable), "--help"], capture_output=True, text=True)
+    option = "--stream-microimage" if microimage else "--stream-image"
+    if option not in help_result.stderr + help_result.stdout:
+        pytest.skip("Build tdc_raw_acquire with --stream-image support")
+    with socket.socket() as stream_port:
+        stream_port.bind(("127.0.0.1", 0))
+        ui.spinBox_pi23ttm_stream_port.setValue(stream_port.getsockname()[1])
+    server = socket.socket()
+    server.bind(("127.0.0.1", 0))
+    server.listen(1)
+    server.settimeout(10)
+    finish = threading.Event()
+    errors = []
+    commands = []
+    # Combined frame/line/dwell, then three columns and two rows.
+    repeat_frame = threading.Event()
+    scan_ready = threading.Event()
+    ids = [33, 0, 24, 27, 1, 27, 2, 2, 2, 29, 3, 27, 4, 4, 27, 5]
+    if microimage:
+        ids.append(27)  # Close the final dwell in the continuous subscription.
+    payload = b"".join(bytes([marker, 0, 1, 0, 0, 2]) for marker in ids)
+
+    def device():
+        try:
+            connection, _ = server.accept()
+            with connection:
+                connection.settimeout(10)
+                connection.sendall(b"Fake PI23\n")
+                with connection.makefile("rb") as stream:
+                    assert stream.readline() == b"T,v,1\n"
+                    connection.sendall(b"invalid\n")
+                    assert stream.readline() == b"T,c,1\n"
+                    connection.sendall(b"calibration valid\n")
+                    commands.append(stream.readline())
+                    assert commands[0].startswith(b"SB,")
+                    assert scan_ready.wait(8)
+                    connection.sendall(payload)
+                    if preview:
+                        assert repeat_frame.wait(8)
+                        connection.sendall(b"DONE\n")
+                        commands.append(stream.readline())
+                        connection.sendall(payload)
+                    assert finish.wait(8)
+                    if not preview:
+                        connection.sendall(b"DONE\n")
+                    else:
+                        assert stream.read(1) == b""
+        except Exception as error:
+            errors.append(error)
+        finally:
+            server.close()
+
+    thread = threading.Thread(target=device, daemon=True)
+    thread.start()
+    ui.lineEdit_pi23ttm_address.setText(f"127.0.0.1:{server.getsockname()[1]}")
+    ui.lineEdit_pi23ttm_folder.setText(str(tmp_path))
+    ui.spinBox_nx.setValue(3)
+    ui.spinBox_ny.setValue(2)
+    ui.doubleSpinBox_pi23ttm_settle.setValue(0.1)
+    recorder = Pi23Timetagging(ui)
+    images, failures, ready = [], [], []
+    worker = None
+    manager = None
+    shared = None
+    if microimage:
+        import multiprocessing as mp
+        from brighteyes_mcs.acquisition.shared_memory import SharedMemoryRegistry
+        from brighteyes_mcs.acquisition.preview import PreviewRepository
+        from brighteyes_mcs.acquisition.detectors.pi23.microimage_worker import MicroimageWorker
+        manager = mp.Manager()
+        shared = manager.dict(channel="Sum")
+        arrays = SharedMemoryRegistry().allocate_preview(dim_x=3, dim_y=2, dim_z=1,
+            detector_dim=5, autocorrelation_maxx=2, trace_bins=2, dfd_bins=2)
+        repository = PreviewRepository()
+        repository.bind(arrays)
+        saving = (dict(filename=str(tmp_path / "image.h5"), frames=1, repetitions=1,
+                       dwell_seconds=0.001) if save_h5 else None)
+        worker = MicroimageWorker(3, 2, ui.spinBox_pi23ttm_stream_port.value(), 2, arrays, shared, saving=saving)
+        worker.start()
+    else:
+        recorder.image_ready.connect(images.append)
+    recorder.failed.connect(failures.append)
+    recorder.ready.connect(lambda: (ready.append(True), scan_ready.set()))
+    try:
+        recorder.start(str(tmp_path / "image.h5"), stream_image=not microimage,
+                       stream_microimage=microimage, record=record, preview=preview, microimage_worker=worker)
+        def received(frame):
+            if microimage:
+                return shared.get("pi23_uimg_status", {}).get("total_dwells", 0) >= 6 * (frame + 1)
+            return images and images[-1].frame == frame and images[-1].events == 10
+        wait_for(app, lambda: (ready and received(0)) or failures or errors)
+        assert not failures and not errors
+        if microimage:
+            np.testing.assert_array_equal(repository.get_preview_image(), [[2, 1, 3], [1, 2, 1]])
+            expected = np.zeros(25, dtype=np.uint64)
+            expected[[0, 1, 2, 3, 4, 5, 24]] = [1, 1, 3, 1, 2, 1, 1]
+            np.testing.assert_array_equal(repository.get_fingerprint(0).ravel(), expected)
+            shared["channel"] = "2"
+            wait_for(app, lambda: repository.get_preview_image().sum() == 3)
+        else:
+            np.testing.assert_array_equal(images[-1].counts, [[2, 1, 3], [1, 2, 1]])
+        log = ui.plainTextEdit_pi23ttm_log.toPlainText()
+        duration = measurement_ms(ui, preview=preview)
+        assert commands == [f"SB,{duration}\n".encode()]
+        assert f"--measurement-ms {duration}" in log
+        if microimage:
+            assert "--stream-microimage" in log and "--stream-image 3 2" not in log
+            assert "--stream-image-pixel" not in log
+            assert "--microimage-buffer 1048576" in log
+        else:
+            assert "--stream-image 3 2" in log and "--stream-microimage" not in log
+        assert f"--stream-image-port {ui.spinBox_pi23ttm_stream_port.value()}" in log
+        if preview:
+            assert "--no-output" in log and "--repeat" in log
+            assert recorder.path is None
+            assert list(tmp_path.iterdir()) == []
+            repeat_frame.set()
+            wait_for(app, lambda: received(1) or failures or errors)
+            assert not failures and not errors
+            assert commands == [f"SB,{duration}\n".encode()] * 2
+            recorder.stop()
+        else:
+            assert "--repeat" not in log
+        finish.set()
+        wait_for(app, lambda: not recorder.active)
+        if record:
+            assert recorder.path.read_bytes() == payload
+        if save_h5:
+            with h5py.File(tmp_path / "image.h5", "r") as saved:
+                assert saved["data"].shape == (1, 1, 2, 3, 1, 25)
+                assert saved["data"].dtype == np.dtype("uint32")
+                np.testing.assert_array_equal(saved["data"][0, 0, :, :, 0].sum(axis=2), [[2, 1, 3], [1, 2, 1]])
+                np.testing.assert_array_equal(saved["data"][...].sum(axis=(0, 1, 2, 3, 4)), expected)
+                assert saved["pi23_microimages/valid"][...].all()
+                assert saved["pi23_microimages"].attrs["complete"]
+            if not record:
+                assert recorder.path is None
+                assert "--no-output" in log
+                assert list(tmp_path.iterdir()) == [tmp_path / "image.h5"]
+        assert not failures
+        assert recorder.image_stop.is_set()
+        thread.join(timeout=2)
+        assert not errors
+    finally:
+        repeat_frame.set()
+        finish.set()
+        recorder.close()
+        if worker is not None:
+            worker.stop()
+            worker.join(timeout=3)
+            if worker.is_alive():
+                worker.terminate()
+                worker.join(timeout=2)
+        if manager is not None:
+            manager.shutdown()

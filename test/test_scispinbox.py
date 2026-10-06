@@ -6,6 +6,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(1, os.getcwd())
 
 from PySide6.QtGui import QValidator
+from PySide6.QtCore import Qt, QLocale
+from PySide6.QtTest import QTest, QSignalSpy
 from PySide6.QtWidgets import QApplication, QDoubleSpinBox
 
 from brighteyes_mcs.ui.qt.scispinbox import eng_string, sciSpinBox, value_eng_string
@@ -157,6 +159,89 @@ class TestSciSpinBox(unittest.TestCase):
             box.lineEdit().characterCursorWidth(),
             max(2, box.fontMetrics().horizontalAdvance("0")),
         )
+
+    def test_formatting_signs_precision_and_engineering_boundaries(self):
+        cases = [
+            (0, {}, "+0.000"),
+            (-12.5, {"format": "%.2f"}, "-12.50"),
+            (1.25, {"decimal_sep": ","}, "+1,250"),
+            (1e-6, {"format_exp": "e%d", "si": True}, "+1.000u"),
+            (1e24, {"format_exp": "e%d", "si": True}, "+1.000Y"),
+            (1e27, {"format_exp": "e%d", "si": True}, "+1.000e27"),
+            (0.125, {"format_exp": "e%d"}, "+125.000e-3"),
+            (1000, {"si": True}, "+1000.000"),
+        ]
+        for value, options, expected in cases:
+            with self.subTest(value=value, options=options):
+                self.assertEqual(eng_string(value, **options), expected)
+
+    def test_smallest_float_and_all_si_prefixes(self):
+        self.assertEqual(eng_string(5e-324, format_exp="e%d"), "+5.000e-324")
+        for suffix, exponent in [("y", -24), ("z", -21), ("a", -18), ("f", -15),
+                                 ("p", -12), ("n", -9), ("u", -6), ("m", -3),
+                                 ("k", 3), ("M", 6), ("G", 9), ("T", 12),
+                                 ("P", 15), ("E", 18), ("Z", 21), ("Y", 24)]:
+            with self.subTest(suffix=suffix):
+                self.assertEqual(value_eng_string("2" + suffix), 2 * 10.0**exponent)
+
+    def test_prefix_cursor_and_carry_preserve_selected_place(self):
+        box = sciSpinBox()
+        box.setDecimals(2)
+        box.setPrefix("Voltage: ")
+        box.setSuffix(" V")
+        box.setValue(9.95)
+        box.lineEdit().setCursorPosition(box.text().find(".") + 1)
+        box.stepBy(1)
+        self.assertEqual(box.text(), "Voltage: +10.05 V")
+        self.assertEqual(box.lineEdit().cursorPosition(), box.text().find(".") + 1)
+        box.stepBy(-1)
+        self.assertEqual(box.text(), "Voltage: +9.95 V")
+
+    def test_negative_steps_limits_and_zero_decimal_display(self):
+        box = sciSpinBox()
+        box.setDecimals(0)
+        box.setRange(-20, 20)
+        box.setValue(-19)
+        box.lineEdit().setCursorPosition(len(box.text()))
+        box.stepBy(-5)
+        self.assertEqual(box.value(), -20)
+        box.stepBy(1)
+        self.assertEqual(box.value(), -19)
+
+    def test_nonfinite_values_are_not_accepted(self):
+        box = sciSpinBox()
+        for text in ("nan", "inf", "-inf", "1e999", "1kk"):
+            with self.subTest(text=text):
+                self.assertEqual(box.validate(text, len(text))[0], QValidator.Invalid)
+
+    def test_keyboard_commit_and_arrow_step_with_units(self):
+        box = sciSpinBox()
+        box.setDecimals(2)
+        box.setPrefix("Delay: ")
+        box.setSuffix(" ns")
+        box.show()
+        box.setFocus()
+        changes = QSignalSpy(box.valueChanged)
+        box.lineEdit().selectAll()
+        QTest.keyClicks(box.lineEdit(), "1,25")
+        self.assertEqual(box.value(), 0.0)
+        QTest.keyClick(box, Qt.Key_Return)
+        self.assertEqual(box.value(), 1.25)
+        self.assertGreater(changes.count(), 0)
+        box.lineEdit().setCursorPosition(box.text().find(".") + 1)
+        QTest.keyClick(box, Qt.Key_Up)
+        self.assertEqual(box.value(), 1.35)
+        box.close()
+
+    def test_comma_locale_display_and_step(self):
+        box = sciSpinBox()
+        box.setLocale(QLocale(QLocale.Language.Italian))
+        box.setDecimals(2)
+        box.setValue(1.25)
+        self.assertEqual(box.text(), "+1,25")
+        box.lineEdit().setCursorPosition(box.text().find(",") + 1)
+        box.stepBy(1)
+        self.assertEqual(box.text(), "+1,35")
 
 
 if __name__ == "__main__":

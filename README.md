@@ -51,6 +51,29 @@ creation. To open the setup again later:
 python -m brighteyes_mcs --setup
 ```
 
+Logging defaults to level **2 (Verbose)**. Select the level at launch:
+
+```console
+python -m brighteyes_mcs --log-level 2
+```
+
+| Level | Log contents |
+| --- | --- |
+| 0 — No log | No application log files or crash dumps are written. |
+| 1 — Normal | Normal application messages, warnings, errors and crash diagnostics. |
+| 2 — Verbose (default) | Normal logs plus user input and the first action handler, with action IDs, completion and failure records. Includes buttons, settings and plot navigation. |
+| 3 — Extremely Verbose | All of the above plus data-flow debug messages, PI23 receive/decode/batch details, and the RAW recorder's `--verbose` diagnostics. |
+
+`--verbosity` is an alias for `--log-level`. The legacy `debug` argument still
+selects the unstable window mode independently of log verbosity.
+Open **Load / Save Cfg → Open log folder** to see the logs. On Windows the default
+folder is `%LOCALAPPDATA%\BrightEyes-MCS\log` (falling back to `%APPDATA%`, or
+`./log` elsewhere); `BRIGHTEYES_LOG_DIR` can override it. Workers inherit the
+selected level and write separate `-pid-…` files with the same session timestamp.
+For PI23 failure analysis, keep all files from the session: they include recorder
+commands/output, exit codes, worker tracebacks and native-crash stacks when available.
+Level 3 can generate large logs and affect acquisition performance.
+
 From the source checkout, optional plug-in dependencies can be installed with:
 
 ```console

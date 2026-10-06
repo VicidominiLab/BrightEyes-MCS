@@ -393,6 +393,11 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_102.setObjectName(u"gridLayout_102")
         self.gridLayout_101 = QGridLayout()
         self.gridLayout_101.setObjectName(u"gridLayout_101")
+        self.pushButton_openLogFolder = QPushButton(self.tab_7)
+        self.pushButton_openLogFolder.setObjectName(u"pushButton_openLogFolder")
+
+        self.gridLayout_101.addWidget(self.pushButton_openLogFolder, 4, 2, 1, 1)
+
         self.pushButton_systemProfile = QPushButton(self.tab_7)
         self.pushButton_systemProfile.setObjectName(u"pushButton_systemProfile")
 
@@ -1857,55 +1862,109 @@ class Ui_MainWindowDesign(object):
         self.label_pi23ttm_margin = QLabel(self.tab_pi_timetagging)
         self.label_pi23ttm_margin.setObjectName(u"label_pi23ttm_margin")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_margin, 5, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_margin, 6, 0, 1, 1)
 
         self.doubleSpinBox_pi23ttm_margin = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pi23ttm_margin.setObjectName(u"doubleSpinBox_pi23ttm_margin")
         self.doubleSpinBox_pi23ttm_margin.setMinimum(0.100000000000000)
         self.doubleSpinBox_pi23ttm_margin.setMaximum(86400.000000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pi23ttm_margin, 5, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pi23ttm_margin, 6, 1, 1, 1)
 
         self.label_pi23ttm_settle = QLabel(self.tab_pi_timetagging)
         self.label_pi23ttm_settle.setObjectName(u"label_pi23ttm_settle")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_settle, 6, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_settle, 7, 0, 1, 1)
 
         self.doubleSpinBox_pi23ttm_settle = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pi23ttm_settle.setObjectName(u"doubleSpinBox_pi23ttm_settle")
         self.doubleSpinBox_pi23ttm_settle.setMaximum(3600.000000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pi23ttm_settle, 6, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pi23ttm_settle, 7, 1, 1, 1)
 
         self.label_pi23ttm_timeout = QLabel(self.tab_pi_timetagging)
         self.label_pi23ttm_timeout.setObjectName(u"label_pi23ttm_timeout")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_timeout, 7, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_timeout, 8, 0, 1, 1)
 
         self.doubleSpinBox_pi23ttm_timeout = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pi23ttm_timeout.setObjectName(u"doubleSpinBox_pi23ttm_timeout")
         self.doubleSpinBox_pi23ttm_timeout.setMinimum(1.000000000000000)
         self.doubleSpinBox_pi23ttm_timeout.setMaximum(3600.000000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pi23ttm_timeout, 7, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pi23ttm_timeout, 8, 1, 1, 1)
+
+        self.label_pi23ttm_stream_port = QLabel(self.tab_pi_timetagging)
+        self.label_pi23ttm_stream_port.setObjectName(u"label_pi23ttm_stream_port")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_stream_port, 5, 0, 1, 1)
+
+        self.spinBox_pi23ttm_stream_port = QSpinBox(self.tab_pi_timetagging)
+        self.spinBox_pi23ttm_stream_port.setObjectName(u"spinBox_pi23ttm_stream_port")
+        self.spinBox_pi23ttm_stream_port.setMinimum(1)
+        self.spinBox_pi23ttm_stream_port.setMaximum(65535)
+        self.spinBox_pi23ttm_stream_port.setValue(19000)
+
+        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pi23ttm_stream_port, 5, 1, 1, 1)
+
+        self.label_pi23ttm_preview_margin = QLabel(self.tab_pi_timetagging)
+        self.label_pi23ttm_preview_margin.setObjectName(u"label_pi23ttm_preview_margin")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_preview_margin, 9, 0, 1, 1)
+
+        self.doubleSpinBox_pi23ttm_preview_margin = QDoubleSpinBox(self.tab_pi_timetagging)
+        self.doubleSpinBox_pi23ttm_preview_margin.setObjectName(u"doubleSpinBox_pi23ttm_preview_margin")
+        self.doubleSpinBox_pi23ttm_preview_margin.setDecimals(3)
+        self.doubleSpinBox_pi23ttm_preview_margin.setMinimum(0.001000000000000)
+        self.doubleSpinBox_pi23ttm_preview_margin.setMaximum(86400.000000000000000)
+        self.doubleSpinBox_pi23ttm_preview_margin.setSingleStep(0.100000000000000)
+        self.doubleSpinBox_pi23ttm_preview_margin.setValue(0.500000000000000)
+
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pi23ttm_preview_margin, 9, 1, 1, 1)
+
+        self.label_pi23ttm_uimg_buffer = QLabel(self.tab_pi_timetagging)
+        self.label_pi23ttm_uimg_buffer.setObjectName(u"label_pi23ttm_uimg_buffer")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_uimg_buffer, 10, 0, 1, 1)
+
+        self.spinBox_pi23ttm_uimg_buffer = QSpinBox(self.tab_pi_timetagging)
+        self.spinBox_pi23ttm_uimg_buffer.setObjectName(u"spinBox_pi23ttm_uimg_buffer")
+        self.spinBox_pi23ttm_uimg_buffer.setMinimum(1)
+        self.spinBox_pi23ttm_uimg_buffer.setMaximum(8388608)
+        self.spinBox_pi23ttm_uimg_buffer.setValue(1048576)
+
+        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pi23ttm_uimg_buffer, 10, 1, 1, 1)
+
+        self.label_pi23ttm_uimg_batch = QLabel(self.tab_pi_timetagging)
+        self.label_pi23ttm_uimg_batch.setObjectName(u"label_pi23ttm_uimg_batch")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_uimg_batch, 11, 0, 1, 1)
+
+        self.spinBox_pi23ttm_uimg_batch = QSpinBox(self.tab_pi_timetagging)
+        self.spinBox_pi23ttm_uimg_batch.setObjectName(u"spinBox_pi23ttm_uimg_batch")
+        self.spinBox_pi23ttm_uimg_batch.setMinimum(1)
+        self.spinBox_pi23ttm_uimg_batch.setMaximum(65536)
+        self.spinBox_pi23ttm_uimg_batch.setValue(4096)
+
+        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pi23ttm_uimg_batch, 11, 1, 1, 1)
 
         self.pushButton_pi23ttm_force_calibration = QPushButton(self.tab_pi_timetagging)
         self.pushButton_pi23ttm_force_calibration.setObjectName(u"pushButton_pi23ttm_force_calibration")
 
-        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pi23ttm_force_calibration, 8, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pi23ttm_force_calibration, 12, 0, 1, 3)
 
         self.label_pi23ttm_status = QLabel(self.tab_pi_timetagging)
         self.label_pi23ttm_status.setObjectName(u"label_pi23ttm_status")
         self.label_pi23ttm_status.setWordWrap(True)
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_status, 9, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pi23ttm_status, 13, 0, 1, 3)
 
         self.plainTextEdit_pi23ttm_log = QPlainTextEdit(self.tab_pi_timetagging)
         self.plainTextEdit_pi23ttm_log.setObjectName(u"plainTextEdit_pi23ttm_log")
         self.plainTextEdit_pi23ttm_log.setReadOnly(True)
         self.plainTextEdit_pi23ttm_log.setMaximumBlockCount(5000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pi23ttm_log, 10, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pi23ttm_log, 14, 0, 1, 3)
 
         self.tabWidget_3.addTab(self.tab_pi_timetagging, "")
         self.tab_6 = QWidget()
@@ -2027,6 +2086,8 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_105.addWidget(self.checkBox_fifo_analog, 2, 0, 1, 1)
 
         self.comboBox_detector_model = QComboBox(self.groupBox_9)
+        self.comboBox_detector_model.addItem("")
+        self.comboBox_detector_model.addItem("")
         self.comboBox_detector_model.addItem("")
         self.comboBox_detector_model.addItem("")
         self.comboBox_detector_model.addItem("")
@@ -4490,6 +4551,10 @@ class Ui_MainWindowDesign(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_statusmonitor), QCoreApplication.translate("MainWindowDesign", u"Status", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_terminal), QCoreApplication.translate("MainWindowDesign", u"Terminal", None))
 #if QT_CONFIG(tooltip)
+        self.pushButton_openLogFolder.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Open the folder containing this session's application and worker logs", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_openLogFolder.setText(QCoreApplication.translate("MainWindowDesign", u"Open log folder", None))
+#if QT_CONFIG(tooltip)
         self.pushButton_systemProfile.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Select the active microscope profile and its resource folders", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_systemProfile.setText(QCoreApplication.translate("MainWindowDesign", u"System\u2026", None))
@@ -4688,13 +4753,24 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_pi23ttm_margin.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Extra recording time beyond the scan duration. Include external trigger delays here.", None))
 #endif // QT_CONFIG(tooltip)
         self.doubleSpinBox_pi23ttm_margin.setSuffix(QCoreApplication.translate("MainWindowDesign", u" s", None))
-        self.label_pi23ttm_settle.setText(QCoreApplication.translate("MainWindowDesign", u"Delay after calibration / ready", None))
+        self.label_pi23ttm_settle.setText(QCoreApplication.translate("MainWindowDesign", u"Delay after armed / ready", None))
 #if QT_CONFIG(tooltip)
-        self.doubleSpinBox_pi23ttm_settle.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCS waits for the recorder's post-calibration ready message, then this delay. Added to measurement-ms.", None))
+        self.doubleSpinBox_pi23ttm_settle.setToolTip(QCoreApplication.translate("MainWindowDesign", u"RAW: wait until SB is sent, then this delay before starting the FPGA. HDF5: wait for the recorder ready message. Included in both preview and recording measurement-ms.", None))
 #endif // QT_CONFIG(tooltip)
         self.doubleSpinBox_pi23ttm_settle.setSuffix(QCoreApplication.translate("MainWindowDesign", u" s", None))
         self.label_pi23ttm_timeout.setText(QCoreApplication.translate("MainWindowDesign", u"Calibration / startup timeout", None))
         self.doubleSpinBox_pi23ttm_timeout.setSuffix(QCoreApplication.translate("MainWindowDesign", u" s", None))
+        self.label_pi23ttm_stream_port.setText(QCoreApplication.translate("MainWindowDesign", u"Stream image TCP/IP port", None))
+#if QT_CONFIG(tooltip)
+        self.spinBox_pi23ttm_stream_port.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Local tdc_raw_acquire image server port. img previews the detector sum; uimg streams each dwell's 25 channel counts for the scan image and detector fingerprint. PI23 TTM also saves RAW timestamps.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_pi23ttm_preview_margin.setText(QCoreApplication.translate("MainWindowDesign", u"Preview margin", None))
+#if QT_CONFIG(tooltip)
+        self.doubleSpinBox_pi23ttm_preview_margin.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Extra time for each timestamp preview measurement, in addition to one frame, scan waits, and the ready delay. Increase this for communication or trigger delays.", None))
+#endif // QT_CONFIG(tooltip)
+        self.doubleSpinBox_pi23ttm_preview_margin.setSuffix(QCoreApplication.translate("MainWindowDesign", u" s", None))
+        self.label_pi23ttm_uimg_buffer.setText(QCoreApplication.translate("MainWindowDesign", u"Uimg buffer (dwells)", None))
+        self.label_pi23ttm_uimg_batch.setText(QCoreApplication.translate("MainWindowDesign", u"Uimg batch size (dwells)", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_pi23ttm_force_calibration.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Send T,c,1 to the configured PI23 TTM endpoint. Do not use while a recorder or PI23 image acquisition is active.", None))
 #endif // QT_CONFIG(tooltip)
@@ -4717,8 +4793,10 @@ class Ui_MainWindowDesign(object):
 
         self.checkBox_fifo_analog.setText(QCoreApplication.translate("MainWindowDesign", u"Analog", None))
         self.comboBox_detector_model.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"FPGA - SPAD", None))
-        self.comboBox_detector_model.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"TCP/IP - PI23", None))
-        self.comboBox_detector_model.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"Disable", None))
+        self.comboBox_detector_model.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"TCP/IP - PI23 (Intesity)", None))
+        self.comboBox_detector_model.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"TCP/IP - PI23 (TS mode - img)", None))
+        self.comboBox_detector_model.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"TCP/IP - PI23 (TS mode - uimg)", None))
+        self.comboBox_detector_model.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"Disable", None))
 
         self.label_detector_model.setText(QCoreApplication.translate("MainWindowDesign", u"Detector", None))
         self.checkBox_fifo_digital.setText(QCoreApplication.translate("MainWindowDesign", u"Digital", None))

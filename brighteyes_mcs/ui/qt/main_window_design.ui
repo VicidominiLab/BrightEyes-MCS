@@ -669,6 +669,16 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                <layout class="QGridLayout" name="gridLayout_102">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_101">
+                  <item row="4" column="2">
+                   <widget class="QPushButton" name="pushButton_openLogFolder">
+                    <property name="toolTip">
+                     <string>Open the folder containing this session's application and worker logs</string>
+                    </property>
+                    <property name="text">
+                     <string>Open log folder</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="3" column="2">
                    <widget class="QPushButton" name="pushButton_systemProfile">
                     <property name="toolTip">
@@ -2878,14 +2888,14 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                     <item row="4" column="1">
                      <widget class="QLineEdit" name="lineEdit_pi23ttm_address"/>
                     </item>
-                    <item row="5" column="0">
+                    <item row="6" column="0">
                      <widget class="QLabel" name="label_pi23ttm_margin">
                       <property name="text">
                        <string>Recording margin</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="5" column="1">
+                    <item row="6" column="1">
                      <widget class="QDoubleSpinBox" name="doubleSpinBox_pi23ttm_margin">
                       <property name="toolTip">
                        <string>Extra recording time beyond the scan duration. Include external trigger delays here.</string>
@@ -2901,17 +2911,17 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="6" column="0">
+                    <item row="7" column="0">
                      <widget class="QLabel" name="label_pi23ttm_settle">
                       <property name="text">
-                       <string>Delay after calibration / ready</string>
+                       <string>Delay after armed / ready</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="6" column="1">
+                    <item row="7" column="1">
                      <widget class="QDoubleSpinBox" name="doubleSpinBox_pi23ttm_settle">
                       <property name="toolTip">
-                       <string>MCS waits for the recorder's post-calibration ready message, then this delay. Added to measurement-ms.</string>
+                       <string>RAW: wait until SB is sent, then this delay before starting the FPGA. HDF5: wait for the recorder ready message. Included in both preview and recording measurement-ms.</string>
                       </property>
                       <property name="suffix">
                        <string> s</string>
@@ -2921,14 +2931,14 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="7" column="0">
+                    <item row="8" column="0">
                      <widget class="QLabel" name="label_pi23ttm_timeout">
                       <property name="text">
                        <string>Calibration / startup timeout</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="7" column="1">
+                    <item row="8" column="1">
                      <widget class="QDoubleSpinBox" name="doubleSpinBox_pi23ttm_timeout">
                       <property name="suffix">
                        <string> s</string>
@@ -2941,7 +2951,48 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="8" column="0" colspan="3">
+                    <item row="5" column="0">
+                     <widget class="QLabel" name="label_pi23ttm_stream_port">
+                      <property name="text"><string>Stream image TCP/IP port</string></property>
+                     </widget>
+                    </item>
+                    <item row="5" column="1">
+                     <widget class="QSpinBox" name="spinBox_pi23ttm_stream_port">
+                      <property name="toolTip"><string>Local tdc_raw_acquire image server port. img previews the detector sum; uimg streams each dwell's 25 channel counts for the scan image and detector fingerprint. PI23 TTM also saves RAW timestamps.</string></property>
+                      <property name="minimum"><number>1</number></property>
+                      <property name="maximum"><number>65535</number></property>
+                      <property name="value"><number>19000</number></property>
+                     </widget>
+                    </item>
+                    <item row="9" column="0">
+                     <widget class="QLabel" name="label_pi23ttm_preview_margin">
+                      <property name="text"><string>Preview margin</string></property>
+                     </widget>
+                    </item>
+                    <item row="9" column="1">
+                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pi23ttm_preview_margin">
+                      <property name="toolTip"><string>Extra time for each timestamp preview measurement, in addition to one frame, scan waits, and the ready delay. Increase this for communication or trigger delays.</string></property>
+                      <property name="decimals"><number>3</number></property>
+                      <property name="suffix"><string> s</string></property>
+                      <property name="minimum"><double>0.001</double></property>
+                      <property name="maximum"><double>86400.0</double></property>
+                      <property name="singleStep"><double>0.1</double></property>
+                      <property name="value"><double>0.5</double></property>
+                     </widget>
+                    </item>
+                    <item row="10" column="0"><widget class="QLabel" name="label_pi23ttm_uimg_buffer">
+                     <property name="text"><string>Uimg buffer (dwells)</string></property></widget></item>
+                    <item row="10" column="1"><widget class="QSpinBox" name="spinBox_pi23ttm_uimg_buffer">
+                     <property name="minimum"><number>1</number></property>
+                     <property name="maximum"><number>8388608</number></property>
+                     <property name="value"><number>1048576</number></property></widget></item>
+                    <item row="11" column="0"><widget class="QLabel" name="label_pi23ttm_uimg_batch">
+                     <property name="text"><string>Uimg batch size (dwells)</string></property></widget></item>
+                    <item row="11" column="1"><widget class="QSpinBox" name="spinBox_pi23ttm_uimg_batch">
+                     <property name="minimum"><number>1</number></property>
+                     <property name="maximum"><number>65536</number></property>
+                     <property name="value"><number>4096</number></property></widget></item>
+                    <item row="12" column="0" colspan="3">
                      <widget class="QPushButton" name="pushButton_pi23ttm_force_calibration">
                       <property name="toolTip">
                        <string>Send T,c,1 to the configured PI23 TTM endpoint. Do not use while a recorder or PI23 image acquisition is active.</string>
@@ -2951,7 +3002,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="9" column="0" colspan="3">
+                    <item row="13" column="0" colspan="3">
                      <widget class="QLabel" name="label_pi23ttm_status">
                       <property name="text">
                        <string>Idle</string>
@@ -2961,7 +3012,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="10" column="0" colspan="3">
+                    <item row="14" column="0" colspan="3">
                      <widget class="QPlainTextEdit" name="plainTextEdit_pi23ttm_log">
                       <property name="readOnly">
                        <bool>true</bool>
@@ -3174,7 +3225,17 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
               </item>
               <item>
                <property name="text">
-                <string>TCP/IP - PI23</string>
+                <string>TCP/IP - PI23 (Intesity)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>TCP/IP - PI23 (TS mode - img)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>TCP/IP - PI23 (TS mode - uimg)</string>
                </property>
               </item>
               <item>

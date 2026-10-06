@@ -1,5 +1,6 @@
 """PI23 raw-bunch stream writer scaffold."""
 
+from brighteyes_mcs.logging_setup import logged_worker
 import multiprocessing as mp
 import os
 import pickle
@@ -92,6 +93,7 @@ class Pi23RawStreamWriterProcess(mp.Process):
         handle.write(payload)
         return len(payload) + 8
 
+    @logged_worker
     def run(self):
         logger.debug("%s %s", "Pi23RawStreamWriterProcess RUN", os.getpid())
         self.acquisition_done.clear()
@@ -163,7 +165,7 @@ class Pi23RawStreamWriterProcess(mp.Process):
             error_text = traceback.format_exc()
             self.shared_dict["raw_writer_error"] = error_text
             self.shared_dict["raw_writer_stop_reason"] = "error"
-            logger.debug("%s %s", "Pi23RawStreamWriterProcess ERROR", error_text)
+            logger.exception("PI23 raw writer failed: %s", error_text)
         finally:
             for handle in handles.values():
                 handle.close()

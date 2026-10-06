@@ -28,15 +28,16 @@ Run from the repository root:
 $env:QT_QPA_PLATFORM = "offscreen"
 python -m pytest -q
 python -m unittest test.test_channel_delay_skew_plugin -v
+python -m pytest -q -m qt_isolated test/test_console_widget.py
 python scripts/check_docs.py
 python scripts/check_lint.py
 python -m compileall -q brighteyes_mcs scripts
 ```
 
-The normal pytest command excludes `qt_isolated` tests. The channel-delay widget
-suite runs in a separate interpreter because mixing Qt finalizers and
-multiprocessing initialization can crash Windows/Python 3.13. The Windows CI
-matrix covers Python 3.10 through 3.14 and runs the isolated suite on 3.13.
+The normal pytest command excludes `qt_isolated` tests. Run the channel-delay
+widget and real in-process console suites separately with the commands above:
+mixing Qt/Jupyter lifetimes and multiprocessing tests can crash Windows/Python
+3.13. The Windows CI template runs these isolated suites on 3.13.
 Tests requiring external tools may skip when those tools are unavailable;
 inspect the skip summary with `python -m pytest -q -rs`.
 

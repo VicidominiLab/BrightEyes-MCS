@@ -63,8 +63,10 @@ counter and metadata behavior.
 
 On Windows with Python 3.13, the channel-delay Qt widgets must run in a dedicated
 interpreter because PySide finalizers can cause an access violation when followed
-by multiprocessing primitive creation. The normal pytest run excludes the
-`qt_isolated` marker; CI runs that module separately with `unittest`.
+by multiprocessing primitive creation. Real in-process QtConsole tests also run
+in a separate interpreter to isolate Jupyter/Qt lifetimes from the rest of the
+suite. The normal pytest run excludes the `qt_isolated` marker; the CI template
+runs both isolated suites using the commands in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Runtime paths
 

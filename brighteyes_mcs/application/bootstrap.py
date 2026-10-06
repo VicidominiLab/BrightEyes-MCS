@@ -9,6 +9,20 @@ import platform
 import sys
 
 
+def _add_logging_argument(parser):
+    parser.add_argument(
+        "--log-level", "--verbosity", dest="log_level", type=int, choices=range(4), default=2,
+        help="log verbosity: 0=off, 1=normal, 2=user actions (default), 3=data-flow debug",
+    )
+
+
+def _logging_options(argv):
+    parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    _add_logging_argument(parser)
+    options, remaining = parser.parse_known_args(argv[1:])
+    return [argv[0], *remaining], options.log_level
+
+
 def _argument_parser() -> argparse.ArgumentParser:
     """Build launcher help without importing Qt."""
 
@@ -21,6 +35,7 @@ def _argument_parser() -> argparse.ArgumentParser:
             "environment."
         ),
     )
+    _add_logging_argument(parser)
     parser.add_argument(
         "--setup",
         action="store_true",
@@ -54,9 +69,22 @@ def main(argv=None):
         _argument_parser().print_help()
         return 0
 
-    from ..logging_setup import configure_logging
+    from ..logging_setup import configure_logging, install_exception_logging, logger
 
-    configure_logging()
+    argv, log_level = _logging_options(argv)
+    configure_logging(verbosity=log_level)
+    restore_exception_logging = install_exception_logging()
+    try:
+        return _run_application(argv)
+    except BaseException:
+        logger.exception("Application startup or event loop failed")
+        raise
+    finally:
+        restore_exception_logging()
+
+
+def _run_application(argv):
+    from ..logging_setup import logger
 
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QIcon
@@ -66,6 +94,7 @@ def main(argv=None):
     from ..ui.qt import MainWindow
     from ..ui.qt.first_run import maybe_run_first_run_setup
     from ..ui.qt.qt_locale import install_scientific_locale
+    from ..ui.qt.action_logging import UserActionFilter
 
     argv, force_setup, skip_setup = _startup_options(argv)
     if any(platform.win32_ver()):
@@ -79,6 +108,8 @@ def main(argv=None):
         argv += ["-platform", "windows:darkmode=2"]
 
     app = QApplication(argv)
+    action_filter = UserActionFilter(app)
+    app.installEventFilter(action_filter)
     app.setWindowIcon(QIcon(str(resource_path("images/icon.ico"))))
     app.setStyle("Fusion")
     app.styleHints().setColorScheme(Qt.ColorScheme.Dark)
@@ -88,6 +119,10 @@ def main(argv=None):
     original_excepthook = sys.excepthook
 
     def shutdown_after_unhandled_exception(exception_type, exception, traceback):
+        logger.critical(
+            "Unhandled application exception",
+            exc_info=(exception_type, exception, traceback),
+        )
         try:
             window.shutdown()
         finally:

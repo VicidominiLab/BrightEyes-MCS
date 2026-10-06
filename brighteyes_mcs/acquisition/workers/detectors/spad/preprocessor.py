@@ -1,5 +1,6 @@
 """FIFO preprocessing worker that batches raw queue payloads into numpy arrays."""
 
+from brighteyes_mcs.logging_setup import logged_worker
 import multiprocessing as mp
 import numpy as np
 from brighteyes_mcs.logging_setup import logger, set_debug
@@ -51,6 +52,7 @@ class DataPreProcess(mp.Process):
         self.len_buffer = len_buffer
         self.timeout = 0 #0.1
 
+    @logged_worker
     def run(self):
         logger.debug("%s %s", "DataPreProcess RUN - PID:", os.getpid())
 

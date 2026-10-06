@@ -1,5 +1,6 @@
 """PI23 preprocessing scaffold."""
 
+from brighteyes_mcs.logging_setup import logged_worker
 import multiprocessing as mp
 import os
 import queue
@@ -43,6 +44,7 @@ class Pi23DataPreProcess(mp.Process):
         self.debug = bool(debug)
         self.stop_event = mp.Event()
 
+    @logged_worker
     def run(self):
         logger.debug("%s %s", "Pi23DataPreProcess RUN - PID:", os.getpid())
         while not self.stop_event.is_set():
@@ -59,7 +61,8 @@ class Pi23DataPreProcess(mp.Process):
                         digital_words_per_sample=self.digital_words_per_sample,
                     )
                 except Exception as exc:
-                    logger.debug("%s %s", "Pi23DataPreProcess decode error", repr(exc))
+                    logger.exception("PI23 decode failed fifo=%s samples=%s: %s",
+                                     fifo_name, raw_bunch.sample_count, exc)
                     continue
                 if decoded.size == 0:
                     continue

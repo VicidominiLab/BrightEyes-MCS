@@ -8,9 +8,10 @@ import time
 # from PySide6.QtCore import QObject
 
 from ..hardware.fpga import FpgaHandle
-from brighteyes_mcs.logging_setup import logger
+from brighteyes_mcs.logging_setup import data_debug_enabled, logger
 from ..acquisition.detectors.models import (
     DETECTOR_DISABLED,
+    detector_uses_pi23_timestamp,
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_fifo,
     detector_uses_pi23_pipeline,
@@ -40,7 +41,7 @@ def create_i64_counter(initial_value=0):
 
 def _pi23_nifpga_dimension_registers(registers, detector_model, direction=1):
     registers = dict(registers)
-    if not detector_uses_pi23_pipeline(detector_model):
+    if not (detector_uses_pi23_pipeline(detector_model) or detector_uses_pi23_timestamp(detector_model)):
         return registers
 
     for register, offset in PI23_NIFPGA_DIMENSION_OFFSETS.items():
@@ -242,7 +243,7 @@ class McsManager():
         self.pi23_host = "127.0.0.1"
         self.pi23_port = 9997
 
-        self.debug = False
+        self.debug = data_debug_enabled()
         self.h5_manager_process = None
         self.h5_command_queue = None
         self.h5_response_queue = None
@@ -664,7 +665,7 @@ class McsManager():
         self.detector_receiver_queue = self.detector_pipeline.make_receiver_queue(self)
 
         self.number_of_threads_h5 = mp.Value("i", 0)
-        if not do_not_save and not self.raw_stream_mode and self.detector_model != DETECTOR_DISABLED:
+        if not do_not_save and not self.raw_stream_mode and self.detector_model != DETECTOR_DISABLED and not detector_uses_pi23_timestamp(self.detector_model):
             (
                 self.h5_command_queue,
                 self.h5_response_queue,

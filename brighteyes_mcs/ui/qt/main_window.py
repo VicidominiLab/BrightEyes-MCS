@@ -1,4 +1,6 @@
 """main_window.py: BrightEyes-MCS - MainWindow."""
+from brighteyes_mcs.logging_setup import default_log_dir, logger, trace_action
+
 __author__ = "Mattia Donato"
 __copyright__ = "Copyright (C) 2023, Istituto Italiano di Tecnologia"
 __license__ = "GPL"
@@ -61,7 +63,11 @@ PI23_TIMETAGGING_CONFIGURATION_KEYS = (
     "pi23ttm_folder",
     "pi23ttm_format",
     "pi23ttm_address",
+    "pi23ttm_stream_port",
+    "pi23ttm_uimg_buffer",
+    "pi23ttm_uimg_batch",
     "pi23ttm_margin",
+    "pi23ttm_preview_margin",
     "pi23ttm_settle",
     "pi23ttm_timeout",
     "no_mcs_save_with_ttm",
@@ -76,7 +82,6 @@ from .system_profile_dialog import SystemProfileDialog
 from ...acquisition.manager import McsManager
 from ..table_manager import TableManager
 
-from brighteyes_mcs.logging_setup import logger
 from .dict_to_tree import TreeModel
 from ...hardware.ttm import TtmRemoteManager
 from ...application.plugin_service import PluginManager
@@ -84,10 +89,13 @@ from ...api import FastAPIServerThread
 from ...storage.raw import convert_raw_acquisition, metadata_filename, raw_output_files
 from ...acquisition.detectors.models import (
     DETECTOR_DISABLED,
+    DETECTOR_PI23_TS,
+    DETECTOR_PI23_TS_UIMG,
     DETECTOR_PI23_UI,
     DETECTOR_SPAD_ARRAY,
     DETECTOR_SPAD_UI,
     detector_uses_pi23_pipeline,
+    detector_uses_pi23_timestamp,
     detector_uses_nifpga_fifo,
     normalize_detector_model,
 )
@@ -254,6 +262,8 @@ class MainWindow(QMainWindow):
         self.pi23_timetagging.ready.connect(self._start_after_pi23_ready)
         self.pi23_timetagging.failed.connect(self._pi23_recording_failed)
         self.pi23_timetagging.finished.connect(self._pi23_recording_finished)
+        self.pi23_timetagging.image_ready.connect(self._show_pi23_timestamp_image)
+        self.pi23_timetagging.microimage_updated.connect(self._plot_pi23_microimage)
         self.ui.pushButton_pi23ttm_force_calibration.clicked.connect(
             self.pi23_timetagging.force_calibration
         )
@@ -451,6 +461,7 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_loadCfg.clicked.connect(self.LoadConfigurationCmd)
         self.ui.pushButton_saveCfg.clicked.connect(self.SaveConfigurationCmd)
         self.ui.pushButton_systemProfile.clicked.connect(self.editSystemProfile)
+        self.ui.pushButton_openLogFolder.clicked.connect(self.openLogFolder)
         self.ui.pushButton_convertRawAcquisition.clicked.connect(
             self.cmd_convertRawAcquisition
         )
@@ -930,6 +941,7 @@ class MainWindow(QMainWindow):
 
 
     @Slot()
+    @trace_action
     def httpServerCheckBoxChanged(self):
         """
         Slot for the HTTP server checkbox changed event
@@ -1598,6 +1610,7 @@ class MainWindow(QMainWindow):
         return configuration_helper
 
     @Slot(str)
+    @trace_action
     def detectorModelChanged(self, detector_model):
         detector_model = detector_model or DETECTOR_SPAD_ARRAY
         self.mcs_manager.set_detector_model(detector_model)
@@ -1607,12 +1620,31 @@ class MainWindow(QMainWindow):
             )
         self._sync_pi23_ttm_detector()
 
+    @trace_action
     def _sync_pi23_ttm_detector(self, _checked=None):
         """The PI23 CS image receiver and SB timetagger cannot run together."""
         combo = self.ui.comboBox_detector_model
         ttm = self.ui.checkBox_pi23ttmActivate
         busy = self.pi23_timetagging.active or getattr(self, "started_normal", False) or getattr(self, "started_preview", False)
-        ttm.setEnabled(not busy and detector_uses_nifpga_fifo(combo.currentText()))
+        timestamp_image = detector_uses_pi23_timestamp(combo.currentText())
+        self.ui.checkBox_rawStreamAcquisition.setEnabled(not busy and not timestamp_image)
+        ttm.setEnabled(not busy and (detector_uses_nifpga_fifo(combo.currentText()) or timestamp_image))
+        self.ui.comboBox_pi23ttm_format.setEnabled(not busy and not timestamp_image)
+        if timestamp_image:
+            self.ui.comboBox_pi23ttm_format.setCurrentText("RAW")
+        microimage = combo.currentText() == DETECTOR_PI23_TS_UIMG
+        if microimage:
+            self.ui.comboBox_spad_channels.setCurrentText("25")
+        self.ui.comboBox_spad_channels.setEnabled(not microimage and not busy)
+        for selector, default, allowed in (
+            (self.ui.comboBox_plot_channel, "Sum", lambda text: text == "Sum" or (text.isdigit() and int(text) < 25)),
+            (self.ui.comboBox_view_projection, "xy", lambda text: text in ("xy", "yx")),
+        ):
+            for index in range(selector.count()):
+                selector.model().item(index).setEnabled(not microimage or allowed(selector.itemText(index)))
+            if microimage and not allowed(selector.currentText()):
+                selector.setCurrentText(default)
+        self.ui.checkBox_accumulate_preview_photons.setEnabled(True)
         for index in range(combo.count()):
             if detector_uses_pi23_pipeline(combo.itemText(index)):
                 combo.model().item(index).setEnabled(not ttm.isChecked())
@@ -1631,6 +1663,8 @@ class MainWindow(QMainWindow):
         )
         if detector_model == DETECTOR_DISABLED:
             combo_text = DETECTOR_DISABLED
+        elif detector_uses_pi23_timestamp(detector_model):
+            combo_text = detector_model
         self.ui.comboBox_detector_model.blockSignals(True)
         self.ui.comboBox_detector_model.setCurrentText(combo_text)
         self.ui.comboBox_detector_model.blockSignals(False)
@@ -1707,6 +1741,7 @@ class MainWindow(QMainWindow):
             self.ui.spinBox_AnalogOut[ch].valueChanged.connect(self.analogOutChanged)
 
     @Slot()
+    @trace_action
     def analogOutChanged(self):
         """
         Slot for the Analog Output changed event
@@ -1798,6 +1833,7 @@ class MainWindow(QMainWindow):
         return register_values
 
     @Slot()
+    @trace_action
     def auxiliaryPositionChanged(self):
         """Apply a changed auxiliary position to its selected analog outputs."""
         register_values = self._sync_auxiliary_position_outputs()
@@ -1805,6 +1841,7 @@ class MainWindow(QMainWindow):
             self.setRegistersDict(register_values)
 
     @Slot(float, float, bool)
+    @trace_action
     def auxiliaryPreviewDrag(self, horizontal_delta, vertical_delta, finished):
         """Move auxiliary axes without panning the main preview image."""
         projection = self.ui.comboBox_view_projection.currentText()
@@ -1836,6 +1873,7 @@ class MainWindow(QMainWindow):
             self._auxiliary_drag_write_timer.start()
 
     @Slot()
+    @trace_action
     def laserChanged(self):
         """
         Slot for the Laser changed event
@@ -1864,6 +1902,7 @@ class MainWindow(QMainWindow):
                 widget.removeColumn(column)
 
     @Slot()
+    @trace_action
     def traceReset(self):
         """
         Slot for the trace reset event
@@ -1873,6 +1912,7 @@ class MainWindow(QMainWindow):
         self.mcs_manager.trace_reset()
 
     @Slot()
+    @trace_action
     def FCSReset(self):
         """
         Slot for the FCS reset event.
@@ -1900,6 +1940,7 @@ class MainWindow(QMainWindow):
             self.drawMarkers()
 
     @Slot()
+    @trace_action
     def traceClicked(self, event):
         """
         Slot for the time trace clicked event
@@ -1912,6 +1953,7 @@ class MainWindow(QMainWindow):
             self.traceReset()
 
     @Slot()
+    @trace_action
     def cmd_path_ttm(self):
         """
         Slot for the TTM path command
@@ -1929,6 +1971,7 @@ class MainWindow(QMainWindow):
             self.ui.lineEdit_ttm_executable_path.setText(filepath)
 
     @Slot()
+    @trace_action
     def cmd_path_destinationfolder(self):
         """
         Slot for the data destination folder command
@@ -1941,6 +1984,7 @@ class MainWindow(QMainWindow):
             self.ui.lineEdit_destinationfolder.setText(dialog.selectedFiles()[0])
 
     @Slot()
+    @trace_action
     def spadChannelsChanged(self):
         """
         Slot for the SPAD channel-count changed event.
@@ -1954,6 +1998,7 @@ class MainWindow(QMainWindow):
         self.mcs_manager.set_spad_channels(int(self.ui.comboBox_spad_channels.currentText()))
 
     @Slot()
+    @trace_action
     def cmd_filename(self):
         """
         Slot for selecting the filename
@@ -1974,6 +2019,7 @@ class MainWindow(QMainWindow):
             )
 
     @Slot()
+    @trace_action
     def cmd_convertRawAcquisition(self):
         """
         Convert a metadata-only RAW acquisition into a standard BrightEyes H5 file.
@@ -2047,6 +2093,7 @@ class MainWindow(QMainWindow):
         )
 
     @Slot()
+    @trace_action
     def cmd_moveToSelectedRowMarker(self):
         """
         Slot for moving to the selected row marker
@@ -2094,6 +2141,7 @@ class MainWindow(QMainWindow):
             self.setGUI_data(configuration)
 
     @Slot()
+    @trace_action
     def cmd_moveToSelectedColumnFCS(self, k=None):
         """
         Set the GUI configuration to the current column in the Macro/FCS table
@@ -2143,6 +2191,7 @@ class MainWindow(QMainWindow):
         return self.ui.tabWidget.addTab(widget, caption)
 
     @Slot()
+    @trace_action
     def tabDoubleClick(self, number):
         """
         Slot for the tab double click event: it moves the tab to a new window
@@ -2257,6 +2306,7 @@ class MainWindow(QMainWindow):
         if ret == QMessageBox.No:
             logger.debug("No")
     @Slot()
+    @trace_action
     def bitfile_changed(self):
         '''
         Slot for update and check the FPGA bitfiles
@@ -2304,6 +2354,7 @@ class MainWindow(QMainWindow):
 
 
     @Slot()
+    @trace_action
     def bit_file_clicked(self):
         """
         Slot for the selecting the bitfile of the 1st FPGA
@@ -2324,6 +2375,7 @@ class MainWindow(QMainWindow):
             self.ui.lineEdit_fpgabitfile.setText(file_bit_nicer)
 
     @Slot()
+    @trace_action
     def bit_file_clicked2(self):
         """
         Slot for the selecting the bitfile of the 2nd FPGA
@@ -2384,6 +2436,7 @@ class MainWindow(QMainWindow):
         return default_cfg
 
     @Slot()
+    @trace_action
     def editSystemProfile(self):
         """Edit ``current_system`` and load the newly selected default config."""
 
@@ -2512,7 +2565,11 @@ class MainWindow(QMainWindow):
             "pi23ttm_folder": (str, self.ui.lineEdit_pi23ttm_folder),
             "pi23ttm_format": (str, self.ui.comboBox_pi23ttm_format),
             "pi23ttm_address": (str, self.ui.lineEdit_pi23ttm_address),
+            "pi23ttm_stream_port": (int, self.ui.spinBox_pi23ttm_stream_port),
+            "pi23ttm_uimg_buffer": (int, self.ui.spinBox_pi23ttm_uimg_buffer),
+            "pi23ttm_uimg_batch": (int, self.ui.spinBox_pi23ttm_uimg_batch),
             "pi23ttm_margin": (float, self.ui.doubleSpinBox_pi23ttm_margin),
+            "pi23ttm_preview_margin": (float, self.ui.doubleSpinBox_pi23ttm_preview_margin),
             "pi23ttm_settle": (float, self.ui.doubleSpinBox_pi23ttm_settle),
             "pi23ttm_timeout": (float, self.ui.doubleSpinBox_pi23ttm_timeout),
             "no_mcs_save_with_ttm": (bool, self.ui.checkBox_noMcsSaveWithTtm),
@@ -2710,6 +2767,7 @@ class MainWindow(QMainWindow):
     #     debug("testevent", ev)
 
     @Slot()
+    @trace_action
     def delete_list_file(self):
         """
         delete the selected files in the list
@@ -2723,6 +2781,7 @@ class MainWindow(QMainWindow):
                     break
 
     @Slot()
+    @trace_action
     def copy_list_file(self):
         '''
         Actually is "cut" the files ready to be "paste" in some folder
@@ -2740,6 +2799,7 @@ class MainWindow(QMainWindow):
         QGuiApplication.clipboard().setMimeData(mime)
 
     @Slot()
+    @trace_action
     def cmd_load_plugin(self):
         """
         Load the selected plugin
@@ -2751,6 +2811,7 @@ class MainWindow(QMainWindow):
             self.plugin_manager.load(plugin_to_be_loaded)
 
     @Slot()
+    @trace_action
     def cmd_close_plugin(self):
         """
         Close the selected plugin
@@ -2758,6 +2819,7 @@ class MainWindow(QMainWindow):
         pass
 
     @Slot()
+    @trace_action
     def cmd_update_plugin_list(self):
         """
         Update the plugin list
@@ -2769,6 +2831,7 @@ class MainWindow(QMainWindow):
             self.ui.listWidget_plugins.addItem(i)
 
     @Slot()
+    @trace_action
     def axesRangeChanged(self, ev=None):
         """
         Slot for the axes range changed event, when the range of the axes of the Image Preview is changed
@@ -3046,6 +3109,7 @@ class MainWindow(QMainWindow):
         logger.debug("Now every process should be closed.")
 
     @Slot()
+    @trace_action
     def closeEvent(self, event):
         """Shut down hardware and workers before accepting the close event."""
         self.shutdown()
@@ -3185,6 +3249,7 @@ class MainWindow(QMainWindow):
         # debug("Waiting setRegistersDict")
 
     @Slot()
+    @trace_action
     def panoramaButton(self):
         """
         Slot for the panorama button event
@@ -3294,6 +3359,7 @@ class MainWindow(QMainWindow):
     #         debug("self.rect_roi_panorama_modified_lock")
 
     @Slot()
+    @trace_action
     def AutoRange_im_widget(self):
         """Fit the central image without padding, excluding ROI and marker overlays."""
         lock_range_changing = self.lock_range_changing
@@ -3332,6 +3398,7 @@ class MainWindow(QMainWindow):
         self.rect_roi_panorama.setSize(size)
         self.rect_roi_panorama_modified_lock = False
 
+    @trace_action
     def roiModified(self, event):
         """
         roiModified event - DUMMY
@@ -3405,6 +3472,7 @@ class MainWindow(QMainWindow):
         pos = self.im_widget.view.vb.mapToView(mouse_point)
         self.statusBar_mousePosition.setText("x: %f   y: %f" % (pos.x(), pos.y()))
 
+    @trace_action
     def imageClicked(self, event):
         """
         Handle a double-click as either move-to or add-marker.
@@ -3454,6 +3522,7 @@ class MainWindow(QMainWindow):
                 self.markersViewTable()
 
     @Slot(bool)
+    @trace_action
     def previewControlModeChanged(self, inverted):
         """Apply and explain the selected Ctrl interaction mode."""
         inverted = bool(inverted)
@@ -3476,6 +3545,7 @@ class MainWindow(QMainWindow):
             )
 
     @Slot(bool)
+    @trace_action
     def previewGridOverImageChanged(self, enabled):
         """Draw the main-preview grid either above or below the image."""
         z_value = 1.0 if enabled else -1.0
@@ -3531,6 +3601,7 @@ class MainWindow(QMainWindow):
                 symbol="+",
             )
 
+    @trace_action
     def fingerprintClicked(self, event):
         """
         fingerprint clicked event
@@ -3665,6 +3736,7 @@ class MainWindow(QMainWindow):
 
 
     @Slot()
+    @trace_action
     def radio_ttm_local(self):
         """
         activate or disactivate the checkbox TTM in local mode
@@ -3676,6 +3748,7 @@ class MainWindow(QMainWindow):
         self.ui.toolButton_ttm_filename.setEnabled(True)
 
     @Slot()
+    @trace_action
     def radio_ttm_remote(self):
         """
         activate or disactivate the checkbox TTM in remote mode
@@ -3687,6 +3760,7 @@ class MainWindow(QMainWindow):
         self.ui.toolButton_ttm_filename.setEnabled(False)
 
     @Slot()
+    @trace_action
     def selectedAutoscaleImg(self):
         """
         Slot for the autoscale image checkbox
@@ -3695,6 +3769,7 @@ class MainWindow(QMainWindow):
         logger.debug("%s %s", "selectedAutoscaleImg()", self.autoscale_image)
 
     @Slot()
+    @trace_action
     def selectedAutoscaleFingerprint(self):
         """
         Slot for the autoscale fingerprint checkbox
@@ -3708,6 +3783,7 @@ class MainWindow(QMainWindow):
     #     print("selectedCumulativeFingerprint", self.cumulative_fingerprint)
 
     @Slot()
+    @trace_action
     def microimageType(self, num):
         """
         Slot for the microimage type selection
@@ -3719,6 +3795,7 @@ class MainWindow(QMainWindow):
         # elif num == 2:  # fingerprint
 
     @Slot()
+    @trace_action
     def addToBatch(self):
         self.table_manager.add_dict(self.getGUI_data())
 
@@ -3882,6 +3959,7 @@ class MainWindow(QMainWindow):
             trace["curve"].setData(trace["times"], trace["values"])
 
     @Slot()
+    @trace_action
     def resetMonitor(self):
         """Remove all selected registers and their accumulated samples."""
         self._monitored_registers.clear()
@@ -4030,6 +4108,7 @@ class MainWindow(QMainWindow):
         if len(x_points):
             self.circular_preview_plot_item.autoRange()
 
+    @trace_action
     def updateCircularPreview(self):
         """Mirror the central preview and overlay calibrated circular points."""
         self.updateCircularPoints()
@@ -4082,6 +4161,7 @@ class MainWindow(QMainWindow):
         except Exception:
             logger.exception("Could not update the Circular status preview")
 
+    @trace_action
     def updateCircularViewAvailability(self, active):
         """Enable the circular-view refresh only while Circular is active."""
         self.ui.pushButton_updateCircularView.setEnabled(bool(active))
@@ -4163,6 +4243,7 @@ class MainWindow(QMainWindow):
 
 
     @Slot()
+    @trace_action
     def test1(self):
         """
         dummy button clicked event for test
@@ -4171,6 +4252,7 @@ class MainWindow(QMainWindow):
         self.finalizeImage()
 
     @Slot()
+    @trace_action
     def test2(self):
         """
         dummy button clicked event for test
@@ -4179,6 +4261,7 @@ class MainWindow(QMainWindow):
         self.webcam_capture = iio.get_reader("<video0>")
 
     @Slot()
+    @trace_action
     def test3(self):
         """
         dummy button clicked event for test
@@ -4189,6 +4272,7 @@ class MainWindow(QMainWindow):
         logger.debug("test3()")
 
     @Slot()
+    @trace_action
     def test4(self):
         """
         dummy button clicked event for test
@@ -4197,6 +4281,7 @@ class MainWindow(QMainWindow):
         # self.openConsoleWidget()
 
     @Slot()
+    @trace_action
     def test5(self):
         """
         dummy button clicked event for test
@@ -4214,6 +4299,7 @@ class MainWindow(QMainWindow):
         fff = a()
 
     @Slot()
+    @trace_action
     def test6(self):
         """
         dummy button clicked event for test
@@ -4221,6 +4307,7 @@ class MainWindow(QMainWindow):
         self.updateTables()
 
     @Slot()
+    @trace_action
     def test7(self):
         """
         dummy button clicked event for test
@@ -4265,6 +4352,7 @@ class MainWindow(QMainWindow):
         self._set_program_state(self.PROGRAM_STATE_ACQUISITION, "test_mode_started")
 
     @Slot()
+    @trace_action
     def test8(self):
         """
         dummy button clicked event for test
@@ -4273,6 +4361,7 @@ class MainWindow(QMainWindow):
         # self.define_circular()
 
     @Slot(bool)
+    @trace_action
     def lissajousModeChanged(self, enabled):
         """Enable Lissajous controls or restore the standard unit circle."""
         self.ui.checkBox_lissajous_opencurve.setEnabled(enabled)
@@ -4312,6 +4401,7 @@ class MainWindow(QMainWindow):
 
     @Slot(bool)
     @Slot(int)
+    @trace_action
     def lissajousFrequencyChanged(self, _value):
         """Regenerate the active trajectory after an omega change."""
         if not self.ui.checkBox_lissajous.isChecked():
@@ -4527,6 +4617,7 @@ class MainWindow(QMainWindow):
         #     )
 
     @Slot()
+    @trace_action
     def test9(self):
         """
         dummy button clicked event for test
@@ -4534,6 +4625,7 @@ class MainWindow(QMainWindow):
         self.load_circular()
 
     @Slot()
+    @trace_action
     def circularMotionActivateChanged(self):
         """
         activate or disactivate the circular motion
@@ -4614,6 +4706,7 @@ class MainWindow(QMainWindow):
         #
         # self.startAcquisition(do_not_save=True)
     @Slot()
+    @trace_action
     def addcurrentconfmacro(self):
         """
         Slot for the add current configuration to the table for macros
@@ -4622,6 +4715,7 @@ class MainWindow(QMainWindow):
         conf = self.getGUI_data()
         self.table_manager.add_dict(conf)
     @Slot()
+    @trace_action
     def addcurrentconfmacrofcs(self):
         """
         Slot for the add current configuration to the table for macros
@@ -4636,6 +4730,7 @@ class MainWindow(QMainWindow):
         print(conf)
         self.table_manager.add_dict(conf)
     @Slot()
+    @trace_action
     def copyPositionsMarkers(self):
         """
         copy the markers to the table for macros
@@ -4644,6 +4739,7 @@ class MainWindow(QMainWindow):
         self.table_manager.add_list_of_dict(self.markers_list)
 
     @Slot()
+    @trace_action
     def copyPositionsMarkersFCS(self):
         """
         copy the markers to the table for macros
@@ -4653,6 +4749,7 @@ class MainWindow(QMainWindow):
         self.table_manager.add_list_of_dict(self.markers_list,  fcs=True)
 
     @Slot()
+    @trace_action
     def startBatchFCS(self):
         """
         start the batch event
@@ -4724,6 +4821,7 @@ class MainWindow(QMainWindow):
         logger.debug("startedBatch FCS ended")
 
     @Slot()
+    @trace_action
     def stopBatchFCS(self):
         """
         stop the batch event
@@ -4785,6 +4883,7 @@ class MainWindow(QMainWindow):
             self.ui.textEdit_pi23_greeting_decoded.setPlainText(decoded_greeting)
 
     @Slot()
+    @trace_action
     def cmd_call_external(self):
         import subprocess
 
@@ -4867,6 +4966,13 @@ class MainWindow(QMainWindow):
             self.timerPreviewImg_tick_mutex.unlock()
             return
 
+        if detector_uses_pi23_timestamp(self._current_detector_model()):
+            # Snapshots arrive asynchronously; no detector FIFO exists in TS mode.
+            if self._current_detector_model() == DETECTOR_PI23_TS_UIMG:
+                self._plot_pi23_microimage()
+            self.timerPreviewImg_tick_mutex.unlock()
+            return
+
         time_res = self.ui.spinBox_timeresolution.value()
         time_bin = self.ui.spinBox_time_bin_per_px.value()
         frames = self.ui.spinBox_nframe.value()
@@ -4933,7 +5039,7 @@ class MainWindow(QMainWindow):
             )
 
             if self.mcs_manager.acquisition_is_almost_done():
-                self.ui.pushButton_stop.setEnabled(False)
+                self.ui.pushButton_stop.setEnabled(self.pi23_timetagging.active)
                 self.ui.pushButton_acquisitionStart.setEnabled(False)
 
             if self.mcs_manager.acquisition_is_done():
@@ -5230,7 +5336,7 @@ class MainWindow(QMainWindow):
 
         if self.mcs_manager.acquisition_is_almost_done():
             logger.debug("%s %s", "self.mcs_manager.acquisition_is_almost_done()", number_of_threads_h5)
-            self.ui.pushButton_stop.setEnabled(False)
+            self.ui.pushButton_stop.setEnabled(self.pi23_timetagging.active)
             self.ui.pushButton_acquisitionStart.setEnabled(False)
 
         if self.mcs_manager.acquisition_is_done():
@@ -5494,6 +5600,7 @@ Have fun!
             )
 
     @Slot()
+    @trace_action
     def temporalSettingsChanged(self):
         """
 
@@ -5547,6 +5654,7 @@ Have fun!
         self.checkAlerts()
 
     @Slot()
+    @trace_action
     def checkBoxLockRatioChanged(self):
         """
         lock the ratio of the ROI
@@ -5556,6 +5664,7 @@ Have fun!
         self.rect_roi_panorama.aspectLocked = self.ui.checkBoxLockRatio.isChecked()
 
     @Slot()
+    @trace_action
     def loadPreset(self):
         """
         load the preset configuration
@@ -5566,6 +5675,7 @@ Have fun!
         logger.debug("preset %s loaded" % combo_str)
 
     @Slot()
+    @trace_action
     def savePreset(self):
         """
         save the preset configuration
@@ -5583,6 +5693,7 @@ Have fun!
     #     self.drawMarkers()
 
     @Slot()
+    @trace_action
     def calibrationFactorChanged(self):
         """
         calibration factor changed event
@@ -5633,6 +5744,7 @@ Have fun!
         return self._offset_volts() 
 
     @Slot()
+    @trace_action
     def offset_um_Changed(self, force=False):
         """
         offset in um changed event
@@ -5642,6 +5754,7 @@ Have fun!
         self.rangeValueChanged()
 
     @Slot()
+    @trace_action
     def updatePixelValueChanged(self, number=None):
         """
         update the number of pixel, line, frame changed event
@@ -5835,6 +5948,7 @@ Have fun!
                 "∞")
 
     @Slot()
+    @trace_action
     def rangeValueChanged(self, number=None):
         """
         the range in um is changed event
@@ -5916,6 +6030,7 @@ Have fun!
         self.lock_range_changing = oldlock_range_changing
 
     @Slot()
+    @trace_action
     def spatialSettingsChanged(self, force=False):
         """
         spatial settings changed event
@@ -5957,6 +6072,7 @@ Have fun!
 
 
     @Slot()
+    @trace_action
     def positionSettingsChanged(self, force=False):
         """
         position settings changed event
@@ -6043,6 +6159,7 @@ Have fun!
         self.checkAlerts()
 
     @Slot()
+    @trace_action
     def DFD_clicked(self):
         """
         activate the DFD mode
@@ -6066,6 +6183,7 @@ Have fun!
         return False, None
 
     @Slot(bool)
+    @trace_action
     def laserForcePulsingChanged(self, enabled):
         """Apply force-pulsing registers and restore their prior values."""
         if enabled and self.ui.checkBox_DFD.isChecked():
@@ -6105,6 +6223,7 @@ Have fun!
         self._laser_force_pulsing_previous = None
         self.setRegistersDict(restore)
 
+    @trace_action
     def updateLaserForcePulsingAvailability(self, _checked=None):
         """Force pulsing and DFD are mutually exclusive."""
         dfd_enabled = self.ui.checkBox_DFD.isChecked()
@@ -6113,6 +6232,7 @@ Have fun!
         self.ui.checkBox_pulsing_forced.setEnabled(not dfd_enabled)
 
     @Slot(int)
+    @trace_action
     def compensationDelayForSnakeChanged(self, value):
         """
         Keep the snake-walk compensation delay synced with the runtime manager.
@@ -6146,6 +6266,7 @@ Have fun!
         )
 
     @Slot()
+    @trace_action
     def plotSettingsChanged(self):
         """
 
@@ -6319,12 +6440,14 @@ Have fun!
         self.ui.doubleSpinBox_delta_tau_ns.blockSignals(False)
 
     @Slot()
+    @trace_action
     def colorLifetimeDeltaTauChanged(self):
         self.updateColorLifetimeShiftControls()
         if self.isLifetimeColorChannel():
             self.plotPreviewImage()
 
     @Slot()
+    @trace_action
     def colorLifetimeDeltaTauUseHistogramMean(self):
         if not self.isLifetimeColorChannel():
             return False
@@ -6384,6 +6507,7 @@ Have fun!
                 label.setVisible(visible)
 
     @Slot()
+    @trace_action
     def previewButtonClicked(self):
         """
         preview button clicked event
@@ -6391,6 +6515,7 @@ Have fun!
         self.previewLoop()
 
     @Slot()
+    @trace_action
     def startButtonClicked(self):
         """
         start button clicked event
@@ -6398,10 +6523,14 @@ Have fun!
         self.start()
 
     @Slot()
+    @trace_action
     def stopButtonClicked(self):
         """
         stop button clicked event
         """
+        # An explicit click must stop the recorder even during automatic
+        # completion, which otherwise allows its recording tail to finish.
+        self._pending_program_state_after_stop = None
         self.stop()
 
     def _update_fpga_connection_button(self):
@@ -6503,6 +6632,7 @@ Have fun!
             raise reset_error
 
     @Slot(bool)
+    @trace_action
     def fpgaConnectionButtonClicked(self, checked):
         """Connect when checked; stop, reset, and disconnect when unchecked."""
         self._keep_fpga_on_requested = bool(checked)
@@ -6547,12 +6677,15 @@ Have fun!
         # Now initialize circular motion with correct DFD state
         self.circularMotionActivateChanged()
 
+        if self._current_detector_model() == DETECTOR_PI23_TS_UIMG:
+            self._sync_pi23_ttm_detector()
         self.spadChannelsChanged()
         self.mcs_manager.set_spad_channels(int(self.ui.comboBox_spad_channels.currentText()))
-        self.mcs_manager.set_pi23_connection(
-            self.ui.lineEdit_pi23_ip_addr.text(),
-            self.ui.spinBox_pi23_port.value(),
-        )
+        if detector_uses_pi23_pipeline(self._current_detector_model()):
+            self.mcs_manager.set_pi23_connection(
+                self.ui.lineEdit_pi23_ip_addr.text(),
+                self.ui.spinBox_pi23_port.value(),
+            )
 
         self.mcs_manager.set_dfd_enable(self.dfd_enable)
         self.mcs_manager.set_DFD_nbins(self.DFD_nbins)
@@ -6853,12 +6986,22 @@ Have fun!
            not do_not_save :
                self.pushButton_uttm_start_clicked()
 
+        self.mcs_manager.pi23_stream_port = self.ui.spinBox_pi23ttm_stream_port.value()
+        self.mcs_manager.pi23_batch_size = self.ui.spinBox_pi23ttm_uimg_batch.value()
         self.mcs_manager.run()
 
         self.plugin_signals.signal.emit("beforeRun")
 
         if do_run:
-            if (not do_not_save and self.ui.checkBox_pi23ttmActivate.isChecked()
+            if detector_uses_pi23_timestamp(self._current_detector_model()):
+                microimage = self._current_detector_model() == DETECTOR_PI23_TS_UIMG
+                self._waiting_for_pi23 = True
+                self.pi23_timetagging.start(
+                    filename, stream_image=not microimage, stream_microimage=microimage, preview=do_not_save,
+                    microimage_worker=self.mcs_manager.previewProcess if microimage else None,
+                    record=not do_not_save and self.ui.checkBox_pi23ttmActivate.isChecked(),
+                )
+            elif (not do_not_save and self.ui.checkBox_pi23ttmActivate.isChecked()
                     and self._current_detector_model() != DETECTOR_DISABLED):
                 self._waiting_for_pi23 = True
                 self.pi23_timetagging.start(filename)
@@ -6868,6 +7011,7 @@ Have fun!
         self.update_fingerprint_mask()
 
     @Slot()
+    @trace_action
     def test_analog_digital(self):
         """experimental mixed analog and digital mode"""
         logger.debug("test_analog_digital()")
@@ -6876,6 +7020,7 @@ Have fun!
         logger.debug("now the ratioButton can be on at the same time")
 
     @Slot()
+    @trace_action
     def trace_parameters_changed(self):
         """trace parameters changed event"""
         trace_bins = int(
@@ -7013,6 +7158,7 @@ Have fun!
 
 
     @Slot()
+    @trace_action
     def grabPanorama(self):
         """
         grab the panorama image
@@ -7040,6 +7186,7 @@ Have fun!
         logger.debug("%s %s %s %s", pos_x, pos_y, size_x, size_y)
         # self.im_widget_panorama.setItem(img)
 
+    @trace_action
     def updatePreviewConfiguration(self):
         """
         update the preview configuration - channel selection
@@ -7110,6 +7257,7 @@ Have fun!
         )
 
     @Slot()
+    @trace_action
     def start(self):
         """
         Start acquisition in normal mode (full duration, with saving).
@@ -7145,6 +7293,7 @@ Have fun!
             self.setRegistersDict({"laser_force_pulsing_enable": False})
 
     @Slot()
+    @trace_action
     def beginAcquisition(self, is_preview=False):
         """
         Start the acquisition with unified initialization for both normal and preview modes.
@@ -7163,10 +7312,10 @@ Have fun!
             or (self.ui.checkBox_uttmActivate.isChecked() and self.ui.checkBox_uttm_auto.isChecked())
             or self.ui.checkBox_pi23ttmActivate.isChecked()
         )
-        if self._current_detector_model() == DETECTOR_DISABLED:
+        if self._current_detector_model() in (DETECTOR_DISABLED, DETECTOR_PI23_TS):
             self._mcs_saving_suppressed = True
         if self.ui.checkBox_pi23ttmActivate.isChecked() and detector_uses_pi23_pipeline(self._current_detector_model()):
-            QMessageBox.warning(self, "Conflicting PI23 modes", "PI23 imaging and PI23TTM cannot be selected together. Select SPAD imaging or uncheck PI23TTM.")
+            QMessageBox.warning(self, "Conflicting PI23 modes", "PI23 intensity imaging and PI23TTM cannot be selected together. Select SPAD or PI23 (TS mode), or uncheck PI23TTM.")
             return
 
         # Enable TTM if requested
@@ -7205,6 +7354,7 @@ Have fun!
 
         # Reset current image state
         self.currentImage = None
+        self._pi23_timestamp_snapshot = None
         self.activeFile = False
         self.mcs_manager.acquisition_done_reset()
         self.mcs_manager.acquisition_almost_done_reset()
@@ -7216,7 +7366,7 @@ Have fun!
         self._sync_pi23_ttm_detector()
         self.ui.comboBox_detector_model.setEnabled(False)
         self._pending_program_state_after_stop = None
-        raw_stream_mode = (not is_preview) and not self._mcs_saving_suppressed and self.ui.checkBox_rawStreamAcquisition.isChecked()
+        raw_stream_mode = (not is_preview) and not self._mcs_saving_suppressed and self.ui.checkBox_rawStreamAcquisition.isChecked() and not detector_uses_pi23_timestamp(self._current_detector_model())
         self.raw_stream_mode = raw_stream_mode
         self._auto_lifetime_correction_completed = False
         self._syncAutoLifetimeCorrectionWithPlotSelection()
@@ -7293,7 +7443,7 @@ Have fun!
             field.setText(path)
 
     def _start_after_pi23_ready(self):
-        if self._waiting_for_pi23 and self.started_normal:
+        if self._waiting_for_pi23 and (self.started_normal or self.started_preview):
             self._waiting_for_pi23 = False
             try:
                 self.sendCmdRun()
@@ -7302,11 +7452,16 @@ Have fun!
 
     def _pi23_recording_failed(self, message):
         self.pi23_timetagging.log(message)
-        if self.started_normal or self._waiting_for_pi23:
+        if self.started_normal or self.started_preview or self._waiting_for_pi23:
             self.stop()
         self.ui.statusBar.showMessage(message, 15000)
 
     def _pi23_recording_finished(self):
+        if detector_uses_pi23_timestamp(self._current_detector_model()) and not self.pi23_timetagging.stopping:
+            if self.started_normal:
+                self.finalizeAcquisition()
+            elif self.started_preview:
+                self.stop()
         if not self.started_normal and not self.started_preview:
             self.ui.pushButton_previewStart.setEnabled(True)
             self.ui.pushButton_acquisitionStart.setEnabled(True)
@@ -7314,7 +7469,67 @@ Have fun!
             self.ui.comboBox_detector_model.setEnabled(True)
             self._sync_pi23_ttm_detector()
 
+    def _show_pi23_timestamp_image(self, snapshot):
+        if self._current_detector_model() != DETECTOR_PI23_TS or not (self.started_normal or self.started_preview):
+            return
+        self._pi23_timestamp_snapshot = snapshot
+        self.ui.label_tot_num_dat_point_val.setText(f"PI23 TS: {snapshot.events} photons (sum)")
+        self.ui.label_current_frame_val.setText(str(snapshot.frame + 1))
+        if not self.ui.checkBox_showPreview.isChecked():
+            return
+        # Rust sends a row-major Y,X raster. ImageView uses X,Y coordinates.
+        width, height = snapshot.counts.shape[1], snapshot.counts.shape[0]
+        size, pos = self.currentImage_size, self.currentImage_pos
+        self.im_widget.setImage(
+            snapshot.counts.T, autoLevels=self.autoscale_image, autoRange=False,
+            levelMode="mono", pos=(pos[0] - size[0] / 2, pos[1] - size[1] / 2),
+            scale=(max(size[0], 1e-12) / width, max(size[1], 1e-12) / height),
+        )
+
+    def _plot_pi23_microimage(self):
+        if self._current_detector_model() != DETECTOR_PI23_TS_UIMG:
+            return
+        status = self.mcs_manager.shared_dict.get("pi23_uimg_status", {})
+        dwell_seconds = self.ui.spinBox_timeresolution.value() * self.ui.spinBox_time_bin_per_px.value() * 1e-6
+        if self.ui.checkBox_circular.isChecked():
+            dwell_seconds *= self.ui.spinBox_circular_points.value() * self.ui.spinBox_circular_repetition.value()
+        delay = status.get("pending_dwells", 0) * dwell_seconds
+        self.ui.label_preview_delay.setText(f"{delay:.3f}")
+        self.ui.label_preview_delay.setToolTip(
+            "Estimated queued acquisition time: recorder and local dwells awaiting preview processing. "
+            "Excludes scan waits and data not yet decoded by Rust. Blinks above 1 second."
+        )
+        # Use the preview timer for a half-second warning phase, with no extra timer.
+        warning = delay > 1.0 and int(time.monotonic() * 2) % 2 == 0
+        self.ui.label_preview_delay.setStyleSheet(
+            "border: 1px solid red; height: 8px; background: rgb(255,128,128);"
+            if warning else "height: 8px; background: None;"
+        )
+        if status.get("frame") is None:
+            return
+        self.ui.label_tot_num_dat_point_val.setText(
+            f"PI23 uimg: {status['total_dwells']} dwells processed; "
+            f"{status.get('available', 0)} queued on recorder; "
+            f"{status.get('local_pending', 0)} queued locally"
+        )
+        self.ui.label_current_frame_val.setText(str(status["frame"] + 1))
+        plane, dwells = {
+            0: (0, status["frame_dwells"]),
+            1: (2, status["recent_dwells"]),
+            2: (3, status["last_frame_dwells"]),
+        }[self.fingerprint_visualization]
+        fingerprint = self.mcs_manager.preview_repository.get_fingerprint(plane)
+        fingerprint = fingerprint / max(dwells * dwell_seconds, 1e-12) * self.fingerprint_mask
+        self.draw_fingerprint(fingerprint, self.mcs_manager.getFingerprintSaturation())
+        if self.ui.checkBox_correlationMatrix.isChecked():
+            self.microimage_analysis(fingerprint)
+        if self.ui.checkBox_showPreview.isChecked():
+            image, _, auto_levels, auto_range, pos, scale = self.getCurrentPreviewImage()
+            self.im_widget.setImage(image, autoLevels=auto_levels, autoRange=auto_range,
+                                    levelMode="mono", pos=pos, scale=scale)
+
     @Slot()
+    @trace_action
     def ttm_activate_change_state(self):
         """
         activate or deactivate the TTM
@@ -7361,6 +7576,7 @@ Have fun!
         return False
 
     @Slot()
+    @trace_action
     def pushButton_uttm_start_clicked(self):
         logger.debug("pushButton_uttm_start")
         ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
@@ -7378,6 +7594,7 @@ Have fun!
             logger.debug("Impossible to connect: " + url+"/start")
 
     @Slot()
+    @trace_action
     def pushButton_uttm_stop_clicked(self):
         logger.debug("pushButton_uttm_stop_clicked")
         ip, port = self.ui.lineEdit_uttm_addr.text().split(":")
@@ -7443,6 +7660,7 @@ Have fun!
         """
 
     @Slot()
+    @trace_action
     def pushButton_uttm_status_clicked(self):
         logger.debug("pushButton_uttm_status")
 
@@ -7474,9 +7692,11 @@ Have fun!
             logger.debug("%s %s", "Failed ", url + "/log_last")
             self.ui.checkBox_uttm_watchdog.setChecked(False)
 
+    @trace_action
     def pushButton_uttm_test_clicked(self):
         logger.debug("pushButton_uttm_test_clicked")
 
+    @trace_action
     def pushButton_uttm_check_laser_clicked(self):
         logger.debug("pushButton_uttm_check_laser_clicked")
 
@@ -7516,6 +7736,7 @@ Have fun!
         self.uttm_laser_widget.plot(np.asarray(x)*1.0e-12, np.asarray(y), clear=True)
 
     @Slot()
+    @trace_action
     def checkBox_uttm_watchdog_clicked(self):
         logger.debug("checkBox_uttm_watchdog_clicked")
         if self.ui.checkBox_uttm_watchdog.isChecked():
@@ -7535,6 +7756,7 @@ Have fun!
         self.timerUttmWatchDog_mutex.unlock()
 
     @Slot()
+    @trace_action
     def checkAlerts(self):
         """
         check the GUI alerts i.e. potential wrong parameters
@@ -7618,6 +7840,7 @@ Have fun!
 
 
     @Slot()
+    @trace_action
     def previewLoop(self):
         """
         Start acquisition in preview mode (limited repetitions, no saving).
@@ -7627,6 +7850,7 @@ Have fun!
         self.beginAcquisition(is_preview=True)
 
     @Slot()
+    @trace_action
     def projChanged(self):
         logger.debug("projChanged()")
         self.plotPreviewImage()
@@ -7755,6 +7979,7 @@ Have fun!
         return legacy_gui_metadata(configuration, spad_array_model=DETECTOR_SPAD_ARRAY)
 
     @Slot()
+    @trace_action
     def cmd_filename_ttm(self):
         """
         call the dialog for setting the filename for the TTM data receiver
@@ -7780,6 +8005,7 @@ Have fun!
         self.setRegistersDict(mydict)
         # time.sleep(0.2)
 
+    @trace_action
     def stopAcquisition(self):
         """
         stop the acquisition
@@ -8081,6 +8307,14 @@ Have fun!
         """
         plot the preview image
         """
+        if self._current_detector_model() == DETECTOR_PI23_TS_UIMG and img is None:
+            self._plot_pi23_microimage()
+            return
+        if self._current_detector_model() == DETECTOR_PI23_TS and img is None:
+            snapshot = getattr(self, "_pi23_timestamp_snapshot", None)
+            if snapshot is not None:
+                self._show_pi23_timestamp_image(snapshot)
+            return
         # Keep projection-specific transforms in the GUI layer so the worker can
         # publish compact shared buffers without duplicating display logic.
         (preview_img,
@@ -8186,6 +8420,7 @@ Have fun!
             logger.debug("%s %s %s", "Total photon [sum]", self.selected_channel, img[:].sum())
 
     @Slot()
+    @trace_action
     def selectChannelSum(self):
         """
         select the sum channel
@@ -8199,6 +8434,7 @@ Have fun!
     #     # self.plotCurrentImage()
 
     @Slot()
+    @trace_action
     def SaveConfigurationCmd(self):
         """
         save the configuration clicked event
@@ -8359,6 +8595,7 @@ Have fun!
                 self.ask_to_save_cfg_as_permanent(filecfg_nicer)
 
     @Slot()
+    @trace_action
     def LoadConfigurationCmd(self):
         """
         load the configuration clicked event
@@ -8421,6 +8658,19 @@ Have fun!
                 self.ui.label_loadedcfg.setText(filecfg)
 
     @Slot()
+    @trace_action
+    def openLogFolder(self):
+        folder = default_log_dir().resolve()
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+            if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder))):
+                raise OSError(f"The desktop could not open {folder}")
+        except OSError as error:
+            logger.exception("Could not open log folder %s", folder)
+            QMessageBox.warning(self, "Open log folder", str(error))
+
+    @Slot()
+    @trace_action
     def openInExplorer(self):
         folder_path = os.path.abspath((self.ui.lineEdit_destinationfolder.text().replace("/","\\")))
         logger.debug(folder_path)

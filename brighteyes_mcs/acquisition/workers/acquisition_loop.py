@@ -1,5 +1,5 @@
 """Shared detector acquisition loop for previews, traces, and HDF5 writes."""
-
+from brighteyes_mcs.logging_setup import logged_worker
 import multiprocessing as mp
 import os
 import threading
@@ -512,6 +512,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
 
         return payload
 
+    @logged_worker
     def run(self):
 
         stop_event_proxy = threading.Event()
