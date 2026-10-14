@@ -42,7 +42,7 @@ def _kernel():
 class RecorderJob:
     def __init__(self):
         self.kernel = _kernel()
-        self.name = "Local\\BrightEyesPI23_" + uuid.uuid4().hex
+        self.name = "Local\\BrightEyesPISPAD23_" + uuid.uuid4().hex
         self.handle = self.kernel.CreateJobObjectW(None, self.name)
         if not self.handle:
             raise ctypes.WinError(ctypes.get_last_error())

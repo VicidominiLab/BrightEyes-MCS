@@ -3,7 +3,11 @@
 import logging
 import multiprocessing as mp
 import os
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
 from inspect import signature
+from time import monotonic
 
 import pytest
 
@@ -38,7 +42,35 @@ def _child_messages():
 
 @logs.logged_worker
 def _child_failure():
-    raise RuntimeError("PI23 synthetic connection failure")
+    raise RuntimeError("PISPAD23 synthetic connection failure")
+
+
+@logs.logged_worker
+def _child_abrupt_exit():
+    logs.logger.error("Diagnostic written just before abrupt process exit")
+    os._exit(23)
+
+
+def test_shared_log_survives_abrupt_exit_and_keeps_process_identity(log_session):
+    path = logs.configure_logging(verbosity=2)
+    process = mp.get_context("spawn").Process(target=_child_abrupt_exit,
+                                               name="MicroimageWorker:crash/test")
+    process.start()
+    process.join(timeout=20)
+    if process.is_alive():
+        process.kill()
+        process.join()
+        pytest.fail("Crash probe did not finish")
+    assert process.exitcode == 23
+    content = path.read_text(encoding="utf-8")
+    assert "Diagnostic written just before abrupt process exit" in content
+    assert f"pid={process.pid} process=MicroimageWorker:crash/test" in content
+    assert "WORKER_EXIT" not in content  # No finally/atexit/clean shutdown ran.
+    logs.configure_logging(verbosity=2)
+    logs.logger.info("Parent continues after child crash")
+    assert path.read_text(encoding="utf-8").startswith(content)
+    assert "Parent continues after child crash" in path.read_text(encoding="utf-8")
+    assert list(log_session.iterdir()) == [path]
 
 
 @pytest.mark.parametrize("level", range(4))
@@ -61,7 +93,7 @@ def test_levels_and_worker_flags_cannot_override_launcher(level, log_session):
 
 @pytest.mark.parametrize("level", range(4))
 def test_spawn_inherits_level_session_and_directory(level, log_session):
-    logs.configure_logging(verbosity=level)
+    path = logs.configure_logging(verbosity=level)
     process = mp.get_context("spawn").Process(target=_child_messages)
     process.start()
     process.join(timeout=20)
@@ -73,16 +105,17 @@ def test_spawn_inherits_level_session_and_directory(level, log_session):
     if level == 0:
         assert not log_session.exists()
         return
-    child_log = log_session / f"mcs-log-test-session-pid-{process.pid}.log"
-    content = child_log.read_text(encoding="utf-8")
+    assert list(log_session.iterdir()) == [path]
+    content = path.read_text(encoding="utf-8")
     assert "normal-message" in content
     assert ("ACTION_BEGIN" in content) == (level >= 2)
     assert ("packet-message" in content) == (level == 3)
     assert f"pid={process.pid}" in content
+    assert f"process={process.name}" in content
 
 
 def test_worker_failure_keeps_traceback(log_session):
-    logs.configure_logging(verbosity=2)
+    path = logs.configure_logging(verbosity=2)
     process = mp.get_context("spawn").Process(target=_child_failure)
     process.start()
     process.join(timeout=20)
@@ -91,10 +124,131 @@ def test_worker_failure_keeps_traceback(log_session):
         process.join()
         pytest.fail("Failing worker did not finish")
     assert process.exitcode != 0
-    content = (log_session / f"mcs-log-test-session-pid-{process.pid}.log").read_text()
+    content = path.read_text()
     assert "WORKER_FAILED" in content
     assert "Traceback" in content
-    assert "PI23 synthetic connection failure" in content
+    assert "PISPAD23 synthetic connection failure" in content
+
+
+@logs.logged_worker
+def _concurrent_messages(ready):
+    assert ready.wait(10)
+
+    def write_records(thread):
+        for index in range(30):
+            token = f"{os.getpid()}-{thread}-{index}"
+            try:
+                raise ValueError("failure-" + token)
+            except ValueError:
+                logs.logger.exception("BEGIN-%s\n%s\nEND-%s", token, "x" * 8192, token)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        list(pool.map(write_records, range(2)))
+
+
+def test_processes_and_threads_share_one_file_without_lost_or_interleaved_records(log_session):
+    path = logs.configure_logging(verbosity=2)
+    context = mp.get_context("spawn")
+    ready = context.Event()
+    processes = [context.Process(target=_concurrent_messages, args=(ready,)) for _ in range(3)]
+    try:
+        for process in processes:
+            process.start()
+        ready.set()
+        # The GUI/main process also writes concurrently with the workers.
+        for index in range(30):
+            logs.logger.info("parent-record-%s", index)
+        for process in processes:
+            process.join(20)
+            assert process.exitcode == 0
+    finally:
+        for process in processes:
+            if process.is_alive():
+                process.kill()
+                process.join(5)
+
+    assert list(log_session.iterdir()) == [path]
+    content = path.read_text(encoding="utf-8")
+    assert content.count("BEGIN-") == 180
+    for process in processes:
+        assert f"pid={process.pid} process={process.name}" in content
+        for thread in range(2):
+            for index in range(30):
+                token = f"{process.pid}-{thread}-{index}"
+                block = f"BEGIN-{token}\n" + "x" * 8192 + f"\nEND-{token}\nTraceback"
+                assert content.count(block) == 1
+                traceback = content.split(f"END-{token}\n", 1)[1].split(f"ValueError: failure-{token}", 1)[0]
+                assert "BEGIN-" not in traceback
+                assert "parent-record-" not in traceback
+    assert content.count("parent-record-") == 30
+
+
+@logs.logged_worker
+def _hold_log_lock(ready, release):
+    handler = next(h for h in logs.logger.handlers if isinstance(h, logs.ResilientFileHandler))
+    assert handler._process_lock.acquire()
+    try:
+        ready.set()
+        assert release.wait(20)
+    finally:
+        handler._process_lock.release()
+
+
+def test_busy_log_cannot_block_actions_and_killed_owner_does_not_poison_lock(log_session, capsys):
+    path = logs.configure_logging(verbosity=2)
+    context = mp.get_context("spawn")
+    ready, release = context.Event(), context.Event()
+    process = context.Process(target=_hold_log_lock, args=(ready, release))
+    process.start()
+    calls = []
+
+    @logs.trace_action
+    def action(self=None):
+        calls.append("ran")
+        return 42
+
+    try:
+        assert ready.wait(10)
+        start = monotonic()
+        assert action() == 42
+        assert monotonic() - start < 2
+        assert calls == ["ran"]
+        assert capsys.readouterr().err.count("shared log busy") == 1
+    finally:
+        # Kill while holding the lock: no finally block or clean shutdown.
+        process.kill()
+        process.join(5)
+    assert not process.is_alive()
+    logs.logger.info("Recovered after lock owner died")
+    assert "Recovered after lock owner died" in path.read_text(encoding="utf-8")
+    assert list(log_session.iterdir()) == [path]
+
+
+def test_native_fatal_crash_appends_to_shared_log_and_parent_continues(log_session):
+    path = logs.configure_logging(verbosity=2)
+    source = """
+import faulthandler
+import os
+from brighteyes_mcs import logging_setup as logs
+if os.name == 'nt':
+    import ctypes
+    ctypes.windll.kernel32.SetErrorMode(3)  # No OS error-report dialog in tests.
+logs.configure_logging()
+logs.logger.error('Immediately before native crash')
+handler = next(h for h in logs.logger.handlers if isinstance(h, logs.ResilientFileHandler))
+assert handler._process_lock.acquire()
+faulthandler._sigsegv()
+"""
+    result = subprocess.run([sys.executable, "-c", source], capture_output=True, timeout=20)
+    assert result.returncode != 0
+    content = path.read_text(encoding="utf-8")
+    assert "Immediately before native crash" in content
+    assert "Windows fatal exception" in content or "Fatal Python error" in content
+    assert '<module>' in content
+    logs.logger.info("Parent continues after native crash")
+    assert path.read_text(encoding="utf-8").startswith(content)
+    assert "Parent continues after native crash" in path.read_text(encoding="utf-8")
+    assert list(log_session.iterdir()) == [path]
 
 
 def test_first_handler_correlates_nested_calls_and_exception(log_session):
@@ -173,16 +327,16 @@ def test_launcher_default_aliases_qt_passthrough_and_rejected_levels():
                 _logging_options(["mcs", flag, invalid])
 
 
-def test_pi23_debug_obeys_level_even_with_legacy_environment(log_session, monkeypatch):
-    from brighteyes_mcs.acquisition.detectors.pi23.backend import pi23_debug, pi23_debug_enabled
+def test_pispad23_debug_obeys_level_even_with_legacy_environment(log_session, monkeypatch):
+    from brighteyes_mcs.acquisition.detectors.pispad23.backend import pispad23_debug, pispad23_debug_enabled
 
-    monkeypatch.setenv("PI23_DEBUG", "1")
+    monkeypatch.setenv("PISPAD23_DEBUG", "1")
     for level in range(4):
         path = logs.configure_logging(verbosity=level)
-        assert pi23_debug_enabled(True) == (level == 3)
-        pi23_debug("PI23 packet detail")
+        assert pispad23_debug_enabled(True) == (level == 3)
+        pispad23_debug("PISPAD23 packet detail")
         if path:
-            assert ("PI23 packet detail" in path.read_text()) == (level == 3)
+            assert ("PISPAD23 packet detail" in path.read_text()) == (level == 3)
     assert os.environ[logs.VERBOSITY_ENV_VAR] == "3"
 
 
@@ -216,7 +370,7 @@ def test_native_crash_logging_failure_keeps_regular_file_logging(log_session, mo
     assert logs._fault_file is None
 
 
-@pytest.mark.parametrize("failure", ["disk", "formatter", "filter", "record"])
+@pytest.mark.parametrize("failure", ["disk", "formatter", "filter", "record", "lock"])
 def test_logging_pipeline_failure_does_not_interrupt_action(log_session, monkeypatch, failure):
     path = logs.configure_logging(verbosity=2)
     handler = next(h for h in logs.logger.handlers if isinstance(h, logs.ResilientFileHandler))
@@ -226,6 +380,8 @@ def test_logging_pipeline_failure_does_not_interrupt_action(log_session, monkeyp
 
     if failure == "disk":
         monkeypatch.setattr(handler.stream, "write", broken)
+    elif failure == "lock":
+        monkeypatch.setattr(handler._process_lock, "acquire", broken)
     elif failure == "formatter":
         monkeypatch.setattr(handler.formatter, "format", broken)
     elif failure == "filter":

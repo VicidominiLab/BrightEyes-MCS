@@ -7,10 +7,10 @@ import threading
 import numpy as np
 import pytest
 
-from brighteyes_mcs.acquisition.detectors.pi23.microimage_stream import (
+from brighteyes_mcs.acquisition.detectors.pispad23.microimage_stream import (
     BATCH_HEADER, BATCH_TRAILER, DWELL_DTYPE, MicroimageBatch, read_batch, buffered_microimages,
 )
-from brighteyes_mcs.acquisition.detectors.pi23.microimage_worker import MicroimageWorker
+from brighteyes_mcs.acquisition.detectors.pispad23.microimage_worker import MicroimageWorker
 from brighteyes_mcs.acquisition.shared_memory import SharedMemoryRegistry
 from brighteyes_mcs.acquisition.preview import PreviewRepository
 
@@ -49,7 +49,7 @@ class FragmentedSocket:
 
 
 def test_worker_delay_counts_recorder_and_local_backlog_then_drains(monkeypatch):
-    from brighteyes_mcs.acquisition.detectors.pi23 import microimage_worker
+    from brighteyes_mcs.acquisition.detectors.pispad23 import microimage_worker
 
     data = records(10)
     queued, processing_second, release = threading.Event(), threading.Event(), threading.Event()
@@ -80,7 +80,7 @@ def test_worker_delay_counts_recorder_and_local_backlog_then_drains(monkeypatch)
     thread.start()
     try:
         assert processing_second.wait(5)
-        status = shared["pi23_uimg_status"]
+        status = shared["pispad23_uimg_status"]
         assert status["sequence"] == 1
         assert status["available"] == 8
         assert status["local_pending"] == 1
@@ -88,7 +88,7 @@ def test_worker_delay_counts_recorder_and_local_backlog_then_drains(monkeypatch)
         release.set()
         assert worker.done.wait(5)
         assert not worker.error
-        status = shared["pi23_uimg_status"]
+        status = shared["pispad23_uimg_status"]
         assert status["sequence"] == 10
         assert status["available"] == status["local_pending"] == status["pending_dwells"] == 0
     finally:
@@ -206,7 +206,7 @@ def test_worker_drains_large_burst_and_changes_channel_without_gui_events():
         try:
             assert worker.done.wait(15)
             assert not worker.error and not errors
-            assert shared["pi23_uimg_status"]["total_dwells"] == 30000
+            assert shared["pispad23_uimg_status"]["total_dwells"] == 30000
             np.testing.assert_array_equal(repository.get_preview_image(), data[-5000:]["counts"][:, 24].reshape(50, 100))
             np.testing.assert_array_equal(repository.get_fingerprint(0).ravel(), data[-5000:]["counts"].sum(axis=0))
             shared["channel"] = "Sum"

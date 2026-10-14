@@ -4,11 +4,19 @@ These guides are maintained with the code. Use the documentation from the same
 checkout or release as your application. The Wiki is an entry point, not a second
 copy of the installation or developer instructions.
 
+## Detector support
+
+BrightEyes-MCS was originally developed for SPAD arrays interfaced directly at the hardware level, with each pixel’s TTL output read by the BrightEyes-MCS FPGA. The Genoa Instruments PRISM-Light has been the most widely used detector in this configuration. Support for the Pi Imaging SPAD23R was added later through a high-level TCP/IP protocol that communicates with Pi Imaging’s pSPAD software.
+
+Detector support was implemented for our own acquisition workflows and does not constitute a characterization or certification of any detector. Performance observed with BrightEyes-MCS depends on the complete experimental setup, including acquisition settings and firmware, and should not be interpreted as representative of a detector’s intrinsic or maximum achievable performance. For detector specifications, refer to the respective manufacturer’s documentation.
+
+PRISM-Light, SPAD23R, and pSPAD are trademarks or product names of their respective owners.
+
 ## User guides
 
 - [Installation and first launch](../README.md)
 - [Statistics and ETA](statistics.md)
-- [PI23 time-tag recording](pi23-timetagging.md)
+- [PI SPAD23R time-tag recording](pispad23-timetagging.md)
 - [Configuration, runtime paths, and RAW conversion](current-architecture.md)
 
 ## Developer guides

@@ -11,7 +11,7 @@ from unittest.mock import patch
 import h5py
 import numpy as np
 
-from brighteyes_mcs.acquisition.detectors.backends import DETECTOR_PI_23
+from brighteyes_mcs.acquisition.detectors.backends import DETECTOR_PISPAD23
 from brighteyes_mcs.storage.converters.spad import (
     _detect_streams,
     _load_metadata,
@@ -179,10 +179,10 @@ class TestRawMetadataCompatibility(unittest.TestCase):
             self.assertEqual(meta["spad_channels_hint"], 25)
             self.assertEqual(streams[0]["spad_channels"], 25)
 
-    def test_raw_converter_dispatches_pi23_metadata_to_pi23_converter(self):
+    def test_raw_converter_dispatches_pispad23_metadata_to_pispad23_converter(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
-            metadata_filename = folder / "pi23_only_metadata.h5"
+            metadata_filename = folder / "pispad23_only_metadata.h5"
 
             with h5py.File(metadata_filename, "w") as h5file:
                 mcs_cfg = h5file.create_group("configurationSpadFCSmanager")
@@ -199,10 +199,10 @@ class TestRawMetadataCompatibility(unittest.TestCase):
                 h5file.create_group("configurationGUI")
 
                 raw_cfg = h5file.create_group("rawStreamAcquisition")
-                raw_cfg.attrs["detector_model"] = DETECTOR_PI_23
+                raw_cfg.attrs["detector_model"] = DETECTOR_PISPAD23
 
             meta = _load_metadata(metadata_filename)
-            self.assertEqual(meta["detector_model"], DETECTOR_PI_23)
+            self.assertEqual(meta["detector_model"], DETECTOR_PISPAD23)
             with self.assertRaises(NotImplementedError):
                 convert_raw_acquisition(metadata_filename)
 

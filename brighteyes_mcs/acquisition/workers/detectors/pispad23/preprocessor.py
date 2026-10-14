@@ -1,4 +1,4 @@
-"""PI23 preprocessing scaffold."""
+"""PISPAD23 preprocessing scaffold."""
 
 from brighteyes_mcs.logging_setup import logged_worker
 import multiprocessing as mp
@@ -7,16 +7,16 @@ import queue
 
 import numpy as np
 
-from ....detectors.pi23.backend import (
-    pi23_decode_raw_bunch_to_spad_preview_words,
-    pi23_debug,
+from ....detectors.pispad23.backend import (
+    pispad23_decode_raw_bunch_to_spad_preview_words,
+    pispad23_debug,
 )
 from brighteyes_mcs.logging_setup import logger, set_debug
 
 
-class Pi23DataPreProcess(mp.Process):
+class PISPAD23DataPreProcess(mp.Process):
     """
-    Decode PI23-native raw bunches into the shared preview/acquisition stream.
+    Decode PISPAD23-native raw bunches into the shared preview/acquisition stream.
 
     Output queues use the same ``stream_out_main`` and ``stream_out_aux`` names
     as the NI-FPGA acquisition path.
@@ -46,7 +46,7 @@ class Pi23DataPreProcess(mp.Process):
 
     @logged_worker
     def run(self):
-        logger.debug("%s %s", "Pi23DataPreProcess RUN - PID:", os.getpid())
+        logger.debug("%s %s", "PISPAD23DataPreProcess RUN - PID:", os.getpid())
         while not self.stop_event.is_set():
             try:
                 dict_from_queue = self.queue_in.get(timeout=0.1)
@@ -56,18 +56,18 @@ class Pi23DataPreProcess(mp.Process):
             for fifo_name, payload in dict_from_queue.items():
                 raw_bunch, _sample_count = payload
                 try:
-                    decoded = pi23_decode_raw_bunch_to_spad_preview_words(
+                    decoded = pispad23_decode_raw_bunch_to_spad_preview_words(
                         raw_bunch,
                         digital_words_per_sample=self.digital_words_per_sample,
                     )
                 except Exception as exc:
-                    logger.exception("PI23 decode failed fifo=%s samples=%s: %s",
+                    logger.exception("PISPAD23 decode failed fifo=%s samples=%s: %s",
                                      fifo_name, raw_bunch.sample_count, exc)
                     continue
                 if decoded.size == 0:
                     continue
-                logger.debug("%s %s %s %s %s %s", "Pi23DataPreProcess decoded", fifo_name, "samples", raw_bunch.sample_count, "words", decoded.size)
-                pi23_debug(
+                logger.debug("%s %s %s %s %s %s", "PISPAD23DataPreProcess decoded", fifo_name, "samples", raw_bunch.sample_count, "words", decoded.size)
+                pispad23_debug(
                     "preprocess decoded",
                     fifo_name,
                     f"samples={raw_bunch.sample_count}",
@@ -84,7 +84,7 @@ class Pi23DataPreProcess(mp.Process):
                 self.last_preprocessed_len[fifo_name].value = decoded_len
 
     def stop(self):
-        logger.debug("Pi23DataPreProcess STOP")
+        logger.debug("PISPAD23DataPreProcess STOP")
         self.stop_event.set()
         self.terminate()
 

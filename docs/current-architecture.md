@@ -8,7 +8,7 @@ For setup, validation, and UI generation commands, see [Contributing](../CONTRIB
 
 BrightEyes-MCS is a Windows-focused PySide6 desktop application for controlling
 image-scanning microscopes. The main Python package coordinates the GUI, NI-FPGA
-scan control, SPAD or PI23 detector data, multiprocessing workers, live previews,
+scan control, SPAD or PI SPAD23R detector data, multiprocessing workers, live previews,
 HDF5/RAW storage, plug-ins, TTM control, and an optional HTTP API.
 
 ```mermaid
@@ -28,9 +28,9 @@ flowchart TB
     Manager --> Detector{Detector pipeline}
 
     Detector --> SPAD[SPAD FIFO pipeline]
-    Detector --> PI23[PI23 TCP pipeline]
+    Detector --> PISPAD23[PI SPAD23R TCP pipeline]
     SPAD --> Workers[Multiprocessing workers]
-    PI23 --> Workers
+    PISPAD23 --> Workers
 
     Workers --> Shared[Shared-memory preview data]
     Shared --> Qt
@@ -241,7 +241,7 @@ typed configuration is not yet the main runtime representation.
 
 - `AcquisitionCoordinator`, which wraps start/stop and records backend errors;
 - `FpgaHandle`, which owns the NI-FPGA control process;
-- the selected `SpadDetectorPipeline` or `Pi23DetectorPipeline`;
+- the selected `SpadDetectorPipeline` or `PISPAD23DetectorPipeline`;
 - `ProcessSupervisor`, `SharedMemoryRegistry`, `PreviewRepository`, and
   `AcquisitionStorage`;
 - multiprocessing events, manager dictionaries, counters and queues.
@@ -268,11 +268,11 @@ flowchart LR
         FifoQueue --> SpadRaw[SpadRawStreamWriterProcess]
     end
 
-    subgraph PI23_path[PI 23 or PI23TT]
-        PI23TCP[PI23 TCP stream] --> Receiver[Pi23ReceiverProcess]
+    subgraph PISPAD23_path[PI SPAD23R or PISPAD23TT]
+        PISPAD23TCP[PI SPAD23R TCP stream] --> Receiver[PISPAD23ReceiverProcess]
         Receiver --> PiQueue[receiver queue]
-        PiQueue --> PiPre[Pi23DataPreProcess]
-        PiQueue --> PiRaw[Pi23RawStreamWriterProcess]
+        PiQueue --> PiPre[PISPAD23DataPreProcess]
+        PiQueue --> PiRaw[PISPAD23RawStreamWriterProcess]
     end
 
     SpadPre --> DataQueues[per-stream data queues]
@@ -286,9 +286,9 @@ flowchart LR
     PiRaw --> RawFiles
 ```
 
-For PI23, NI-FPGA remains the scan-control surface, but its detector FIFO is not
-used. Detector payload comes from the PI23 TCP receiver. The PI23 emulator in
-[`detectors/pi23/emulator.py`](../brighteyes_mcs/acquisition/detectors/pi23/emulator.py)
+For PI SPAD23R, NI-FPGA remains the scan-control surface, but its detector FIFO is not
+used. Detector payload comes from the PI SPAD23R TCP receiver. The PI SPAD23R emulator in
+[`detectors/pispad23/emulator.py`](../brighteyes_mcs/acquisition/detectors/pispad23/emulator.py)
 provides a software source for development.
 
 ### Processes and communication
@@ -297,7 +297,7 @@ provides a software source for development.
 | --- | --- | --- |
 | Qt main thread | GUI, timers, configuration and orchestration | Qt signals, manager API, shared-array reads |
 | `NiFpgaControlProcess` | NI session, register and SPAD FIFO control | manager queues/events and Rust FIFO reader |
-| PI23 receiver process | Receive detector TCP bunches | multiprocessing receiver queue |
+| PI SPAD23R receiver process | Receive detector TCP bunches | multiprocessing receiver queue |
 | detector preprocessor process | Batch/repack receiver payloads | receiver queue to per-stream data queues |
 | detector acquisition-loop process | Decode, aggregate, preview and request HDF5 writes | shared memory, shared dict, HDF5 command queue |
 | detector RAW writer process | Write native stream payloads directly | receiver queue to `.raw` files |
@@ -367,7 +367,7 @@ legacy public attribute names through `storage/legacy_names.py`. See the full
 
 RAW mode produces a metadata-only HDF5 file plus detector stream files. The
 in-package converter supports SPAD RAW reconstruction through
-`storage/converters/spad.py`; PI23 uses `storage/converters/pi23.py`. The
+`storage/converters/spad.py`; PI SPAD23R uses `storage/converters/pispad23.py`. The
 source-checkout CLI wrapper `scripts/convert_raw_acquisition_to_h5.py` calls the
 package converter for either detector. With BrightEyes-MCS installed, run it
 from the repository root:
@@ -456,7 +456,7 @@ a separate interpreter on Windows/Python 3.13:
 python -m unittest test.test_channel_delay_skew_plugin -v
 ```
 
-Hardware acceptance remains manual: SPAD and PI23 connection, preview, normal
+Hardware acceptance remains manual: SPAD and PI SPAD23R connection, preview, normal
 and RAW acquisition, stop/reconnect, HDF5 conversion, TTM, plug-ins and REST.
 
 ## Refactor status: completed versus still transitional
@@ -467,7 +467,7 @@ and RAW acquisition, stop/reconnect, HDF5 conversion, TTM, plug-ins and REST.
   gone; there are no compatibility import shims.
 - Acquisition, storage, hardware, application, API, UI and plug-in ownership is
   named explicitly.
-- Detector-specific SPAD and PI23 pipeline factories replace branching in many
+- Detector-specific SPAD and PI SPAD23R pipeline factories replace branching in many
   process-construction sites.
 - HDF5 writes have a dedicated process; preview arrays have a registry/repository;
   child-process lifecycle has a supervisor.
@@ -498,7 +498,7 @@ and RAW acquisition, stop/reconnect, HDF5 conversion, TTM, plug-ins and REST.
 | Scan start/stop or orchestration | `ui/qt/main_window.py`, `acquisition/manager.py`, `acquisition/coordinator.py` |
 | NI register/FIFO behavior | `hardware/fpga.py`, `acquisition/workers/fpga.py`, `acquisition/fifo.py` |
 | SPAD processing | `acquisition/detectors/spad/` and `acquisition/workers/detectors/spad/` |
-| PI23 receive/processing/emulation | `acquisition/detectors/pi23/` and `acquisition/workers/detectors/pi23/` |
+| PI SPAD23R receive/processing/emulation | `acquisition/detectors/pispad23/` and `acquisition/workers/detectors/pispad23/` |
 | Preview math/shared arrays | `acquisition/workers/acquisition_loop.py`, `acquisition/shared_memory.py`, `acquisition/preview.py` |
 | Preview presentation | `ui/controllers/preview.py`, `ui/qt/main_window.py`, `ui/qt/flim_image_view.py` |
 | HDF5 or RAW format | `storage/`; update schema/compatibility tests and documentation |

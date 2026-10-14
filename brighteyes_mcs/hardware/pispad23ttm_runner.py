@@ -70,7 +70,7 @@ def main():
         import ctypes
 
         if arguments[:1] == ["--job-name"]:
-            from pi23ttm_job import join_recorder_job
+            from pispad23ttm_job import join_recorder_job
 
             join_recorder_job(arguments[1])
             arguments = arguments[2:]

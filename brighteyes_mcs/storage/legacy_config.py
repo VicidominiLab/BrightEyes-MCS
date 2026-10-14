@@ -63,8 +63,8 @@ class LegacyConfigurationTranslator:
             channels=int(legacy.get("spad_channels", 25)),
             address=str(legacy.get("niAddr", "RIO0")),
             bitfile=str(legacy.get("bitFile", "")),
-            pi23_host=str(legacy.get("pi23_host", "127.0.0.1")),
-            pi23_port=int(legacy.get("pi23_port", 9997)),
+            pispad23_host=str(legacy.get("pispad23_host", "127.0.0.1")),
+            pispad23_port=int(legacy.get("pispad23_port", 9997)),
         )
         output = OutputConfig(filename=Path(str(legacy.get("filename", "DEFAULT.h5"))))
         return AcquisitionConfig(geometry=geometry, detector=detector, output=output, legacy=legacy)
@@ -86,8 +86,8 @@ class LegacyConfigurationTranslator:
                 "filename": str(config.output.filename),
             }
         )
-        if "pi23_host" in payload or config.detector.pi23_host != "127.0.0.1":
-            payload["pi23_host"] = config.detector.pi23_host
-        if "pi23_port" in payload or config.detector.pi23_port != 9997:
-            payload["pi23_port"] = config.detector.pi23_port
+        if "pispad23_host" in payload or config.detector.pispad23_host != "127.0.0.1":
+            payload["pispad23_host"] = config.detector.pispad23_host
+        if "pispad23_port" in payload or config.detector.pispad23_port != 9997:
+            payload["pispad23_port"] = config.detector.pispad23_port
         return payload

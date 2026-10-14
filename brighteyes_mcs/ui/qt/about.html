@@ -19,6 +19,12 @@
 designed by the Molecular Microscopy and Spectroscopy group of the
 Istituto Italiano di Tecnologia.</p>
 
+<p>
+<a href="https://github.com/VicidominiLab/BrightEyes-MCS">Source code</a> &middot;
+<a href="https://github.com/VicidominiLab/BrightEyes-MCS/wiki">Documentation</a> &middot;
+<a href="https://github.com/VicidominiLab/BrightEyes-MCS/issues">Report an issue</a>
+</p>
+
 <h2>Credits and citation</h2>
 <p><strong>Author:</strong> Mattia Donato<br>
 <strong>Institution:</strong> Istituto Italiano di Tecnologia<br>
@@ -28,13 +34,14 @@ Istituto Italiano di Tecnologia.</p>
 <p><em>BrightEyes-MCS: a control software for multichannel scanning microscopy.</em><br>
 Donato et al., Journal of Open Source Software (2024), 9(103), 7125.<br>
 <a href="https://doi.org/10.21105/joss.07125">https://doi.org/10.21105/joss.07125</a></p>
-<p>
-<a href="https://github.com/VicidominiLab/BrightEyes-MCS">Source code</a> &middot;
-<a href="https://github.com/VicidominiLab/BrightEyes-MCS/wiki">Documentation</a> &middot;
-<a href="https://github.com/VicidominiLab/BrightEyes-MCS/issues">Report an issue</a>
-</p>
 
-<h2>BrightEyes-MCS software license</h2>
+<h2>Detector support</h2>
+<p>BrightEyes-MCS was originally developed for SPAD arrays interfaced directly at the hardware level, with each pixel’s TTL output read by the BrightEyes-MCS FPGA. The Genoa Instruments PRISM-Light has been the most widely used detector in this configuration. Support for the Pi Imaging SPAD23R was added later through a high-level TCP/IP protocol that communicates with Pi Imaging’s pSPAD software.</p>
+<p>Detector support was implemented for our own acquisition workflows and does not constitute a characterization or certification of any detector. Performance observed with BrightEyes-MCS depends on the complete experimental setup, including acquisition settings and firmware, and should not be interpreted as representative of a detector’s intrinsic or maximum achievable performance. For detector specifications, refer to the respective manufacturer’s documentation.</p>
+<p>PRISM-Light, SPAD23R, and pSPAD are trademarks or product names of their respective owners.</p>
+
+<h2>Licenses and notices</h2>
+<h3>BrightEyes-MCS software license</h3>
 <pre class="license">BrightEyes-MCS - The microscope control software for image-scanning microscopy.
 Copyright (C) 2023 Istituto Italiano di Tecnologia
 
@@ -52,7 +59,7 @@ Copyright (C) 2023 Istituto Italiano di Tecnologia
     along with this program. If not, see https://www.gnu.org/licenses/.
 </pre>
 
-<h2>BrightEyes-MCSLL firmware: separate license</h2>
+<h3>BrightEyes-MCSLL firmware: separate license</h3>
 <div class="notice">
 <p><strong>The FPGA <code>.lvbitx</code> firmware is not part of BrightEyes-MCS
 and is not covered by the GPL license below.</strong> It is distributed separately
@@ -80,7 +87,7 @@ agreement to this Agreement.</p>
 <a href="https://github.com/VicidominiLab/BrightEyes-MCSLL/blob/main/LICENSE.md">BrightEyes-MCSLL license</a>
 before downloading or using firmware.</p>
 
-<h2>Third-party software</h2>
+<h3>Third-party software</h3>
 <p>BrightEyes-MCS uses third-party Python and native packages distributed under
 their own licenses. The license and notice files installed with each package
 (normally under its <code>*.dist-info</code> directory) are authoritative for

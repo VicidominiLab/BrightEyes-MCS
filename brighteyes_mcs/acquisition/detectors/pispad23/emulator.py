@@ -23,7 +23,7 @@ import numpy as np
 
 
 def debug_enabled(default=False):
-    value = os.environ.get("PI23_DEBUG", os.environ.get("DEBUG"))
+    value = os.environ.get("PISPAD23_DEBUG", os.environ.get("DEBUG"))
     if value is None:
         return bool(default)
     return value.strip().lower() in ("1", "true", "yes", "on", "debug")
@@ -71,7 +71,7 @@ def handle_client(
 
     try:
         greeting = (
-            "BrightEyes-MCS PI23 Emulator v1.0\r\n"
+            "BrightEyes-MCS PISPAD23 Emulator v1.0\r\n"
             "Ready. Send CS,<dwell_us>,<frames>,<pix_x>,<pix_y>,<ext_frame>\r\n"
         )
         conn.sendall(greeting.encode("utf-8"))
@@ -173,7 +173,7 @@ def run_server(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="TCP emulator for PI23 scanning binary data")
+    parser = argparse.ArgumentParser(description="TCP emulator for PISPAD23 scanning binary data")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=9997)
     parser.add_argument("--chunk", type=int, default=32768)
@@ -182,7 +182,7 @@ if __name__ == "__main__":
         "--verbose",
         action="store_true",
         default=debug_enabled(False),
-        help="Print raw command strings. Also enabled by DEBUG=1 or PI23_DEBUG=1",
+        help="Print raw command strings. Also enabled by DEBUG=1 or PISPAD23_DEBUG=1",
     )
     args = parser.parse_args()
 

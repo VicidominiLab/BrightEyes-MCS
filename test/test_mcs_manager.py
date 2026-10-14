@@ -8,10 +8,9 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 from brighteyes_mcs.acquisition.detectors.models import (
     DETECTOR_DISABLED,
-    DETECTOR_PI23_TT,
-    DETECTOR_PI23_TS,
-    DETECTOR_PI23_TS_UIMG,
-    DETECTOR_PI_23,
+    DETECTOR_PISPAD23_TT,
+    DETECTOR_PISPAD23_TS_UIMG,
+    DETECTOR_PISPAD23,
     DETECTOR_SPAD_ARRAY,
     DETECTOR_SPAD_TTM,
     detector_uses_nifpga_control,
@@ -22,7 +21,7 @@ from brighteyes_mcs.acquisition.manager import McsManager
 class TestMcsManager(unittest.TestCase):
 
     def test_timestamp_restart_never_starts_intensity_receiver_or_storage(self):
-        for model in (DETECTOR_PI23_TS, DETECTOR_PI23_TS_UIMG):
+        for model in (DETECTOR_PISPAD23_TS_UIMG,):
             instance = McsManager()
             instance.set_detector_model(model)
             instance.dim_x, instance.dim_y, instance.dim_z = 3, 2, 1
@@ -30,18 +29,16 @@ class TestMcsManager(unittest.TestCase):
             instance.readRegistersDict = MagicMock()
             instance.set_do_not_save(True)
             instance.acquisition_storage.start = MagicMock()
-            with patch("brighteyes_mcs.acquisition.detectors.pi23.pipeline.Pi23ReceiverProcess") as receiver:
+            with patch("brighteyes_mcs.acquisition.detectors.pispad23.pipeline.PISPAD23ReceiverProcess") as receiver:
                 for _ in range(2):
                     instance.run()
                     self.assertEqual(instance.detector_pipeline.detector_model, model)
                     self.assertIsNone(instance.detector_receiver_process)
                     self.assertIsNone(instance.detector_receiver_queue)
                     self.assertIsNone(instance.dataProcess)
-                    if model != DETECTOR_PI23_TS_UIMG:
-                        self.assertIsNone(instance.previewProcess)
                     self.assertIsNone(instance.raw_writer_process)
                     instance.fpga_handle.set_list_fifos_to_read_continously.assert_called_with([])
-                    if model == DETECTOR_PI23_TS_UIMG:
+                    if model == DETECTOR_PISPAD23_TS_UIMG:
                         self.assertTrue(instance.previewProcess.is_alive())
                         self.assertIn("shared_fingerprint", instance.detector_pipeline.worker.shared_objects)
                     instance.stopPreview()
@@ -90,16 +87,16 @@ class TestMcsManager(unittest.TestCase):
         ):
             instance.fpga_handle.register_write_checked.assert_any_call(name, value)
 
-    def test_pi23_keeps_nifpga_control_without_nifpga_fifo_data(self):
+    def test_pispad23_keeps_nifpga_control_without_nifpga_fifo_data(self):
         self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_ARRAY))
         self.assertTrue(detector_uses_nifpga_control(DETECTOR_SPAD_ARRAY))
         self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_TTM))
         self.assertTrue(detector_uses_nifpga_control(DETECTOR_SPAD_TTM))
 
-        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PI_23))
-        self.assertTrue(detector_uses_nifpga_control(DETECTOR_PI_23))
-        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PI23_TT))
-        self.assertTrue(detector_uses_nifpga_control(DETECTOR_PI23_TT))
+        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PISPAD23))
+        self.assertTrue(detector_uses_nifpga_control(DETECTOR_PISPAD23))
+        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PISPAD23_TT))
+        self.assertTrue(detector_uses_nifpga_control(DETECTOR_PISPAD23_TT))
 
     def test_parse_dfd_metadata_from_bitfile_name_extracts_values(self):
         cycle_mhz, dfd_nbins = McsManager.parse_dfd_metadata_from_bitfile_name(
@@ -206,9 +203,9 @@ class TestMcsManager(unittest.TestCase):
             instance.fpga_handle.runfpga.assert_called_once_with()
             instance.update_chuck.assert_called()
 
-    def test_connect_pi23_disables_nifpga_fifos(self):
+    def test_connect_pispad23_disables_nifpga_fifos(self):
         instance = McsManager()
-        instance.set_detector_model(DETECTOR_PI_23)
+        instance.set_detector_model(DETECTOR_PISPAD23)
         instance.update_chuck = MagicMock()
 
         with patch("brighteyes_mcs.acquisition.manager.FpgaHandle") as MockFpgaHandle:
@@ -229,9 +226,9 @@ class TestMcsManager(unittest.TestCase):
         self.assertFalse(run_registers["stream_out_aux_enable"])
         self.assertFalse(run_registers["dfd_enable"])
 
-    def test_connect_pi23_offsets_nifpga_scan_dimensions(self):
+    def test_connect_pispad23_offsets_nifpga_scan_dimensions(self):
         instance = McsManager()
-        instance.set_detector_model(DETECTOR_PI_23)
+        instance.set_detector_model(DETECTOR_PISPAD23)
         instance.update_chuck = MagicMock()
 
         with patch("brighteyes_mcs.acquisition.manager.FpgaHandle") as MockFpgaHandle:
@@ -250,9 +247,9 @@ class TestMcsManager(unittest.TestCase):
         self.assertEqual(run_registers["max_line"], 201)
         self.assertEqual(run_registers["max_frame"], 4)
 
-    def test_connect_pi23tt_offsets_nifpga_scan_dimensions(self):
+    def test_connect_pispad23tt_offsets_nifpga_scan_dimensions(self):
         instance = McsManager()
-        instance.set_detector_model(DETECTOR_PI23_TT)
+        instance.set_detector_model(DETECTOR_PISPAD23_TT)
         instance.update_chuck = MagicMock()
 
         with patch("brighteyes_mcs.acquisition.manager.FpgaHandle") as MockFpgaHandle:
@@ -271,9 +268,9 @@ class TestMcsManager(unittest.TestCase):
         self.assertEqual(run_registers["max_line"], 201)
         self.assertEqual(run_registers["max_frame"], 4)
 
-    def test_set_registers_dict_pi23_forces_fifo_registers_off(self):
+    def test_set_registers_dict_pispad23_forces_fifo_registers_off(self):
         instance = McsManager()
-        instance.set_detector_model(DETECTOR_PI_23)
+        instance.set_detector_model(DETECTOR_PISPAD23)
         instance.is_connected = True
         instance.fpga_handle = MagicMock()
 
@@ -289,9 +286,9 @@ class TestMcsManager(unittest.TestCase):
         instance.fpga_handle.register_write_checked.assert_any_call("stream_out_aux_enable", False)
         instance.fpga_handle.register_write_checked.assert_any_call("dfd_enable", False)
 
-    def test_set_registers_dict_pi23_offsets_nifpga_scan_dimensions_only(self):
+    def test_set_registers_dict_pispad23_offsets_nifpga_scan_dimensions_only(self):
         instance = McsManager()
-        instance.set_detector_model(DETECTOR_PI_23)
+        instance.set_detector_model(DETECTOR_PISPAD23)
         instance.is_connected = True
         instance.fpga_handle = MagicMock()
 
@@ -310,9 +307,9 @@ class TestMcsManager(unittest.TestCase):
         self.assertEqual(instance.registers_configuration["max_line"], 200)
         self.assertEqual(instance.registers_configuration["max_frame"], 3)
 
-    def test_read_registers_dict_pi23_restores_logical_scan_dimensions(self):
+    def test_read_registers_dict_pispad23_restores_logical_scan_dimensions(self):
         instance = McsManager()
-        instance.set_detector_model(DETECTOR_PI_23)
+        instance.set_detector_model(DETECTOR_PISPAD23)
         instance.is_connected = True
         instance.fpga_handle = MagicMock()
         instance.fpga_handle.register_read_all.return_value = {

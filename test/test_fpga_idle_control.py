@@ -433,9 +433,9 @@ def test_legacy_keep_connected_settings_do_not_fake_live_connection_state():
 
 def test_acquisition_start_failure_restores_controls_and_shows_popup():
     window = MainWindow.__new__(MainWindow)
-    window.pi23_timetagging = SimpleNamespace(active=False)
+    window.pispad23_timetagging = SimpleNamespace(active=False)
     window.ui = SimpleNamespace(
-        checkBox_pi23ttmActivate=MagicMock(isChecked=MagicMock(return_value=False)),
+        checkBox_pispad23ttmActivate=MagicMock(isChecked=MagicMock(return_value=False)),
         checkBox_ttmActivate=MagicMock(
             isChecked=MagicMock(return_value=False)
         ),

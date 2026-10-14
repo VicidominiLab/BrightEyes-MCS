@@ -1,4 +1,4 @@
-"""PI23 raw-bunch stream writer scaffold."""
+"""PISPAD23 raw-bunch stream writer scaffold."""
 
 from brighteyes_mcs.logging_setup import logged_worker
 import multiprocessing as mp
@@ -13,10 +13,10 @@ import numpy as np
 from brighteyes_mcs.logging_setup import logger, set_debug
 
 
-class Pi23RawStreamWriterProcess(mp.Process):
-    """Write PI23-native raw bunches without converting them to SPAD FIFO words."""
+class PISPAD23RawStreamWriterProcess(mp.Process):
+    """Write PISPAD23-native raw bunches without converting them to SPAD FIFO words."""
 
-    FORMAT_VERSION = "pi23_pickle_bunch_v0"
+    FORMAT_VERSION = "pispad23_pickle_bunch_v0"
 
     def __init__(
         self,
@@ -95,12 +95,12 @@ class Pi23RawStreamWriterProcess(mp.Process):
 
     @logged_worker
     def run(self):
-        logger.debug("%s %s", "Pi23RawStreamWriterProcess RUN", os.getpid())
+        logger.debug("%s %s", "PISPAD23RawStreamWriterProcess RUN", os.getpid())
         self.acquisition_done.clear()
         self.acquisition_almost_done.clear()
         self.shared_dict["raw_writer_error"] = ""
         self.shared_dict["raw_writer_stop_reason"] = "running"
-        self.shared_dict["pi23_raw_stream_format"] = self.FORMAT_VERSION
+        self.shared_dict["pispad23_raw_stream_format"] = self.FORMAT_VERSION
 
         handles = {}
         for fifo_name, filename in self.raw_output_files.items():
@@ -113,6 +113,8 @@ class Pi23RawStreamWriterProcess(mp.Process):
             self.shared_dict[f"{fifo_name}_expected_words"] = int(self.expected_words[fifo_name])
             self.shared_dict[f"{fifo_name}_expected_bytes"] = 0
 
+        if self.shared_dict.get("software_trigger_enabled", False):
+            self.shared_dict["software_trigger_worker_ready"] = True
         idle_after_stop = 0
         try:
             while True:
@@ -165,7 +167,7 @@ class Pi23RawStreamWriterProcess(mp.Process):
             error_text = traceback.format_exc()
             self.shared_dict["raw_writer_error"] = error_text
             self.shared_dict["raw_writer_stop_reason"] = "error"
-            logger.exception("PI23 raw writer failed: %s", error_text)
+            logger.exception("PISPAD23 raw writer failed: %s", error_text)
         finally:
             for handle in handles.values():
                 handle.close()
@@ -178,8 +180,8 @@ class Pi23RawStreamWriterProcess(mp.Process):
 
         self.acquisition_almost_done.set()
         self.acquisition_done.set()
-        logger.debug("Pi23RawStreamWriterProcess DONE")
+        logger.debug("PISPAD23RawStreamWriterProcess DONE")
 
     def stop(self):
-        logger.debug("Pi23RawStreamWriterProcess STOP")
+        logger.debug("PISPAD23RawStreamWriterProcess STOP")
         self.stop_event.set()

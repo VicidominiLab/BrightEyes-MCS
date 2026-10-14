@@ -11,10 +11,10 @@ from ..hardware.fpga import FpgaHandle
 from brighteyes_mcs.logging_setup import data_debug_enabled, logger
 from ..acquisition.detectors.models import (
     DETECTOR_DISABLED,
-    detector_uses_pi23_timestamp,
+    detector_uses_pispad23_timestamp,
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_fifo,
-    detector_uses_pi23_pipeline,
+    detector_uses_pispad23_pipeline,
     normalize_detector_model,
 )
 from ..acquisition.detectors import create_detector_pipeline
@@ -28,7 +28,7 @@ from ..acquisition import (
 )
 
 
-PI23_NIFPGA_DIMENSION_OFFSETS = {
+PISPAD23_NIFPGA_DIMENSION_OFFSETS = {
     "max_pixel": 1,
     "max_line": 1,
     "max_frame": 1,
@@ -39,12 +39,12 @@ def create_i64_counter(initial_value=0):
     return mp.Value("q", int(initial_value))
 
 
-def _pi23_nifpga_dimension_registers(registers, detector_model, direction=1):
+def _pispad23_nifpga_dimension_registers(registers, detector_model, direction=1):
     registers = dict(registers)
-    if not (detector_uses_pi23_pipeline(detector_model) or detector_uses_pi23_timestamp(detector_model)):
+    if not (detector_uses_pispad23_pipeline(detector_model) or detector_uses_pispad23_timestamp(detector_model)):
         return registers
 
-    for register, offset in PI23_NIFPGA_DIMENSION_OFFSETS.items():
+    for register, offset in PISPAD23_NIFPGA_DIMENSION_OFFSETS.items():
         if register in registers and registers[register] is not None:
             registers[register] = max(1, int(registers[register]) + (direction * offset))
     return registers
@@ -184,6 +184,7 @@ class McsManager():
         self.dim_y = 0
         self.dim_z = 0
         self.dim_rep = 0
+        self.software_trigger_session = None
         # self.acquisitionThread = Thread()
         self.previewProcess = None  # mp.Process()
         self.dataProcess = None
@@ -240,8 +241,8 @@ class McsManager():
 
         self.use_rust_fifo = True
         self.detector_model = DETECTOR_SPAD_ARRAY
-        self.pi23_host = "127.0.0.1"
-        self.pi23_port = 9997
+        self.pispad23_host = "127.0.0.1"
+        self.pispad23_port = 9997
 
         self.debug = data_debug_enabled()
         self.h5_manager_process = None
@@ -497,7 +498,7 @@ class McsManager():
                 "stream_out_main_enable": False,
                 "dfd_enable": False,
             }
-        nifpga_initial_registers = _pi23_nifpga_dimension_registers(
+        nifpga_initial_registers = _pispad23_nifpga_dimension_registers(
             initial_registers_for_detector,
             self.detector_model,
         )
@@ -573,13 +574,13 @@ class McsManager():
         if self.fpga_handle is not None:
             self.fpga_handle.set_detector_model(self.detector_model)
 
-    def set_pi23_connection(self, host="127.0.0.1", port=9997):
-        self.pi23_host = str(host or "127.0.0.1")
-        self.pi23_port = int(port or 9997)
-        self.shared_dict["pi23_host"] = self.pi23_host
-        self.shared_dict["pi23_port"] = self.pi23_port
-        self.shared_dict["pi23_greeting_raw"] = ""
-        self.shared_dict["pi23_greeting_decoded"] = ""
+    def set_pispad23_connection(self, host="127.0.0.1", port=9997):
+        self.pispad23_host = str(host or "127.0.0.1")
+        self.pispad23_port = int(port or 9997)
+        self.shared_dict["pispad23_host"] = self.pispad23_host
+        self.shared_dict["pispad23_port"] = self.pispad23_port
+        self.shared_dict["pispad23_greeting_raw"] = ""
+        self.shared_dict["pispad23_greeting_decoded"] = ""
 
     def set_raw_stream_mode(self, enabled=False):
         """
@@ -665,7 +666,7 @@ class McsManager():
         self.detector_receiver_queue = self.detector_pipeline.make_receiver_queue(self)
 
         self.number_of_threads_h5 = mp.Value("i", 0)
-        if not do_not_save and not self.raw_stream_mode and self.detector_model != DETECTOR_DISABLED and not detector_uses_pi23_timestamp(self.detector_model):
+        if not do_not_save and not self.raw_stream_mode and self.detector_model != DETECTOR_DISABLED and not detector_uses_pispad23_timestamp(self.detector_model):
             (
                 self.h5_command_queue,
                 self.h5_response_queue,
@@ -742,6 +743,14 @@ class McsManager():
         self.shared_dict["dfd_cycle_mhz"] = self.dfd_cycle_mhz
         self.shared_dict["raw_output_files"] = dict(self.raw_output_files)
         self.shared_dict["detector_model"] = self.detector_model
+        trigger = self.software_trigger_session
+        self.shared_dict["software_trigger_enabled"] = trigger is not None
+        self.shared_dict["software_trigger_preview"] = bool(trigger and trigger.preview)
+        if trigger is not None:
+            self.shared_dict["software_trigger_receiver_ready"] = 0
+            self.shared_dict["software_trigger_worker_ready"] = False
+            for fifo in self.activated_fifos_list:
+                self.shared_dict[f"software_trigger_frames_{fifo}"] = 0
 
         logger.debug("%s %s", "self.activate_show_preview", self.activate_show_preview)
         self.shared_dict.update(
@@ -846,7 +855,7 @@ class McsManager():
             for register in ("stream_out_aux_enable", "stream_out_main_enable", "dfd_enable"):
                 if register in myconf:
                     myconf[register] = False
-        nifpga_conf = _pi23_nifpga_dimension_registers(myconf, self.detector_model)
+        nifpga_conf = _pispad23_nifpga_dimension_registers(myconf, self.detector_model)
         # debug("setRegistersDict")
         register_set = "setRegistersDict: "
         temp_dict = {}
@@ -870,7 +879,7 @@ class McsManager():
         logger.debug("readRegistersDict()")
         if self.is_connected:
             self.registers_configuration.update(
-                _pi23_nifpga_dimension_registers(
+                _pispad23_nifpga_dimension_registers(
                     self.fpga_handle.register_read_all(),
                     self.detector_model,
                     direction=-1,
@@ -890,6 +899,10 @@ class McsManager():
         self.dim_y = self.registers_configuration["max_line"]
         self.dim_z = self.registers_configuration["max_frame"]
         self.dim_rep = self.registers_configuration["max_repetition"] - 1
+        trigger = getattr(self, "software_trigger_session", None)
+        if trigger is not None:
+            self.dim_z = trigger.frames
+            self.dim_rep = trigger.repetitions
 
         self.expected_words_data_per_frame_analog = (
                 self.timebins_per_pixel * self.dim_x * self.dim_y * self.circ_repetition * self.circ_points
@@ -919,6 +932,10 @@ class McsManager():
                 self.expected_words_data_per_frame_analog * self.dim_z * self.dim_rep
         )
 
+        if trigger is not None and trigger.preview:
+            # Preserve signed 64-bit counters without a practical preview limit.
+            self.expected_words_data_digital = (1 << 63) - 1
+            self.expected_words_data_analog = (1 << 63) - 1
         self.update_chuck()
 
     def update_chuck(self):

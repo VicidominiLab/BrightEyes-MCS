@@ -77,5 +77,5 @@ describes profile migration and user-writable paths.
 ## Hardware acceptance checklist
 
 Automated tests do not replace validation on attached instruments. Before a
-release, validate SPAD and PI23 connect, preview, normal acquisition, RAW
+release, validate SPAD and PI SPAD23R connect, preview, normal acquisition, RAW
 acquisition, stop, reconnect, HDF5 conversion, TTM, plugins, and REST startup.

@@ -13,7 +13,7 @@ import numpy as np
 class MicroimagePreview:
     def __init__(self, width, height, *, snake=False, shared_objects=None):
         if width <= 0 or height <= 0 or width * height > 16_777_216:
-            raise ValueError("Invalid PI23 microimage scan dimensions")
+            raise ValueError("Invalid PISPAD23 microimage scan dimensions")
         self.width, self.height = int(width), int(height)
         self.snake = snake
         self.shared_objects = shared_objects or {}
@@ -32,9 +32,9 @@ class MicroimagePreview:
         if snapshot.flags & 3 != 3:
             return False
         if not (0 <= snapshot.x < self.width and 0 <= snapshot.y < self.height):
-            return False  # PI23/FPGA trailing synchronization dwells.
+            return False  # PISPAD23/FPGA trailing synchronization dwells.
         if self.frame is not None and snapshot.frame < self.frame:
-            raise ValueError("PI23 microimage frame order reversed")
+            raise ValueError("PISPAD23 microimage frame order reversed")
         if snapshot.frame != self.frame:
             if self.frame is not None:
                 self.fingerprints[3] = self.fingerprints[0]

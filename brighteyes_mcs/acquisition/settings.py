@@ -22,8 +22,8 @@ class DetectorConfig:
     channels: int = 25
     address: str = "RIO0"
     bitfile: str = ""
-    pi23_host: str = "127.0.0.1"
-    pi23_port: int = 9997
+    pispad23_host: str = "127.0.0.1"
+    pispad23_port: int = 9997
 
 
 @dataclass(frozen=True)

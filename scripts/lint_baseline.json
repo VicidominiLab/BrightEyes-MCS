@@ -208,7 +208,7 @@
   },
   {
     "key": [
-      "brighteyes_mcs/acquisition/workers/detectors/pi23/raw_writer.py",
+      "brighteyes_mcs/acquisition/workers/detectors/pispad23/raw_writer.py",
       "F401",
       "`numpy` imported but unused",
       "import numpy as np"

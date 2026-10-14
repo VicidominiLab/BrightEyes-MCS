@@ -434,6 +434,8 @@ class BaseAcquisitionLoopProcess(mp.Process):
         self.time_resolution = shared_dict["time_resolution"]
         self.expected_words_data_digital = shared_dict["expected_words_data_digital"]
         self.expected_words_data_analog = shared_dict["expected_words_data_analog"]
+        self.software_trigger_enabled = shared_dict.get("software_trigger_enabled", False)
+        self.software_trigger_preview = shared_dict.get("software_trigger_preview", False)
         self.expected_words_data_per_frame_digital = shared_dict["expected_words_data_per_frame_digital"]
         self.expected_words_data_per_frame_analog = shared_dict["expected_words_data_per_frame_analog"]
 
@@ -549,7 +551,8 @@ class BaseAcquisitionLoopProcess(mp.Process):
         p.nice(psutil.HIGH_PRIORITY_CLASS)
         logger.debug("%s %s %s %s", self.process_label, "RUN - PID:", os.getpid(), p.nice())
 
-        stop_event_proxy.clear()
+        if not self.software_trigger_enabled:
+            stop_event_proxy.clear()
         self.current_pointer_in_sample_digital = 0  # self.timebinsPerPixel * self.DATA_WORDS_PER_SAMPLE_DIGITAL
         self.current_pointer_in_sample_analog = 0  # self.timebinsPerPixel * self.DATA_WORDS_PER_SAMPLE_ANALOG
 
@@ -792,6 +795,10 @@ class BaseAcquisitionLoopProcess(mp.Process):
                     self.buffer_for_save_digital_extra_ch[:] = 0
                     logger.debug("done digital add_to_dataset")
                     logger.debug(self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL)
+                if self.software_trigger_enabled:
+                    # This acknowledgement must reach the GUI even when the
+                    # worker exits before its periodic status publication.
+                    self.shared_dict["software_trigger_frames_stream_out_main"] = self.current_frame_digital
             except Exception as e:
                 logger.debug("%s %s", "Error in finalize_frame_fifo:", e)
 
@@ -822,9 +829,13 @@ class BaseAcquisitionLoopProcess(mp.Process):
                     self.buffer_analog_for_save[:] = 0
                     logger.debug("done analog add_to_dataset")
                     logger.debug("%s %s", self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG, self.expected_words_data_analog)
+                if self.software_trigger_enabled:
+                    self.shared_dict["software_trigger_frames_stream_out_aux"] = self.current_frame_analog
             except Exception as e:
                 logger.debug("%s %s", "Error in finalize_frame_fifo_analog:", e)
 
+        if self.software_trigger_enabled:
+            self.shared_dict["software_trigger_worker_ready"] = True
         while not stop_event_proxy.is_set():
             selected_channel = self.selected_channel
 
@@ -1567,7 +1578,7 @@ class BaseAcquisitionLoopProcess(mp.Process):
             cond_digital = (self.current_pointer_in_sample_digital * self.DATA_WORDS_PER_SAMPLE_DIGITAL >= self.expected_words_data_digital)
             cond_analog  = (self.current_pointer_in_sample_analog * self.DATA_WORDS_PER_SAMPLE_ANALOG >= self.expected_words_data_analog)
 
-            if not(
+            if not self.software_trigger_preview and not(
                     ("stream_out_main" in self.shm_activated_fifos_list and not cond_digital)
                     or
                     ("stream_out_aux" in self.shm_activated_fifos_list and not cond_analog)

@@ -10,7 +10,7 @@ import time
 
 import pytest
 
-from brighteyes_mcs.hardware import pi23ttm_runner
+from brighteyes_mcs.hardware import pispad23ttm_runner
 
 
 def launch_bridge():
@@ -18,7 +18,7 @@ def launch_bridge():
     job = None
     bridge_args = []
     if os.name == "nt":
-        from brighteyes_mcs.hardware.pi23ttm_job import RecorderJob
+        from brighteyes_mcs.hardware.pispad23ttm_job import RecorderJob
 
         job = RecorderJob()
         bridge_args = ["--job-name", job.name]
@@ -26,7 +26,7 @@ def launch_bridge():
         startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         options = {"creationflags": subprocess.CREATE_NEW_CONSOLE, "startupinfo": startup}
     process = subprocess.Popen(
-        [sys.executable, "-u", str(Path(pi23ttm_runner.__file__).resolve()), *bridge_args,
+        [sys.executable, "-u", str(Path(pispad23ttm_runner.__file__).resolve()), *bridge_args,
          sys.executable, "-u", "-c",
          "import signal,time; signal.signal(signal.SIGINT,lambda *args:None); "
          "print('STUB_READY',flush=True); time.sleep(120)"],
@@ -62,7 +62,7 @@ def test_bridge_forces_unresponsive_child_after_stop_or_parent_close(eof):
         assert "forcing termination" in log
     finally:
         if process.poll() is None:
-            pi23ttm_runner.stop_watchdog(process, lines)
+            pispad23ttm_runner.stop_watchdog(process, lines)
         process.stdin.close()
         process.stdout.close()
         if process.recorder_job is not None:
@@ -72,9 +72,9 @@ def test_bridge_forces_unresponsive_child_after_stop_or_parent_close(eof):
 def test_watchdog_terminates_launcher_tree_when_stop_pipe_is_unusable(monkeypatch):
     process, lines, reader = launch_bridge()
     try:
-        monkeypatch.setattr(pi23ttm_runner, "STOP_WATCHDOG_SECONDS", 0.1)
+        monkeypatch.setattr(pispad23ttm_runner, "STOP_WATCHDOG_SECONDS", 0.1)
         # Deliberately send no stop command: exercise the independent fallback.
-        pi23ttm_runner.stop_watchdog(process, lines)
+        pispad23ttm_runner.stop_watchdog(process, lines)
         assert not any("termination failed" in line for line in list(lines.queue)), list(lines.queue)
         process.wait(timeout=5)
         reader.join(timeout=2)
@@ -82,7 +82,7 @@ def test_watchdog_terminates_launcher_tree_when_stop_pipe_is_unusable(monkeypatc
         assert "forcing its process tree" in "".join(list(lines.queue))
     finally:
         if process.poll() is None:
-            pi23ttm_runner.stop_watchdog(process, lines)
+            pispad23ttm_runner.stop_watchdog(process, lines)
         process.stdin.close()
         process.stdout.close()
         if process.recorder_job is not None:

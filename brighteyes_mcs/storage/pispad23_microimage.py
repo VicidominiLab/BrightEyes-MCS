@@ -1,4 +1,4 @@
-"""Save original PI23 dwell counts independently of rolling preview pixels."""
+"""Save original PISPAD23 dwell counts independently of rolling preview pixels."""
 
 import h5py
 import numpy as np
@@ -10,7 +10,7 @@ class MicroimageH5Writer:
     def __init__(self, filename, width, height, frames, repetitions, dwell_seconds,
                  *, snake=False, snake_z=False):
         if min(width, height, frames, repetitions) < 1 or dwell_seconds <= 0:
-            raise ValueError("Invalid PI23 HDF5 acquisition dimensions or dwell duration")
+            raise ValueError("Invalid PISPAD23 HDF5 acquisition dimensions or dwell duration")
         self.width, self.height = width, height
         self.frames, self.repetitions = frames, repetitions
         self.snake, self.snake_z = snake, snake_z
@@ -29,7 +29,7 @@ class MicroimageH5Writer:
             self.data.attrs.update(axes="repetition,z,y,x,timebin,channel", units="photon counts",
                                    timebins_per_pixel=1, dwell_seconds=dwell_seconds,
                                    integration="one complete dwell per time bin")
-            self.info = self.file.create_group("pi23_microimages")
+            self.info = self.file.create_group("pispad23_microimages")
             self.info.attrs.update(complete=False, stop_reason="recording", saved_dwells=0,
                                    dwell_seconds=dwell_seconds, expected_frames=frames * repetitions,
                                    detector_channels=25, snake_walk_xy=snake, snake_walk_z=snake_z)
@@ -50,9 +50,9 @@ class MicroimageH5Writer:
         if not (0 <= snapshot.x < self.width and 0 <= snapshot.y < self.height):
             return  # Trailing synchronization dwells are not scan pixels.
         if not 0 <= snapshot.frame < self.frames * self.repetitions:
-            raise ValueError("PI23 HDF5 received a frame outside the configured acquisition")
+            raise ValueError("PISPAD23 HDF5 received a frame outside the configured acquisition")
         if self.frame is not None and snapshot.frame < self.frame:
-            raise ValueError("PI23 HDF5 frame order reversed")
+            raise ValueError("PISPAD23 HDF5 frame order reversed")
         if snapshot.frame != self.frame:
             self._flush_frame()
             self.frame = snapshot.frame
@@ -60,7 +60,7 @@ class MicroimageH5Writer:
             self.flags.fill(0)
         x = self.width - 1 - snapshot.x if self.snake and snapshot.y % 2 else snapshot.x
         if self.flags[snapshot.y, x]:
-            raise ValueError("Duplicate PI23 dwell coordinate in HDF5 acquisition")
+            raise ValueError("Duplicate PISPAD23 dwell coordinate in HDF5 acquisition")
         self.counts[snapshot.y, x, 0] = snapshot.counts
         self.flags[snapshot.y, x] = snapshot.flags
         self.saved_dwells += 1

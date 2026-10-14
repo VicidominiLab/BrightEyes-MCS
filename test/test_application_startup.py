@@ -82,6 +82,7 @@ def test_full_window_startup_and_plot_signals(tmp_path, log_directory_available)
     assert "STARTUP_AND_PLOT_SIGNALS_OK" in result.stdout, details
     if log_directory_available:
         assert "STARTUP_AND_PLOT_SIGNALS_OK" in content, details
+        assert list(path.parent.iterdir()) == [path]
     else:
         assert "logging failure (configuration)" in result.stderr, details
     assert "ACTION_FAILED" not in content, content

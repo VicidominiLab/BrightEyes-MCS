@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import os
 import faulthandler
-import multiprocessing
 import sys
 import threading
 from contextvars import ContextVar
@@ -14,6 +13,8 @@ from inspect import Parameter, signature
 from itertools import count
 from pathlib import Path
 from time import localtime, strftime
+
+from ._log_file import LogFileLock, open_append
 
 
 LOGGER_NAME = "brighteyes_mcs"
@@ -62,8 +63,49 @@ class ResilientLogger(logging.LoggerAdapter):
 
 
 class ResilientFileHandler(logging.FileHandler):
-    """Stop retrying an unusable file; leave the application and other sinks running."""
+    """Share one append-only file while keeping sink failures out of app code."""
     _failed = False
+
+    def __init__(self, filename, encoding="utf-8"):
+        self._process_lock = None
+        super().__init__(filename, encoding=encoding, delay=True)
+        try:
+            self._process_lock = LogFileLock(self.baseFilename)
+            self.stream = open_append(self.baseFilename, encoding=encoding)
+        except BaseException:
+            self.close()
+            raise
+
+    def emit(self, record):
+        if self.stream is None:
+            return
+        try:
+            # Format outside the process lock; write each complete traceback
+            # under the lock. StreamHandler's thread lock still applies too.
+            message = self.format(record)
+            if not self._process_lock.acquire():
+                report_logging_failure("shared log busy", TimeoutError(
+                    "Skipped a record after waiting 100 ms for another writer"))
+                return
+            try:
+                self.stream.write(message + self.terminator)
+                self.flush()
+            finally:
+                self._process_lock.release()
+        except Exception:
+            self.handleError(record)
+
+    def close(self):
+        self.acquire()
+        try:
+            try:
+                super().close()
+            finally:
+                if self._process_lock is not None:
+                    self._process_lock.close()
+                    self._process_lock = None
+        finally:
+            self.release()
 
     def handle(self, record):
         if self._failed:
@@ -152,7 +194,7 @@ def configure_logging(*, verbosity: int | None = None, debug_enabled: bool | Non
 def _configure_logging(*, verbosity=None, debug_enabled=None, log_dir=None):
     """Configure this process; children inherit the session, folder and verbosity.
 
-    Each process owns a file, avoiding interleaved writes and tracebacks on Windows.
+    All processes append to one file, serializing complete records and tracebacks.
     Level zero creates neither a directory nor a file.
     """
     global _fault_file
@@ -186,9 +228,7 @@ def _configure_logging(*, verbosity=None, debug_enabled=None, log_dir=None):
     if selected == 0:
         return None
     destination.mkdir(parents=True, exist_ok=True)
-    suffix = ("" if multiprocessing.current_process().name == "MainProcess"
-              else f"-pid-{os.getpid()}")
-    log_file = destination / f"mcs-log-{_session_timestamp()}{suffix}.log"
+    log_file = destination / f"mcs-log-{_session_timestamp()}.log"
     handler = ResilientFileHandler(log_file, encoding="utf-8")
     handler._brighteyes_handler = True
     handler.addFilter(SessionFilter())
@@ -199,7 +239,9 @@ def _configure_logging(*, verbosity=None, debug_enabled=None, log_dir=None):
     logger.addHandler(handler)
     # Keep the descriptor alive for native faults, including crashes in extensions.
     try:
-        _fault_file = log_file.open("a", encoding="utf-8")
+        # Native fatal handlers cannot safely take a Python/process lock. Their
+        # best-effort stacks append directly, even if the GUI or a worker dies.
+        _fault_file = open_append(log_file)
         faulthandler.enable(file=_fault_file, all_threads=True)
     except Exception as error:
         report_logging_failure("native crash diagnostics", error)

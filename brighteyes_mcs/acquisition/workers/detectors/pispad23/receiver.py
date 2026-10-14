@@ -1,4 +1,4 @@
-"""PI23 detector receiver."""
+"""PISPAD23 detector receiver."""
 
 from brighteyes_mcs.logging_setup import logged_worker
 import multiprocessing as mp
@@ -7,13 +7,13 @@ from time import sleep
 
 import psutil
 
-from ....detectors.pi23.backend import Pi23TcpBunchSource, pi23_debug
+from ....detectors.pispad23.backend import PISPAD23TcpBunchSource, pispad23_debug
 from brighteyes_mcs.logging_setup import logger, set_debug
 
 
-class Pi23ReceiverProcess(mp.Process):
+class PISPAD23ReceiverProcess(mp.Process):
     """
-    Receive PI23-native raw bunches.
+    Receive PISPAD23-native raw bunches.
 
     The TCP detector source is intentionally isolated here so the rest of the
     acquisition stack can continue to consume detector-native bunches.
@@ -48,7 +48,7 @@ class Pi23ReceiverProcess(mp.Process):
         self.active_fifos = list(active_fifos)
         self.start_event = start_event
         self.stop_event = mp.Event()
-        self.source = Pi23TcpBunchSource(
+        self.source = PISPAD23TcpBunchSource(
             fifo_chuck_size_digital=fifo_chuck_size_digital,
             fifo_chuck_size_analog=fifo_chuck_size_analog,
             expected_words_data_digital=expected_words_data_digital,
@@ -70,7 +70,7 @@ class Pi23ReceiverProcess(mp.Process):
 
     @logged_worker
     def run(self):
-        logger.debug("%s %s", "Pi23ReceiverProcess RUN - PID:", os.getpid())
+        logger.debug("%s %s", "PISPAD23ReceiverProcess RUN - PID:", os.getpid())
         try:
             psutil.Process(os.getpid()).nice(psutil.HIGH_PRIORITY_CLASS)
         except Exception:
@@ -87,7 +87,7 @@ class Pi23ReceiverProcess(mp.Process):
                 try:
                     bunch = self.source.read_bunch(fifo_name)
                 except Exception as exc:
-                    logger.exception("PI23 receive failed fifo=%s endpoint=%s:%s scan=%sx%s frames=%s: %s",
+                    logger.exception("PISPAD23 receive failed fifo=%s endpoint=%s:%s scan=%sx%s frames=%s: %s",
                                      fifo_name, self.source.host, self.source.port,
                                      self.source.scan_x, self.source.scan_y, self.source.scan_frames, exc)
                     self.stop_event.set()
@@ -95,8 +95,8 @@ class Pi23ReceiverProcess(mp.Process):
                 if bunch is None:
                     continue
                 self.queue_out.put({fifo_name: [bunch, bunch.sample_count]})
-                logger.debug("%s %s %s", "Pi23ReceiverProcess queued", fifo_name, bunch.sample_count)
-                pi23_debug("receiver queued", fifo_name, bunch.sample_count, enabled=self.debug)
+                logger.debug("%s %s %s", "PISPAD23ReceiverProcess queued", fifo_name, bunch.sample_count)
+                pispad23_debug("receiver queued", fifo_name, bunch.sample_count, enabled=self.debug)
                 emitted_any = True
 
             if not emitted_any:
@@ -105,6 +105,6 @@ class Pi23ReceiverProcess(mp.Process):
         self.source.stop()
 
     def stop(self):
-        logger.debug("Pi23ReceiverProcess STOP")
+        logger.debug("PISPAD23ReceiverProcess STOP")
         self.stop_event.set()
 

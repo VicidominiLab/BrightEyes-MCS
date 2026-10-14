@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2000</width>
+    <width>1921</width>
     <height>2079</height>
    </rect>
   </property>
@@ -20,7 +20,7 @@
       <item row="0" column="0">
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>4</number>
+         <number>0</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -660,7 +660,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
             <item row="0" column="0">
              <widget class="QTabWidget" name="tabWidget_2">
               <property name="currentIndex">
-               <number>5</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tab_7">
                <attribute name="title">
@@ -2799,73 +2799,73 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                   </widget>
                   <widget class="QWidget" name="tab_pi_timetagging">
                    <attribute name="title">
-                    <string>PI23 (Timestamp mode)</string>
+                    <string>PI SPAD23R (Timestamp mode)</string>
                    </attribute>
                    <layout class="QGridLayout" name="gridLayout_pi_timetagging">
                     <item row="0" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_executable">
+                     <widget class="QLabel" name="label_pispad23ttm_executable">
                       <property name="text">
                        <string>HDF5 recorder</string>
                       </property>
                      </widget>
                     </item>
                     <item row="0" column="1">
-                     <widget class="QLineEdit" name="lineEdit_pi23ttm_h5_executable"/>
+                     <widget class="QLineEdit" name="lineEdit_pispad23ttm_h5_executable"/>
                     </item>
                     <item row="0" column="2">
-                     <widget class="QToolButton" name="toolButton_pi23ttm_h5">
+                     <widget class="QToolButton" name="toolButton_pispad23ttm_h5">
                       <property name="text">
                        <string>...</string>
                       </property>
                      </widget>
                     </item>
                     <item row="1" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_raw">
+                     <widget class="QLabel" name="label_pispad23ttm_raw">
                       <property name="text">
                        <string>RAW recorder</string>
                       </property>
                      </widget>
                     </item>
                     <item row="1" column="1">
-                     <widget class="QLineEdit" name="lineEdit_pi23ttm_raw_executable"/>
+                     <widget class="QLineEdit" name="lineEdit_pispad23ttm_raw_executable"/>
                     </item>
                     <item row="1" column="2">
-                     <widget class="QToolButton" name="toolButton_pi23ttm_raw">
+                     <widget class="QToolButton" name="toolButton_pispad23ttm_raw">
                       <property name="text">
                        <string>...</string>
                       </property>
                      </widget>
                     </item>
                     <item row="2" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_folder">
+                     <widget class="QLabel" name="label_pispad23ttm_folder">
                       <property name="text">
                        <string>Data folder</string>
                       </property>
                      </widget>
                     </item>
                     <item row="2" column="1">
-                     <widget class="QLineEdit" name="lineEdit_pi23ttm_folder">
+                     <widget class="QLineEdit" name="lineEdit_pispad23ttm_folder">
                       <property name="placeholderText">
                        <string>Empty: use the MCS destination folder</string>
                       </property>
                      </widget>
                     </item>
                     <item row="2" column="2">
-                     <widget class="QToolButton" name="toolButton_pi23ttm_folder">
+                     <widget class="QToolButton" name="toolButton_pispad23ttm_folder">
                       <property name="text">
                        <string>...</string>
                       </property>
                      </widget>
                     </item>
                     <item row="3" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_format">
+                     <widget class="QLabel" name="label_pispad23ttm_format">
                       <property name="text">
                        <string>Output format</string>
                       </property>
                      </widget>
                     </item>
                     <item row="3" column="1">
-                     <widget class="QComboBox" name="comboBox_pi23ttm_format">
+                     <widget class="QComboBox" name="comboBox_pispad23ttm_format">
                       <item>
                        <property name="text">
                         <string>HDF5</string>
@@ -2879,24 +2879,24 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                      </widget>
                     </item>
                     <item row="4" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_address">
+                     <widget class="QLabel" name="label_pispad23ttm_address">
                       <property name="text">
                        <string>TTM endpoint (host:port)</string>
                       </property>
                      </widget>
                     </item>
                     <item row="4" column="1">
-                     <widget class="QLineEdit" name="lineEdit_pi23ttm_address"/>
+                     <widget class="QLineEdit" name="lineEdit_pispad23ttm_address"/>
                     </item>
                     <item row="6" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_margin">
+                     <widget class="QLabel" name="label_pispad23ttm_margin">
                       <property name="text">
                        <string>Recording margin</string>
                       </property>
                      </widget>
                     </item>
                     <item row="6" column="1">
-                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pi23ttm_margin">
+                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23ttm_margin">
                       <property name="toolTip">
                        <string>Extra recording time beyond the scan duration. Include external trigger delays here.</string>
                       </property>
@@ -2912,14 +2912,14 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                      </widget>
                     </item>
                     <item row="7" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_settle">
+                     <widget class="QLabel" name="label_pispad23ttm_settle">
                       <property name="text">
                        <string>Delay after armed / ready</string>
                       </property>
                      </widget>
                     </item>
                     <item row="7" column="1">
-                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pi23ttm_settle">
+                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23ttm_settle">
                       <property name="toolTip">
                        <string>RAW: wait until SB is sent, then this delay before starting the FPGA. HDF5: wait for the recorder ready message. Included in both preview and recording measurement-ms.</string>
                       </property>
@@ -2932,14 +2932,14 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                      </widget>
                     </item>
                     <item row="8" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_timeout">
+                     <widget class="QLabel" name="label_pispad23ttm_timeout">
                       <property name="text">
                        <string>Calibration / startup timeout</string>
                       </property>
                      </widget>
                     </item>
                     <item row="8" column="1">
-                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pi23ttm_timeout">
+                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23ttm_timeout">
                       <property name="suffix">
                        <string> s</string>
                       </property>
@@ -2952,50 +2952,104 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                      </widget>
                     </item>
                     <item row="5" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_stream_port">
-                      <property name="text"><string>Stream image TCP/IP port</string></property>
+                     <widget class="QLabel" name="label_pispad23ttm_stream_port">
+                      <property name="text">
+                       <string>Stream image TCP/IP port</string>
+                      </property>
                      </widget>
                     </item>
                     <item row="5" column="1">
-                     <widget class="QSpinBox" name="spinBox_pi23ttm_stream_port">
-                      <property name="toolTip"><string>Local tdc_raw_acquire image server port. img previews the detector sum; uimg streams each dwell's 25 channel counts for the scan image and detector fingerprint. PI23 TTM also saves RAW timestamps.</string></property>
-                      <property name="minimum"><number>1</number></property>
-                      <property name="maximum"><number>65535</number></property>
-                      <property name="value"><number>19000</number></property>
+                     <widget class="QSpinBox" name="spinBox_pispad23ttm_stream_port">
+                      <property name="toolTip">
+                       <string>Local tdc_raw_acquire image server port. img previews the detector sum; uimg streams each dwell's 25 channel counts for the scan image and detector fingerprint. PI SPAD23R TTM also saves RAW timestamps.</string>
+                      </property>
+                      <property name="minimum">
+                       <number>1</number>
+                      </property>
+                      <property name="maximum">
+                       <number>65535</number>
+                      </property>
+                      <property name="value">
+                       <number>19000</number>
+                      </property>
                      </widget>
                     </item>
                     <item row="9" column="0">
-                     <widget class="QLabel" name="label_pi23ttm_preview_margin">
-                      <property name="text"><string>Preview margin</string></property>
+                     <widget class="QLabel" name="label_pispad23ttm_preview_margin">
+                      <property name="text">
+                       <string>Preview margin</string>
+                      </property>
                      </widget>
                     </item>
                     <item row="9" column="1">
-                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pi23ttm_preview_margin">
-                      <property name="toolTip"><string>Extra time for each timestamp preview measurement, in addition to one frame, scan waits, and the ready delay. Increase this for communication or trigger delays.</string></property>
-                      <property name="decimals"><number>3</number></property>
-                      <property name="suffix"><string> s</string></property>
-                      <property name="minimum"><double>0.001</double></property>
-                      <property name="maximum"><double>86400.0</double></property>
-                      <property name="singleStep"><double>0.1</double></property>
-                      <property name="value"><double>0.5</double></property>
+                     <widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23ttm_preview_margin">
+                      <property name="toolTip">
+                       <string>Extra time for each timestamp preview measurement, in addition to one frame, scan waits, and the ready delay. Increase this for communication or trigger delays.</string>
+                      </property>
+                      <property name="suffix">
+                       <string> s</string>
+                      </property>
+                      <property name="decimals">
+                       <number>3</number>
+                      </property>
+                      <property name="minimum">
+                       <double>0.001000000000000</double>
+                      </property>
+                      <property name="maximum">
+                       <double>86400.000000000000000</double>
+                      </property>
+                      <property name="singleStep">
+                       <double>0.100000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>0.500000000000000</double>
+                      </property>
                      </widget>
                     </item>
-                    <item row="10" column="0"><widget class="QLabel" name="label_pi23ttm_uimg_buffer">
-                     <property name="text"><string>Uimg buffer (dwells)</string></property></widget></item>
-                    <item row="10" column="1"><widget class="QSpinBox" name="spinBox_pi23ttm_uimg_buffer">
-                     <property name="minimum"><number>1</number></property>
-                     <property name="maximum"><number>8388608</number></property>
-                     <property name="value"><number>1048576</number></property></widget></item>
-                    <item row="11" column="0"><widget class="QLabel" name="label_pi23ttm_uimg_batch">
-                     <property name="text"><string>Uimg batch size (dwells)</string></property></widget></item>
-                    <item row="11" column="1"><widget class="QSpinBox" name="spinBox_pi23ttm_uimg_batch">
-                     <property name="minimum"><number>1</number></property>
-                     <property name="maximum"><number>65536</number></property>
-                     <property name="value"><number>4096</number></property></widget></item>
+                    <item row="10" column="0">
+                     <widget class="QLabel" name="label_pispad23ttm_uimg_buffer">
+                      <property name="text">
+                       <string>Uimg buffer (dwells)</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="10" column="1">
+                     <widget class="QSpinBox" name="spinBox_pispad23ttm_uimg_buffer">
+                      <property name="minimum">
+                       <number>1</number>
+                      </property>
+                      <property name="maximum">
+                       <number>8388608</number>
+                      </property>
+                      <property name="value">
+                       <number>1048576</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="11" column="0">
+                     <widget class="QLabel" name="label_pispad23ttm_uimg_batch">
+                      <property name="text">
+                       <string>Uimg batch size (dwells)</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="11" column="1">
+                     <widget class="QSpinBox" name="spinBox_pispad23ttm_uimg_batch">
+                      <property name="minimum">
+                       <number>1</number>
+                      </property>
+                      <property name="maximum">
+                       <number>65536</number>
+                      </property>
+                      <property name="value">
+                       <number>4096</number>
+                      </property>
+                     </widget>
+                    </item>
                     <item row="12" column="0" colspan="3">
-                     <widget class="QPushButton" name="pushButton_pi23ttm_force_calibration">
+                     <widget class="QPushButton" name="pushButton_pispad23ttm_force_calibration">
                       <property name="toolTip">
-                       <string>Send T,c,1 to the configured PI23 TTM endpoint. Do not use while a recorder or PI23 image acquisition is active.</string>
+                       <string>Send T,c,1 to the configured PI SPAD23R TTM endpoint. Do not use while a recorder or PI SPAD23R image acquisition is active.</string>
                       </property>
                       <property name="text">
                        <string>Force Calibration</string>
@@ -3003,7 +3057,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                      </widget>
                     </item>
                     <item row="13" column="0" colspan="3">
-                     <widget class="QLabel" name="label_pi23ttm_status">
+                     <widget class="QLabel" name="label_pispad23ttm_status">
                       <property name="text">
                        <string>Idle</string>
                       </property>
@@ -3013,7 +3067,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                      </widget>
                     </item>
                     <item row="14" column="0" colspan="3">
-                     <widget class="QPlainTextEdit" name="plainTextEdit_pi23ttm_log">
+                     <widget class="QPlainTextEdit" name="plainTextEdit_pispad23ttm_log">
                       <property name="readOnly">
                        <bool>true</bool>
                       </property>
@@ -3026,20 +3080,20 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                   </widget>
                   <widget class="QWidget" name="tab_6">
                    <attribute name="title">
-                    <string>PI23 (Intensity mode)</string>
+                    <string>PI SPAD23R (Intensity mode)</string>
                    </attribute>
                    <layout class="QGridLayout" name="gridLayout_106">
                     <item row="0" column="0">
                      <layout class="QGridLayout" name="gridLayout_43">
                       <item row="0" column="2">
-                       <widget class="QLabel" name="label_pi23_port">
+                       <widget class="QLabel" name="label_pispad23_port">
                         <property name="text">
                          <string>Port</string>
                         </property>
                        </widget>
                       </item>
                       <item row="0" column="3">
-                       <widget class="QSpinBox" name="spinBox_pi23_port">
+                       <widget class="QSpinBox" name="spinBox_pispad23_port">
                         <property name="minimum">
                          <number>1</number>
                         </property>
@@ -3052,42 +3106,42 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                        </widget>
                       </item>
                       <item row="0" column="0">
-                       <widget class="QLabel" name="label_pi23_ip_addr">
+                       <widget class="QLabel" name="label_pispad23_ip_addr">
                         <property name="text">
                          <string>IP addr.</string>
                         </property>
                        </widget>
                       </item>
                       <item row="1" column="0">
-                       <widget class="QLabel" name="label_pi23_greeting_raw">
+                       <widget class="QLabel" name="label_pispad23_greeting_raw">
                         <property name="text">
                          <string>Greeting raw</string>
                         </property>
                        </widget>
                       </item>
                       <item row="0" column="1">
-                       <widget class="QLineEdit" name="lineEdit_pi23_ip_addr">
+                       <widget class="QLineEdit" name="lineEdit_pispad23_ip_addr">
                         <property name="text">
                          <string>127.0.0.1</string>
                         </property>
                        </widget>
                       </item>
                       <item row="1" column="1">
-                       <widget class="QTextEdit" name="textEdit_pi23_greeting_raw">
+                       <widget class="QTextEdit" name="textEdit_pispad23_greeting_raw">
                         <property name="readOnly">
                          <bool>true</bool>
                         </property>
                        </widget>
                       </item>
                       <item row="2" column="0">
-                       <widget class="QLabel" name="label_pi23_greeting_decoded">
+                       <widget class="QLabel" name="label_pispad23_greeting_decoded">
                         <property name="text">
                          <string>Greeting decoded</string>
                         </property>
                        </widget>
                       </item>
                       <item row="2" column="1">
-                       <widget class="QTextEdit" name="textEdit_pi23_greeting_decoded">
+                       <widget class="QTextEdit" name="textEdit_pispad23_greeting_decoded">
                         <property name="readOnly">
                          <bool>true</bool>
                         </property>
@@ -3217,7 +3271,13 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
              </widget>
             </item>
             <item row="0" column="1" colspan="2">
-             <widget class="QComboBox" name="comboBox_detector_model">
+             <widget class="ElidedComboBox" name="comboBox_detector_model">
+              <property name="sizeAdjustPolicy">
+               <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+              </property>
+              <property name="minimumContentsLength">
+               <number>20</number>
+              </property>
               <item>
                <property name="text">
                 <string>FPGA - SPAD</string>
@@ -3225,17 +3285,12 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
               </item>
               <item>
                <property name="text">
-                <string>TCP/IP - PI23 (Intesity)</string>
+                <string>TCP/IP - PI SPAD23R (Intensity)</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>TCP/IP - PI23 (TS mode - img)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>TCP/IP - PI23 (TS mode - uimg)</string>
+                <string>TCP/IP - PI SPAD23R (TS mode - uimg)</string>
                </property>
               </item>
               <item>
@@ -3645,9 +3700,9 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
            </widget>
           </item>
           <item row="0" column="2">
-           <widget class="QCheckBox" name="checkBox_pi23ttmActivate">
+           <widget class="QCheckBox" name="checkBox_pispad23ttmActivate">
             <property name="text">
-             <string>PI23 TTM</string>
+             <string>PI SPAD23R TTM</string>
             </property>
            </widget>
           </item>
@@ -4101,7 +4156,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
           <x>0</x>
           <y>0</y>
           <width>478</width>
-          <height>133</height>
+          <height>125</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_68">
@@ -6808,7 +6863,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
           <x>0</x>
           <y>0</y>
           <width>478</width>
-          <height>209</height>
+          <height>198</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_66">
@@ -6879,7 +6934,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
           <x>0</x>
           <y>0</y>
           <width>478</width>
-          <height>96</height>
+          <height>90</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_65">
@@ -6998,6 +7053,19 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_20">
     <layout class="QGridLayout" name="gridLayout_70">
+     <item row="1" column="0">
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Orientation::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
      <item row="0" column="0">
       <layout class="QGridLayout" name="gridLayout_62">
        <property name="sizeConstraint">
@@ -7167,18 +7235,12 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
        </item>
       </layout>
      </item>
-     <item row="1" column="0">
-      <spacer name="verticalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Orientation::Vertical</enum>
+     <item row="2" column="0">
+      <widget class="QGroupBox" name="groupBox_26">
+       <property name="title">
+        <string>GroupBox</string>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
+      </widget>
      </item>
     </layout>
    </widget>
@@ -7227,81 +7289,6 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
      </property>
      <item row="0" column="0">
       <layout class="QGridLayout" name="gridLayout_111">
-       <item row="1" column="0">
-        <widget class="QGroupBox" name="groupBox_8">
-         <property name="title">
-          <string>Slave Mode</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_28">
-          <property name="leftMargin">
-           <number>4</number>
-          </property>
-          <property name="topMargin">
-           <number>4</number>
-          </property>
-          <property name="rightMargin">
-           <number>4</number>
-          </property>
-          <property name="bottomMargin">
-           <number>4</number>
-          </property>
-          <property name="spacing">
-           <number>4</number>
-          </property>
-          <item row="0" column="0" rowspan="2" colspan="2">
-           <widget class="QCheckBox" name="checkBox_slavemode_enable">
-            <property name="text">
-             <string>Activate</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QComboBox" name="comboBox_slavemode_type">
-            <property name="currentIndex">
-             <number>2</number>
-            </property>
-            <item>
-             <property name="text">
-              <string>Circ. Pos.</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Circ. Rep.</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Pixel</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Line</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Frame</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Repetition</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_112">
-            <property name="text">
-             <string>Wait a trigger for:</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item row="0" column="0">
         <widget class="QGroupBox" name="groupBox_15">
          <property name="title">
@@ -7356,6 +7343,121 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </layout>
         </widget>
        </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="title">
+          <string>Slave Mode</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_28">
+          <property name="leftMargin">
+           <number>4</number>
+          </property>
+          <property name="topMargin">
+           <number>4</number>
+          </property>
+          <property name="rightMargin">
+           <number>4</number>
+          </property>
+          <property name="bottomMargin">
+           <number>4</number>
+          </property>
+          <property name="spacing">
+           <number>4</number>
+          </property>
+          <item row="2" column="0">
+           <widget class="QGroupBox" name="groupBox_27">
+            <property name="title">
+             <string>Hardware</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_13">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="checkBox_slavemode_enable">
+               <property name="text">
+                <string>Activate</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_112">
+               <property name="text">
+                <string>Wait a trigger for:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QComboBox" name="comboBox_slavemode_type">
+               <property name="currentIndex">
+                <number>2</number>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Circ. Pos.</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Circ. Rep.</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Pixel</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Line</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Frame</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Repetition</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QGroupBox" name="groupBox_28">
+            <property name="title">
+             <string>Software</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_113">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="checkBox_sw_trigger_enable">
+               <property name="text">
+                <string>Activate</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QPushButton" name="pushButton_sw_trigger_cmd">
+               <property name="text">
+                <string>Trigger now</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="checkBox_sw_trigger_laser_off">
+               <property name="text">
+                <string>Switch off
+laser inbetween</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item row="0" column="1" rowspan="2">
         <widget class="QGroupBox" name="groupBox_25">
          <property name="sizePolicy">
@@ -7371,7 +7473,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
           <item row="1" column="0">
            <widget class="QCheckBox" name="checkBox_noMcsSaveWithTtm">
             <property name="toolTip">
-             <string>Run the scan without saving MCS HDF5 or RAW data when TTM, automatic uTTM, or PI23 TTM recording is enabled.</string>
+             <string>Run the scan without saving MCS HDF5 or RAW data when TTM, automatic uTTM, or PI SPAD23R TTM recording is enabled.</string>
             </property>
             <property name="text">
              <string>Do not save MCS data
@@ -7706,6 +7808,11 @@ when TTM is active</string>
   </widget>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>ElidedComboBox</class>
+   <extends>QComboBox</extends>
+   <header>.support.h</header>
+  </customwidget>
   <customwidget>
    <class>sciSpinBox</class>
    <extends>QDoubleSpinBox</extends>
@@ -9387,6 +9494,16 @@ when TTM is active</string>
    <signal>clicked()</signal>
    <receiver>MainWindowDesign</receiver>
    <slot>AutoRange_im_widget()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
   </connection>
  </connections>
  <slots>

@@ -29,9 +29,9 @@ class TestH5MetadataCompatibility(unittest.TestCase):
         self.assertNotIn("spad_cmd_length", metadata)
 
     def test_gui_config_for_h5_keeps_non_spad_detector_model(self):
-        metadata = MainWindow._gui_config_for_h5({"detector_model": "PI 23"})
+        metadata = MainWindow._gui_config_for_h5({"detector_model": "PISPAD23"})
 
-        self.assertEqual(metadata["detector_model"], "PI 23")
+        self.assertEqual(metadata["detector_model"], "PISPAD23")
 
     def test_gui_config_for_h5_keeps_spad_ttm_detector_model(self):
         metadata = MainWindow._gui_config_for_h5({"detector_model": "SPAD_TTM"})

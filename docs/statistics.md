@@ -34,5 +34,5 @@ on the next one-second tick.
 This is a scan-data estimate, not a measured throughput prediction. It does not
 budget laser startup waits, frame waits, external trigger delays, recorder startup
 or tail time, or final disk flushing. These can make actual completion later.
-Changing the system clock changes the displayed ETA. PI23 recorder duration is
-calculated separately; see [time-tag recording](pi23-timetagging.md).
+Changing the system clock changes the displayed ETA. PI SPAD23R recorder duration is
+calculated separately; see [time-tag recording](pispad23-timetagging.md).

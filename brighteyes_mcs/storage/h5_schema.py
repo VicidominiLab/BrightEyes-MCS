@@ -36,7 +36,7 @@ def legacy_raw_stream_metadata(
     spad_channels,
     clock_base_mhz,
     raw_files,
-    include_pi23=False,
+    include_pispad23=False,
 ):
     """Build the immutable ``rawStreamAcquisition`` attribute mapping.
 
@@ -81,12 +81,12 @@ def legacy_raw_stream_metadata(
         "raw_writer_stop_reason": runtime.get("raw_writer_stop_reason", ""),
         "raw_writer_error": runtime.get("raw_writer_error", ""),
     }
-    if include_pi23:
+    if include_pispad23:
         payload.update(
             {
                 "detector_model": acquisition.detector_model,
-                "pi23_raw_stream_format": runtime.get(
-                    "pi23_raw_stream_format", ""
+                "pispad23_raw_stream_format": runtime.get(
+                    "pispad23_raw_stream_format", ""
                 ),
             }
         )

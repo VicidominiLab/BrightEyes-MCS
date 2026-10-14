@@ -15,10 +15,10 @@ from brighteyes_mcs_cylibs.fastconverter import (
 )
 from ...acquisition.detectors.models import (
     DETECTOR_SPAD_ARRAY,
-    detector_uses_pi23_pipeline,
+    detector_uses_pispad23_pipeline,
     normalize_detector_model,
 )
-from .pi23 import convert_pi23_raw_acquisition
+from .pispad23 import convert_pispad23_raw_acquisition
 from ...acquisition.workers.acquisition_loop import (
     accumulate_unordered_sum_4d,
     decode_pointer_list,
@@ -451,8 +451,8 @@ def convert_raw_acquisition(metadata_filename: Path, output_filename: Path | Non
     """Rebuild a normal BrightEyes acquisition HDF5 from raw-stream acquisition files."""
     metadata_filename = Path(metadata_filename).resolve()
     meta = _load_metadata(metadata_filename)
-    if detector_uses_pi23_pipeline(meta["detector_model"]):
-        return convert_pi23_raw_acquisition(
+    if detector_uses_pispad23_pipeline(meta["detector_model"]):
+        return convert_pispad23_raw_acquisition(
             metadata_filename,
             output_filename=output_filename,
             progress_callback=progress_callback,

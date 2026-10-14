@@ -93,7 +93,7 @@ class TestAcquisitionFormatContract(unittest.TestCase):
             },
             shared_dict={
                 "stream_out_main_bytes_written": 100,
-                "pi23_raw_stream_format": "pi23-v1",
+                "pispad23_raw_stream_format": "pispad23-v1",
             },
             activated_fifos_list=["stream_out_main"],
             clk_multiplier=2,
@@ -101,7 +101,7 @@ class TestAcquisitionFormatContract(unittest.TestCase):
             snake_walk_xy=True,
             snake_walk_z=False,
             dfd_enable=True,
-            detector_model="PI 23",
+            detector_model="PISPAD23",
         )
 
         metadata = legacy_raw_stream_metadata(
@@ -109,14 +109,14 @@ class TestAcquisitionFormatContract(unittest.TestCase):
             spad_channels=25,
             clock_base_mhz=40,
             raw_files={"stream_out_main": "scan_FIFO.raw"},
-            include_pi23=True,
+            include_pispad23=True,
         )
 
         self.assertEqual(metadata["effective_timebins_per_pixel"], 24)
         self.assertEqual(metadata["digital_words_per_sample"], 2)
         self.assertEqual(metadata["digital_raw_bytes"], 100)
-        self.assertEqual(metadata["detector_model"], "PI 23")
-        self.assertEqual(metadata["pi23_raw_stream_format"], "pi23-v1")
+        self.assertEqual(metadata["detector_model"], "PISPAD23")
+        self.assertEqual(metadata["pispad23_raw_stream_format"], "pispad23-v1")
         self.assertEqual(metadata["analog_raw_bytes"], 0)
 
     def test_raw_filenames_remain_legacy_compatible(self):
@@ -171,7 +171,7 @@ class TestAcquisitionFormatContract(unittest.TestCase):
 
 class TestDetectorPipelineContract(unittest.TestCase):
     def test_all_detector_pipelines_satisfy_shared_protocol(self):
-        for model in ("SPAD Array", "SPAD_TTM", "PI 23", "PI23TT"):
+        for model in ("SPAD Array", "SPAD_TTM", "PISPAD23", "PISPAD23TT"):
             with self.subTest(model=model):
                 self.assertIsInstance(create_detector_pipeline(model), DetectorPipeline)
 

@@ -9,7 +9,7 @@ import time
 from .microimage import MicroimagePreview
 from .microimage_stream import buffered_microimages
 from .stream_image import MicroimageSnapshot
-from ....storage.pi23_microimage import MicroimageH5Writer
+from ....storage.pispad23_microimage import MicroimageH5Writer
 from ....logging_setup import logger
 
 
@@ -23,12 +23,12 @@ class MicroimageWorker(mp.Process):
         self.snake = snake
         self.saving = saving
         self.connected, self.done, self.stop_event = mp.Event(), mp.Event(), mp.Event()
-        self.shared_dict["pi23_uimg_status"] = {}
-        self.shared_dict["pi23_uimg_error"] = ""
+        self.shared_dict["pispad23_uimg_status"] = {}
+        self.shared_dict["pispad23_uimg_error"] = ""
 
     @property
     def error(self):
-        return self.shared_dict.get("pi23_uimg_error", "")
+        return self.shared_dict.get("pispad23_uimg_error", "")
 
     def stop(self):
         self.stop_event.set()
@@ -58,7 +58,7 @@ class MicroimageWorker(mp.Process):
                         received = batch.sequence + len(batch.records)
                     enqueue(batch)
             except Exception as error:
-                logger.exception("PI23 microimage receive failed port=%s batch=%s", self.port, self.batch_size)
+                logger.exception("PISPAD23 microimage receive failed port=%s batch=%s", self.port, self.batch_size)
                 enqueue(error)
             finally:
                 enqueue(None)
@@ -87,7 +87,7 @@ class MicroimageWorker(mp.Process):
                     if batch is None:
                         end = True
                     elif batch is not False:
-                        logger.debug("PI23 microimage batch sequence=%s records=%s capacity=%s oldest=%s",
+                        logger.debug("PISPAD23 microimage batch sequence=%s records=%s capacity=%s oldest=%s",
                                      batch.sequence, len(batch.records), batch.capacity, batch.oldest)
                         for record in batch.records:
                             snapshot = MicroimageSnapshot(
@@ -112,20 +112,20 @@ class MicroimageWorker(mp.Process):
                     status.update(frame=preview.frame, frame_dwells=preview.frame_dwells,
                                   last_frame_dwells=preview.last_frame_dwells,
                                   recent_dwells=len(preview.recent), total_dwells=preview.total_dwells)
-                    self.shared_dict["pi23_uimg_status"] = dict(status)
+                    self.shared_dict["pispad23_uimg_status"] = dict(status)
                     last_publish = time.monotonic()
                 if end:
                     if writer is not None:
                         closing, writer = writer, None
                         if not closing.close(finished=True):
-                            raise ValueError("PI23 HDF5 acquisition incomplete; missing pixels are marked in pi23_microimages/valid")
+                            raise ValueError("PISPAD23 HDF5 acquisition incomplete; missing pixels are marked in pispad23_microimages/valid")
                     self.done.set()
                     self.stop_event.wait(0.1)
         except Exception as error:
-            logger.exception("PI23 microimage worker failed port=%s scan=%sx%s status=%s",
+            logger.exception("PISPAD23 microimage worker failed port=%s scan=%sx%s status=%s",
                              self.port, self.width, self.height,
-                             self.shared_dict.get("pi23_uimg_status"))
-            self.shared_dict["pi23_uimg_error"] = str(error)
+                             self.shared_dict.get("pispad23_uimg_status"))
+            self.shared_dict["pispad23_uimg_error"] = str(error)
         finally:
             self.stop_event.set()
             if reader.ident is not None:
@@ -134,6 +134,6 @@ class MicroimageWorker(mp.Process):
                 try:
                     writer.close(error=self.error)
                 except Exception as error:
-                    logger.exception("PI23 HDF5 close failed")
-                    self.shared_dict["pi23_uimg_error"] = f"PI23 HDF5 close failed: {error}"
+                    logger.exception("PISPAD23 HDF5 close failed")
+                    self.shared_dict["pispad23_uimg_error"] = f"PISPAD23 HDF5 close failed: {error}"
             self.done.set()

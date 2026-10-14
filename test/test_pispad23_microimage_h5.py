@@ -4,9 +4,9 @@ import h5py
 import numpy as np
 import pytest
 
-from brighteyes_mcs.storage.pi23_microimage import MicroimageH5Writer
-from brighteyes_mcs.acquisition.detectors.pi23.stream_image import MicroimageSnapshot
-from brighteyes_mcs.acquisition.detectors.pi23.timestamp_pipeline import Pi23MicroimagePipeline
+from brighteyes_mcs.storage.pispad23_microimage import MicroimageH5Writer
+from brighteyes_mcs.acquisition.detectors.pispad23.stream_image import MicroimageSnapshot
+from brighteyes_mcs.acquisition.detectors.pispad23.timestamp_pipeline import PISPAD23MicroimagePipeline
 
 
 def dwell(frame, x, y, value, flags=3):
@@ -20,7 +20,7 @@ def test_pipeline_saves_only_acquisitions_and_uses_full_dwell_duration(tmp_path,
     acquisition = SimpleNamespace(dim_x=3, dim_y=2, dim_z=4, dim_rep=5,
         shared_dict={}, shared_objects={}, filenameh5=str(tmp_path / "scan.h5"),
         time_resolution=10, timebins_per_pixel=100, circ_points=2, circ_repetition=3)
-    worker = Pi23MicroimagePipeline().make_acquisition_loop(acquisition, preview)
+    worker = PISPAD23MicroimagePipeline().make_acquisition_loop(acquisition, preview)
     if preview:
         assert worker.saving is None
     else:
@@ -47,9 +47,9 @@ def test_h5_preserves_channels_frames_repetitions_and_snake_coordinates(tmp_path
                 np.testing.assert_array_equal(saved["data"][rep, z, :, :, 0, channel],
                     [[100000 * frame + x for x in range(3)],
                      [100000 * frame + 10 + x for x in (2, 1, 0)]])
-        assert saved["pi23_microimages/valid"][...].all()
-        assert saved["pi23_microimages/frame_complete"][...].all()
-        assert saved["pi23_microimages"].attrs["complete"]
+        assert saved["pispad23_microimages/valid"][...].all()
+        assert saved["pispad23_microimages/frame_complete"][...].all()
+        assert saved["pispad23_microimages"].attrs["complete"]
         assert saved["data"].attrs["dwell_seconds"] == 0.001
 
 
@@ -63,9 +63,9 @@ def test_partial_frame_has_no_old_pixels_and_distinguishes_missing_from_zero(tmp
     writer.consume(dwell(1, 2, 0, 123))  # Synchronization dwell outside the scan.
     assert not writer.close(finished=finished)
     with h5py.File(path) as saved:
-        assert not saved["pi23_microimages"].attrs["complete"]
-        assert saved["pi23_microimages"].attrs["stop_reason"] == ("incomplete" if finished else "stopped")
-        np.testing.assert_array_equal(saved["pi23_microimages/valid"][0, 1], [[True, False]])
+        assert not saved["pispad23_microimages"].attrs["complete"]
+        assert saved["pispad23_microimages"].attrs["stop_reason"] == ("incomplete" if finished else "stopped")
+        np.testing.assert_array_equal(saved["pispad23_microimages/valid"][0, 1], [[True, False]])
         assert not saved["data"][0, 1].any()
         assert saved["data"][0, 0, 0, 1, 0, 24] == 60000
 
@@ -77,9 +77,9 @@ def test_missing_frame_is_not_renumbered_and_saturation_is_explicit(tmp_path):
     writer.consume(dwell(2, 0, 0, 2**32 - 1, flags=7))
     assert not writer.close(finished=True)
     with h5py.File(path) as saved:
-        np.testing.assert_array_equal(saved["pi23_microimages/frame_id"][0], [0, -1, 2])
-        assert not saved["pi23_microimages/valid"][0, 1].any()
-        assert saved["pi23_microimages/flags"][0, 2, 0, 0] == 7
+        np.testing.assert_array_equal(saved["pispad23_microimages/frame_id"][0], [0, -1, 2])
+        assert not saved["pispad23_microimages/valid"][0, 1].any()
+        assert saved["pispad23_microimages/flags"][0, 2, 0, 0] == 7
         assert saved["data"][0, 2, 0, 0, 0, 0] == 2**32 - 1
 
 
@@ -94,4 +94,4 @@ def test_duplicate_and_existing_output_are_rejected(tmp_path):
         MicroimageH5Writer(path, 1, 1, 1, 1, 0.01)
     with h5py.File(path) as saved:
         assert saved["data"][0, 0, 0, 0, 0, 0] == 4
-        assert saved["pi23_microimages"].attrs["stop_reason"] == "error"
+        assert saved["pispad23_microimages"].attrs["stop_reason"] == "error"

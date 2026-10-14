@@ -1,9 +1,17 @@
-# PI23 time-tag recording
+# PI SPAD23R time-tag recording
 
 This integration was built by the Molecular Microscopy and Spectroscopy group
 at Istituto Italiano di Tecnologia for our own microscope workflows. It is our
 own tool, not an official Pi Imaging tool, and is not presented as endorsed or
 supported by Pi Imaging.
+
+The GUI names this detector **PI SPAD23R**; implementation modules and identifiers
+use `PISPAD23` or `pispad23`. Configuration fields and HDF5 metadata use the
+`pispad23` prefix. The external recorder's `PI23_ARMED` / `PI23_DISARMED` messages
+remain unchanged because they are emitted by the recorder executable.
+
+See the [detector support overview](README.md#detector-support) and
+[detector performance disclaimer](README.md#detector-support).
 
 The device API source is the
 [Pi Imaging Technology pSPAD system manual](https://piimaging.com/doc-pspad),
@@ -13,34 +21,25 @@ examples retain their own copyright and terms; BrightEyes-MCS's license does
 not grant rights to that material. The local image/microimage server protocol
 described below belongs to our integration and is separate from the vendor API.
 
-The recorder settings are under **Config → TimeTagging → PI23 (Timestamp mode)**.
+The recorder settings are under **Config → TimeTagging → PI SPAD23R (Timestamp mode)**.
 Choose the HDF5 or RAW executable, output format, endpoint, and destination
-folder. An empty PI23 folder uses the MCS destination folder. Enable
-**PI23 TTM (record with acquisition)** in the Time Tagging group.
+folder. An empty PI SPAD23R folder uses the MCS destination folder. Enable
+**PI SPAD23R TTM (record with acquisition)** in the Time Tagging group.
 
-Select **TCP/IP - PI23 (TS mode - img)** for a live XY image from timestamp events.
-Saved configurations using the previous **TCP/IP - PI23 (TS mode)** label
-still select this full-image mode.
-MCS launches the RAW executable with `--stream-image X Y`, using the scan's
-pixel dimensions, and polls its `PREVIEW` TCP snapshots about five times per
-second in a background thread. The image shows the sum of detector pixels.
-Set **Stream image TCP/IP port** in the timestamp panel (default **19000**).
-This is the local Rust image server port, separate from the device's TTM endpoint.
-The executable must support `--stream-image` and `--no-output`; rebuild an older
-`tdc_raw_acquire` executable from its current source if these options are missing.
-
-Select **TCP/IP - PI23 (TS mode - uimg)** for per-channel scan imaging and the
+Select **TCP/IP - PI SPAD23R (TS mode - uimg)** for per-channel scan imaging and the
 detector fingerprint. Each microimage contains 25 photon counts, one per detector
 channel, for one completed scan dwell. MCS launches `--stream-microimage` and
 retrieves batches with `READ <sequence> <maximum-count>` on the configurable
-local port (default **19000**). The uimg command omits `--stream-image-pixel`:
+local port (default **19000**), set by **Stream image TCP/IP port** in the
+timestamp panel. This local server port is separate from the device's TTM
+endpoint. The uimg command omits `--stream-image-pixel`:
 microimage mode always retains all 25 channels separately.
 
 Rust retains completed dwells from acquisition start, independently of client
 connections. The buffer and sequence numbers survive repeated SB measurements.
 **Uimg buffer (dwells)** defaults to **1,048,576** (128 MiB of packed records when
 full); **Uimg batch size (dwells)** defaults to **4,096**. Both settings persist in
-the PI23 configuration. A request for 100 returns immediately with 0 through 100
+the PI SPAD23R configuration. A request for 100 returns immediately with 0 through 100
 available dwells. Reads are non-destructive: an interrupted transfer can be
 retried at the same sequence. Session IDs prevent mixing data after a recorder
 restart. If unread data is overwritten, MCS reports the missing dwell count and
@@ -89,12 +88,11 @@ margin**. The result is rounded up to whole milliseconds. For example, a
 margin for communication, scheduling, or external trigger delays. **Stop** ends
 the repeated preview cleanly. Repeated SB windows are time based, not locked to
 FPGA frame boundaries; the margin provides additional capture time.
-For a normal acquisition, enable **PI23 TTM** to save RAW timestamps while the
+For a normal acquisition, enable **PI SPAD23R TTM** to save RAW timestamps while the
 same Rust process serves the image. In **TS mode - uimg**, **Acquire** also saves
-the normal MCS `.h5` file, including when PI23 TTM is unchecked. The existing
+the normal MCS `.h5` file, including when PI SPAD23R TTM is unchecked. The existing
 **Do not save MCS data when TTM is active** option can suppress this HDF5 output
-when a timetagger is enabled. Preview never saves HDF5. **TS mode - img** still
-provides preview and optional RAW timestamps only. Neither timestamp mode uses
+when a timetagger is enabled. Preview never saves HDF5. Timestamp mode does not use
 the intensity/SPAD raw-stream saving option.
 
 The uimg HDF5 `data` dataset has axes `(repetition, z, y, x, timebin, channel)`
@@ -106,7 +104,7 @@ Acquisition GUI/FPGA metadata retain their original hardware settings.
 XY and Z snake coordinates are corrected when saving.
 
 The acquisition process writes fresh frame buffers independently of the rolling
-preview. `pi23_microimages/valid` distinguishes measured zero counts from missing
+preview. `pispad23_microimages/valid` distinguishes measured zero counts from missing
 pixels; `flags` preserves saturation flags, and `frame_complete` and `frame_id`
 describe each saved frame. Missing frames are not renumbered. The group's
 `complete`, `stop_reason`, and `error` attributes record completion or interruption.
@@ -117,17 +115,16 @@ Existing output files are never overwritten by this writer.
 Normal TS acquisitions finish when the timed Rust measurement closes. Manual
 Stop interrupts both preview and timestamp recording.
 
-The **TCP/IP - PI23 (Intesity)** mode and PI23TTM remain mutually
+The **TCP/IP - PI SPAD23R (Intensity)** mode and PI SPAD23R TTM remain mutually
 exclusive: the intensity receiver's `CS` command competes with the recorder's
-`SB` command. Use SPAD imaging or either PI23 timestamp mode with PI23TTM.
+`SB` command. Use SPAD imaging or PI SPAD23R **TS mode - uimg** with PI SPAD23R TTM.
 Conflicting loaded configurations cannot start a scan.
-Older configurations using the label **TCP/IP - PI23** still select intensity
-mode. Intensity keeps its existing `CS` receiver on the intensity panel's port
+Select **TCP/IP - PI SPAD23R (Intensity)** for intensity mode. Intensity keeps its existing `CS` receiver on the intensity panel's port
 (default **9997**). TS mode never starts that receiver: only the Rust recorder
 connects to the device's timestamp endpoint, while the MCS image client connects
 to the separate local image port (default **19000**).
 
-For RAW recording and both TS preview modes, MCS prepares its workers, launches
+For RAW recording and TS microimage preview, MCS prepares its workers, launches
 the recorder, and waits for `PI23_ARMED SB,<ms>`. Rust emits this only after the
 SB command has been successfully written/flushed and its receive buffers are
 ready. MCS then waits the configured **Delay after armed / ready** (default
@@ -158,9 +155,9 @@ stdout/stderr appear in the PI-Timetagging panel and the application log under
 `%LOCALAPPDATA%/BrightEyes-MCS/log`. Recorder exits, image connection errors,
 waiting for scan markers, and the first received image are logged even when
 debug logging is disabled. All settings persist in the
-`cfg/plugins_cfg/pi23_timetagging.cfg` plug-in configuration, which is loaded
+`cfg/plugins_cfg/pispad23_timetagging.cfg` plug-in configuration, which is loaded
 with the other plug-in configuration files at startup. Older main MCS
-configurations containing top-level `pi23ttm_*` settings remain supported.
+configurations containing top-level `pispad23ttm_*` settings remain supported.
 
 Natural MCS completion lets the recorder finish its timed measurement. New
 acquisitions wait until it closes. Manual Stop, including during the recording
@@ -183,7 +180,7 @@ streaming, and file closing, without depending on Qt timers.
 
 **Adv2. → Time tagging / MCS saving → Do not save MCS data when TTM is active**
 suppresses MCS HDF5/RAW output while continuing the finite scan and preview.
-External TTM, automatic uTTM, and PI23TTM recording remain enabled. No empty
+External TTM, automatic uTTM, and PI SPAD23R TTM recording remain enabled. No empty
 MCS metadata-only file is created in this mode.
 
 ## Register startup
@@ -197,11 +194,11 @@ the connected FPGA and its firmware.
 
 ## Verification
 
-`python -m pytest test/test_pi23_timetagging.py test/test_pi23_stream_image.py test/test_pi23_microimage_batches.py test/test_fpga_idle_control.py`
+`python -m pytest test/test_pispad23_timetagging.py test/test_pispad23_stream_image.py test/test_pispad23_microimage_batches.py test/test_fpga_idle_control.py`
 tests UI placement, exclusion, timing, stop behavior, saving suppression, and
 register startup. When the supplied recorder builds are available, the tests
 also run both real executables against a local fake TCP detector, including
-calibration, timestamp image polling, complete microimage raster delivery,
+calibration, complete microimage raster delivery,
 channel selection, fingerprints, repeated frames, optional RAW recording, and clean
 interruption; no microscope hardware is contacted. Batch tests also cover
 fragmented responses, retries without duplication, session changes, buffer

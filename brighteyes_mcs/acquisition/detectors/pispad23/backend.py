@@ -1,4 +1,4 @@
-"""PI23 detector TCP source and decoding helpers.
+"""PISPAD23 detector TCP source and decoding helpers.
 
 Device API reference: Pi Imaging Technology pSPAD system manual,
 https://piimaging.com/doc-pspad (Remote command interface / Command guide).
@@ -21,29 +21,29 @@ from brighteyes_mcs.logging_setup import VERBOSITY_ENV_VAR, data_debug_enabled, 
 
 DONE_SENTINEL = b"DONE"
 ERROR_SENTINEL = b"ERROR"
-DEFAULT_PI23_HOST = "127.0.0.1"
-DEFAULT_PI23_PORT = 9997
-DEFAULT_PI23_CHANNELS = 23
+DEFAULT_PISPAD23_HOST = "127.0.0.1"
+DEFAULT_PISPAD23_PORT = 9997
+DEFAULT_PISPAD23_CHANNELS = 23
 
 
-def pi23_debug_enabled(default=False):
+def pispad23_debug_enabled(default=False):
     if VERBOSITY_ENV_VAR in os.environ:
         return data_debug_enabled()
-    value = os.environ.get("PI23_DEBUG", os.environ.get("DEBUG"))
+    value = os.environ.get("PISPAD23_DEBUG", os.environ.get("DEBUG"))
     if value is None:
         return bool(default)
     return value.strip().lower() in ("1", "true", "yes", "on", "debug")
 
 
-def pi23_debug(*objects, enabled=False):
-    if pi23_debug_enabled(enabled):
-        logger.debug("[PI23] %s", " ".join(map(str, objects)))
+def pispad23_debug(*objects, enabled=False):
+    if pispad23_debug_enabled(enabled):
+        logger.debug("[PISPAD23] %s", " ".join(map(str, objects)))
 
 
 @dataclass
-class Pi23RawBunch:
+class PISPAD23RawBunch:
     """
-    PI23-native raw bunch.
+    PISPAD23-native raw bunch.
 
     For scanning binary TCP data, ``payload["channel_counts"]`` is a
     ``(sample_count, n_channels)`` array. Samples are already ordered in the
@@ -57,7 +57,7 @@ class Pi23RawBunch:
     payload: dict
 
 
-class Pi23TcpBunchSource:
+class PISPAD23TcpBunchSource:
     """
     TCP client for the Pi Imaging pSPAD ``CS`` scanning-binary command.
 
@@ -103,13 +103,13 @@ class Pi23TcpBunchSource:
         self.timebins_per_pixel = max(1, int(timebins_per_pixel))
         self.dwell_us = 0 if float(dwell_us) == 0.0 else float(dwell_us)
         self.external_frame = int(external_frame)
-        self.host = host or os.environ.get("PI23_HOST", DEFAULT_PI23_HOST)
-        self.port = int(port or os.environ.get("PI23_PORT", DEFAULT_PI23_PORT))
-        self.socket_timeout = float(os.environ.get("PI23_TIMEOUT", socket_timeout))
-        self.read_chunk_size = int(os.environ.get("PI23_READ_CHUNK", read_chunk_size))
-        self.packet_samples = max(1, int(os.environ.get("PI23_PACKET_SAMPLES", packet_samples)))
+        self.host = host or os.environ.get("PISPAD23_HOST", DEFAULT_PISPAD23_HOST)
+        self.port = int(port or os.environ.get("PISPAD23_PORT", DEFAULT_PISPAD23_PORT))
+        self.socket_timeout = float(os.environ.get("PISPAD23_TIMEOUT", socket_timeout))
+        self.read_chunk_size = int(os.environ.get("PISPAD23_READ_CHUNK", read_chunk_size))
+        self.packet_samples = max(1, int(os.environ.get("PISPAD23_PACKET_SAMPLES", packet_samples)))
         self.detector_channels = int(
-            detector_channels or os.environ.get("PI23_CHANNELS", DEFAULT_PI23_CHANNELS)
+            detector_channels or os.environ.get("PISPAD23_CHANNELS", DEFAULT_PISPAD23_CHANNELS)
         )
         self.shared_dict = shared_dict
         self.debug = bool(debug)
@@ -123,8 +123,8 @@ class Pi23TcpBunchSource:
         self.started_at_ns = perf_counter_ns()
         self._counts = None
         self._sample_cursor = 0
-        logger.debug("%s %s %s %s %s", "PI23 source start", f"{self.host}:{self.port}", f"scan={self.scan_x}x{self.scan_y}x{self.scan_frames}", f"timebins={self.timebins_per_pixel}", f"dwell_us={self.dwell_us}")
-        pi23_debug(
+        logger.debug("%s %s %s %s %s", "PISPAD23 source start", f"{self.host}:{self.port}", f"scan={self.scan_x}x{self.scan_y}x{self.scan_frames}", f"timebins={self.timebins_per_pixel}", f"dwell_us={self.dwell_us}")
+        pispad23_debug(
             "source start",
             f"{self.host}:{self.port}",
             f"scan={self.scan_x}x{self.scan_y}x{self.scan_frames}",
@@ -134,8 +134,8 @@ class Pi23TcpBunchSource:
         )
 
     def stop(self):
-        logger.debug("PI23 source stop")
-        pi23_debug("source stop", enabled=self.debug)
+        logger.debug("PISPAD23 source stop")
+        pispad23_debug("source stop", enabled=self.debug)
         self.started_at_ns = None
         self._counts = None
         self._sample_cursor = 0
@@ -145,11 +145,11 @@ class Pi23TcpBunchSource:
             return None
 
         if self._counts is None:
-            logger.debug("%s %s", "PI23 source receiving scan", fifo_name)
-            self._counts = self.pi23_receive_scan_counts()
+            logger.debug("%s %s", "PISPAD23 source receiving scan", fifo_name)
+            self._counts = self.pispad23_receive_scan_counts()
             self._sample_cursor = 0
-            logger.debug("%s %s %s", "PI23 source received scan", f"samples={self._counts.shape[0]}", f"channels={self._counts.shape[1]}")
-            pi23_debug(
+            logger.debug("%s %s %s", "PISPAD23 source received scan", f"samples={self._counts.shape[0]}", f"channels={self._counts.shape[1]}")
+            pispad23_debug(
                 "received scan",
                 f"samples={self._counts.shape[0]}",
                 f"channels={self._counts.shape[1]}",
@@ -162,10 +162,10 @@ class Pi23TcpBunchSource:
             generated_words = self.generated_words.get("stream_out_main", 0)
             if expected_words > 0 and generated_words >= expected_words:
                 return None
-            logger.debug("%s %s", "PI23 source receiving next scan", fifo_name)
-            self._counts = self.pi23_receive_scan_counts()
+            logger.debug("%s %s", "PISPAD23 source receiving next scan", fifo_name)
+            self._counts = self.pispad23_receive_scan_counts()
             self._sample_cursor = 0
-            logger.debug("%s %s %s", "PI23 source received next scan", f"samples={self._counts.shape[0]}", f"channels={self._counts.shape[1]}")
+            logger.debug("%s %s %s", "PISPAD23 source received next scan", f"samples={self._counts.shape[0]}", f"channels={self._counts.shape[1]}")
             remaining_samples = self._counts.shape[0]
             if remaining_samples <= 0:
                 return None
@@ -177,7 +177,7 @@ class Pi23TcpBunchSource:
         counts = self._counts[start:stop]
         self._sample_cursor = stop
 
-        bunch = Pi23RawBunch(
+        bunch = PISPAD23RawBunch(
             fifo_name="stream_out_main",
             timestamp_ns=perf_counter_ns(),
             sample_count=int(counts.shape[0]),
@@ -190,8 +190,8 @@ class Pi23TcpBunchSource:
         self.generated_words["stream_out_main"] = self.generated_words.get("stream_out_main", 0) + (
             bunch.sample_count * self.digital_words_per_sample
         )
-        logger.debug("%s %s %s", "PI23 source emit bunch", f"samples={bunch.sample_count}", f"cursor={self._sample_cursor}/{self._counts.shape[0]}")
-        pi23_debug(
+        logger.debug("%s %s %s", "PISPAD23 source emit bunch", f"samples={bunch.sample_count}", f"cursor={self._sample_cursor}/{self._counts.shape[0]}")
+        pispad23_debug(
             "emit bunch",
             f"samples={bunch.sample_count}",
             f"cursor={self._sample_cursor}/{self._counts.shape[0]}",
@@ -199,7 +199,7 @@ class Pi23TcpBunchSource:
         )
         return bunch
 
-    def pi23_receive_scan_counts(self):
+    def pispad23_receive_scan_counts(self):
         payload = self._receive_cs_binary_payload()
         planes = self._payload_to_planes(payload)
         counts = self._planes_to_sample_counts(planes)
@@ -210,8 +210,8 @@ class Pi23TcpBunchSource:
             f"CS,{self.dwell_us},{self.scan_frames},"
             f"{self.scan_x},{self.scan_y},{self.external_frame}\n"
         )
-        pi23_debug("connect", f"{self.host}:{self.port}", enabled=self.debug)
-        logger.debug("%s %s", "PI23 TCP connect", f"{self.host}:{self.port}")
+        pispad23_debug("connect", f"{self.host}:{self.port}", enabled=self.debug)
+        logger.debug("%s %s", "PISPAD23 TCP connect", f"{self.host}:{self.port}")
         data = bytearray()
         with socket.create_connection(
             (self.host, self.port),
@@ -225,41 +225,54 @@ class Pi23TcpBunchSource:
             if greeting:
                 greeting_decoded = greeting.decode("utf-8", errors="replace").strip()
                 if self.shared_dict is not None:
-                    self.shared_dict["pi23_greeting_raw"] = greeting.hex(" ")
-                    self.shared_dict["pi23_greeting_decoded"] = greeting_decoded
-                logger.debug("%s %s", "PI23 TCP greeting", greeting_decoded)
-                pi23_debug(
+                    self.shared_dict["pispad23_greeting_raw"] = greeting.hex(" ")
+                    self.shared_dict["pispad23_greeting_decoded"] = greeting_decoded
+                logger.debug("%s %s", "PISPAD23 TCP greeting", greeting_decoded)
+                pispad23_debug(
                     "greeting",
                     greeting_decoded,
                     enabled=self.debug,
                 )
-            pi23_debug("send", command.strip(), enabled=self.debug)
-            logger.debug("%s %s", "PI23 TCP send", command.strip())
+            pispad23_debug("send", command.strip(), enabled=self.debug)
+            logger.debug("%s %s", "PISPAD23 TCP send", command.strip())
             tcp.sendall(command.encode("utf-8"))
 
+            software_trigger = self.shared_dict is not None and self.shared_dict.get("software_trigger_enabled", False)
+            if software_trigger:
+                tcp.settimeout(0.5)
+                self.shared_dict["software_trigger_receiver_ready"] = (
+                    self.shared_dict.get("software_trigger_receiver_ready", 0) + 1)
+
             while True:
-                block = tcp.recv(self.read_chunk_size)
+                try:
+                    block = tcp.recv(self.read_chunk_size)
+                except socket.timeout:
+                    if software_trigger:
+                        # Human trigger waits have no deadline. The session
+                        # supervises issued frames and stops this receiver.
+                        continue
+                    raise
                 if not block:
-                    raise RuntimeError("PI23 TCP stream closed before DONE")
+                    raise RuntimeError("PISPAD23 TCP stream closed before DONE")
                 data.extend(block)
                 if data.endswith(DONE_SENTINEL):
                     data = data[: -len(DONE_SENTINEL)]
                     break
                 if data.endswith(ERROR_SENTINEL) or ERROR_SENTINEL in data[-256:]:
                     tail = bytes(data[-512:]).decode("utf-8", errors="replace")
-                    raise RuntimeError(f"PI23 TCP server returned ERROR: {tail}")
+                    raise RuntimeError(f"PISPAD23 TCP server returned ERROR: {tail}")
 
-        pi23_debug("payload bytes", len(data), enabled=self.debug)
-        logger.debug("%s %s", "PI23 TCP payload bytes", len(data))
+        pispad23_debug("payload bytes", len(data), enabled=self.debug)
+        logger.debug("%s %s", "PISPAD23 TCP payload bytes", len(data))
         return bytes(data)
 
     def _payload_to_planes(self, payload):
         pixels_per_frame = self.scan_x * self.scan_y
         if pixels_per_frame <= 0:
-            raise RuntimeError("PI23 invalid scan dimensions")
+            raise RuntimeError("PISPAD23 invalid scan dimensions")
         if len(payload) % pixels_per_frame != 0:
             raise RuntimeError(
-                "PI23 payload length is not aligned to scan pixels: "
+                "PISPAD23 payload length is not aligned to scan pixels: "
                 f"bytes={len(payload)} pixels_per_frame={pixels_per_frame}"
             )
 
@@ -273,10 +286,10 @@ class Pi23TcpBunchSource:
                 self.scan_frames = inferred_frames
 
         if detector_planes <= 0:
-            raise RuntimeError("PI23 payload contains no image planes")
+            raise RuntimeError("PISPAD23 payload contains no image planes")
 
         if detector_planes != self.detector_channels:
-            pi23_debug(
+            pispad23_debug(
                 "detector plane count inferred",
                 detector_planes,
                 f"(configured {self.detector_channels})",
@@ -288,7 +301,7 @@ class Pi23TcpBunchSource:
         expected = self.scan_frames * detector_planes * self.scan_y * self.scan_x
         if array.size != expected:
             raise RuntimeError(
-                "PI23 payload size mismatch after inference: "
+                "PISPAD23 payload size mismatch after inference: "
                 f"got={array.size} expected={expected}"
             )
         return array.reshape(self.scan_frames, detector_planes, self.scan_y, self.scan_x)
@@ -354,10 +367,10 @@ class Pi23TcpBunchSource:
         return int(sample_count) * self.digital_words_per_sample
 
 
-def pi23_pack_counts_to_spad25_words(counts):
+def pispad23_pack_counts_to_spad25_words(counts):
     counts = np.asarray(counts, dtype=np.uint64)
     if counts.ndim != 2:
-        raise ValueError("PI23 channel counts must be a 2-D array")
+        raise ValueError("PISPAD23 channel counts must be a 2-D array")
 
     sample_count = counts.shape[0]
     padded = np.zeros((sample_count, 25), dtype=np.uint64)
@@ -410,15 +423,15 @@ def pi23_pack_counts_to_spad25_words(counts):
     return words
 
 
-def pi23_decode_raw_bunch_to_spad_preview_words(
+def pispad23_decode_raw_bunch_to_spad_preview_words(
     raw_bunch,
     digital_words_per_sample=2,
 ):
     """
-    Decode a PI23 raw bunch into the current normalized preview word stream.
+    Decode a PISPAD23 raw bunch into the current normalized preview word stream.
 
     The normalized stream is a temporary compatibility boundary for the existing
-    preview/H5 writer. The input remains PI23-native, so the real PI23 decoder
+    preview/H5 writer. The input remains PISPAD23-native, so the real PISPAD23 decoder
     can replace this function without touching the receiver or manager.
     """
     if raw_bunch is None or raw_bunch.sample_count <= 0:
@@ -432,14 +445,14 @@ def pi23_decode_raw_bunch_to_spad_preview_words(
 
     words_per_sample = max(1, int(digital_words_per_sample))
     if words_per_sample != 2:
-        raise NotImplementedError("PI23 TCP scanning currently packs to the 25-channel SPAD word layout")
+        raise NotImplementedError("PISPAD23 TCP scanning currently packs to the 25-channel SPAD word layout")
 
     counts = np.asarray(raw_bunch.payload["channel_counts"], dtype=np.uint64)
-    return pi23_pack_counts_to_spad25_words(counts)
+    return pispad23_pack_counts_to_spad25_words(counts)
 
 
-class Pi23RandomBunchSource:
-    """In-memory PI23 raw-bunch source used by tests and offline dry-runs."""
+class PISPAD23RandomBunchSource:
+    """In-memory PISPAD23 raw-bunch source used by tests and offline dry-runs."""
 
     def __init__(
         self,
@@ -488,7 +501,7 @@ class Pi23RandomBunchSource:
             size=(sample_count, self.digital_output_channels),
             dtype=np.uint16,
         )
-        bunch = Pi23RawBunch(
+        bunch = PISPAD23RawBunch(
             fifo_name="stream_out_main",
             timestamp_ns=perf_counter_ns(),
             sample_count=int(sample_count),

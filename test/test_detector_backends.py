@@ -3,17 +3,17 @@ import unittest
 import numpy as np
 
 from brighteyes_mcs.acquisition.detectors.backends import (
-    DETECTOR_PI23_TT,
-    DETECTOR_PI_23,
+    DETECTOR_PISPAD23_TT,
+    DETECTOR_PISPAD23,
     DETECTOR_SPAD_ARRAY,
     DETECTOR_SPAD_TTM,
-    Pi23RandomBunchSource,
-    Pi23RawBunch,
-    detector_uses_pi23_pipeline,
+    PISPAD23RandomBunchSource,
+    PISPAD23RawBunch,
+    detector_uses_pispad23_pipeline,
     detector_uses_nifpga_fifo,
     detector_uses_spad_pipeline,
     normalize_detector_model,
-    pi23_decode_raw_bunch_to_spad_preview_words,
+    pispad23_decode_raw_bunch_to_spad_preview_words,
 )
 
 
@@ -24,23 +24,23 @@ class Counter:
 
 class TestDetectorBackends(unittest.TestCase):
     def test_detector_model_normalization(self):
-        self.assertEqual(normalize_detector_model(DETECTOR_PI_23), DETECTOR_PI_23)
-        self.assertEqual(normalize_detector_model(DETECTOR_PI23_TT), DETECTOR_PI23_TT)
+        self.assertEqual(normalize_detector_model(DETECTOR_PISPAD23), DETECTOR_PISPAD23)
+        self.assertEqual(normalize_detector_model(DETECTOR_PISPAD23_TT), DETECTOR_PISPAD23_TT)
         self.assertEqual(normalize_detector_model(DETECTOR_SPAD_TTM), DETECTOR_SPAD_TTM)
-        self.assertEqual(normalize_detector_model("PI23"), DETECTOR_PI_23)
+        self.assertEqual(normalize_detector_model("PISPAD23"), DETECTOR_PISPAD23)
         self.assertEqual(normalize_detector_model("SPAD"), DETECTOR_SPAD_ARRAY)
-        self.assertEqual(normalize_detector_model("TCP/IP - PI23"), DETECTOR_PI_23)
+        self.assertEqual(normalize_detector_model("TCP/IP - PI SPAD23R (Intensity)"), DETECTOR_PISPAD23)
         self.assertEqual(normalize_detector_model("FPGA - SPAD"), DETECTOR_SPAD_ARRAY)
         self.assertEqual(normalize_detector_model("unknown"), DETECTOR_SPAD_ARRAY)
         self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_ARRAY))
         self.assertTrue(detector_uses_nifpga_fifo(DETECTOR_SPAD_TTM))
-        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PI_23))
-        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PI23_TT))
+        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PISPAD23))
+        self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_PISPAD23_TT))
         self.assertTrue(detector_uses_spad_pipeline(DETECTOR_SPAD_TTM))
-        self.assertTrue(detector_uses_pi23_pipeline(DETECTOR_PI23_TT))
+        self.assertTrue(detector_uses_pispad23_pipeline(DETECTOR_PISPAD23_TT))
 
-    def test_pi23_random_source_returns_raw_bunches_until_expected_words(self):
-        source = Pi23RandomBunchSource(
+    def test_pispad23_random_source_returns_raw_bunches_until_expected_words(self):
+        source = PISPAD23RandomBunchSource(
             fifo_chuck_size_digital=Counter(4),
             fifo_chuck_size_analog=Counter(2),
             expected_words_data_digital=Counter(20),
@@ -52,12 +52,12 @@ class TestDetectorBackends(unittest.TestCase):
         source.start()
 
         first_bunch = source.read_bunch("stream_out_main")
-        self.assertIsInstance(first_bunch, Pi23RawBunch)
+        self.assertIsInstance(first_bunch, PISPAD23RawBunch)
         self.assertIsInstance(first_bunch.payload, dict)
         self.assertIn("channel_counts", first_bunch.payload)
         self.assertNotIsInstance(first_bunch, np.ndarray)
 
-        first_packet = pi23_decode_raw_bunch_to_spad_preview_words(
+        first_packet = pispad23_decode_raw_bunch_to_spad_preview_words(
             first_bunch,
             digital_words_per_sample=2,
         )
@@ -70,7 +70,7 @@ class TestDetectorBackends(unittest.TestCase):
             bunch = source.read_bunch("stream_out_main")
             if bunch is None:
                 break
-            packet = pi23_decode_raw_bunch_to_spad_preview_words(
+            packet = pispad23_decode_raw_bunch_to_spad_preview_words(
                 bunch,
                 digital_words_per_sample=2,
             )

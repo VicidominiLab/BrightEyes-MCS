@@ -3,18 +3,18 @@ import sys
 import unittest
 
 from brighteyes_mcs.acquisition.detectors import create_detector_pipeline
-from brighteyes_mcs.acquisition.detectors.pi23.pipeline import Pi23DetectorPipeline
+from brighteyes_mcs.acquisition.detectors.pispad23.pipeline import PISPAD23DetectorPipeline
 from brighteyes_mcs.acquisition.detectors.disabled import DisabledDetectorPipeline
 from brighteyes_mcs.acquisition.detectors.models import (
     DETECTOR_DISABLED,
     detector_uses_nifpga_control,
     detector_uses_nifpga_fifo,
-    detector_uses_pi23_pipeline,
+    detector_uses_pispad23_pipeline,
 )
 from brighteyes_mcs.acquisition.detectors.spad.pipeline import SpadDetectorPipeline
 from brighteyes_mcs.acquisition.detectors.backends import (
-    DETECTOR_PI23_TT,
-    DETECTOR_PI_23,
+    DETECTOR_PISPAD23_TT,
+    DETECTOR_PISPAD23,
     DETECTOR_SPAD_ARRAY,
     DETECTOR_SPAD_TTM,
 )
@@ -25,15 +25,15 @@ class TestDetectorPipelines(unittest.TestCase):
         self.assertIsInstance(create_detector_pipeline("Disable"), DisabledDetectorPipeline)
         self.assertTrue(detector_uses_nifpga_control(DETECTOR_DISABLED))
         self.assertFalse(detector_uses_nifpga_fifo(DETECTOR_DISABLED))
-        self.assertFalse(detector_uses_pi23_pipeline(DETECTOR_DISABLED))
+        self.assertFalse(detector_uses_pispad23_pipeline(DETECTOR_DISABLED))
 
-    def test_pi23_acquisition_loop_imports_in_a_clean_interpreter(self):
+    def test_pispad23_acquisition_loop_imports_in_a_clean_interpreter(self):
         result = subprocess.run(
             [
                 sys.executable,
                 "-c",
-                "from brighteyes_mcs.acquisition.workers.detectors.pi23.acquisition_loop "
-                "import Pi23AcquisitionLoopProcess",
+                "from brighteyes_mcs.acquisition.workers.detectors.pispad23.acquisition_loop "
+                "import PISPAD23AcquisitionLoopProcess",
             ],
             capture_output=True,
             text=True,
@@ -50,13 +50,13 @@ class TestDetectorPipelines(unittest.TestCase):
         self.assertEqual(spad_ttm_pipeline.detector_model, DETECTOR_SPAD_TTM)
         self.assertIsInstance(create_detector_pipeline("unknown"), SpadDetectorPipeline)
 
-    def test_factory_selects_pi23_pipeline(self):
-        pi23_pipeline = create_detector_pipeline(DETECTOR_PI_23)
-        pi23tt_pipeline = create_detector_pipeline(DETECTOR_PI23_TT)
+    def test_factory_selects_pispad23_pipeline(self):
+        pispad23_pipeline = create_detector_pipeline(DETECTOR_PISPAD23)
+        pispad23tt_pipeline = create_detector_pipeline(DETECTOR_PISPAD23_TT)
 
-        self.assertIsInstance(pi23_pipeline, Pi23DetectorPipeline)
-        self.assertIsInstance(pi23tt_pipeline, Pi23DetectorPipeline)
-        self.assertEqual(pi23tt_pipeline.detector_model, DETECTOR_PI23_TT)
+        self.assertIsInstance(pispad23_pipeline, PISPAD23DetectorPipeline)
+        self.assertIsInstance(pispad23tt_pipeline, PISPAD23DetectorPipeline)
+        self.assertEqual(pispad23tt_pipeline.detector_model, DETECTOR_PISPAD23_TT)
 
 
 if __name__ == "__main__":

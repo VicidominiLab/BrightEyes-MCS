@@ -7,61 +7,63 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from brighteyes_mcs.acquisition.detectors.pi23.stream_image import (
-    HEADER, TRAILER, read_snapshot, read_microimage, stream_microimages, MicroimageSnapshot,
+from brighteyes_mcs.acquisition.detectors.pispad23.stream_image import (
+    HEADER, TRAILER, read_microimage, stream_microimages, MicroimageSnapshot,
 )
 from brighteyes_mcs.acquisition.detectors.factory import create_detector_pipeline
 from brighteyes_mcs.acquisition.detectors.models import (
-    DETECTOR_PI23_TS, DETECTOR_PI23_TS_UIMG, DETECTOR_PI_23, DETECTOR_PI23_UI,
+    DETECTOR_DISABLED, DETECTOR_PISPAD23_TS_UIMG, DETECTOR_PISPAD23, DETECTOR_PISPAD23_TT, DETECTOR_PISPAD23_UI,
     detector_uses_nifpga_fifo, normalize_detector_model,
 )
-from brighteyes_mcs.acquisition.detectors.pi23.pipeline import Pi23DetectorPipeline
-from brighteyes_mcs.acquisition.detectors.pi23.timestamp_pipeline import Pi23TimestampPipeline, Pi23MicroimagePipeline
-from brighteyes_mcs.acquisition.detectors.pi23.microimage import MicroimagePreview
-from brighteyes_mcs.acquisition.manager import _pi23_nifpga_dimension_registers
+from brighteyes_mcs.acquisition.detectors.pispad23.pipeline import PISPAD23DetectorPipeline
+from brighteyes_mcs.acquisition.detectors.pispad23.timestamp_pipeline import PISPAD23MicroimagePipeline
+from brighteyes_mcs.acquisition.detectors.pispad23.microimage import MicroimagePreview
+from brighteyes_mcs.acquisition.manager import _pispad23_nifpga_dimension_registers
 
 
-@pytest.mark.parametrize("model,pipeline_class", [(DETECTOR_PI23_TS, Pi23TimestampPipeline), (DETECTOR_PI23_TS_UIMG, Pi23MicroimagePipeline)])
-def test_timestamp_detector_controls_fpga_without_intensity_receiver(model, pipeline_class):
+def test_timestamp_detector_controls_fpga_without_intensity_receiver():
+    model = DETECTOR_PISPAD23_TS_UIMG
     assert normalize_detector_model(model) == model
     assert not detector_uses_nifpga_fifo(model)
     pipeline = create_detector_pipeline(model)
-    assert isinstance(pipeline, pipeline_class)
-    assert not isinstance(pipeline, Pi23DetectorPipeline)
+    assert isinstance(pipeline, PISPAD23MicroimagePipeline)
+    assert not isinstance(pipeline, PISPAD23DetectorPipeline)
     assert pipeline.detector_model == model
     assert pipeline.make_receiver_process(None, None, None) is None
     worker = pipeline.make_acquisition_loop(SimpleNamespace(dim_x=3, dim_y=2, shared_dict={}, shared_objects={}), True)
-    assert (worker is not None) == (model == DETECTOR_PI23_TS_UIMG)
+    assert worker is not None
     assert pipeline.make_raw_stream_writer(None, None) is None
     registers = {"max_pixel": 3, "max_line": 2, "max_frame": 1}
-    physical = _pi23_nifpga_dimension_registers(registers, model)
+    physical = _pispad23_nifpga_dimension_registers(registers, model)
     assert physical == {"max_pixel": 4, "max_line": 3, "max_frame": 2}
-    assert _pi23_nifpga_dimension_registers(physical, model, -1) == registers
+    assert _pispad23_nifpga_dimension_registers(physical, model, -1) == registers
 
 
-def test_old_timestamp_label_selects_image_mode():
-    assert normalize_detector_model("TCP/IP - PI23 (TS mode)") == DETECTOR_PI23_TS
+@pytest.mark.parametrize("label", ["TCP/IP - PI SPAD23R (TS mode)", "TCP/IP - PI SPAD23R (TS mode - img)"])
+def test_retired_timestamp_labels_disable_detector(label):
+    assert normalize_detector_model(label) == DETECTOR_DISABLED
+    assert create_detector_pipeline(label).detector_model == DETECTOR_DISABLED
 
 
-@pytest.mark.parametrize("label", ["TCP/IP - PI23", DETECTOR_PI23_UI, "TCP/IP - PI23 (Intensity)"])
-def test_renamed_intensity_detector_keeps_original_pipeline_and_configurations(label):
-    assert normalize_detector_model(label) == DETECTOR_PI_23
-    assert isinstance(create_detector_pipeline(label), Pi23DetectorPipeline)
+@pytest.mark.parametrize("label", [DETECTOR_PISPAD23, DETECTOR_PISPAD23_UI, DETECTOR_PISPAD23_TT])
+def test_intensity_detector_selects_its_pipeline(label):
+    expected = DETECTOR_PISPAD23_TT if label == DETECTOR_PISPAD23_TT else DETECTOR_PISPAD23
+    assert normalize_detector_model(label) == expected
+    assert isinstance(create_detector_pipeline(label), PISPAD23DetectorPipeline)
 
 
-@pytest.mark.parametrize("microimage", [False, True])
 @pytest.mark.parametrize("fault", [None, "not_ready", "dimensions", "size", "trailer", "truncated", "version", "magic"])
-def test_snapshot_framing_and_non_square_orientation(fault, microimage):
-    payload = np.arange(25 if microimage else 6, dtype="<u4").tobytes()
+def test_microimage_snapshot_framing_and_channel_order(fault):
+    payload = np.arange(25, dtype="<u4").tobytes()
     status = 1 if fault == "not_ready" else 0
     if status:
         payload = b""
     size = len(payload)
     packet = HEADER.pack(
-        b"INVALID!" if fault == "magic" else b"TDCMIC01" if microimage else b"TDCIMG01",
+        b"INVALID!" if fault == "magic" else b"TDCMIC01",
         2 if fault == "version" else 1, status,
-        2 if fault == "dimensions" else 25 if microimage else 3,
-        1 if microimage else 2, -1, 3 if microimage else 2, 7, 2, 1, 15,
+        2 if fault == "dimensions" else 25,
+        1, -1, 3, 7, 2, 1, 15,
         2**40 if fault == "size" else size,
     ) + payload + TRAILER.pack(b"BADEND01" if fault == "trailer" else b"TDCEND01", 7, size)
     if fault == "truncated":
@@ -86,7 +88,7 @@ def test_snapshot_framing_and_non_square_orientation(fault, microimage):
         thread = threading.Thread(target=serve, daemon=True)
         thread.start()
         def read():
-            return read_microimage(server.getsockname()[1]) if microimage else read_snapshot(server.getsockname()[1], 3, 2)
+            return read_microimage(server.getsockname()[1])
         if fault not in (None, "not_ready"):
             with pytest.raises(ValueError):
                 read()
@@ -95,13 +97,12 @@ def test_snapshot_framing_and_non_square_orientation(fault, microimage):
             if status:
                 assert snapshot is None
             else:
-                expected = np.arange(25) if microimage else [[0, 1, 2], [3, 4, 5]]
+                expected = np.arange(25)
                 np.testing.assert_array_equal(snapshot.counts, expected)
                 assert snapshot.frame == 7 and snapshot.events == 15
-                if microimage:
-                    assert (snapshot.x, snapshot.y) == (2, 1)
+                assert (snapshot.x, snapshot.y) == (2, 1)
         thread.join(timeout=3)
-        assert requests == [b"LAST\n" if microimage else b"PREVIEW\n"]
+        assert requests == [b"LAST\n"]
 
 
 def microimage(frame=0, x=0, y=0, flags=3, counts=None):

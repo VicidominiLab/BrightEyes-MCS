@@ -99,6 +99,8 @@ class RawStreamWriterProcess(mp.Process):
             self.shared_dict[f"{fifo_name}_expected_words"] = int(self.expected_words[fifo_name])
             self.shared_dict[f"{fifo_name}_expected_bytes"] = self._expected_bytes(fifo_name)
 
+        if self.shared_dict.get("software_trigger_enabled", False):
+            self.shared_dict["software_trigger_worker_ready"] = True
         idle_after_stop = 0
         try:
             while True:
