@@ -6,7 +6,8 @@ sys.path.insert(1, os.getcwd())
 import unittest
 from unittest.mock import MagicMock, call, patch
 from types import SimpleNamespace
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPointF
+from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent
 
 from brighteyes_mcs.ui.qt.main_window import MainWindow
 from brighteyes_mcs.ui.qt.flim_image_view import (
@@ -324,7 +325,7 @@ class TestMyClass(unittest.TestCase):
         point = SimpleNamespace(x=lambda: 1.25, y=lambda: 2.5)
         event = SimpleNamespace(
             double=lambda: True,
-            pos=lambda: object(),
+            scenePos=lambda: QPointF(125, 250),
             modifiers=lambda: modifiers,
         )
         spin_x = MagicMock()
@@ -334,7 +335,7 @@ class TestMyClass(unittest.TestCase):
         instance = SimpleNamespace(
             im_widget=SimpleNamespace(
                 view=SimpleNamespace(
-                    vb=SimpleNamespace(mapToView=lambda _point: point)
+                    vb=SimpleNamespace(mapSceneToView=MagicMock(return_value=point))
                 )
             ),
             preview_view_box=SimpleNamespace(
@@ -386,6 +387,30 @@ class TestMyClass(unittest.TestCase):
         instance.ui.spinBox_off_y_um.setValue.assert_called_once_with(2.5)
         instance.ui.spinBox_off_z_um.setValue.assert_called_once_with(3.75)
         instance.offset_um_Changed.assert_called_once_with()
+
+    def test_preview_scene_click_without_current_item_uses_scene_coordinates(self):
+        instance, _ = self._preview_click_fixture(Qt.KeyboardModifier.NoModifier)
+        press = SimpleNamespace(
+            scenePos=lambda: QPointF(125, 250),
+            screenPos=lambda: QPointF(500, 600),
+            button=lambda: Qt.MouseButton.LeftButton,
+            buttons=lambda: Qt.MouseButton.LeftButton,
+            modifiers=lambda: Qt.KeyboardModifier.NoModifier,
+        )
+        event = MouseClickEvent(press, double=True)
+        self.assertIsNone(event.currentItem)
+
+        MainWindow.imageClicked(instance, event)
+
+        instance.im_widget.view.vb.mapSceneToView.assert_called_once_with(QPointF(125, 250))
+        self.assertEqual(instance.markers_list[0]["offset_x_um"], 1.25)
+        self.assertEqual(instance.markers_list[0]["offset_y_um"], 2.5)
+
+    def test_preview_single_click_does_not_read_coordinates(self):
+        instance, _ = self._preview_click_fixture(Qt.KeyboardModifier.NoModifier)
+        MainWindow.imageClicked(instance, SimpleNamespace(double=lambda: False))
+        instance.im_widget.view.vb.mapSceneToView.assert_not_called()
+        self.assertEqual(instance.markers_list, [])
 
     def test_laser_force_pulsing_applies_and_restores_registers(self):
         instance = SimpleNamespace(

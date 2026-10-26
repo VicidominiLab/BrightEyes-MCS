@@ -10,6 +10,8 @@ from typing import Any, Mapping
 import numpy as np
 
 from ..acquisition.settings import AcquisitionConfig, DetectorConfig, OutputConfig, ScanGeometry
+from ..acquisition.detectors.models import detector_uses_flare
+from ..acquisition.detectors.flare.config import FlareSettings
 
 
 class NumpyJSONEncoder(json.JSONEncoder):
@@ -65,6 +67,8 @@ class LegacyConfigurationTranslator:
             bitfile=str(legacy.get("bitFile", "")),
             pispad23_host=str(legacy.get("pispad23_host", "127.0.0.1")),
             pispad23_port=int(legacy.get("pispad23_port", 9997)),
+            flare=(FlareSettings.from_legacy(legacy) if detector_uses_flare(legacy.get("detector_model"))
+                   else FlareSettings()),
         )
         output = OutputConfig(filename=Path(str(legacy.get("filename", "DEFAULT.h5"))))
         return AcquisitionConfig(geometry=geometry, detector=detector, output=output, legacy=legacy)
@@ -90,4 +94,6 @@ class LegacyConfigurationTranslator:
             payload["pispad23_host"] = config.detector.pispad23_host
         if "pispad23_port" in payload or config.detector.pispad23_port != 9997:
             payload["pispad23_port"] = config.detector.pispad23_port
+        if detector_uses_flare(config.detector.model):
+            payload.update(config.detector.flare.legacy_values())
         return payload

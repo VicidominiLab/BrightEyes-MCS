@@ -1,4 +1,4 @@
-from .models import DETECTOR_DISABLED, DETECTOR_PISPAD23_TS_UIMG, detector_uses_pispad23_pipeline, normalize_detector_model
+from .models import DETECTOR_DISABLED, DETECTOR_PISPAD23_TS_UIMG, detector_uses_flare, detector_uses_pispad23_pipeline, normalize_detector_model
 from .disabled import DisabledDetectorPipeline
 from .pispad23.pipeline import PISPAD23DetectorPipeline
 from .pispad23.timestamp_pipeline import PISPAD23MicroimagePipeline
@@ -7,6 +7,9 @@ from .spad.pipeline import SpadDetectorPipeline
 
 def create_detector_pipeline(detector_model):
     detector_model = normalize_detector_model(detector_model)
+    if detector_uses_flare(detector_model):
+        from .flare.pipeline import FlareDetectorPipeline
+        return FlareDetectorPipeline()
     if detector_model == DETECTOR_DISABLED:
         return DisabledDetectorPipeline()
     if detector_model == DETECTOR_PISPAD23_TS_UIMG:

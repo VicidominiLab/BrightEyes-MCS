@@ -1,6 +1,25 @@
 """Canonical RAW acquisition converter import."""
 
-from .converters.spad import convert_raw_acquisition
+from .converters.spad import convert_raw_acquisition as _convert_legacy_raw
+
+
+def convert_raw_acquisition(metadata_filename, output_filename=None, progress_callback=None):
+    """Dispatch explicitly identified Flare sidecars; preserve legacy H5 conversion."""
+    from pathlib import Path
+    if str(metadata_filename).endswith(".flare.json"):
+        import json
+        from .flare import convert_flare_raw
+        metadata_path = Path(metadata_filename)
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        raw = metadata_path.parent / metadata["raw_file"]
+        output = output_filename or metadata_path.with_name(metadata_path.name.removesuffix(".flare.json") + "_converted.h5")
+        if progress_callback:
+            progress_callback(0, "Converting Flare raw counts")
+        result = convert_flare_raw(raw, metadata_path, output)
+        if progress_callback:
+            progress_callback(100, "Flare conversion complete")
+        return result
+    return _convert_legacy_raw(metadata_filename, output_filename, progress_callback)
 
 
 def metadata_filename(filename):

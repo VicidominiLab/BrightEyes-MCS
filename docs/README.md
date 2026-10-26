@@ -17,6 +17,7 @@ PRISM-Light, SPAD23R, and pSPAD are trademarks or product names of their respect
 - [Installation and first launch](../README.md)
 - [Statistics and ETA](statistics.md)
 - [PI SPAD23R time-tag recording](pispad23-timetagging.md)
+- [Kria Flare connection, acquisition and register debugging](flare.md)
 - [Configuration, runtime paths, and RAW conversion](current-architecture.md)
 
 ## Developer guides
@@ -24,6 +25,7 @@ PRISM-Light, SPAD23R, and pSPAD are trademarks or product names of their respect
 - [Contributing, tests, and Qt UI generation](../CONTRIBUTING.md)
 - [Current architecture and repository map](current-architecture.md)
 - [Refactoring boundaries and compatibility](refactoring-architecture.md)
+- [Flare FPGA integration plan and checklist](flare-integration-plan.md)
 - [Plug-in API](../brighteyes_mcs/plugins/README.md)
 - [Build and release procedure (publishing disabled)](pypi-release.md)
 - [Wiki landing-page draft](wiki-home.md)

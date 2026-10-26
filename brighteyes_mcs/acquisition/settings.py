@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping
 
+from .detectors.flare.config import FlareSettings
+
 
 @dataclass(frozen=True)
 class ScanGeometry:
@@ -24,6 +26,7 @@ class DetectorConfig:
     bitfile: str = ""
     pispad23_host: str = "127.0.0.1"
     pispad23_port: int = 9997
+    flare: FlareSettings = field(default_factory=FlareSettings)
 
 
 @dataclass(frozen=True)

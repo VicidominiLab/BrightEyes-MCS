@@ -7,10 +7,10 @@ import time
 
 # from PySide6.QtCore import QObject
 
-from ..hardware.fpga import FpgaHandle
 from brighteyes_mcs.logging_setup import data_debug_enabled, logger
 from ..acquisition.detectors.models import (
     DETECTOR_DISABLED,
+    detector_uses_flare,
     detector_uses_pispad23_timestamp,
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_fifo,
@@ -37,6 +37,12 @@ PISPAD23_NIFPGA_DIMENSION_OFFSETS = {
 
 def create_i64_counter(initial_value=0):
     return mp.Value("q", int(initial_value))
+
+
+def FpgaHandle(*args, **kwargs):
+    """Load NI bindings only when the legacy connection path requests a handle."""
+    from ..hardware.fpga import FpgaHandle as NiFpgaHandle
+    return NiFpgaHandle(*args, **kwargs)
 
 
 def _pispad23_nifpga_dimension_registers(registers, detector_model, direction=1):
@@ -480,6 +486,8 @@ class McsManager():
         self.timeout_fifos = timeout
 
     def connect(self, initial_registers=None, list_fifos=None):
+        if detector_uses_flare(self.detector_model):
+            raise RuntimeError("Flare control uses FlareAcquisition; NI initialization is disabled for this detector")
         if initial_registers is None:
             initial_registers = {}
         if list_fifos is None:
@@ -602,6 +610,8 @@ class McsManager():
         """
         Run the FPGA, start the data process, the preview process and run the FPGA handle class
         """
+        if detector_uses_flare(self.detector_model):
+            raise RuntimeError("Flare acquisition uses FlareAcquisition, not NI workers")
         do_not_save = self.do_not_save_event.is_set()
         self.process_supervisor.clear()
 

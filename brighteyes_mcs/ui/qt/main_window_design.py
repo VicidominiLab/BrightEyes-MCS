@@ -22,7 +22,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QPlainTextEdit, QProgressBar, QPushButton, QRadioButton,
     QScrollArea, QSizePolicy, QSpacerItem, QSpinBox,
     QStatusBar, QTabWidget, QTableWidget, QTableWidgetItem,
-    QTextEdit, QToolButton, QTreeView, QWidget)
+    QTextEdit, QToolButton, QTreeView, QVBoxLayout,
+    QWidget)
 
 from .scispinbox import sciSpinBox
 from .support import ElidedComboBox
@@ -454,9 +455,15 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_2.addTab(self.tab_7, "")
         self.tab_2 = QWidget()
         self.tab_2.setObjectName(u"tab_2")
-        self.gridLayout_36 = QGridLayout(self.tab_2)
+        self.verticalLayout_fpga_backends = QVBoxLayout(self.tab_2)
+        self.verticalLayout_fpga_backends.setObjectName(u"verticalLayout_fpga_backends")
+        self.tabWidget_fpga_backends = QTabWidget(self.tab_2)
+        self.tabWidget_fpga_backends.setObjectName(u"tabWidget_fpga_backends")
+        self.tab_fpga_ni = QWidget()
+        self.tab_fpga_ni.setObjectName(u"tab_fpga_ni")
+        self.gridLayout_36 = QGridLayout(self.tab_fpga_ni)
         self.gridLayout_36.setObjectName(u"gridLayout_36")
-        self.groupBox_22 = QGroupBox(self.tab_2)
+        self.groupBox_22 = QGroupBox(self.tab_fpga_ni)
         self.groupBox_22.setObjectName(u"groupBox_22")
         self.gridLayout_99 = QGridLayout(self.groupBox_22)
         self.gridLayout_99.setObjectName(u"gridLayout_99")
@@ -558,7 +565,7 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_36.addItem(self.verticalSpacer_22, 2, 0, 1, 1)
 
-        self.groupBox_23 = QGroupBox(self.tab_2)
+        self.groupBox_23 = QGroupBox(self.tab_fpga_ni)
         self.groupBox_23.setObjectName(u"groupBox_23")
         self.gridLayout_104 = QGridLayout(self.groupBox_23)
         self.gridLayout_104.setObjectName(u"gridLayout_104")
@@ -679,6 +686,260 @@ class Ui_MainWindowDesign(object):
 
 
         self.gridLayout_36.addWidget(self.groupBox_23, 1, 0, 1, 1)
+
+        self.tabWidget_fpga_backends.addTab(self.tab_fpga_ni, "")
+        self.tab_fpga_flare = QWidget()
+        self.tab_fpga_flare.setObjectName(u"tab_fpga_flare")
+        self.verticalLayout_flare = QVBoxLayout(self.tab_fpga_flare)
+        self.verticalLayout_flare.setObjectName(u"verticalLayout_flare")
+        self.gridLayout_flare_settings = QGridLayout()
+        self.gridLayout_flare_settings.setObjectName(u"gridLayout_flare_settings")
+        self.label_flare_0 = QLabel(self.tab_fpga_flare)
+        self.label_flare_0.setObjectName(u"label_flare_0")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_0, 0, 0, 1, 1)
+
+        self.lineEdit_flare_host = QLineEdit(self.tab_fpga_flare)
+        self.lineEdit_flare_host.setObjectName(u"lineEdit_flare_host")
+
+        self.gridLayout_flare_settings.addWidget(self.lineEdit_flare_host, 0, 1, 1, 1)
+
+        self.label_flare_1 = QLabel(self.tab_fpga_flare)
+        self.label_flare_1.setObjectName(u"label_flare_1")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_1, 1, 0, 1, 1)
+
+        self.spinBox_flare_port = QSpinBox(self.tab_fpga_flare)
+        self.spinBox_flare_port.setObjectName(u"spinBox_flare_port")
+        self.spinBox_flare_port.setMaximum(65535)
+        self.spinBox_flare_port.setMinimum(1)
+        self.spinBox_flare_port.setValue(8081)
+
+        self.gridLayout_flare_settings.addWidget(self.spinBox_flare_port, 1, 1, 1, 1)
+
+        self.label_flare_2 = QLabel(self.tab_fpga_flare)
+        self.label_flare_2.setObjectName(u"label_flare_2")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_2, 2, 0, 1, 1)
+
+        self.comboBox_flare_mode = QComboBox(self.tab_fpga_flare)
+        self.comboBox_flare_mode.addItem("")
+        self.comboBox_flare_mode.addItem("")
+        self.comboBox_flare_mode.setObjectName(u"comboBox_flare_mode")
+
+        self.gridLayout_flare_settings.addWidget(self.comboBox_flare_mode, 2, 1, 1, 1)
+
+        self.label_flare_3 = QLabel(self.tab_fpga_flare)
+        self.label_flare_3.setObjectName(u"label_flare_3")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_3, 3, 0, 1, 1)
+
+        self.lineEdit_flare_bind_host = QLineEdit(self.tab_fpga_flare)
+        self.lineEdit_flare_bind_host.setObjectName(u"lineEdit_flare_bind_host")
+
+        self.gridLayout_flare_settings.addWidget(self.lineEdit_flare_bind_host, 3, 1, 1, 1)
+
+        self.label_flare_4 = QLabel(self.tab_fpga_flare)
+        self.label_flare_4.setObjectName(u"label_flare_4")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_4, 4, 0, 1, 1)
+
+        self.lineEdit_flare_receiver_host = QLineEdit(self.tab_fpga_flare)
+        self.lineEdit_flare_receiver_host.setObjectName(u"lineEdit_flare_receiver_host")
+
+        self.gridLayout_flare_settings.addWidget(self.lineEdit_flare_receiver_host, 4, 1, 1, 1)
+
+        self.label_flare_5 = QLabel(self.tab_fpga_flare)
+        self.label_flare_5.setObjectName(u"label_flare_5")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_5, 5, 0, 1, 1)
+
+        self.spinBox_flare_receiver_port = QSpinBox(self.tab_fpga_flare)
+        self.spinBox_flare_receiver_port.setObjectName(u"spinBox_flare_receiver_port")
+        self.spinBox_flare_receiver_port.setMaximum(65535)
+        self.spinBox_flare_receiver_port.setValue(9000)
+
+        self.gridLayout_flare_settings.addWidget(self.spinBox_flare_receiver_port, 5, 1, 1, 1)
+
+        self.label_flare_6 = QLabel(self.tab_fpga_flare)
+        self.label_flare_6.setObjectName(u"label_flare_6")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_6, 6, 0, 1, 1)
+
+        self.spinBox_flare_packet_bins = QSpinBox(self.tab_fpga_flare)
+        self.spinBox_flare_packet_bins.setObjectName(u"spinBox_flare_packet_bins")
+        self.spinBox_flare_packet_bins.setMinimum(1)
+        self.spinBox_flare_packet_bins.setMaximum(4096)
+        self.spinBox_flare_packet_bins.setValue(4)
+
+        self.gridLayout_flare_settings.addWidget(self.spinBox_flare_packet_bins, 6, 1, 1, 1)
+
+        self.label_flare_7 = QLabel(self.tab_fpga_flare)
+        self.label_flare_7.setObjectName(u"label_flare_7")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_7, 7, 0, 1, 1)
+
+        self.doubleSpinBox_flare_buffer_seconds = QDoubleSpinBox(self.tab_fpga_flare)
+        self.doubleSpinBox_flare_buffer_seconds.setObjectName(u"doubleSpinBox_flare_buffer_seconds")
+        self.doubleSpinBox_flare_buffer_seconds.setMinimum(0.001000000000000)
+        self.doubleSpinBox_flare_buffer_seconds.setMaximum(3600.000000000000000)
+        self.doubleSpinBox_flare_buffer_seconds.setDecimals(3)
+        self.doubleSpinBox_flare_buffer_seconds.setValue(0.250000000000000)
+
+        self.gridLayout_flare_settings.addWidget(self.doubleSpinBox_flare_buffer_seconds, 7, 1, 1, 1)
+
+        self.label_flare_8 = QLabel(self.tab_fpga_flare)
+        self.label_flare_8.setObjectName(u"label_flare_8")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_8, 8, 0, 1, 1)
+
+        self.doubleSpinBox_flare_timeout_seconds = QDoubleSpinBox(self.tab_fpga_flare)
+        self.doubleSpinBox_flare_timeout_seconds.setObjectName(u"doubleSpinBox_flare_timeout_seconds")
+        self.doubleSpinBox_flare_timeout_seconds.setMinimum(0.001000000000000)
+        self.doubleSpinBox_flare_timeout_seconds.setMaximum(3600.000000000000000)
+        self.doubleSpinBox_flare_timeout_seconds.setDecimals(3)
+        self.doubleSpinBox_flare_timeout_seconds.setValue(2.000000000000000)
+
+        self.gridLayout_flare_settings.addWidget(self.doubleSpinBox_flare_timeout_seconds, 8, 1, 1, 1)
+
+        self.label_flare_9 = QLabel(self.tab_fpga_flare)
+        self.label_flare_9.setObjectName(u"label_flare_9")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_9, 9, 0, 1, 1)
+
+        self.doubleSpinBox_flare_http_timeout_seconds = QDoubleSpinBox(self.tab_fpga_flare)
+        self.doubleSpinBox_flare_http_timeout_seconds.setObjectName(u"doubleSpinBox_flare_http_timeout_seconds")
+        self.doubleSpinBox_flare_http_timeout_seconds.setMinimum(0.001000000000000)
+        self.doubleSpinBox_flare_http_timeout_seconds.setMaximum(3600.000000000000000)
+        self.doubleSpinBox_flare_http_timeout_seconds.setDecimals(3)
+        self.doubleSpinBox_flare_http_timeout_seconds.setValue(5.000000000000000)
+
+        self.gridLayout_flare_settings.addWidget(self.doubleSpinBox_flare_http_timeout_seconds, 9, 1, 1, 1)
+
+
+        self.verticalLayout_flare.addLayout(self.gridLayout_flare_settings)
+
+        self.horizontalLayout_flare_commands = QHBoxLayout()
+        self.horizontalLayout_flare_commands.setObjectName(u"horizontalLayout_flare_commands")
+        self.pushButton_flare_connect = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_connect.setObjectName(u"pushButton_flare_connect")
+
+        self.horizontalLayout_flare_commands.addWidget(self.pushButton_flare_connect)
+
+        self.pushButton_flare_disconnect = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_disconnect.setObjectName(u"pushButton_flare_disconnect")
+
+        self.horizontalLayout_flare_commands.addWidget(self.pushButton_flare_disconnect)
+
+        self.pushButton_flare_status = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_status.setObjectName(u"pushButton_flare_status")
+
+        self.horizontalLayout_flare_commands.addWidget(self.pushButton_flare_status)
+
+        self.pushButton_flare_stop = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_stop.setObjectName(u"pushButton_flare_stop")
+
+        self.horizontalLayout_flare_commands.addWidget(self.pushButton_flare_stop)
+
+        self.pushButton_flare_reset = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_reset.setObjectName(u"pushButton_flare_reset")
+
+        self.horizontalLayout_flare_commands.addWidget(self.pushButton_flare_reset)
+
+
+        self.verticalLayout_flare.addLayout(self.horizontalLayout_flare_commands)
+
+        self.label_flare_status = QLabel(self.tab_fpga_flare)
+        self.label_flare_status.setObjectName(u"label_flare_status")
+        self.label_flare_status.setWordWrap(True)
+
+        self.verticalLayout_flare.addWidget(self.label_flare_status)
+
+        self.checkBox_flare_dummy = QCheckBox(self.tab_fpga_flare)
+        self.checkBox_flare_dummy.setObjectName(u"checkBox_flare_dummy")
+
+        self.verticalLayout_flare.addWidget(self.checkBox_flare_dummy)
+
+        self.horizontalLayout_flare_debug = QHBoxLayout()
+        self.horizontalLayout_flare_debug.setObjectName(u"horizontalLayout_flare_debug")
+        self.lineEdit_flare_register = QLineEdit(self.tab_fpga_flare)
+        self.lineEdit_flare_register.setObjectName(u"lineEdit_flare_register")
+
+        self.horizontalLayout_flare_debug.addWidget(self.lineEdit_flare_register)
+
+        self.lineEdit_flare_value = QLineEdit(self.tab_fpga_flare)
+        self.lineEdit_flare_value.setObjectName(u"lineEdit_flare_value")
+
+        self.horizontalLayout_flare_debug.addWidget(self.lineEdit_flare_value)
+
+        self.pushButton_flare_read = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_read.setObjectName(u"pushButton_flare_read")
+
+        self.horizontalLayout_flare_debug.addWidget(self.pushButton_flare_read)
+
+        self.pushButton_flare_write = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_write.setObjectName(u"pushButton_flare_write")
+
+        self.horizontalLayout_flare_debug.addWidget(self.pushButton_flare_write)
+
+        self.pushButton_flare_read_all = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_read_all.setObjectName(u"pushButton_flare_read_all")
+
+        self.horizontalLayout_flare_debug.addWidget(self.pushButton_flare_read_all)
+
+
+        self.verticalLayout_flare.addLayout(self.horizontalLayout_flare_debug)
+
+        self.tableWidget_flare_registers = QTableWidget(self.tab_fpga_flare)
+        if (self.tableWidget_flare_registers.columnCount() < 6):
+            self.tableWidget_flare_registers.setColumnCount(6)
+        __qtablewidgetitem = QTableWidgetItem()
+        self.tableWidget_flare_registers.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        self.tableWidget_flare_registers.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        self.tableWidget_flare_registers.setHorizontalHeaderItem(2, __qtablewidgetitem2)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        self.tableWidget_flare_registers.setHorizontalHeaderItem(3, __qtablewidgetitem3)
+        __qtablewidgetitem4 = QTableWidgetItem()
+        self.tableWidget_flare_registers.setHorizontalHeaderItem(4, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        self.tableWidget_flare_registers.setHorizontalHeaderItem(5, __qtablewidgetitem5)
+        self.tableWidget_flare_registers.setObjectName(u"tableWidget_flare_registers")
+        self.tableWidget_flare_registers.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+
+        self.verticalLayout_flare.addWidget(self.tableWidget_flare_registers)
+
+        self.plainTextEdit_flare_log = QPlainTextEdit(self.tab_fpga_flare)
+        self.plainTextEdit_flare_log.setObjectName(u"plainTextEdit_flare_log")
+        self.plainTextEdit_flare_log.setReadOnly(True)
+        self.plainTextEdit_flare_log.setMaximumBlockCount(1000)
+
+        self.verticalLayout_flare.addWidget(self.plainTextEdit_flare_log)
+
+        self.horizontalLayout_flare_log = QHBoxLayout()
+        self.horizontalLayout_flare_log.setObjectName(u"horizontalLayout_flare_log")
+        self.pushButton_flare_clear_log = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_clear_log.setObjectName(u"pushButton_flare_clear_log")
+
+        self.horizontalLayout_flare_log.addWidget(self.pushButton_flare_clear_log)
+
+        self.pushButton_flare_copy_log = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_copy_log.setObjectName(u"pushButton_flare_copy_log")
+
+        self.horizontalLayout_flare_log.addWidget(self.pushButton_flare_copy_log)
+
+        self.pushButton_flare_export_log = QPushButton(self.tab_fpga_flare)
+        self.pushButton_flare_export_log.setObjectName(u"pushButton_flare_export_log")
+
+        self.horizontalLayout_flare_log.addWidget(self.pushButton_flare_export_log)
+
+
+        self.verticalLayout_flare.addLayout(self.horizontalLayout_flare_log)
+
+        self.tabWidget_fpga_backends.addTab(self.tab_fpga_flare, "")
+
+        self.verticalLayout_fpga_backends.addWidget(self.tabWidget_fpga_backends)
 
         self.tabWidget_2.addTab(self.tab_2, "")
         self.tab_8 = QWidget()
@@ -2087,6 +2348,7 @@ class Ui_MainWindowDesign(object):
         self.gridLayout_105.addWidget(self.checkBox_fifo_analog, 2, 0, 1, 1)
 
         self.comboBox_detector_model = ElidedComboBox(self.groupBox_9)
+        self.comboBox_detector_model.addItem("")
         self.comboBox_detector_model.addItem("")
         self.comboBox_detector_model.addItem("")
         self.comboBox_detector_model.addItem("")
@@ -4339,14 +4601,14 @@ class Ui_MainWindowDesign(object):
         self.tableWidget_markers = QTableWidget(self.scrollAreaWidgetContents_7)
         if (self.tableWidget_markers.columnCount() < 4):
             self.tableWidget_markers.setColumnCount(4)
-        __qtablewidgetitem = QTableWidgetItem()
-        self.tableWidget_markers.setHorizontalHeaderItem(0, __qtablewidgetitem)
-        __qtablewidgetitem1 = QTableWidgetItem()
-        self.tableWidget_markers.setHorizontalHeaderItem(1, __qtablewidgetitem1)
-        __qtablewidgetitem2 = QTableWidgetItem()
-        self.tableWidget_markers.setHorizontalHeaderItem(2, __qtablewidgetitem2)
-        __qtablewidgetitem3 = QTableWidgetItem()
-        self.tableWidget_markers.setHorizontalHeaderItem(3, __qtablewidgetitem3)
+        __qtablewidgetitem6 = QTableWidgetItem()
+        self.tableWidget_markers.setHorizontalHeaderItem(0, __qtablewidgetitem6)
+        __qtablewidgetitem7 = QTableWidgetItem()
+        self.tableWidget_markers.setHorizontalHeaderItem(1, __qtablewidgetitem7)
+        __qtablewidgetitem8 = QTableWidgetItem()
+        self.tableWidget_markers.setHorizontalHeaderItem(2, __qtablewidgetitem8)
+        __qtablewidgetitem9 = QTableWidgetItem()
+        self.tableWidget_markers.setHorizontalHeaderItem(3, __qtablewidgetitem9)
         self.tableWidget_markers.setObjectName(u"tableWidget_markers")
         self.tableWidget_markers.setFont(font1)
         self.tableWidget_markers.setColumnCount(4)
@@ -4638,6 +4900,50 @@ class Ui_MainWindowDesign(object):
         self.comboBox_fifobackend.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Python nifpga library", None))
 
         self.label_configured_fifo_depth.setText(QCoreApplication.translate("MainWindowDesign", u"0", None))
+        self.tabWidget_fpga_backends.setTabText(self.tabWidget_fpga_backends.indexOf(self.tab_fpga_ni), QCoreApplication.translate("MainWindowDesign", u"NI", None))
+        self.label_flare_0.setText(QCoreApplication.translate("MainWindowDesign", u"Host", None))
+        self.lineEdit_flare_host.setText(QCoreApplication.translate("MainWindowDesign", u"mmskria3", None))
+        self.label_flare_1.setText(QCoreApplication.translate("MainWindowDesign", u"HTTP port", None))
+        self.label_flare_2.setText(QCoreApplication.translate("MainWindowDesign", u"Mode", None))
+        self.comboBox_flare_mode.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"master", None))
+        self.comboBox_flare_mode.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"slave", None))
+
+        self.label_flare_3.setText(QCoreApplication.translate("MainWindowDesign", u"Listener bind address", None))
+        self.lineEdit_flare_bind_host.setText(QCoreApplication.translate("MainWindowDesign", u"0.0.0.0", None))
+        self.label_flare_4.setText(QCoreApplication.translate("MainWindowDesign", u"Advertised GUI address (empty = automatic)", None))
+        self.label_flare_5.setText(QCoreApplication.translate("MainWindowDesign", u"GUI receiver port (0 = automatic)", None))
+        self.label_flare_6.setText(QCoreApplication.translate("MainWindowDesign", u"Bins per DMA packet", None))
+        self.label_flare_7.setText(QCoreApplication.translate("MainWindowDesign", u"Buffer seconds", None))
+        self.label_flare_8.setText(QCoreApplication.translate("MainWindowDesign", u"Socket timeout seconds", None))
+        self.label_flare_9.setText(QCoreApplication.translate("MainWindowDesign", u"HTTP timeout seconds", None))
+        self.pushButton_flare_connect.setText(QCoreApplication.translate("MainWindowDesign", u"Connect", None))
+        self.pushButton_flare_disconnect.setText(QCoreApplication.translate("MainWindowDesign", u"Disconnect", None))
+        self.pushButton_flare_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status", None))
+        self.pushButton_flare_stop.setText(QCoreApplication.translate("MainWindowDesign", u"Stop (hold outputs)", None))
+        self.pushButton_flare_reset.setText(QCoreApplication.translate("MainWindowDesign", u"Reset (zero outputs)", None))
+        self.label_flare_status.setText(QCoreApplication.translate("MainWindowDesign", u"Disconnected. Master supports finite raster scans and DFD with laser sequencing. Slave timing, ADC and TTM are unavailable.", None))
+        self.checkBox_flare_dummy.setText(QCoreApplication.translate("MainWindowDesign", u"Synthetic detector events (physical inputs and outputs remain active)", None))
+        self.lineEdit_flare_register.setPlaceholderText(QCoreApplication.translate("MainWindowDesign", u"Register name or 0x address", None))
+        self.lineEdit_flare_value.setPlaceholderText(QCoreApplication.translate("MainWindowDesign", u"JSON integer or complete array", None))
+        self.pushButton_flare_read.setText(QCoreApplication.translate("MainWindowDesign", u"Read", None))
+        self.pushButton_flare_write.setText(QCoreApplication.translate("MainWindowDesign", u"Write", None))
+        self.pushButton_flare_read_all.setText(QCoreApplication.translate("MainWindowDesign", u"Read all", None))
+        ___qtablewidgetitem = self.tableWidget_flare_registers.horizontalHeaderItem(0)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindowDesign", u"Name", None))
+        ___qtablewidgetitem1 = self.tableWidget_flare_registers.horizontalHeaderItem(1)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("MainWindowDesign", u"Address", None))
+        ___qtablewidgetitem2 = self.tableWidget_flare_registers.horizontalHeaderItem(2)
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindowDesign", u"Type", None))
+        ___qtablewidgetitem3 = self.tableWidget_flare_registers.horizontalHeaderItem(3)
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("MainWindowDesign", u"Access", None))
+        ___qtablewidgetitem4 = self.tableWidget_flare_registers.horizontalHeaderItem(4)
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("MainWindowDesign", u"Policy", None))
+        ___qtablewidgetitem5 = self.tableWidget_flare_registers.horizontalHeaderItem(5)
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("MainWindowDesign", u"Value", None))
+        self.pushButton_flare_clear_log.setText(QCoreApplication.translate("MainWindowDesign", u"Clear log", None))
+        self.pushButton_flare_copy_log.setText(QCoreApplication.translate("MainWindowDesign", u"Copy log", None))
+        self.pushButton_flare_export_log.setText(QCoreApplication.translate("MainWindowDesign", u"Export log", None))
+        self.tabWidget_fpga_backends.setTabText(self.tabWidget_fpga_backends.indexOf(self.tab_fpga_flare), QCoreApplication.translate("MainWindowDesign", u"Kria Flare", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_2), QCoreApplication.translate("MainWindowDesign", u"FPGA", None))
         self.groupBox_20.setTitle(QCoreApplication.translate("MainWindowDesign", u"Primary Position System (X Y Z)", None))
         self.label_16.setText(QCoreApplication.translate("MainWindowDesign", u"CalibrationFactors ", None))
@@ -4832,6 +5138,7 @@ class Ui_MainWindowDesign(object):
         self.comboBox_detector_model.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"TCP/IP - PI SPAD23R (Intensity)", None))
         self.comboBox_detector_model.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"TCP/IP - PI SPAD23R (TS mode - uimg)", None))
         self.comboBox_detector_model.setItemText(3, QCoreApplication.translate("MainWindowDesign", u"Disable", None))
+        self.comboBox_detector_model.setItemText(4, QCoreApplication.translate("MainWindowDesign", u"TCP/IP - FPGA Flare", None))
 
         self.label_detector_model.setText(QCoreApplication.translate("MainWindowDesign", u"Detector", None))
         self.checkBox_fifo_digital.setText(QCoreApplication.translate("MainWindowDesign", u"Digital", None))
@@ -5324,14 +5631,14 @@ class Ui_MainWindowDesign(object):
         self.pushButton_15.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Move the offset to the position on the row selected on the table below </p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_15.setText(QCoreApplication.translate("MainWindowDesign", u"Move to selected row", None))
-        ___qtablewidgetitem = self.tableWidget_markers.horizontalHeaderItem(0)
-        ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
-        ___qtablewidgetitem1 = self.tableWidget_markers.horizontalHeaderItem(1)
-        ___qtablewidgetitem1.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
-        ___qtablewidgetitem2 = self.tableWidget_markers.horizontalHeaderItem(2)
-        ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
-        ___qtablewidgetitem3 = self.tableWidget_markers.horizontalHeaderItem(3)
-        ___qtablewidgetitem3.setText(QCoreApplication.translate("MainWindowDesign", u"Comments", None))
+        ___qtablewidgetitem6 = self.tableWidget_markers.horizontalHeaderItem(0)
+        ___qtablewidgetitem6.setText(QCoreApplication.translate("MainWindowDesign", u"X", None))
+        ___qtablewidgetitem7 = self.tableWidget_markers.horizontalHeaderItem(1)
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("MainWindowDesign", u"Y", None))
+        ___qtablewidgetitem8 = self.tableWidget_markers.horizontalHeaderItem(2)
+        ___qtablewidgetitem8.setText(QCoreApplication.translate("MainWindowDesign", u"Z", None))
+        ___qtablewidgetitem9 = self.tableWidget_markers.horizontalHeaderItem(3)
+        ___qtablewidgetitem9.setText(QCoreApplication.translate("MainWindowDesign", u"Comments", None))
 #if QT_CONFIG(tooltip)
         self.tableWidget_markers.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Table of position selected on the image. To add a point double-click on the image.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

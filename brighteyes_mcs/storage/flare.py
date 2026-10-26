@@ -1,0 +1,216 @@
+"""Lossless Flare raw and HDF5 storage, separate from the NI v0.0.1 format."""
+
+from datetime import datetime
+import json
+from pathlib import Path
+
+import h5py
+
+
+FLARE_FORMAT = "brighteyes-flare-1"
+FLARE_DFD_FORMAT = "brighteyes-flare-dfd-1"
+
+
+def timestamp():
+    return datetime.now().astimezone().isoformat()
+
+
+class FlareRecording:
+    def __init__(self, filename, configuration, *, raw_only=False):
+        self.path = Path(filename)
+        self.raw_path = self.path.with_suffix(".flare.raw")
+        self.metadata_path = self.path.with_suffix(".flare.json")
+        if any(p.exists() for p in (self.path, self.raw_path, self.metadata_path)):
+            raise FileExistsError("Flare output already exists; choose a new filename")
+        self.configuration = dict(configuration)
+        self.dfd = configuration.get("acquisition_mode") == "dfd"
+        self.format = FLARE_DFD_FORMAT if self.dfd else FLARE_FORMAT
+        self.raw_only = raw_only
+        self.h5 = None
+        self.data = None
+        self.written_bins = 0
+        self.metadata = {
+            "format": self.format,
+            "raw_format": "DFD1 raw little-endian" if self.dfd else "FLR4 raw little-endian",
+            "configuration": dict(configuration),
+            "started_at": timestamp(),
+            "result": "partial",
+            "complete": False,
+            "raw_file": self.raw_path.name,
+        }
+        # Persist initial identity before receiving bytes so interrupted runs remain identifiable.
+        self.metadata_path.write_text(json.dumps(self.metadata, indent=2), encoding="utf-8")
+        if not raw_only:
+            try:
+                self.h5 = h5py.File(self.path, "x")
+                self.h5.attrs["data_format_version"] = self.format
+                c = configuration
+                self.data = self.h5.create_dataset(
+                    "data",
+                    shape=(
+                        c["repetitions"],
+                        c["frames"],
+                        c["lines"],
+                        c["pixels"],
+                        c["histogram_bins"] if self.dfd else c["bins_per_pixel"],
+                        c["stream_channels"] if self.dfd else c["channels"],
+                    ),
+                    dtype="<u2" if self.dfd else "<u4",
+                    chunks=True,
+                )
+                self.h5.attrs["complete"] = False
+                self.h5.flush()
+            except Exception:
+                if self.h5 is not None:
+                    self.h5.close()
+                raise
+
+    def append(self, index, counts):
+        if self.data is None or len(counts) == 0:
+            return
+        c = self.configuration
+        if self.dfd:
+            for offset, histogram in enumerate(counts):
+                n = index + offset
+                x, n = n % c["pixels"], n // c["pixels"]
+                y, n = n % c["lines"], n // c["lines"]
+                z, rep = n % c["frames"], n // c["frames"]
+                self.data[rep, z, y, x, :, :] = histogram
+            self.written_bins = index + len(counts)
+            return
+        offset = 0
+        while offset < len(counts):
+            n = index + offset
+            b = n % c["bins_per_pixel"]
+            n //= c["bins_per_pixel"]
+            x = n % c["pixels"]
+            n //= c["pixels"]
+            y = n % c["lines"]
+            n //= c["lines"]
+            z, rep = n % c["frames"], n // c["frames"]
+            remaining = len(counts) - offset
+            if b or remaining < c["bins_per_pixel"]:
+                take = min(remaining, c["bins_per_pixel"] - b)
+                self.data[rep, z, y, x, b : b + take, :] = counts[offset : offset + take]
+            else:
+                pixels = min(c["pixels"] - x, remaining // c["bins_per_pixel"])
+                take = pixels * c["bins_per_pixel"]
+                self.data[rep, z, y, x : x + pixels, :, :] = counts[offset : offset + take].reshape(
+                    pixels, c["bins_per_pixel"], c["channels"]
+                )
+            offset += take
+            self.written_bins = index + offset
+
+    def finish(self, metadata):
+        self.metadata.update(metadata)
+        self.metadata["stored_bins"] = self.written_bins
+        self.metadata["finished_at"] = timestamp()
+        try:
+            if self.h5 is not None:
+                self._write_reader_metadata()
+                self.h5.attrs["complete"] = bool(self.metadata.get("complete"))
+                self.h5.attrs["validated_bins"] = int(self.metadata.get("validated_bins", 0))
+                self.h5.attrs["stored_bins"] = self.written_bins
+                if self.dfd:
+                    self.h5.attrs["validated_records"] = int(self.metadata.get("validated_bins", 0))
+                    self.h5.attrs["stored_records"] = self.written_bins
+                    for key in ("stream_format", "histogram_bins", "reference_channel_index", "count_bits", "detector_channels"):
+                        self.h5.attrs[key] = self.configuration[key]
+                self.h5.attrs["flare_metadata"] = json.dumps(self.metadata)
+                self.h5.flush()
+        except Exception as error:
+            self.metadata.update(
+                complete=False, result="partial", error=f"File finalization failed: {error}"
+            )
+            raise
+        finally:
+            if self.h5 is not None:
+                self.h5.close()
+                self.h5 = None
+            self.metadata_path.write_text(json.dumps(self.metadata, indent=2), encoding="utf-8")
+
+    def checkpoint(self, metadata):
+        self.metadata.update(metadata)
+        self.metadata_path.write_text(json.dumps(self.metadata, indent=2), encoding="utf-8")
+
+    def _write_reader_metadata(self):
+        """Expose common analysis metadata while keeping the Flare format identity."""
+        c = self.configuration
+        gui = dict(self.metadata.get("configurationGUI", {}))
+        gui.update(
+            nx=c["pixels"],
+            ny=c["lines"],
+            nframe=c["frames"],
+            nrep=c["repetitions"],
+            timebin_per_pixel=91 if self.dfd else c["bins_per_pixel"],
+            spad_number_of_channels=c["channels"],
+            detector_model="FPGA Flare",
+        )
+        normalized = {
+            "nx": c["pixels"],
+            "ny": c["lines"],
+            "nz": c["frames"],
+            "nrep": c["repetitions"],
+            "time_bins": 91 if self.dfd else c["bins_per_pixel"],
+            "dfd_active": self.dfd,
+        }
+        clock = self.metadata.get("firmware", {}).get("clock_hz")
+        if clock:
+            pixel_us = (c["pixel_sys_cycles"] if self.dfd else c["dwell"] * c["bins_per_pixel"]) * 1e6 / clock
+            gui["time_resolution"] = pixel_us / (91 if self.dfd else c["bins_per_pixel"])
+            normalized["time_resolution_us"] = gui["time_resolution"]
+            normalized["pixel_dwell_time_us"] = pixel_us
+        if self.dfd:
+            gui.update(DFD_Activate=True, DFDnbins=91, dfd_cycle_mhz=c["laser_hz"] / 1e6, clk_base_multiplier=1)
+            normalized.update(
+                stream_channels=c["stream_channels"], reference_channel_index=c["reference_channel_index"],
+                dfd_nbins=91, dfd_cycle_mhz=c["laser_hz"] / 1e6,
+                laser_frequency_mhz=c["laser_hz"] / 1e6,
+                dfd_bin_width_ps=1e12 / c["laser_hz"] / 91,
+            )
+        for axis, count in (("x", c["pixels"]), ("y", c["lines"]), ("z", c["frames"])):
+            if f"range_{axis}" in gui:
+                normalized[f"range_{axis}_um"] = gui[f"range_{axis}"]
+                normalized[f"pixel_size_{axis}_um"] = gui[f"range_{axis}"] / count
+            if f"offset_{axis}_um" in gui:
+                normalized[f"offset_{axis}_um"] = gui[f"offset_{axis}_um"]
+        for group_name, values in (
+            ("configurationGUI", gui),
+            ("raw/metadata", normalized),
+            ("configurationFlare", c),
+        ):
+            group = self.h5.require_group(group_name)
+            for key, value in values.items():
+                if isinstance(value, (str, int, float, bool)):
+                    group.attrs[key] = value
+
+
+def convert_flare_raw(raw_filename, metadata_filename, output_filename):
+    """Convert only explicitly identified Flare files, preserving partial status."""
+    from ..acquisition.detectors.flare.decoder import FlareDecoder
+    from ..acquisition.detectors.flare.dfd import FlareDfdDecoder
+
+    metadata = json.loads(Path(metadata_filename).read_text(encoding="utf-8"))
+    if metadata.get("format") not in (FLARE_FORMAT, FLARE_DFD_FORMAT):
+        raise ValueError("Metadata does not identify a supported Flare recording")
+    decoder = (FlareDfdDecoder if metadata["format"] == FLARE_DFD_FORMAT else FlareDecoder)(metadata["configuration"], metadata["run_id"])
+    recording = FlareRecording(output_filename, metadata["configuration"])
+    result = dict(metadata)
+    try:
+        with open(raw_filename, "rb") as source:
+            while chunk := source.read(262144):
+                index = decoder.index
+                recording.append(index, decoder.feed(chunk))
+        if metadata["format"] == FLARE_DFD_FORMAT and not metadata.get("complete"):
+            result.update(decoder.finish(cancelled=True))
+        else:
+            decoder.finish()
+    except Exception as error:
+        result.update(complete=False, result="partial", error=str(error))
+        raise
+    finally:
+        result["validated_bins"] = decoder.index
+        result["source_raw_file"] = str(raw_filename)
+        result["raw_file"] = str(Path(raw_filename).resolve())
+        recording.finish(result)
+    return str(output_filename)

@@ -8,16 +8,20 @@ DETECTOR_SPAD_UI = "FPGA - SPAD"
 DETECTOR_PISPAD23_UI = "TCP/IP - PI SPAD23R (Intensity)"
 DETECTOR_PISPAD23_TS_UIMG = "TCP/IP - PI SPAD23R (TS mode - uimg)"
 DETECTOR_DISABLED = "Disable"
+DETECTOR_FLARE = "FPGA Flare"
+DETECTOR_FLARE_UI = "TCP/IP - FPGA Flare"
 
 DETECTOR_SPAD_MODELS = (DETECTOR_SPAD_ARRAY, DETECTOR_SPAD_TTM)
 DETECTOR_PISPAD23_MODELS = (DETECTOR_PISPAD23, DETECTOR_PISPAD23_TT)
 DETECTOR_PISPAD23_TS_MODELS = (DETECTOR_PISPAD23_TS_UIMG,)
-DETECTOR_MODELS = DETECTOR_SPAD_MODELS + DETECTOR_PISPAD23_MODELS + DETECTOR_PISPAD23_TS_MODELS + (DETECTOR_DISABLED,)
+DETECTOR_MODELS = DETECTOR_SPAD_MODELS + DETECTOR_PISPAD23_MODELS + DETECTOR_PISPAD23_TS_MODELS + (DETECTOR_DISABLED, DETECTOR_FLARE)
 
 
 def normalize_detector_model(detector_model):
     if detector_model in DETECTOR_MODELS:
         return detector_model
+    if detector_model == DETECTOR_FLARE_UI:
+        return DETECTOR_FLARE
     if detector_model == DETECTOR_SPAD_UI:
         return DETECTOR_SPAD_ARRAY
     if detector_model == DETECTOR_PISPAD23_UI:
@@ -44,5 +48,11 @@ def detector_uses_nifpga_fifo(detector_model):
     return detector_uses_spad_pipeline(detector_model)
 
 
-def detector_uses_nifpga_control(detector_model):
+def detector_uses_nifpga_control(detector_model, flare_mode="master"):
+    if detector_uses_flare(detector_model):
+        return flare_mode == "slave"
     return normalize_detector_model(detector_model) in DETECTOR_MODELS
+
+
+def detector_uses_flare(detector_model):
+    return normalize_detector_model(detector_model) == DETECTOR_FLARE

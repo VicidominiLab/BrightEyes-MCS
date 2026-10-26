@@ -254,8 +254,13 @@ typed configuration is not yet the main runtime representation.
 | Normal acquisition | no | no | enabled | enabled | acquisition/preview loop |
 | RAW streaming | no | yes | disabled | metadata is handled separately by the GUI; bulk HDF5 writer is disabled | detector-specific RAW writer |
 
-All three modes still use the scan-control FPGA session. The difference is how
-detector data are received, processed and stored.
+These legacy modes use the NI scan-control FPGA session. The difference is how
+detector data are received, processed and stored. Selecting **TCP/IP - FPGA Flare**
+routes control to the separate `FlareController` and Qt-independent
+`FlareAcquisition` service. Its HTTP client, listening TCP receiver, native U32
+decoder and recording path do not initialize NI. Slave acquisition is gated until
+firmware supports external NI timing. See [Kria Flare](flare.md) for supported
+features, connection setup and diagnostics.
 
 ### Detector data paths
 
@@ -344,7 +349,9 @@ compatibility.
 
 ### Standard HDF5
 
-Current format version: **0.0.1**.
+Legacy NI/PI format version: **0.0.1**. Flare uses **brighteyes-flare-1** with
+U32 counts, its own metadata and lossless raw conversion; its layout is described
+in [Flare files and conversion](flare.md#files-and-offline-conversion).
 
 ```text
 /

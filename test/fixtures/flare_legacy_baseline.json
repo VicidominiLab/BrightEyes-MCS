@@ -1,0 +1,746 @@
+[
+  {
+    "detector": "FPGA - SPAD",
+    "channels": 25,
+    "model": "SPAD Array",
+    "pipeline": "SpadDetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": true,
+    "writes": [
+      [
+        "max_pixel",
+        3
+      ],
+      [
+        "max_line",
+        2
+      ],
+      [
+        "max_frame",
+        4
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        true
+      ],
+      [
+        "stream_out_aux_enable",
+        true
+      ],
+      [
+        "dfd_enable",
+        true
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": true,
+      "stream_out_aux_enable": true,
+      "dfd_enable": true,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "FPGA - SPAD",
+    "channels": 49,
+    "model": "SPAD Array",
+    "pipeline": "SpadDetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": true,
+    "writes": [
+      [
+        "max_pixel",
+        3
+      ],
+      [
+        "max_line",
+        2
+      ],
+      [
+        "max_frame",
+        4
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        true
+      ],
+      [
+        "stream_out_aux_enable",
+        true
+      ],
+      [
+        "dfd_enable",
+        true
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": true,
+      "stream_out_aux_enable": true,
+      "dfd_enable": true,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "SPAD_TTM",
+    "channels": 25,
+    "model": "SPAD_TTM",
+    "pipeline": "SpadDetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": true,
+    "writes": [
+      [
+        "max_pixel",
+        3
+      ],
+      [
+        "max_line",
+        2
+      ],
+      [
+        "max_frame",
+        4
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        true
+      ],
+      [
+        "stream_out_aux_enable",
+        true
+      ],
+      [
+        "dfd_enable",
+        true
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": true,
+      "stream_out_aux_enable": true,
+      "dfd_enable": true,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "SPAD_TTM",
+    "channels": 49,
+    "model": "SPAD_TTM",
+    "pipeline": "SpadDetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": true,
+    "writes": [
+      [
+        "max_pixel",
+        3
+      ],
+      [
+        "max_line",
+        2
+      ],
+      [
+        "max_frame",
+        4
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        true
+      ],
+      [
+        "stream_out_aux_enable",
+        true
+      ],
+      [
+        "dfd_enable",
+        true
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": true,
+      "stream_out_aux_enable": true,
+      "dfd_enable": true,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "TCP/IP - PI SPAD23R (Intensity)",
+    "channels": 25,
+    "model": "PISPAD23",
+    "pipeline": "PISPAD23DetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": false,
+    "writes": [
+      [
+        "max_pixel",
+        4
+      ],
+      [
+        "max_line",
+        3
+      ],
+      [
+        "max_frame",
+        5
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        false
+      ],
+      [
+        "stream_out_aux_enable",
+        false
+      ],
+      [
+        "dfd_enable",
+        false
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": false,
+      "stream_out_aux_enable": false,
+      "dfd_enable": false,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "TCP/IP - PI SPAD23R (Intensity)",
+    "channels": 49,
+    "model": "PISPAD23",
+    "pipeline": "PISPAD23DetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": false,
+    "writes": [
+      [
+        "max_pixel",
+        4
+      ],
+      [
+        "max_line",
+        3
+      ],
+      [
+        "max_frame",
+        5
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        false
+      ],
+      [
+        "stream_out_aux_enable",
+        false
+      ],
+      [
+        "dfd_enable",
+        false
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": false,
+      "stream_out_aux_enable": false,
+      "dfd_enable": false,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "PISPAD23TT",
+    "channels": 25,
+    "model": "PISPAD23TT",
+    "pipeline": "PISPAD23DetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": false,
+    "writes": [
+      [
+        "max_pixel",
+        4
+      ],
+      [
+        "max_line",
+        3
+      ],
+      [
+        "max_frame",
+        5
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        false
+      ],
+      [
+        "stream_out_aux_enable",
+        false
+      ],
+      [
+        "dfd_enable",
+        false
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": false,
+      "stream_out_aux_enable": false,
+      "dfd_enable": false,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "PISPAD23TT",
+    "channels": 49,
+    "model": "PISPAD23TT",
+    "pipeline": "PISPAD23DetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": false,
+    "writes": [
+      [
+        "max_pixel",
+        4
+      ],
+      [
+        "max_line",
+        3
+      ],
+      [
+        "max_frame",
+        5
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        false
+      ],
+      [
+        "stream_out_aux_enable",
+        false
+      ],
+      [
+        "dfd_enable",
+        false
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": false,
+      "stream_out_aux_enable": false,
+      "dfd_enable": false,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "TCP/IP - PI SPAD23R (TS mode - uimg)",
+    "channels": 25,
+    "model": "TCP/IP - PI SPAD23R (TS mode - uimg)",
+    "pipeline": "PISPAD23MicroimagePipeline",
+    "ni_control": true,
+    "ni_fifo": false,
+    "writes": [
+      [
+        "max_pixel",
+        4
+      ],
+      [
+        "max_line",
+        3
+      ],
+      [
+        "max_frame",
+        5
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        false
+      ],
+      [
+        "stream_out_aux_enable",
+        false
+      ],
+      [
+        "dfd_enable",
+        false
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": false,
+      "stream_out_aux_enable": false,
+      "dfd_enable": false,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "TCP/IP - PI SPAD23R (TS mode - uimg)",
+    "channels": 49,
+    "model": "TCP/IP - PI SPAD23R (TS mode - uimg)",
+    "pipeline": "PISPAD23MicroimagePipeline",
+    "ni_control": true,
+    "ni_fifo": false,
+    "writes": [
+      [
+        "max_pixel",
+        4
+      ],
+      [
+        "max_line",
+        3
+      ],
+      [
+        "max_frame",
+        5
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        false
+      ],
+      [
+        "stream_out_aux_enable",
+        false
+      ],
+      [
+        "dfd_enable",
+        false
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": false,
+      "stream_out_aux_enable": false,
+      "dfd_enable": false,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "Disable",
+    "channels": 25,
+    "model": "Disable",
+    "pipeline": "DisabledDetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": false,
+    "writes": [
+      [
+        "max_pixel",
+        3
+      ],
+      [
+        "max_line",
+        2
+      ],
+      [
+        "max_frame",
+        4
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        false
+      ],
+      [
+        "stream_out_aux_enable",
+        false
+      ],
+      [
+        "dfd_enable",
+        false
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": false,
+      "stream_out_aux_enable": false,
+      "dfd_enable": false,
+      "start_command": true
+    }
+  },
+  {
+    "detector": "Disable",
+    "channels": 49,
+    "model": "Disable",
+    "pipeline": "DisabledDetectorPipeline",
+    "ni_control": true,
+    "ni_fifo": false,
+    "writes": [
+      [
+        "max_pixel",
+        3
+      ],
+      [
+        "max_line",
+        2
+      ],
+      [
+        "max_frame",
+        4
+      ],
+      [
+        "max_repetition",
+        3
+      ],
+      [
+        "time_bin_dwell_cycles",
+        2000
+      ],
+      [
+        "max_time_bins_per_pixel",
+        5
+      ],
+      [
+        "stream_out_main_enable",
+        false
+      ],
+      [
+        "stream_out_aux_enable",
+        false
+      ],
+      [
+        "dfd_enable",
+        false
+      ],
+      [
+        "start_command",
+        true
+      ]
+    ],
+    "registers": {
+      "max_pixel": 3,
+      "max_line": 2,
+      "max_frame": 4,
+      "max_repetition": 3,
+      "time_bin_dwell_cycles": 2000,
+      "max_time_bins_per_pixel": 5,
+      "stream_out_main_enable": false,
+      "stream_out_aux_enable": false,
+      "dfd_enable": false,
+      "start_command": true
+    }
+  }
+]

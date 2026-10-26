@@ -90,6 +90,8 @@ from ...api import FastAPIServerThread
 from ...storage.raw import convert_raw_acquisition, metadata_filename, raw_output_files
 from ...acquisition.detectors.models import (
     DETECTOR_DISABLED,
+    DETECTOR_FLARE_UI,
+    detector_uses_flare,
     DETECTOR_PISPAD23_TS_UIMG,
     DETECTOR_PISPAD23_UI,
     DETECTOR_SPAD_ARRAY,
@@ -455,7 +457,10 @@ class MainWindow(QMainWindow):
         self.ui.doubleSpinBox_trace_dfd_start_percent.valueChanged.connect(self.plotSettingsChanged)
         self.ui.doubleSpinBox_trace_dfd_end_percent.valueChanged.connect(self.plotSettingsChanged)
 
+        from ..controllers.flare import FlareController
+        self.flare = FlareController(self)
         self.configuration_helper = self.configuration_helper_init()
+        self.configuration_helper.update(self.flare.configuration_fields())
         self.software_trigger = SoftwareTriggerController(self)
 
         self.ui.pushButton_loadCfg.clicked.connect(self.LoadConfigurationCmd)
@@ -741,6 +746,7 @@ class MainWindow(QMainWindow):
         self.configurationGUI_dict_beforeStart = {}
 
         self.im_widget_plot_item.sigRangeChanged.connect(self.axesRangeChanged)
+        self.preview_view_box.sigRangeChangedManually.connect(self.flare.preserve_preview_view)
 
         self.lockspatialSettingsChanged = False
         self.lock_range_changing = False
@@ -1619,12 +1625,19 @@ class MainWindow(QMainWindow):
     @trace_action
     def detectorModelChanged(self, detector_model):
         detector_model = detector_model or DETECTOR_SPAD_ARRAY
+        flare = getattr(self, "flare", None)
+        if flare is not None:
+            if detector_uses_flare(detector_model) and not flare.selected and self.mcs_manager.is_connected:
+                self.disconnectFPGA()
+            flare.selection_changed(detector_model)
         self.mcs_manager.set_detector_model(detector_model)
         if hasattr(self.ui, "comboBox_fifobackend"):
             self.ui.comboBox_fifobackend.setEnabled(
                 detector_uses_nifpga_fifo(detector_model)
             )
         self._sync_pispad23_ttm_detector()
+        if flare is not None and flare.selected is True:
+            self.ui.checkBox_pispad23ttmActivate.setEnabled(False)
 
     @trace_action
     def _sync_pispad23_ttm_detector(self, _checked=None):
@@ -1669,6 +1682,8 @@ class MainWindow(QMainWindow):
         )
         if detector_model == DETECTOR_DISABLED:
             combo_text = DETECTOR_DISABLED
+        elif detector_uses_flare(detector_model):
+            combo_text = DETECTOR_FLARE_UI
         elif detector_uses_pispad23_timestamp(detector_model):
             combo_text = detector_model
         self.ui.comboBox_detector_model.blockSignals(True)
@@ -2040,7 +2055,7 @@ class MainWindow(QMainWindow):
             self,
             "Select RAW acquisition metadata",
             suggested_input,
-            "HDF5 File (*.h5)",
+            "RAW metadata (*.h5 *.flare.json);;HDF5 File (*.h5);;Flare metadata (*.flare.json)",
         )
         if metadata_filename == "":
             return
@@ -2059,6 +2074,9 @@ class MainWindow(QMainWindow):
         )
         if output_filename == "":
             return
+
+        if metadata_path.endswith(".flare.json"):
+            return self.flare.convert(metadata_path, output_filename)
 
         progress_dialog = QProgressDialog("Preparing RAW conversion...", None, 0, 100, self)
         progress_dialog.setWindowTitle("Converting RAW acquisition")
@@ -2345,6 +2363,8 @@ class MainWindow(QMainWindow):
         """
         Update inferred DFD metadata from the primary FPGA bitfile name.
         """
+        if getattr(getattr(self, "flare", None), "selected", False) is True:
+            return
         dfd_cycle_mhz, inferred_dfd_nbins = (
             self.mcs_manager.parse_dfd_metadata_from_bitfile_name(
                 bitfile,
@@ -2467,6 +2487,8 @@ class MainWindow(QMainWindow):
         for n, (name, (caption, mtype, ref_obj, visible)) in enumerate(
                 self.configuration_helper.items()
         ):
+            if name.startswith("flare_") and not getattr(getattr(self, "flare", None), "selected", False):
+                continue
             try:
                 if name == "plugins":
                     configuration[name] = self._get_plugins_configuration_section()
@@ -2714,6 +2736,10 @@ class MainWindow(QMainWindow):
         """
         Set the GUI data from a dictionary (it can be also a partial configuration)
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True and (
+                (flare.run_job is not None and flare.run_job.isRunning()) or flare._repeat.isActive()):
+            raise RuntimeError("Stop the Flare acquisition before loading configuration")
         trigger = getattr(self, "software_trigger", None)
         if trigger is not None and trigger.active:
             raise RuntimeError("Stop the armed acquisition before changing its configuration.")
@@ -2847,6 +2873,11 @@ class MainWindow(QMainWindow):
         """
         Slot for the axes range changed event, when the range of the axes of the Image Preview is changed
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            if self.preview_view_box.navigation_event_active:
+                flare.navigate_preview()
+            return
         logger.debug("axesRangeChanged(...)")
         if self.preview_view_box.navigation_event_active:
             proj = self.ui.comboBox_view_projection.currentText()
@@ -3044,6 +3075,9 @@ class MainWindow(QMainWindow):
         """Best-effort shutdown that always closes the NI FPGA sessions."""
         if self._shutdown_complete or self._shutdown_started:
             return
+        flare = getattr(self, "flare", None)
+        if flare is not None:
+            flare.close()
         self._shutdown_started = True
         trigger = getattr(self, "software_trigger", None)
         if trigger is not None and trigger.active:
@@ -3132,7 +3166,13 @@ class MainWindow(QMainWindow):
     @trace_action
     def closeEvent(self, event):
         """Shut down hardware and workers before accepting the close event."""
-        self.shutdown()
+        from ..controllers.flare import FlareShutdownError
+        try:
+            self.shutdown()
+        except FlareShutdownError as error:
+            event.ignore()
+            self.ui.statusBar.showMessage(str(error), 15000)
+            return
         event.accept()
 
         logger.debug("Now every process should be closed,Really! \n=============\n=== CIAO! ===\n=============")
@@ -3157,6 +3197,9 @@ class MainWindow(QMainWindow):
         """
         Connect to the FPGA(s)
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.diagnostic("connect")
         logger.debug("ConnectFPGA")
 
         primary_bitfile = self.bitfile_check(self.ui.lineEdit_fpgabitfile.text())
@@ -3263,6 +3306,10 @@ class MainWindow(QMainWindow):
         """
         Set the registers dictionary which is mapped to the FPGA
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            # NI widget callbacks do not write into Flare's different register ABI.
+            return
         trigger = getattr(self, "software_trigger", None)
         if trigger is not None and trigger.active and not trigger.stopping:
             # Only preview range/position may change between triggered frames.
@@ -3508,13 +3555,17 @@ class MainWindow(QMainWindow):
         the two actions.
         """
         mouse_event = event
-        mouse_point = mouse_event.pos()
+        if not mouse_event.double():
+            return
+        # Scene-wide clicks may have no currentItem (or an axis/overlay item).
+        # Map from scene coordinates instead of depending on that item's pos().
+        mouse_point = mouse_event.scenePos()
         projection = self.ui.comboBox_view_projection.currentText()
 
         if mouse_event.double():
             logger.debug("Double click")
             logger.debug(mouse_point)
-            pos = self.im_widget.view.vb.mapToView(mouse_point)
+            pos = self.im_widget.view.vb.mapSceneToView(mouse_point)
 
             if projection == "xy":
                 a = (pos.x(), pos.y(), self.ui.spinBox_off_z_um.value())
@@ -3681,6 +3732,10 @@ class MainWindow(QMainWindow):
                         symbol="o",
                     )
 
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            flare.update_display()
+            return
         if self.mcs_manager.shared_arrays_ready:
             logger.debug("ready self.mcs_manager.shared_arrays_ready")
             self.mcs_manager.set_fingerprint_mask(
@@ -4198,6 +4253,9 @@ class MainWindow(QMainWindow):
         """
         Update the Status tables
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.diagnostic("read_all")
         if self.mcs_manager.is_connected == True:
             fff = self.mcs_manager.fpga_handle.register_read_all()
         else:
@@ -4781,6 +4839,10 @@ class MainWindow(QMainWindow):
         """
         start the batch event
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            self.ui.statusBar.showMessage("Flare batch acquisition is not yet supported", 10000)
+            return
         self.runBatchFCS = True
         self.batchFCS()
 
@@ -5206,95 +5268,11 @@ class MainWindow(QMainWindow):
         self.trace_dfd_widget.setVisible(self.dfd_enable)
         if self.dfd_enable:
             dfd_trace = self.mcs_manager.getDfdTrace()
-            trace_dfd_x = dfd_trace[0, :]
-            trace_live = dfd_trace[1, :]
-            trace_sum = dfd_trace[2, :]
-            peak_idx = int(np.argmax(trace_sum))
-            self.mcs_manager.update_shared_dict({"dfd_peak_idx": peak_idx})
-            trace_dfd_x_bins = np.asarray(trace_dfd_x, dtype=float)
-            tcycle_s = 1.0 / (
-                max(float(self.dfd_cycle_mhz), 1e-12) * 1e6 * max(clk_multiplier, 1)
+            self.renderDfdTrace(
+                dfd_trace[1], dfd_trace[2],
+                max(float(self.dfd_cycle_mhz), 1e-12) * 1e6 * max(clk_multiplier, 1), self.DFD_nbins,
+                peak_callback=lambda peak: self.mcs_manager.update_shared_dict({"dfd_peak_idx": peak}),
             )
-            trace_dfd_x_seconds = trace_dfd_x_bins / max(int(self.DFD_nbins), 1) * tcycle_s
-            axis_name = "DFD bin"
-            if self.ui.checkBox_trace_dfd_time_axis.isChecked():
-                trace_dfd_x = trace_dfd_x_seconds
-                axis_name = "Time"
-            else:
-                trace_dfd_x = trace_dfd_x_bins
-            bin_width_ns = tcycle_s * 1e9 / max(int(self.DFD_nbins), 1)
-            live_max = np.max(trace_live)
-            sum_max = np.max(trace_sum)
-
-            if live_max > 0 and sum_max > 0:
-                trace_live = (trace_live / live_max) * sum_max
-            elif live_max > 0 and sum_max <= 0:
-                trace_live = trace_live / live_max
-
-            if self.ui.checkBox_trace_dfd_align_peak.isChecked():
-                trace_live = np.roll(trace_live, -peak_idx)
-                trace_sum = np.roll(trace_sum, -peak_idx)
-                trace_dfd_x_plot = (
-                    np.roll(
-                        np.mod(trace_dfd_x_seconds - trace_dfd_x_seconds[peak_idx], tcycle_s),
-                        -peak_idx,
-                    )
-                    if self.ui.checkBox_trace_dfd_time_axis.isChecked()
-                    else np.roll(
-                        np.mod(
-                            trace_dfd_x_bins - trace_dfd_x_bins[peak_idx],
-                            float(max(int(self.DFD_nbins), 1)),
-                        ),
-                        -peak_idx,
-                    )
-                )
-            else:
-                trace_dfd_x_plot = trace_dfd_x
-
-            self.trace_dfd_widget.plot(
-                trace_dfd_x_plot,
-                trace_live,
-                clear=True,
-                pen=pg.mkPen(color=(255, 255, 255), width=1),
-            )
-            self.trace_dfd_widget.plot(
-                trace_dfd_x_plot,
-                trace_sum,
-                pen=pg.mkPen(color=(180, 180, 180), width=2),
-            )
-            tau_ns, fit_curve, peak_idx, trace_sum_peak0, trace_dfd_x_peak0_seconds = self.estimateDfdDecayLifetimeNs(
-                trace_sum,
-                trace_dfd_x_seconds,
-                bin_width_ns,
-                max(int(self.DFD_nbins), 1),
-                tcycle_s,
-                start_level=self.ui.doubleSpinBox_trace_dfd_start_percent.value() / 100.0,
-                end_level=self.ui.doubleSpinBox_trace_dfd_end_percent.value() / 100.0,
-            )
-            self.latest_dfd_tau_fit_ns = tau_ns
-            if tau_ns is not None:
-                self.trace_dfd_widget.setLabel("top", f"tau_fit={tau_ns:.3f} ns - {axis_name}", "s" if axis_name == "Time" else None)
-            else:
-                self.trace_dfd_widget.setLabel("top", axis_name, "s" if axis_name == "Time" else None)
-
-            if fit_curve is not None:
-                if self.ui.checkBox_trace_dfd_time_axis.isChecked():
-                    fit_x = fit_curve["x_fit_seconds"]
-                else:
-                    fit_x = fit_curve["x_fit_bins"]
-                fit_y = fit_curve["y_fit"]
-                order = np.argsort(fit_x)
-                fit_x = fit_x[order]
-                fit_y = fit_y[order]
-                self.trace_dfd_widget.plot(
-                    fit_x,
-                    fit_y,
-                    pen=None,
-                    symbol="o",
-                    symbolSize=3,
-                    symbolBrush=(255, 200, 0),
-                    symbolPen=pg.mkPen(color=(255, 200, 0), width=1),
-                )
         else:
             self.latest_dfd_tau_fit_ns = None
             self.mcs_manager.update_shared_dict({"dfd_peak_idx": -1})
@@ -5999,6 +5977,12 @@ Have fun!
         """
         called when the offset in um is changed
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True and (self.started_preview or self.started_normal):
+            # Flare remaps cached pixels immediately and sends DAC arrays
+            # asynchronously; the legacy redraw must not replace that view.
+            self._update_offset_voltage_labels()
+            return
         oldlock_range_changing = self.lock_range_changing
         oldlock_parameters_changed_call = self.lock_parameters_changed_call
         if not self.lock_parameters_changed_call or force:
@@ -6353,6 +6337,95 @@ Have fun!
         # when the displayed lifetime mean and cumulative DFD fit are both valid.
         return bool(self.colorLifetimeDeltaTauUseHistogramMean())
 
+    def renderDfdTrace(self, trace_live, trace_sum, cycle_hz, nbins, peak_callback=None):
+        """Render either backend using the same histogram alignment and decay fit."""
+        self.trace_dfd_widget.setVisible(True)
+        peak_idx = int(np.argmax(trace_sum))
+        if peak_callback is not None:
+            peak_callback(peak_idx)
+        trace_dfd_x_bins = np.arange(nbins, dtype=float)
+        tcycle_s = 1.0 / float(cycle_hz)
+        trace_dfd_x_seconds = trace_dfd_x_bins / max(int(nbins), 1) * tcycle_s
+        axis_name = "DFD bin"
+        if self.ui.checkBox_trace_dfd_time_axis.isChecked():
+            trace_dfd_x = trace_dfd_x_seconds
+            axis_name = "Time"
+        else:
+            trace_dfd_x = trace_dfd_x_bins
+        bin_width_ns = tcycle_s * 1e9 / max(int(nbins), 1)
+        live_max = np.max(trace_live)
+        sum_max = np.max(trace_sum)
+
+        if live_max > 0 and sum_max > 0:
+            trace_live = (trace_live / live_max) * sum_max
+        elif live_max > 0 and sum_max <= 0:
+            trace_live = trace_live / live_max
+
+        if self.ui.checkBox_trace_dfd_align_peak.isChecked():
+            trace_live = np.roll(trace_live, -peak_idx)
+            trace_sum = np.roll(trace_sum, -peak_idx)
+            trace_dfd_x_plot = (
+                np.roll(
+                    np.mod(trace_dfd_x_seconds - trace_dfd_x_seconds[peak_idx], tcycle_s),
+                    -peak_idx,
+                )
+                if self.ui.checkBox_trace_dfd_time_axis.isChecked()
+                else np.roll(
+                    np.mod(
+                        trace_dfd_x_bins - trace_dfd_x_bins[peak_idx],
+                        float(max(int(nbins), 1)),
+                    ),
+                    -peak_idx,
+                )
+            )
+        else:
+            trace_dfd_x_plot = trace_dfd_x
+
+        self.trace_dfd_widget.plot(
+            trace_dfd_x_plot,
+            trace_live,
+            clear=True,
+            pen=pg.mkPen(color=(255, 255, 255), width=1),
+        )
+        self.trace_dfd_widget.plot(
+            trace_dfd_x_plot,
+            trace_sum,
+            pen=pg.mkPen(color=(180, 180, 180), width=2),
+        )
+        tau_ns, fit_curve, peak_idx, trace_sum_peak0, trace_dfd_x_peak0_seconds = self.estimateDfdDecayLifetimeNs(
+            trace_sum,
+            trace_dfd_x_seconds,
+            bin_width_ns,
+            max(int(nbins), 1),
+            tcycle_s,
+            start_level=self.ui.doubleSpinBox_trace_dfd_start_percent.value() / 100.0,
+            end_level=self.ui.doubleSpinBox_trace_dfd_end_percent.value() / 100.0,
+        )
+        self.latest_dfd_tau_fit_ns = tau_ns
+        if tau_ns is not None:
+            self.trace_dfd_widget.setLabel("top", f"tau_fit={tau_ns:.3f} ns - {axis_name}", "s" if axis_name == "Time" else None)
+        else:
+            self.trace_dfd_widget.setLabel("top", axis_name, "s" if axis_name == "Time" else None)
+
+        if fit_curve is not None:
+            if self.ui.checkBox_trace_dfd_time_axis.isChecked():
+                fit_x = fit_curve["x_fit_seconds"]
+            else:
+                fit_x = fit_curve["x_fit_bins"]
+            fit_y = fit_curve["y_fit"]
+            order = np.argsort(fit_x)
+            fit_x = fit_x[order]
+            fit_y = fit_y[order]
+            self.trace_dfd_widget.plot(
+                fit_x,
+                fit_y,
+                pen=None,
+                symbol="o",
+                symbolSize=3,
+                symbolBrush=(255, 200, 0),
+                symbolPen=pg.mkPen(color=(255, 200, 0), width=1),
+            )
+
     def estimateDfdDecayLifetimeNs(
         self,
         trace_sum,
@@ -6460,6 +6533,8 @@ Have fun!
             clk_multiplier = max(int(self.mcs_manager.clk_multiplier), 1)
         dfd_cycle_mhz = max(float(getattr(self, "dfd_cycle_mhz", 40.0)), 1e-12)
         tcycle_ns = 1e3 / (dfd_cycle_mhz * clk_multiplier)
+        if getattr(getattr(self, "flare", None), "selected", False) is True:
+            tcycle_ns = 25.0  # Negotiated 40MHz_91 profile, independent of NI metadata.
         self.ui.label_delta_tau_ns.setText(f"Corr. delta_tau [ns] (T={tcycle_ns:.4f})")
 
         self.ui.doubleSpinBox_delta_tau_ns.blockSignals(True)
@@ -6487,6 +6562,8 @@ Have fun!
             max(float(self.dfd_cycle_mhz), 1e-12)
             * max(int(self.mcs_manager.clk_multiplier), 1)
         )
+        if getattr(getattr(self, "flare", None), "selected", False) is True:
+            tcycle_ns = 25.0
         h_mean = self.im_widget.getDisplayedHMean()
         tau_fit_ns = self.latest_dfd_tau_fit_ns
         if h_mean is None or tau_fit_ns is None:
@@ -6566,6 +6643,12 @@ Have fun!
 
     def _update_fpga_connection_button(self):
         """Reflect whether FPGA firmware is currently loaded."""
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            self.ui.pushButton_fpga_connection_cmd.setText("Disconnect Flare" if flare.connected else "Connect Flare")
+            self.ui.pushButton_fpga_connection_cmd.setChecked(flare.connected)
+            self.ui.label_FPGA_status.setText("Flare connected" if flare.connected else "Flare disconnected")
+            return
         connected = bool(self.mcs_manager.is_connected)
         keep_requested = bool(
             getattr(self, "_keep_fpga_on_requested", False)
@@ -6591,6 +6674,10 @@ Have fun!
     @Slot()
     def _fpgaWatchdogTick(self):
         """Poll the FPGA and blink its status label after successful reads."""
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            self._update_fpga_connection_button()
+            return
         if not self.mcs_manager.is_connected:
             self._update_fpga_connection_button()
             return
@@ -6634,6 +6721,9 @@ Have fun!
 
     def disconnectFPGA(self):
         """Stop FPGA activity and close the hardware session."""
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.diagnostic("disconnect")
         self._keep_fpga_on_requested = False
         if not self.mcs_manager.is_connected:
             self._update_fpga_connection_button()
@@ -6666,6 +6756,9 @@ Have fun!
     @trace_action
     def fpgaConnectionButtonClicked(self, checked):
         """Connect when checked; stop, reset, and disconnect when unchecked."""
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.diagnostic("connect" if checked else "disconnect")
         self._keep_fpga_on_requested = bool(checked)
         try:
             if not checked:
@@ -6702,6 +6795,9 @@ Have fun!
         self.raw_stream_mode = raw_stream_mode
 
         # Initialize DFD settings BEFORE circular motion to ensure correct state
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            raise RuntimeError("Flare uses its own acquisition coordinator; NI initialization is unavailable")
         self.dfd_enable = self.ui.checkBox_DFD.isChecked()
         self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
 
@@ -7226,6 +7322,9 @@ Have fun!
         """
         update the preview configuration - channel selection
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.update_display()
         logger.debug("updatePreviewConfiguration")
 
         t = self.ui.comboBox_plot_channel.currentText()
@@ -7337,6 +7436,9 @@ Have fun!
             is_preview (bool): If True, run in preview mode (limited repetitions, no saving).
                              If False, run in normal acquisition mode.
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.begin(is_preview)
         logger.debug("beginAcquisition(is_preview=%s)" % is_preview)
         trigger = getattr(self, "software_trigger", None)
         if trigger is not None and (trigger.active or not trigger.validate()):
@@ -8030,6 +8132,9 @@ Have fun!
         """
         stop the acquisition
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.stop()
         logger.debug("stopAcquisition")
         trigger = getattr(self, "software_trigger", None)
         if trigger is not None and trigger.active:
@@ -8076,6 +8181,9 @@ Have fun!
         """
         stop the acquisition clicked event
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.stop()
         trigger = getattr(self, "software_trigger", None)
         if trigger is not None and trigger.active:
             trigger.before_stop()
@@ -8162,6 +8270,9 @@ Have fun!
         """
         send the run command to the FPGA
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            raise RuntimeError("Flare starts through its acquisition coordinator; NI start pulses are unavailable")
         if self.ui.pushButton_fpga_connection_cmd.isChecked():
             # A reused VI needs a fresh edge for every acquisition.
             self.setRegistersDict({"stop_command": False, "start_command": True})
@@ -8176,6 +8287,9 @@ Have fun!
         """
         send the stop command to the FPGA
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.stop()
         self.setRegistersDict({"stop_command": False})
         self.setRegistersDict({"stop_command": True})
 
@@ -8183,6 +8297,9 @@ Have fun!
         """
         get the preview image
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return self.currentImage
         return self.preview_controller.image(
             self.mcs_manager, self.currentImage, projection, rgb
         )
@@ -8340,6 +8457,9 @@ Have fun!
         """
         plot the preview image
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            return flare.plot_image(img)
         if self._current_detector_model() == DETECTOR_PISPAD23_TS_UIMG and img is None:
             self._plot_pispad23_microimage()
             return

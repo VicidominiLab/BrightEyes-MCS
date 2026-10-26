@@ -1,0 +1,105 @@
+# Kria Flare acquisition
+
+Select **TCP/IP - FPGA Flare** in the detector combobox, then open **Config / FPGA / Kria Flare**. Existing FPGA settings are under **Config / FPGA / NI**. Existing detector selections keep their NI control and detector pipelines; they do not connect to Flare or require a reachable Flare board.
+
+## Connection and modes
+
+The default Flare host is `mmskria3`, with HTTP control on port **8081**. Master is the default mode: Flare owns the scan and detector stream, and no NI FPGA session is opened. Changing detector while an NI session is held closes that session before selecting Flare. Flare acquisition does not use NI bitfiles, FIFO settings or the second NI FPGA.
+
+Slave mode can be selected and saved for future use. Register diagnostics remain available, but preview and acquisition are blocked until firmware implements synchronization to NI pixel/line/frame timing. The current inputs being readable does not establish that timing support.
+
+Click **Connect** to read device identity, supported registers and status. Connecting never resets an existing acquisition. Master acquisition currently requires FLR4 board identity and register schema 3 or 4. DFD requires schema 4 and an advertised `dfd` acquisition mode (reference service revision `fc5f8a9`). Board firmware 1.0.2 with a 100 MHz clock was used for initial integration checks; the clock is discovered for each run. Firmware 1.0.4 from `brighteyes-flare` revision `2985e2f` (2026-10-21) supports live register writes. Board capability bit 4 advertises laser registers; bit 5 advertises acquisition-independent raw register writes. The catalog displays the server's access policies; the server decides whether to accept each write.
+
+The board initiates a separate TCP connection to the GUI computer. The default **GUI receiver port is 9000**; it is independent of HTTP port 8081. Keep the advertised GUI address empty for automatic route selection, or enter an address the board can reach. The bind address controls the local listener. Port 0 requests an automatic ephemeral port, which needs corresponding network/firewall access. Integration checks on this workstation succeeded on 9000 after an ephemeral-port callback timed out.
+
+If HTTP works but start reports a connection timeout, check the advertised address, receiver port and inbound TCP access on the GUI computer. No firewall changes are made by the application. Optional REST authentication reads `FLARE_API_TOKEN` from the environment; the token is not saved in profiles or acquisition metadata.
+
+## Preview and recording
+
+In normal intensity Flare mode, X/Y/Z offset (center), range and extra offset send live register updates when connected, including during preview and recording. Preview pan/zoom uses the same path. Rapid edits are coalesced for 80 ms and sent from a background worker. The application writes complete `axis_start_offset_volts` and `axis_calibration_volts_per_step` arrays in signed DAC counts, then writes 1 to `command` (COMMIT). It does not stop/reset the run or change its pixel counts, timing, calibration, channel count or stream framing. Edits made while disconnected are retained for connection/startup.
+
+Like FPGA-SPAD mode, the displayed scan area follows position/range requests immediately. During the mouse event, Flare remaps the cached image with a lightweight transform; it does not wait for the 80 ms write timer, network response, COMMIT or next data frame, or recalculate image levels/histograms. Queued old frames and delayed confirmations do not undo the latest displayed area. The hardware updates remain asynchronous, and server errors still appear in the log.
+
+Wheel zoom and pan retain the mouse-selected view when live writes complete or new preview frames arrive. Like FPGA-SPAD mode, navigation uses the smaller visible span for both X/Y scan ranges, so rectangular window padding does not stretch a square scan or its pixels. Navigation updates the spatial controls together, avoiding intermediate position/range callbacks. The existing Ctrl navigation preference still determines whether a gesture also changes microscope coordinates. Direct spatial-control edits fit the requested area immediately; ordinary image updates keep the current view. The cached pixels are progressively replaced by incoming measurements. A scan edited in progress can contain samples from more than one physical area. Recording metadata retains the initial configuration and timestamped live register requests/readbacks independently of the displayed area; the protocol does not identify the exact bin at which the hardware applies COMMIT.
+
+Use the normal Preview and Acquire buttons. Master supports finite raster scans with 25 or 49 detector channels, multiple time bins, repetitions and frames. Z position/range is staged through the third axis-array element after the REST configuration resets it; frames advance that axis when its step is nonzero. With zero Z step, frames repeat XY. Physical calibration and direction remain instrument acceptance tasks. Preview repeats finite acquisitions with fresh connections; there are gaps between runs. Each pixel is cleared when its first new time bin arrives, then accumulates that pixel's remaining bins. Other pixels retain their previous values across frame boundaries and repeated preview runs until refreshed. The fingerprint uses Cumulative visualization, and the trace shows recent bin rates. Sum or individual channel selection and the fingerprint mask affect the displayed image; all detector counts are retained in the recording.
+
+Range and offsets use the existing microscope calibration in micrometres per volt. Flare converts these to signed DAC counts, using the board's nominal `code * 10 / 32768` voltage mapping. Exceeding configured voltage limits logs a warning. Invalid coordinates/calibration cannot be converted, and initial X/Y scan endpoints outside the physical signed 16-bit DAC range still block acquisition. Live register values are submitted for server validation. Flare's internal coordinates can advance faster than the DAC settles; a valid photon bin does not establish the settled physical position.
+
+Snake/circular/Lissajous scans, external/slave/software triggers, batch acquisition, FCS acquisition, ADC and TTM remain unavailable in this integration. The normal L1-L4 checkboxes control Flare's corresponding enable registers and may be selected before starting. Unsupported acquisition workflows remain separate from raw register access, where the server evaluates every request.
+
+Synthetic detector events are optional and default off. Enabling them does not disconnect physical detector inputs or suppress physical outputs.
+
+**Stop** cancels the active Flare run and holds its last output. **Reset** also commands DAC zero and is available in the Flare panel when no local run is active. Transmission failure can leave hardware acquiring/draining: the panel reports hardware state, saves the partial result and leaves Stop/Reset as separate actions. Commands are not automatically retried after ambiguous HTTP errors. Check status before recovery.
+
+## Register debugging and logs
+
+Select a register row or enter its canonical name, `REG_` name or displayed numeric address. Known numeric addresses are resolved against the discovered catalog. Use **Read**, **Write**, or **Read all**. Enter JSON values: arrays normally require a complete array, such as `[-10, 0, 10]`, and scalar values normally require integers. The client sends the value to the server and reads back after an accepted write.
+
+The debug field sends writes regardless of the advertised `write_policy`, local acquisition state or whether a named register appears in the catalog. The server validates register existence, access, type/range and busy state. Its HTTP status, errno and message appear in the Flare log. Firmware 1.0.4 advertises all implemented writable registers as `live`; older servers can reject writes with HTTP 409 or 403. Errors are reported without retrying or silently stopping/resetting the device. Read all is sequential rather than an atomic snapshot.
+
+Read, Write and Read all run in independent background workers and reuse connection discovery. A slow register request does not block Qt rendering/input, independent reads or acquisition data reception. Conflicting register writes and configuration/start/stop operations are ordered in their background workers; reads do not take that lock. The table updates returned values without rebuilding unchanged cells.
+
+Raw writes retain their hardware semantics. Geometry, dwell, masks and axis arrays are staged; writing 1 to `command` commits them. Staging alone does not alter the active scan. Raw channel/packet writes and raw lifecycle commands do not update the application's expected geometry, receive buffers or recording metadata and can invalidate a capture. Use the normal acquisition controls and Stop/Reset for managed runs.
+
+For normal intensity scans, stream dimensions, channel mode and dummy generation are staged afresh for each run. Current detector enable masks and hold-off settings are reapplied after configuration resets them. The latest requested axis arrays and L1-L4 states are then reapplied and the axes committed before starting. GUI writes and configuration share a lock in their background workers; the GUI thread stays responsive. Saved metadata includes initial register readback and live register events.
+
+### Laser registers
+
+Use the normal L1-L4 checkboxes for Flare enable requests, or the register browser for direct control and clock programming. Checkbox values are sent as integer 0/1. Requests are attempted without a firmware/catalog veto; older servers report unsupported or busy controls through the normal error path. The same sequence selectors configure Flare through its REST service; see the DFD profile below.
+
+| Address | Register | Meaning |
+| --- | --- | --- |
+| `0x0450` | `laser_1_enable` | 0 off, 1 enable; PMOD1 P0 / J2 pin 1 |
+| `0x0454` / `0x0458` / `0x045c` | `laser_2_enable` / `laser_3_enable` / `laser_4_enable` | Independent internal requests; no external connections |
+| `0x8070` | `master_laser_clk_multiplier` | Staged integer multiplier M |
+| `0x8074` | `master_laser_clk_divider` | Staged integer divider D, 2..128 |
+| `0x8078` | `master_laser_clk_apply` | Write 1 to apply M/D; reads back 0 |
+| `0x807c` | `master_laser_clk_status` | Read-only bits: 0 ready, 1 busy, 2 fault |
+| `0x8080` / `0x8084` | `master_laser_clk_active_multiplier` / `master_laser_clk_active_divider` | Submitted M/D; valid when ready |
+
+At the current 100 MHz fabric clock, frequency is `100 MHz * M / D`, with M restricted to 8..12. Reset defaults are M=10, D=25 (40 MHz), with all lasers disabled. For 20 MHz, stage M=10 and D=50, write 1 to APPLY, then poll status until ready. APPLY pauses laser gates while the MMCM reprograms and relocks. On firmware 1.0.4, enable requests and clock staging are writable during scanning/draining; the driver serializes APPLY against an ongoing clock operation. Older firmware permits disabling during a stream but can return HTTP 409 when enabling or changing the clock.
+
+Enable requests act immediately, without COMMIT. Start, stop and normal completion leave them unchanged. Reset, including the reset performed by `PUT /configuration` before every finite scan, disables lasers and restores 40 MHz. The application reapplies the latest checkbox requests after configuration, including between finite preview scans. A direct browser write does not change the checkbox state. Clock programming remains a register-browser operation and is not restored automatically after reset; the DFD profile configures sequencing as described below.
+
+The bounded log shows client requests, returned errors and acquisition transitions, with clear/copy/export controls. It does not read the board's system journal. Device status is polled independently of rendering; network reception and disk writes run outside the GUI thread.
+
+## DFD and laser sequencing
+
+Use the existing **DFD** checkbox, laser sequence selectors, L1-L4 enables, reference checkbox and lifetime display controls for either FPGA-SPAD or Flare. Switching back to FPGA-SPAD restores its phase-bin and clock-multiplier settings. Flare currently fixes the profile to **40 MHz, 91 phase bins and six excitation slots**; the multiplier and phase-bin fields show these effective values.
+
+Sequence selectors 1-6 map 0 to off and 1-4 to L1-L4. Slots 7-12 must be zero for this firmware. The six masks are sent in configuration and packed with slot 1 in the most significant nibble for direct `laser_excitation_sequence` register updates (`0x80c4`). L1-L4 remain independent enable gates. The current firmware selects the sequenced waveform in DFD mode; normal intensity mode retains its manual laser clock. Raw register requests still go to the server for validation.
+
+DFD uses pixel-end timing: pixel integration is `dwell * bins_per_pixel / sys_hz`. These scan timing fields determine exposure, while the 91 histogram bins divide the 25 ns laser cycle. The reference is retained as channel 26 or 50, even when disabled; it is excluded from intensity, fingerprint and lifetime sums. The existing channel/fingerprint selection, RGBDFD, lifetime/quality images, histogram peak alignment, time axis and decay-fit controls are available. Histogram rates use the exposure per phase bin. Both backends share the lifetime estimator and histogram rendering.
+
+The current REST DFD configuration supports XY scanning with Z range and offsets at zero; frames repeat XY. DFD geometry, masks, hold-off, sequence, reference and laser enables are submitted together before START. They are not restaged afterward, because START checks the accepted configuration against hardware. Protected GUI controls remain fixed during acquisition/draining; navigation changes the displayed view without moving the DFD scan. Normal intensity scans retain live position/range and laser controls. The register browser remains asynchronous and server-authoritative in either mode.
+
+DFD reception validates the negotiated DFD1 layout, full 32-bit run ID, record ordinal/coordinates, flags, padding, tail and exact length across arbitrary TCP fragmentation. A partial pixel or nonzero `dfd_fault_flags` prevents a successful completion. No automatic switch to intensity decoding occurs on an invalid DFD stream.
+
+## Files and offline conversion
+
+A normal recording creates `name.h5`, `name.flare.raw` and `name.flare.json`. RAW-only mode creates the raw file and JSON sidecar. Existing files are not overwritten. Interrupted/failed recordings retain a partial result with error/status information. Partial HDF5 files retain the nominal dataset shape; the usable prefix is limited by both `validated_bins` and `stored_bins`. Check `complete` before interpreting unwritten positions as measured zeros.
+
+For normal intensity scans, raw bytes preserve the original FLR4 stream: little-endian records of 120 bytes for 25 channels or 216 bytes for 49 channels. Counts are U32, not the NI packed FIFO encoding. Validation checks geometry/order modulo the header's eight-bit fields, run ID, markers, padding and exact length; these structural checks are not a payload checksum.
+
+For normal intensity scans, the HDF5 format identifier is `brighteyes-flare-1`. Dataset `data` has shape `(repetition, frame, line, pixel, timebin, channel)` and U32 values. Root attributes contain completion state and JSON Flare metadata. Groups `configurationFlare`, `configurationGUI` and `raw/metadata` expose scan settings and common analysis metadata; `brighteyes_mcs_reader.load()` is tested for U32 values and effective timing. The JSON sidecar records accepted configuration, firmware, mode, detector registers, stream UUID/run ID, timing, buffer settings, received bytes, final status, timezone-aware times and completion/error state. `live_register_updates` records GUI and browser write values, request/finish times, readbacks and server errors during the run. Existing NI/PI files and the NI HDF5 0.0.1 schema keep their formats.
+
+DFD files use `brighteyes-flare-dfd-1`. Their raw DFD1 records are 5144/9512 bytes for 25/49 physical channels, with U16 counts. HDF5 `data` has shape `(repetition, frame, line, pixel, 91, 26 or 50)`, preserving the reference histogram. Metadata records the negotiated layout, reference role, 40 MHz laser frequency, phase-bin width and pixel exposure. For incomplete DFD files inspect `validated_records`, `stored_records`, `partial_records` in metadata and `complete`; a structurally valid partial final pixel is retained but does not establish completion.
+
+The existing RAW conversion action accepts a `.flare.json` sidecar and converts in a background worker. The Python entry point is also available:
+
+```python
+from brighteyes_mcs.storage.raw import convert_raw_acquisition
+
+convert_raw_acquisition("scan.flare.json", "scan_converted.h5")
+```
+
+Flare conversion uses its own decoder and never routes the file through the NI decoder. It preserves the native U32 intensity or U16 DFD counts, reference channel and incomplete status. A capture without the required configuration/run identity cannot be reconstructed from raw bytes alone. Analysis tools should inspect the Flare format identifier and native count type; `h5py` can read the dataset directly.
+
+## Validation and remaining acceptance
+
+The [integration checklist](flare-integration-plan.md) records resumable work and release gates. Automated checks cover existing detector contracts with Flare construction forbidden, binary fragmentation/corruption, HTTP errors, ambiguous starts, Qt defaults/isolation, U32 intensity and U16 DFD recording/raw conversion, six-slot mapping, reference exclusion/preservation and lifetime GUI integration. DFD checks use independent binary fixtures and mocked service streams; connected-hardware DFD/sequencer acceptance is still pending.
+
+Live checks on 2026-10-20 read firmware/status and all 53 advertised registers on `mmskria3:8081`, wrote/read/restored scratch, and completed zero-motion synthetic captures through GUI port 9000. Initial 12-bin captures received 1440/2592 bytes; final 257-bin captures received 30840/55512 bytes for 25/49 channels respectively. The final runs also checked coordinate wrapping, a short final DMA packet and concurrent scratch writes/readback plus reading all 53 registers during scanning. Raw framing, local HDF5 writing and final device completion passed. Scratch was restored to 0 and the board was reset/idle with no DMA/PL errors afterward. Local evidence is under the ignored `build/flare-live-checks/` directory.
+
+These checks do not complete physical microscope calibration, known-pulse detector characterization, sustained throughput/endurance or attached NI/PI instrument regression acceptance. Those tasks remain unchecked before release.

@@ -8,8 +8,29 @@ Real Jupyter console lifetimes also require a dedicated interpreter.
 
 from pathlib import Path
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def forbid_flare_activation_in_existing_workflows(request, monkeypatch):
+    """The existing suite must pass with Flare acquisition/control unavailable."""
+    if Path(str(request.node.fspath)).name.startswith("test_flare"):
+        return
+    if request.node.get_closest_marker("qt_isolated"):
+        # Keep multiprocessing/h5py imports out of the isolated Qt/Jupyter lifetime.
+        return
+    from brighteyes_mcs.hardware.flare import FlareClient
+    from brighteyes_mcs.acquisition.flare import FlareAcquisition
+
+    def unexpected_flare(*args, **kwargs):
+        raise AssertionError("Existing detector workflow attempted to activate Flare")
+
+    monkeypatch.setattr(FlareClient, "__init__", unexpected_flare)
+    monkeypatch.setattr(FlareAcquisition, "__init__", unexpected_flare)
+
 
 QT_MODULES = {
+    "test_flare_ui.py",
     "test_action_logging.py",
     "test_pispad23_timetagging.py",
     "test_h5_metadata_compatibility.py",
