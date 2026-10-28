@@ -64,6 +64,9 @@ def _startup_options(argv):
 
 
 def main(argv=None):
+    from multiprocessing import freeze_support
+
+    freeze_support()
     argv = list(sys.argv if argv is None else argv)
     if any(argument in {"-h", "--help"} for argument in argv[1:]):
         _argument_parser().print_help()

@@ -257,7 +257,9 @@ typed configuration is not yet the main runtime representation.
 These legacy modes use the NI scan-control FPGA session. The difference is how
 detector data are received, processed and stored. Selecting **TCP/IP - FPGA Flare**
 routes control to the separate `FlareController` and Qt-independent
-`FlareAcquisition` service. Its HTTP client, listening TCP receiver, native U32
+`FlareAcquisition` service in spawned worker processes. Qt polls results and a
+single-slot preview mailbox; Flare device work does not use `QThread`.
+Its HTTP client, listening TCP receiver, native U32
 decoder and recording path do not initialize NI. Slave acquisition is gated until
 firmware supports external NI timing. See [Kria Flare](flare.md) for supported
 features, connection setup and diagnostics.

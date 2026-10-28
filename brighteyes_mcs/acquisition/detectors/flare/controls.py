@@ -5,14 +5,29 @@ import threading
 
 
 class FlareLiveControls:
-    def __init__(self):
-        self.io_lock = threading.RLock()
-        self._lock = threading.Lock()
-        self._requested = {}
-        self._pending = {}
-        self._geometry = None
-        self._applied_geometry = None
-        self._events = []
+    def __init__(self, manager=None):
+        self.io_lock = manager.RLock() if manager else threading.RLock()
+        self._lock = manager.Lock() if manager else threading.Lock()
+        self._requested = manager.dict() if manager else {}
+        self._pending = manager.dict() if manager else {}
+        self._state = manager.dict() if manager else {}
+        self._events = manager.list() if manager else []
+
+    @property
+    def _geometry(self):
+        return self._state.get("geometry")
+
+    @_geometry.setter
+    def _geometry(self, value):
+        self._state["geometry"] = value
+
+    @property
+    def _applied_geometry(self):
+        return self._state.get("applied_geometry")
+
+    @_applied_geometry.setter
+    def _applied_geometry(self, value):
+        self._state["applied_geometry"] = value
 
     def request(self, registers, *, geometry=None):
         with self._lock:
@@ -39,7 +54,8 @@ class FlareLiveControls:
 
     def begin_run(self):
         with self._lock:
-            self._events.clear()
+            self._events[:] = []
+            self._applied_geometry = None
 
     def _write(self, client, name, value):
         event = {

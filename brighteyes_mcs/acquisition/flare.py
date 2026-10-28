@@ -1,7 +1,7 @@
 """Finite Flare acquisition with independent reception, control and rendering."""
 
 import logging
-from contextlib import nullcontext
+from contextlib import ExitStack, nullcontext
 import queue
 import socket
 import threading
@@ -75,6 +75,7 @@ class FlareAcquisition:
         self._eof = threading.Event()
         self._stop_receiver = threading.Event()
         self.display_channels = None
+        self.display_state = None
         shape = (self.configuration["lines"], self.configuration["pixels"])
         self._image = (
             np.array(initial_image, dtype=np.uint64, copy=True)
@@ -91,6 +92,10 @@ class FlareAcquisition:
         recording = None
         decoder = None
         listener = connection = thread = None
+        poll_thread = None
+        stop_poll = threading.Event()
+        poll_results = queue.Queue(maxsize=1)
+        configuration_guard = ExitStack()
         metadata = {
             "complete": False,
             "result": "partial",
@@ -110,6 +115,8 @@ class FlareAcquisition:
                 raise InterruptedError("Flare acquisition cancelled before configuration")
             # GUI writes wait in their own worker while reset/configuration runs.
             # Restore the latest requests after reset, including laser enables.
+            if self.live_controls:
+                configuration_guard.enter_context(self.live_controls.io_lock)
             with self.live_controls.io_lock if self.live_controls else nullcontext():
                 if self.live_controls:
                     self.live_controls.begin_run()
@@ -126,6 +133,10 @@ class FlareAcquisition:
                 response = client.configure(requested)
                 accepted = (validate_accepted(requested, response, client.firmware["clock_hz"])
                             if self.dfd else validate_configuration(response))
+                if self.dfd:
+                    advertised = client.firmware.get("supported_dfd_formats", ["DFD1"])
+                    if accepted["stream_format"] not in advertised:
+                        raise FlareError("Accepted DFD format was not advertised by the device")
                 if not self.dfd and accepted != self.configuration:
                     raise FlareError("Flare accepted settings differ from the requested scan")
                 detector_settings = {}
@@ -179,12 +190,19 @@ class FlareAcquisition:
                     nonlocal last_dispatch
                     if not pending:
                         return
-                    try:
-                        chunks.put_nowait(bytes(pending))
-                    except queue.Full as error:
-                        raise FlareError(
-                            "Flare processing queue filled; capture is incomplete"
-                        ) from error
+                    payload = bytes(pending)
+                    deadline = time.monotonic() + self.settings.timeout_seconds
+                    while not self._stop_receiver.is_set():
+                        try:
+                            # A transient backlog applies TCP backpressure
+                            # instead of immediately discarding the capture.
+                            chunks.put(payload, timeout=0.05)
+                            break
+                        except queue.Full:
+                            if time.monotonic() >= deadline:
+                                raise FlareError(
+                                    "Flare processing queue filled; capture is incomplete"
+                                ) from None
                     pending.clear()
                     last_dispatch = time.monotonic()
 
@@ -247,12 +265,16 @@ class FlareAcquisition:
             with self.live_controls.io_lock if self.live_controls else nullcontext():
                 started = True
                 stream = client.command("start")
+            configuration_guard.close()
             metadata["stream"] = stream
             metadata["stream_id"] = stream["id"]
             metadata["run_id"] = client.read_register("run_id")["value"]
             if self.dfd and any(stream.get(key) != accepted[key] for key in (
-                "stream_format", "record_bytes", "stream_channels", "histogram_bins", "total_records", "total_bytes",
-            )):
+                "stream_format", "stream_format_version", "record_bytes", "stream_channels", "histogram_bins",
+                "total_records", "total_bytes", "reference_channel_index", "detector_channels",
+                "extra_channel_index", "extra_channel_count", "extra_channel_physical_io",
+                "padded_channels", "padding_channel_indices", "channel_roles", "excitation_alignment_generation",
+            ) if key in accepted):
                 raise FlareError("Started Flare DFD stream disagrees with its accepted layout")
             if recording:
                 recording.checkpoint(metadata)
@@ -263,8 +285,31 @@ class FlareAcquisition:
             displayed_channels = self.display_channels
             trace = []
             expected_bytes = total_bins(accepted) * size
-            last_snapshot = last_poll = 0.0
+            last_snapshot = 0.0
             status = {}
+
+            def poll_status():
+                # Use an independent HTTP session: a slow control request must
+                # never prevent the decoder from draining received data.
+                poll_client = self.client_factory(self.settings)
+                try:
+                    while not stop_poll.is_set():
+                        try:
+                            sample = (poll_client.status(), None)
+                        except Exception as error:
+                            sample = (None, error)
+                        try:
+                            poll_results.get_nowait()
+                        except queue.Empty:
+                            pass
+                        poll_results.put_nowait(sample)
+                        if sample[1] is not None or stop_poll.wait(0.2):
+                            break
+                finally:
+                    poll_client.close()
+
+            poll_thread = threading.Thread(target=poll_status, name="Flare status", daemon=True)
+            poll_thread.start()
             while True:
                 if self.cancel.is_set():
                     raise InterruptedError("Flare acquisition cancelled")
@@ -281,7 +326,8 @@ class FlareAcquisition:
                 if recording:
                     recording.append(index, counts)
                 if len(counts):
-                    selection = self.display_channels
+                    selection = (self.display_state.get("channels")
+                                 if self.display_state is not None else self.display_channels)
                     if selection != displayed_channels:
                         image.fill(0)
                         displayed_channels = selection
@@ -297,9 +343,15 @@ class FlareAcquisition:
                     trace.extend((sums.astype(float) * clock_hz / dwell).tolist())
                     trace = trace[-3000:]
                 now = time.monotonic()
-                if now - last_poll >= 0.2:
-                    status = client.status()
-                    last_poll = now
+                try:
+                    sample, poll_error = poll_results.get_nowait()
+                except queue.Empty:
+                    sample = None
+                    poll_error = None
+                if poll_error is not None:
+                    raise poll_error
+                if sample is not None:
+                    status = sample
                     active = status.get("stream") or {}
                     if active.get("id") != stream["id"]:
                         raise FlareError("Flare stream identity changed during acquisition")
@@ -390,6 +442,8 @@ class FlareAcquisition:
                     metadata["recovery_error"] = str(recovery_error)
             log.warning("Flare acquisition failed: %s", error)
         finally:
+            configuration_guard.close()
+            stop_poll.set()
             self._stop_receiver.set()
             if connection:
                 try:
@@ -405,6 +459,10 @@ class FlareAcquisition:
                     metadata.update(
                         complete=False, result="partial", error="Flare receiver did not close"
                     )
+            if poll_thread:
+                poll_thread.join(timeout=self.settings.http_timeout_seconds + 1)
+                if poll_thread.is_alive():
+                    metadata.update(complete=False, result="partial", error="Flare status worker did not close")
             if self._receiver_error:
                 metadata.update(complete=False, result="partial")
                 metadata.setdefault("error", str(self._receiver_error))

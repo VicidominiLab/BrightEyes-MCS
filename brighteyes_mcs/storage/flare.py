@@ -31,7 +31,7 @@ class FlareRecording:
         self.written_bins = 0
         self.metadata = {
             "format": self.format,
-            "raw_format": "DFD1 raw little-endian" if self.dfd else "FLR4 raw little-endian",
+            "raw_format": f"{configuration['stream_format']} raw little-endian" if self.dfd else "FLR4 raw little-endian",
             "configuration": dict(configuration),
             "started_at": timestamp(),
             "result": "partial",
@@ -45,6 +45,14 @@ class FlareRecording:
                 self.h5 = h5py.File(self.path, "x")
                 self.h5.attrs["data_format_version"] = self.format
                 c = configuration
+                chunks = True
+                if self.dfd:
+                    # Keep a pixel's complete histogram together. Automatic
+                    # six-dimensional chunks split it across many small tiles,
+                    # multiplying read/modify/write work during live recording.
+                    pixel_bytes = c["histogram_bins"] * c["stream_channels"] * 2
+                    chunk_pixels = min(c["pixels"], max(1, 262144 // pixel_bytes))
+                    chunks = (1, 1, 1, chunk_pixels, c["histogram_bins"], c["stream_channels"])
                 self.data = self.h5.create_dataset(
                     "data",
                     shape=(
@@ -56,7 +64,7 @@ class FlareRecording:
                         c["stream_channels"] if self.dfd else c["channels"],
                     ),
                     dtype="<u2" if self.dfd else "<u4",
-                    chunks=True,
+                    chunks=chunks,
                 )
                 self.h5.attrs["complete"] = False
                 self.h5.flush()
@@ -70,13 +78,16 @@ class FlareRecording:
             return
         c = self.configuration
         if self.dfd:
-            for offset, histogram in enumerate(counts):
+            offset = 0
+            while offset < len(counts):
                 n = index + offset
                 x, n = n % c["pixels"], n // c["pixels"]
                 y, n = n % c["lines"], n // c["lines"]
                 z, rep = n % c["frames"], n // c["frames"]
-                self.data[rep, z, y, x, :, :] = histogram
-            self.written_bins = index + len(counts)
+                take = min(len(counts) - offset, c["pixels"] - x)
+                self.data[rep, z, y, x:x + take, :, :] = counts[offset:offset + take]
+                offset += take
+                self.written_bins = index + offset
             return
         offset = 0
         while offset < len(counts):
@@ -116,6 +127,13 @@ class FlareRecording:
                     self.h5.attrs["stored_records"] = self.written_bins
                     for key in ("stream_format", "histogram_bins", "reference_channel_index", "count_bits", "detector_channels"):
                         self.h5.attrs[key] = self.configuration[key]
+                    for key in ("stream_format_version", "stream_channels", "padded_channels",
+                                "extra_channel_count", "extra_channel_index", "extra_channel_physical_io",
+                                "padding_channel_indices", "channel_roles"):
+                        if key in self.configuration:
+                            self.h5.attrs[key] = self.configuration[key]
+                            self.data.attrs[key] = self.configuration[key]
+                    self.data.attrs["reference_channel_index"] = self.configuration["reference_channel_index"]
                 self.h5.attrs["flare_metadata"] = json.dumps(self.metadata)
                 self.h5.flush()
         except Exception as error:

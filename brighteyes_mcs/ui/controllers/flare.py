@@ -3,39 +3,30 @@
 from datetime import datetime
 import json
 import logging
+import multiprocessing
+import queue
+import time
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
-from PySide6.QtCore import QObject, QSignalBlocker, QThread, Signal, QTimer
+from PySide6.QtCore import QObject, QSignalBlocker, Signal, QTimer, Qt
 from PySide6.QtGui import QTransform
-from PySide6.QtWidgets import QApplication, QFileDialog, QHeaderView, QTableWidgetItem
+from PySide6.QtWidgets import QApplication, QFileDialog, QHeaderView, QTableWidgetItem, QMessageBox
 
 from ...acquisition.detectors.flare.config import (
-    FlareSettings, axis_registers_from_gui, configuration_from_gui,
+    FlareSettings, axis_registers_from_gui,
 )
 from ...acquisition.detectors.flare.controls import FlareLiveControls
 from ...acquisition.detectors.flare.dfd import sequence_from_gui
 from ...acquisition.detectors.flare.dfd_format import pack_sequence
 from ...acquisition.detectors.models import detector_uses_flare
+from ...acquisition.flare_worker import FlareTask, initialize_worker
+from .flare_job import FlareJob
 
 
 class FlareShutdownError(RuntimeError):
     """Keep the window alive until a bounded Flare request has returned."""
-
-
-class FlareJob(QThread):
-    result = Signal(object, object)
-    snapshot = Signal(object)
-
-    def __init__(self, function, parent):
-        super().__init__(parent)
-        self.function = function
-
-    def run(self):
-        try:
-            self.result.emit(self.function(), None)
-        except Exception as error:
-            self.result.emit(None, str(error))
 
 
 class FlareLogBridge(QObject, logging.Handler):
@@ -62,6 +53,20 @@ class FlareController(QObject):
         self.conversion_job = None
         self.live_job = None
         self.live_controls = FlareLiveControls()
+        self._process_pool = None
+        self._pool_failed = False
+        self._pending_reset = False
+        self._ipc_manager = None
+        self._cancel = None
+        self._display = None
+        self._busy_failures = []
+        self._reset_prompt = None
+        self._closed = False
+        self._log_mailbox = None
+        self._log_timer = QTimer(self)
+        self._log_timer.setInterval(200)
+        self._log_timer.timeout.connect(self._drain_worker_logs)
+        self.ui.plainTextEdit_flare_log.setMaximumBlockCount(1000)
         self.runner = None
         self.preview = False
         self.stopping = False
@@ -128,6 +133,44 @@ class FlareController(QObject):
             QHeaderView.ResizeMode.ResizeToContents
         )
         self.ui.tableWidget_flare_registers.horizontalHeader().setStretchLastSection(True)
+        self._channel_items = []
+        self.ui.checkBox_DFD.toggled.connect(self.update_display)
+        self.ui.comboBox_spad_channels.currentTextChanged.connect(self.update_display)
+
+    def _ensure_processes(self):
+        if self._process_pool is not None and not self._pool_failed:
+            return
+        context = multiprocessing.get_context("spawn")
+        if self._process_pool is not None:
+            self._process_pool.shutdown(wait=False, cancel_futures=True)
+        if self._ipc_manager is None:
+            self._ipc_manager = context.Manager()
+        previous = self.live_controls
+        # A dead process may have held the old I/O lock. Retain desired values
+        # but create fresh locks so an explicit Stop/Reset can still proceed.
+        self.live_controls = FlareLiveControls(self._ipc_manager)
+        self.live_controls.request(dict(previous._requested), geometry=previous._geometry)
+        if self._log_mailbox is None:
+            self._log_mailbox = self._ipc_manager.Queue(maxsize=256)
+        self._process_pool = ProcessPoolExecutor(
+            max_workers=3, mp_context=context, initializer=initialize_worker,
+            initargs=(self._log_mailbox,),
+        )
+        self._pool_failed = False
+        self._log_timer.start()
+
+    def _drain_worker_logs(self):
+        for _ in range(32):
+            try:
+                message = self._log_mailbox.get_nowait()
+            except queue.Empty:
+                break
+            if self.selected:
+                self.log(message)
+
+    def _task(self, action, settings=None, **arguments):
+        self._ensure_processes()
+        return FlareTask(action, settings, self.live_controls, arguments)
 
     def configuration_fields(self):
         fields = {}
@@ -183,12 +226,12 @@ class FlareController(QObject):
             self.log("Wait for the current Flare conversion")
             return
 
-        def execute():
-            from ...storage.raw import convert_raw_acquisition
-
-            return convert_raw_acquisition(metadata_filename, output_filename)
-
-        self.conversion_job = FlareJob(execute, self)
+        try:
+            task = self._task("convert", metadata=metadata_filename, output=output_filename)
+        except Exception as error:
+            self._converted(None, str(error))
+            return
+        self.conversion_job = FlareJob(task, self)
         self.conversion_job.result.connect(self._converted)
         self.conversion_job.start()
         self.ui.statusBar.showMessage("Converting Flare recording...")
@@ -258,6 +301,46 @@ class FlareController(QObject):
         self.ui.label_flare_status.setText(
             "Disconnected. Slave acquisition awaits external-timing firmware."
         )
+        if self.selected:
+            self.update_display()
+        else:
+            self._sync_channel_items(None)
+
+    def _display_layout(self):
+        if not self.selected or not self.ui.checkBox_DFD.isChecked():
+            return None
+        physical = int(self.ui.comboBox_spad_channels.currentText())
+        layout = (self.last_snapshot or {}).get("dfd_layout")
+        if self._acquisition_active() and layout and layout["detector_channels"] == physical:
+            return layout
+        firmware = (self._discovery or {}).get("firmware", {})
+        formats = firmware.get("supported_dfd_formats", [])
+        version = 2 if "DFD2" in formats else 1
+        return dict(detector_channels=physical, stream_channels=physical + version,
+                    reference_channel_index=physical + version - 1,
+                    extra_channel_index=physical if version == 2 else None)
+
+    def _sync_channel_items(self, layout):
+        combo = self.ui.comboBox_plot_channel
+        wanted = [] if layout is None else [str(i) for i in range(layout["stream_channels"])]
+        with QSignalBlocker(combo):
+            for text in self._channel_items[:]:
+                if text not in wanted:
+                    index = combo.findText(text)
+                    if index >= 0:
+                        combo.removeItem(index)
+                    self._channel_items.remove(text)
+            for text in wanted:
+                if combo.findText(text) < 0:
+                    combo.addItem(text)
+                    self._channel_items.append(text)
+                combo.setItemData(combo.findText(text), "", Qt.ItemDataRole.ToolTipRole)
+            if layout:
+                for key, label in (("extra_channel_index", "Extra (unconnected)"),
+                                   ("reference_channel_index", "Laser reference")):
+                    index = layout.get(key)
+                    if index is not None:
+                        combo.setItemData(combo.findText(str(index)), label, Qt.ItemDataRole.ToolTipRole)
 
     def poll_status(self):
         if (
@@ -306,7 +389,8 @@ class FlareController(QObject):
             registers = axis_registers_from_gui(values)
             self._preserve_view = navigation
             self._display_geometry = dict(values)
-            self.queue_registers(registers, geometry=values)
+            if not (self.ui.checkBox_DFD.isChecked() and self._acquisition_active() and not self.preview):
+                self.queue_registers(registers, geometry=values)
             if isinstance(getattr(self.window, "currentImage", None), np.ndarray):
                 # Remap cached pixels in this mouse event, before the 80 ms
                 # write timer or any HTTP response. Do not reprocess the image.
@@ -316,7 +400,7 @@ class FlareController(QObject):
 
     def navigate_preview(self):
         """Keep the mouse's view and update controls once without NI callbacks."""
-        if self.ui.checkBox_DFD.isChecked() and self._acquisition_active():
+        if self.ui.checkBox_DFD.isChecked() and self._acquisition_active() and not self.preview:
             return  # DFD firmware freezes its scan layout through draining; view-only navigation remains available.
         projection = self.ui.comboBox_view_projection.currentText()
         if projection not in ("xy", "yx"):
@@ -355,21 +439,12 @@ class FlareController(QObject):
             return
         try:
             settings = self.settings()
+            task = self._task("live", settings)
         except Exception as error:
             self.log(str(error))
+            self.ui.statusBar.showMessage("Flare worker could not start: " + str(error), 0)
             return
-        controls = self.live_controls
-
-        def execute():
-            from ...hardware.flare import FlareClient
-
-            client = FlareClient(settings)
-            try:
-                return controls.apply(client)
-            finally:
-                client.close()
-
-        self.live_job = FlareJob(execute, self)
+        self.live_job = FlareJob(task, self)
         self.live_job.result.connect(self._live_result)
         self.live_job.finished.connect(self._live_finished)
         self.ui.comboBox_detector_model.setEnabled(False)
@@ -452,7 +527,9 @@ class FlareController(QObject):
             *(f"spinBox_off_{axis}_um" for axis in "xyz"),
         ))
         if self.ui.checkBox_DFD.isChecked():
-            frozen += tuple(name for axis in "xyz" for name in (
+            # XY preview geometry is read afresh between finite frames. Z
+            # remains unsupported by the DFD REST configuration.
+            frozen += tuple(name for axis in ("z" if self.preview else "xyz") for name in (
                 f"spinBox_range_{axis}", f"spinBox_off_{axis}_um", f"spinBox_offExtra_{axis}_V",
             ))
             frozen += tuple(f"checkBox_laser{i}" for i in range(4))
@@ -471,18 +548,28 @@ class FlareController(QObject):
                 self.ui.comboBox_detector_model.setEnabled(False)
 
     def update_display(self):
+        layout = self._display_layout()
+        self._sync_channel_items(layout)
         if not self.selected:
             return
         channels = int(self.ui.comboBox_spad_channels.currentText())
         text = self.ui.comboBox_plot_channel.currentText()
-        mask = np.asarray(self.window.fingerprint_mask).reshape(-1)
+        mask = np.asarray(getattr(self.window, "fingerprint_mask", np.ones(channels))).reshape(-1)
         self.display_channels = tuple(
             i
             for i in range(channels)
             if i < len(mask) and mask[i] and (not text.isdigit() or i == int(text))
         )
-        if self.runner:
-            self.runner.display_channels = self.display_channels
+        role = ""
+        if layout and text.isdigit():
+            index = int(text)
+            if channels <= index < layout["stream_channels"]:
+                self.display_channels = (index,)
+                role = ("Laser reference" if index == layout["reference_channel_index"]
+                        else "Extra (unconnected)")
+        self.ui.label_plot_channel.setText(f"Ch. selected: {text}" + (f" — {role}" if role else ""))
+        if self._display is not None:
+            self._display["channels"] = self.display_channels
         if self.last_snapshot and "hcl_image" in self.last_snapshot:
             self.plot_image()
 
@@ -511,6 +598,10 @@ class FlareController(QObject):
             self.log("Stop the local acquisition before resetting Flare")
             return
         if action not in ("read", "write", "read_all") and self.job and self.job.isRunning():
+            if action == "reset":
+                self._pending_reset = True
+                self.ui.statusBar.showMessage("Reset requested; waiting for the current Flare request.")
+                return
             self.log("Wait for the current Flare control request")
             return
         try:
@@ -518,37 +609,13 @@ class FlareController(QObject):
             name = self.ui.lineEdit_flare_register.text().strip()
             value = json.loads(self.ui.lineEdit_flare_value.text()) if action == "write" else None
             cached_discovery = self._discovery
+            task = self._task(action, settings, name=name, value=value, discovery=cached_discovery)
         except Exception as error:
             self.log(str(error))
+            self.ui.statusBar.showMessage("Flare request could not start: " + str(error), 0)
             return
 
-        def execute():
-            from ...hardware.flare import FlareClient
-
-            client = FlareClient(settings)
-            try:
-                if cached_discovery and action in ("read", "write", "read_all", "status"):
-                    discovery = dict(cached_discovery)
-                    client.catalog = {row["name"]: row for row in discovery["registers"]}
-                    if action == "status":
-                        discovery["status"] = client.status()
-                else:
-                    discovery = client.discover()
-                result = discovery
-                if action == "read":
-                    result = client.read_register(name)
-                elif action == "write":
-                    result = self.live_controls.write(client, name, value)
-                elif action == "read_all":
-                    result = client.read_all()
-                elif action in ("reset", "stop"):
-                    with self.live_controls.io_lock:
-                        result = {"before_command": client.status(), "command": client.command(action)}
-                return {"action": action, "discovery": discovery, "result": result}
-            finally:
-                client.close()
-
-        job = FlareJob(execute, self)
+        job = FlareJob(task, self)
         if action in ("read", "write", "read_all"):
             self.register_jobs.add(job)
         else:
@@ -570,17 +637,22 @@ class FlareController(QObject):
             self.ui.comboBox_detector_model.setEnabled(True)
         if job is not None:
             job.deleteLater()
+        if self._pending_reset:
+            self._pending_reset = False
+            self.diagnostic("reset")
 
     def _diagnostic_result(self, result, error):
         if error:
             self.log(error)
             self.ui.label_flare_status.setText(error)
+            self.ui.statusBar.showMessage("Flare request failed: " + error, 0)
             return
         if not self.selected:
             return
         self.connected = True
         discovery = result["discovery"]
         self._discovery = discovery
+        self.update_display()
         self._status_timer.start()
         self._catalog = {row["name"]: row for row in discovery["registers"]}
         if self.live_controls.has_pending():
@@ -593,6 +665,9 @@ class FlareController(QObject):
         )
         if result["action"] == "status":
             return
+        if result["action"] == "reset":
+            self._busy_failures.clear()
+            self.ui.statusBar.showMessage("Flare reset completed. You can start Preview again.", 15000)
         values = result["result"] if result["action"] == "read_all" else {}
         if result["action"] in ("read", "write"):
             values = {result["result"]["name"]: result["result"]["value"]}
@@ -710,6 +785,10 @@ class FlareController(QObject):
                 self.live_controls.discard_pending()
             else:
                 self.live_controls.request(registers, geometry=values)
+            self._ensure_processes()
+            cancel = self._ipc_manager.Event()
+            display = self._ipc_manager.dict(channels=self.display_channels)
+            snapshots = self._ipc_manager.Queue(maxsize=1)
         except Exception as error:
             self.log(str(error))
             self.ui.statusBar.showMessage(str(error), 15000)
@@ -741,6 +820,10 @@ class FlareController(QObject):
             self.window.PROGRAM_STATE_PREVIEW if preview else self.window.PROGRAM_STATE_ACQUISITION,
             "flare_started",
         )
+        if initial_image is None:
+            self.ui.statusBar.showMessage(
+                "Starting Flare preview..." if preview else "Starting Flare acquisition...", 5000,
+            )
         self.window.last_requested_filename = filename or ""
         self.window.currentImage_size = np.asarray(
             [values[f"range_{axis}"] for axis in "xyz"], dtype=float
@@ -756,44 +839,18 @@ class FlareController(QObject):
             self.window.acquisition_run_id += 1
             self.window.last_acquisition_started_at = self.window._make_status_timestamp()
 
-        def acquire():
-            from ...hardware.flare import FlareClient
-            from ...acquisition.flare import FlareAcquisition
-
-            client = FlareClient(settings)
-            try:
-                client.discover()
-                if values["dfd_enable"]:
-                    client.check_acquisition_support(dfd=True)
-                else:
-                    client.check_acquisition_support()
-                configuration = configuration_from_gui(
-                    values, client.firmware["clock_hz"], settings, preview=preview, dummy=dummy
-                )
-            finally:
-                client.close()
-            runner = FlareAcquisition(
-                settings,
-                configuration,
-                filename=filename,
-                raw_only=raw_only,
-                on_snapshot=lambda snapshot: self.run_job.snapshot.emit(dict(
-                    snapshot, geometry=values if values["dfd_enable"] else (self.live_controls.geometry() or values),
-                )),
-                initial_image=initial_image,
-                live_controls=self.live_controls,
-            )
-            runner.gui_metadata = dict(values)
-            runner.display_channels = self.display_channels
-            self.runner = runner
-            if self.stopping:
-                runner.stop()
-            return runner.run()
-
-        self.run_job = FlareJob(acquire, self)
+        self._cancel = cancel
+        self._display = display
+        task = self._task(
+            "acquire", settings, values=values, preview=preview, dummy=dummy,
+            filename=filename, raw_only=raw_only, initial_image=initial_image,
+            cancel=self._cancel, display=self._display,
+            snapshots=snapshots,
+        )
+        self.run_job = FlareJob(task, self)
         self.run_job.snapshot.connect(self.render)
         self.run_job.result.connect(self._acquisition_result)
-        self.run_job.finished.connect(self._run_thread_finished)
+        self.run_job.finished.connect(self._run_finished)
         self.run_job.start()
 
     def render(self, snapshot):
@@ -806,6 +863,8 @@ class FlareController(QObject):
             )
         )
         self.last_snapshot = snapshot
+        if "dfd_layout" in snapshot:
+            self.update_display()
         self.connected = True
         if not self._status_timer.isActive():
             self._status_timer.start()
@@ -912,7 +971,11 @@ class FlareController(QObject):
 
     def _acquisition_result(self, result, error):
         self.runner = None
+        self._cancel = None
+        self._display = None
         self.last_result = result
+        if result and result.get("discovery"):
+            self._discovery = result["discovery"]
         message = error or (result.get("error") if result else "Flare acquisition failed")
         if message:
             self.log(message)
@@ -929,6 +992,7 @@ class FlareController(QObject):
             )
         if self.preview and result and result.get("complete") and not self.stopping:
             # A finite preview frame ending is not the end of the preview session.
+            self._busy_failures.clear()
             return
         if self.preview:
             self.stopping = True
@@ -951,9 +1015,50 @@ class FlareController(QObject):
             else self.window.PROGRAM_STATE_IDLE,
             "flare_completed" if complete else "flare_stopped",
         )
-        self.ui.statusBar.showMessage(message or "Flare acquisition complete", 15000)
+        if result and result.get("result") == "cancelled":
+            self._busy_failures.clear()
+            self.ui.statusBar.showMessage("Flare stopped", 15000)
+        elif message:
+            recovery = bool(result and result.get("recovery_required"))
+            self.ui.statusBar.showMessage(
+                ("Flare preview failed: " if self.preview else "Flare acquisition failed: ") + message
+                + (". Flare may still be busy; use Stop or Reset in the Flare tab." if recovery else ""),
+                0,
+            )
+            if "busy" in message.lower() or "errno=16" in message:
+                now = time.monotonic()
+                self._busy_failures = [stamp for stamp in self._busy_failures if now - stamp < 30]
+                self._busy_failures.append(now)
+                if len(self._busy_failures) >= 2 and self._reset_prompt is None:
+                    self._offer_reset()
+        else:
+            self._busy_failures.clear()
+            self.ui.statusBar.showMessage("Flare acquisition complete", 15000)
 
-    def _run_thread_finished(self):
+    def _offer_reset(self):
+        prompt = QMessageBox(self.window)
+        prompt.setWindowTitle("Flare is still busy")
+        prompt.setIcon(QMessageBox.Icon.Warning)
+        prompt.setText("Preview or acquisition could not start repeatedly because Flare is still busy.")
+        prompt.setInformativeText(
+            "Reset Flare now? This stops the board's current acquisition and returns DAC outputs to zero. "
+            "After reset finishes, start Preview or Acquisition again."
+        )
+        prompt.setStandardButtons(QMessageBox.StandardButton.Reset | QMessageBox.StandardButton.Cancel)
+        prompt.setDefaultButton(QMessageBox.StandardButton.Cancel)
+        self._reset_prompt = prompt
+
+        def answered(button):
+            self._reset_prompt = None
+            self._busy_failures.clear()
+            if button == QMessageBox.StandardButton.Reset:
+                self.diagnostic("reset")
+            prompt.deleteLater()
+
+        prompt.finished.connect(answered)
+        prompt.open()
+
+    def _run_finished(self):
         job = self.run_job
         self.run_job = None
         if job is not None:
@@ -969,8 +1074,8 @@ class FlareController(QObject):
     def stop(self):
         self.stopping = True
         self._repeat.stop()
-        if self.runner:
-            self.runner.stop()
+        if self._cancel is not None:
+            self._cancel.set()
         elif (
             self.preview
             and not (self.run_job and self.run_job.isRunning())
@@ -979,6 +1084,11 @@ class FlareController(QObject):
             self._acquisition_result({"complete": False, "result": "cancelled"}, None)
 
     def close(self):
+        if self._closed:
+            return
+        self._pending_reset = False
+        if self._reset_prompt is not None:
+            self._reset_prompt.reject()
         self._live_timer.stop()
         self.live_controls.discard_pending()
         self.stop()
@@ -990,5 +1100,15 @@ class FlareController(QObject):
                     raise FlareShutdownError(
                         "Flare worker is still closing; retry closing the application"
                     )
+            if job:
+                job._timer.stop()
+        if self._process_pool is not None:
+            self._process_pool.shutdown(wait=True, cancel_futures=True)
+            self._process_pool = None
+        if self._ipc_manager is not None:
+            self._log_timer.stop()
+            self._ipc_manager.shutdown()
+            self._ipc_manager = None
         for logger in self.loggers:
             logger.removeHandler(self.bridge)
+        self._closed = True

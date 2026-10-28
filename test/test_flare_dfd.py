@@ -1,8 +1,9 @@
-"""Schema-4 DFD1 contract, independent fixtures, recording and analysis checks."""
+"""Schema-4 DFD1/DFD2 contracts, recording, display and analysis checks."""
 
 import socket
 import struct
 import threading
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -19,7 +20,7 @@ from brighteyes_mcs.acquisition.detectors.flare.dfd import (
 from brighteyes_mcs.acquisition.detectors.flare.dfd_format import pack_sequence
 from brighteyes_mcs.acquisition.flare import FlareAcquisition
 from brighteyes_mcs.hardware.flare import FlareClient, FlareError
-from brighteyes_mcs.storage.flare import FLARE_DFD_FORMAT
+from brighteyes_mcs.storage.flare import FLARE_DFD_FORMAT, FlareRecording
 from brighteyes_mcs.storage.raw import convert_raw_acquisition
 
 
@@ -32,19 +33,23 @@ def request(channels=25, **changes):
     return dict(c, **changes)
 
 
-def accepted(c):
-    layout = layout_for(c)
+def accepted(c, version=1):
+    layout = replace(layout_for(c), format_version=version)
     result = dict(c)
     holdoff = result.pop("detector_fpga_holdoff_cycles", 0)
     result.update(
-        stream_format="DFD1", stream_format_version=1, record_unit="pixel", record_bytes=layout.record_bytes,
+        stream_format=f"DFD{version}", stream_format_version=version, record_unit="pixel", record_bytes=layout.record_bytes,
         detector_channels=c["channels"], stream_channels=layout.stream_channels, histogram_bins=91,
-        reference_channel_index=c["channels"], count_bits=16, total_records=layout.total_records,
+        reference_channel_index=layout.reference_channel_index, count_bits=16, total_records=layout.total_records,
         total_bytes=layout.total_bytes, sys_hz=100000000, dma_hz=100000000, sampling_hz_num=3640000000,
         sampling_hz_den=9, laser_hz=40000000, fast_exc_hz=240000000, laser_slots=6,
         pixel_sys_cycles=c["dwell"] * c["bins_per_pixel"], holdoff_cycles=holdoff,
         holdoff_clock="clk_sampling", reference_enabled=bool(c["dfd_reference_enable"]),
     )
+    if version == 2:
+        result.update(extra_channel_count=1, extra_channel_index=c["channels"], extra_channel_physical_io=False,
+                      padded_channels=layout.padded_channels, padding_channel_indices=[layout.stream_channels],
+                      channel_roles=["detector"] * c["channels"] + ["extra", "laser_reference"])
     return result
 
 
@@ -56,7 +61,7 @@ def record(c, index, run_id=0x12345678, partial=False):
     counts[:, -1] = 60000  # Bright reference must never leak into intensity/fingerprint.
     padded = np.zeros((91, layout.padded_channels), dtype='<u2')
     padded[:, :layout.stream_channels] = counts
-    header = struct.pack('<5Q', 0x444644310000005b | layout.stream_channels << 16,
+    header = struct.pack('<5Q', layout.magic << 32 | 91 | layout.stream_channels << 16,
                          run_id << 32 | index, x << 32 | y, z << 32 | rep,
                          layout.payload_words << 32 | partial)
     return header + padded.tobytes() + struct.pack('<Q', 0x4446445f454e4421), counts
@@ -141,11 +146,45 @@ def test_preview_sums_exclude_reference_and_do_not_overflow(channels):
     assert image[0, 0] == data[0, :, 0].sum(dtype=np.uint64)
 
 
+def test_preview_batch_crossing_frames_keeps_last_visit_to_each_pixel():
+    c = accepted(request(25))
+    data = np.arange(15 * 91 * 26, dtype=np.uint16).reshape(15, 91, 26)
+    image = np.zeros((2, 3), dtype=np.uint64)
+    preview = DfdPreview(c, image)
+    sums = preview.update(data, 4, None)
+    expected = np.zeros_like(image)
+    for offset, count in enumerate(sums):
+        expected.flat[(4 + offset) % image.size] = count
+    np.testing.assert_array_equal(image, expected)
+
+
+@pytest.mark.parametrize("channels", [25, 49])
+def test_batched_recording_preserves_pixels_across_rows_frames_and_repetitions(tmp_path, channels):
+    c = accepted(request(channels, pixels=5, lines=3, frames=2, repetitions=2))
+    count = c["total_records"]
+    histograms = np.arange(count * 91 * (channels + 1), dtype=np.uint16).reshape(count, 91, channels + 1)
+    recording = FlareRecording(tmp_path / "batched.h5", c)
+    assert recording.data.chunks[-2:] == (91, channels + 1)
+    offset = 0
+    for size in (1, 4, 8, 19, 3, count):
+        batch = histograms[offset:offset + size]
+        recording.append(offset, batch)
+        offset += len(batch)
+        assert recording.written_bins == offset
+    recording.finish({"complete": True, "validated_bins": count})
+    with h5py.File(recording.path) as output:
+        expected = histograms.reshape(2, 2, 3, 5, 91, channels + 1)
+        np.testing.assert_array_equal(output["data"][:], expected)
+        assert output.attrs["stored_bins"] == count
+        assert output.attrs["complete"]
+
+
 class Service:
-    def __init__(self, c, *, truncate=False, fault=False):
+    def __init__(self, c, *, truncate=False, fault=False, version=1):
         self.c, self.truncate, self.fault = c, truncate, fault
+        self.version = version
         self.firmware = dict(board_id=0x464c5234, schema_version=0x40000, clock_hz=100000000,
-                             supported_acquisition_modes=['normal', 'dfd'])
+                             supported_acquisition_modes=['normal', 'dfd'], supported_dfd_formats=[f'DFD{version}'])
         self.done = threading.Event()
         self.calls = []
         self.run_id = 0x12345678
@@ -164,7 +203,7 @@ class Service:
 
     def configure(self, c):
         self.calls.append(("configure", dict(c)))
-        self.effective = accepted(c)
+        self.effective = accepted(c, self.version)
         return self.effective
 
     def read_register(self, name):
@@ -186,7 +225,7 @@ class Service:
             self.stream = dict(self.effective, id='dfd-test', complete=False, acquisition_done=0, sender_done=0)
 
             def send():
-                raw = b''.join(record(self.c, i, self.run_id)[0] for i in range(layout_for(self.c).total_records))
+                raw = b''.join(record(self.effective, i, self.run_id)[0] for i in range(layout_for(self.c).total_records))
                 if self.truncate:
                     raw = raw[:-23]
                 with socket.create_connection((self.destination['host'], self.destination['port'])) as connection:
@@ -261,3 +300,79 @@ def test_mode_and_layout_discovery_prevent_using_a2_for_dfd():
                        ('reference_enabled', False), ('record_unit', 'bin')]:
         with pytest.raises(ValueError):
             validate_accepted(c, dict(accepted(c), **{key: value}), 100000000)
+
+
+@pytest.mark.parametrize("channels", [25, 49])
+@pytest.mark.parametrize("chunk_size", [1, 39, 40, 517, 262144])
+def test_dfd2_fragmented_extra_and_reference_are_distinct(channels, chunk_size):
+    c = accepted(request(channels, pixels=1, lines=1), version=2)
+    validate_accepted(request(channels, pixels=1, lines=1), c, 100000000)
+    raw, expected = record(c, 0)
+    decoder = FlareDfdDecoder(c, 0x12345678)
+    parts = [decoder.feed(raw[i:i + chunk_size]) for i in range(0, len(raw), chunk_size)]
+    decoder.finish()
+    actual = np.concatenate(parts)
+    np.testing.assert_array_equal(actual[0], expected)
+    assert actual.shape == (1, 91, channels + 2)
+    assert np.any(actual[0, :, channels] != 0)
+    assert np.all(actual[0, :, channels + 1] == 60000)
+    image = np.zeros((1, 1), dtype=np.uint64)
+    preview = DfdPreview(c, image)
+    preview.update(actual, 0, None)
+    assert image[0, 0] == expected[:, :channels].sum(dtype=np.uint64)
+    for index in (channels, channels + 1):
+        preview.update(actual, 0, (index,))
+        assert image[0, 0] == expected[:, index].sum(dtype=np.uint64)
+        np.testing.assert_array_equal(preview.hist_sum, expected[:, index])
+
+
+@pytest.mark.parametrize("channels", [25, 49])
+def test_dfd2_capture_conversion_and_channel_metadata(tmp_path, channels):
+    c = request(channels)
+    effective = accepted(c, version=2)
+    service = Service(c, version=2)
+    settings = FlareSettings(host='127.0.0.1', bind_host='127.0.0.1', receiver_host='127.0.0.1', receiver_port=0)
+    filename = tmp_path / 'dfd2.h5'
+    snapshots = []
+    run = FlareAcquisition(settings, c, filename=filename, client_factory=lambda _: service,
+                           on_snapshot=snapshots.append)
+    run.display_channels = (channels + 1,)
+    result = run.run()
+    assert result.get('error') is None, result
+    assert result['complete']
+    expected = np.stack([record(effective, i)[1] for i in range(6)])
+    converted = tmp_path / 'converted.h5'
+    convert_raw_acquisition(filename.with_suffix('.flare.json'), converted)
+    for path in (filename, converted):
+        with h5py.File(path) as output:
+            np.testing.assert_array_equal(output['data'][:].reshape(expected.shape), expected)
+            assert output.attrs['stream_format'] == 'DFD2'
+            assert output['data'].attrs['extra_channel_index'] == channels
+            assert output['data'].attrs['reference_channel_index'] == channels + 1
+            assert output.attrs['channel_roles'][-2:].tolist() == ['extra', 'laser_reference']
+    assert snapshots[-1]['dfd_layout']['reference_channel_index'] == channels + 1
+    np.testing.assert_array_equal(snapshots[-1]['image'], np.full((2, 3), 91 * 60000))
+    np.testing.assert_array_equal(snapshots[-1]['fingerprint'], expected[:, :, :channels].sum(axis=(0, 1)))
+
+
+@pytest.mark.parametrize("channels", [25, 49])
+def test_dfd2_rejects_wrong_layout_padding_and_incomplete_data(channels):
+    request_config = request(channels, pixels=1, lines=1)
+    c = accepted(request_config, version=2)
+    raw = record(c, 0)[0]
+    with pytest.raises(ValueError):
+        FlareDfdDecoder(accepted(request_config), 0x12345678).feed(raw)
+    for key, value in (("reference_channel_index", channels), ("extra_channel_index", channels + 1),
+                       ("extra_channel_physical_io", True), ("channel_roles", ['detector'] * (channels + 2)),
+                       ("padding_channel_indices", []), ("stream_format_version", 1)):
+        with pytest.raises(ValueError):
+            FlareDfdDecoder(dict(c, **{key: value}), 0x12345678)
+    corrupt = bytearray(raw)
+    corrupt[40 + 2 * c['stream_channels']] = 1
+    with pytest.raises(ValueError):
+        FlareDfdDecoder(c, 0x12345678).feed(corrupt)
+    for incomplete in (raw[:-1], record(c, 0, partial=True)[0]):
+        decoder = FlareDfdDecoder(c, 0x12345678)
+        decoder.feed(incomplete)
+        with pytest.raises(ValueError):
+            decoder.finish()

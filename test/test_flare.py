@@ -422,6 +422,94 @@ class FakeClient:
         return {"command": name}
 
 
+def test_slow_status_request_does_not_block_decoding():
+    config = configuration(frames=1, repetitions=1)
+    settings = FlareSettings(
+        host="127.0.0.1", bind_host="127.0.0.1", receiver_host="127.0.0.1", receiver_port=0,
+    )
+    device = FakeClient(settings, config)
+    polling, release, decoded = threading.Event(), threading.Event(), threading.Event()
+
+    class SlowStatus:
+        def status(self):
+            polling.set()
+            assert release.wait(5)
+            return device.status()
+
+        def close(self):
+            pass
+
+    calls = []
+
+    def factory(settings):
+        calls.append(True)
+        return device if len(calls) == 1 else SlowStatus()
+
+    def snapshot(value):
+        if value["bins"] == total_bins(config):
+            decoded.set()
+
+    results = []
+    runner = FlareAcquisition(settings, config, client_factory=factory, on_snapshot=snapshot)
+    worker = threading.Thread(target=lambda: results.append(runner.run()))
+    worker.start()
+    try:
+        assert polling.wait(3)
+        assert decoded.wait(3), "Decoding waited for the slow HTTP status request"
+    finally:
+        release.set()
+        worker.join(5)
+    assert not worker.is_alive()
+    assert results[0]["complete"]
+
+
+def test_live_geometry_commit_waits_until_start_has_completed():
+    config = configuration(frames=1, repetitions=1)
+    settings = FlareSettings(
+        host="127.0.0.1", bind_host="127.0.0.1", receiver_host="127.0.0.1", receiver_port=0,
+    )
+    controls = FlareLiveControls()
+    ready, attempted, started = threading.Event(), threading.Event(), threading.Event()
+    writes = []
+
+    class Device(FakeClient):
+        def stream_settings(self, value):
+            ready.set()
+            assert attempted.wait(3)
+            assert not writes
+            return super().stream_settings(value)
+
+        def command(self, name):
+            result = super().command(name)
+            if name == "start":
+                assert not writes
+                started.set()
+            return result
+
+        def write_register(self, name, value):
+            writes.append((name, value, started.is_set()))
+            return {"name": name, "value": value}
+
+    device = Device(settings, config)
+
+    def edit_geometry():
+        if not ready.wait(3):
+            return
+        controls.request({"axis_start_offset_volts": [1, 2, 0]})
+        attempted.set()
+        controls.apply(device)
+
+    writer = threading.Thread(target=edit_geometry)
+    writer.start()
+    try:
+        result = FlareAcquisition(settings, config, live_controls=controls, client_factory=lambda s: device).run()
+    finally:
+        writer.join(5)
+    assert not writer.is_alive()
+    assert result["complete"]
+    assert writes == [("axis_start_offset_volts", [1, 2, 0], True), ("command", 1, True)]
+
+
 @pytest.mark.parametrize("policy", ["stopped", "live"])
 def test_detector_masks_and_holdoff_survive_configuration_reset(policy):
     config = configuration(frames=1, repetitions=1)

@@ -7,6 +7,8 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 from xml.etree import ElementTree
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+import queue
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -23,7 +25,7 @@ from brighteyes_mcs.hardware.flare import FlareError
 
 
 @pytest.fixture
-def panel():
+def panel(monkeypatch):
     app = QApplication.instance() or QApplication([])
     window = QMainWindow()
     source = Path(__file__).resolve().parents[1] / "brighteyes_mcs/ui/qt/main_window_design.ui"
@@ -38,6 +40,16 @@ def panel():
     window.mcs_manager = SimpleNamespace(is_connected=False)
     window._set_program_state = Mock()
     controller = FlareController(window)
+    # Keep device mocks in this interpreter for focused UI tests. Real spawn
+    # and IPC integration is exercised separately in test_flare_process.py.
+    def local_workers():
+        if controller._process_pool is None:
+            controller._process_pool = ThreadPoolExecutor(max_workers=3)
+            controller._ipc_manager = SimpleNamespace(
+                Event=threading.Event, dict=lambda **kw: dict(kw), Queue=queue.Queue,
+                shutdown=lambda: None,
+            )
+    monkeypatch.setattr(controller, "_ensure_processes", local_workers)
     yield window, controller
     controller.close()
     window.close()
@@ -69,6 +81,39 @@ def test_tabs_defaults_and_inactive_controls_never_construct_flare(panel):
             controller.selection_changed(label)
         assert controller.job is None
         assert controller.run_job is None
+
+
+@pytest.mark.parametrize("physical", [25, 49])
+@pytest.mark.parametrize("version", [1, 2])
+def test_flare_reference_selection_bypasses_detector_mask(panel, physical, version):
+    window, controller = panel
+    controller.selection_changed("TCP/IP - FPGA Flare")
+    window.fingerprint_mask = np.zeros(physical)
+    window.ui.comboBox_spad_channels.setCurrentText(str(physical))
+    controller._discovery = {"firmware": {"supported_dfd_formats": [f"DFD{version}"]}}
+    window.ui.checkBox_DFD.setChecked(True)
+    controller._display = {}
+    reference = physical + version - 1
+    combo = window.ui.comboBox_plot_channel
+    assert combo.findText(str(reference)) >= 0
+    combo.setCurrentText(str(reference))
+    controller.update_display()
+    assert controller.display_channels == (reference,)
+    assert controller._display['channels'] == (reference,)
+    assert "Laser reference" in window.ui.label_plot_channel.text()
+    if version == 2:
+        combo.setCurrentText(str(physical))
+        controller.update_display()
+        assert controller.display_channels == (physical,)
+        assert "Extra (unconnected)" in window.ui.label_plot_channel.text()
+    combo.setCurrentText("Sum")
+    controller.update_display()
+    assert controller.display_channels == ()
+    window.fingerprint_mask = np.ones(physical)
+    controller.update_display()
+    assert controller.display_channels == tuple(range(physical))
+    controller.selection_changed("FPGA - SPAD")
+    assert combo.findText(str(reference)) < 0
 
 
 def test_selection_restores_existing_widget_state_and_slave_is_blocked(panel):
@@ -144,13 +189,60 @@ def test_preview_completion_keeps_controls_locked_until_stop_between_frames(pane
     controller._acquisition_result({"complete": True, "result": "complete"}, None)
     assert window.started_preview
     assert not window.ui.comboBox_detector_model.isEnabled()
-    controller._run_thread_finished()
+    controller._run_finished()
     assert controller._repeat.isActive()
     controller.stop()
     assert not window.started_preview
     assert not controller._repeat.isActive()
     assert window.ui.spinBox_nx.isEnabled() == before
     assert window.ui.comboBox_flare_mode.isEnabled()
+
+
+@pytest.mark.parametrize("preview", [True, False])
+def test_repeated_busy_failures_offer_reset_only_after_user_accepts(preview_panel, preview):
+    from PySide6.QtWidgets import QMessageBox
+
+    window, controller = preview_panel
+    failure = {"complete": False, "error": "Flare is busy; inspect status", "result": "partial"}
+    with patch.object(controller, "diagnostic") as diagnostic:
+        controller.preview = preview
+        controller._acquisition_result(failure, None)
+        assert controller._reset_prompt is None
+        assert "Flare is busy" in window.ui.statusBar.currentMessage()
+        controller._acquisition_result(failure, None)
+        assert controller._reset_prompt is not None
+        diagnostic.assert_not_called()
+        controller._reset_prompt.done(QMessageBox.StandardButton.Cancel)
+        diagnostic.assert_not_called()
+        assert controller._reset_prompt is None
+        controller._acquisition_result(failure, None)
+        controller._acquisition_result(failure, None)
+        controller._reset_prompt.done(QMessageBox.StandardButton.Reset)
+        diagnostic.assert_called_once_with("reset")
+
+
+def test_old_busy_failures_do_not_trigger_reset_prompt(preview_panel):
+    _, controller = preview_panel
+    failure = {"complete": False, "error": "Flare is busy", "result": "partial"}
+    controller.preview = True
+    with patch("brighteyes_mcs.ui.controllers.flare.time.monotonic", side_effect=[0, 31]):
+        controller._acquisition_result(failure, None)
+        controller._acquisition_result(failure, None)
+    assert controller._reset_prompt is None
+
+
+def test_queue_overflow_remains_visible_and_does_not_reset_automatically(preview_panel):
+    window, controller = preview_panel
+    controller.preview = True
+    with patch.object(controller, "diagnostic") as diagnostic:
+        controller._acquisition_result({
+            "complete": False, "result": "partial", "recovery_required": True,
+            "error": "Flare processing queue filled; capture is incomplete",
+        }, None)
+        assert "queue filled" in window.ui.statusBar.currentMessage()
+        assert "Stop or Reset" in window.ui.statusBar.currentMessage()
+        assert not window.started_preview
+        diagnostic.assert_not_called()
 
 
 @pytest.mark.parametrize("name", ["max_pixel", "REG_MAX_PIXEL", "0x104"])
@@ -259,7 +351,7 @@ def test_only_continuing_preview_passes_previous_image_to_next_run(preview_panel
     with (
         patch("brighteyes_mcs.ui.controllers.flare.FlareJob") as job,
         patch("brighteyes_mcs.hardware.flare.FlareClient"),
-        patch("brighteyes_mcs.ui.controllers.flare.configuration_from_gui"),
+        patch("brighteyes_mcs.acquisition.flare_worker.configuration_from_gui"),
         patch("brighteyes_mcs.acquisition.flare.FlareAcquisition") as acquisition,
     ):
         job.return_value.isRunning.return_value = False
@@ -330,7 +422,7 @@ def test_live_server_errors_appear_in_panel_without_changing_selection_or_retry(
         controller.queue_registers({"laser_1_enable": 1})
         _wait_live_idle(controller)
         assert error in window.ui.plainTextEdit_flare_log.toPlainText()
-        assert window.ui.statusBar.currentMessage() == error
+        assert error in window.ui.statusBar.currentMessage()
         assert controller.connected and controller.selected
         assert factory.return_value.write_register.call_count == 1
         factory.return_value.command.assert_not_called()
@@ -418,7 +510,7 @@ def test_pan_zoom_updates_display_immediately_and_reuses_it_in_next_scan(preview
             expected_bytes=2160, status={}, fingerprint=np.zeros(25), trace=None,
         )
         publish(snapshot)
-        first_snapshot = jobs[0].snapshot.emit.call_args.args[0]
+        first_snapshot = jobs[0].function.arguments["snapshots"].get_nowait()
         controller.render(first_snapshot)
         # Exercise the existing preview navigation handler with new view bounds.
         window.preview_view_box = SimpleNamespace(navigation_event_active=True)
@@ -449,7 +541,7 @@ def test_pan_zoom_updates_display_immediately_and_reuses_it_in_next_scan(preview
         window.AutoRange_im_widget.assert_not_called()
         # Complete the finite run, then start the next one with the latest edits.
         controller._acquisition_result({"complete": True, "result": "complete"}, None)
-        controller._run_thread_finished()
+        controller._run_finished()
         controller._repeat.stop()
         controller.begin(True)
         jobs[1].function()
@@ -458,7 +550,7 @@ def test_pan_zoom_updates_display_immediately_and_reuses_it_in_next_scan(preview
         assert second_configuration["y_start"] != first_configuration["y_start"]
         assert second_configuration["x_step"] == round(2 / 3 * 32768 / 10)
         acquisition.call_args.kwargs["on_snapshot"](snapshot)
-        controller.render(jobs[1].snapshot.emit.call_args.args[0])
+        controller.render(jobs[1].function.arguments["snapshots"].get_nowait())
         assert window.im_widget.setImage.call_args.kwargs["pos"] == (1, -2)
         assert window.im_widget.setImage.call_args.kwargs["autoRange"] is False
         assert window.im_widget.getView().setRange.call_count == 1
@@ -793,11 +885,66 @@ def test_flare_dfd_begin_uses_existing_sequence_and_reference_controls(preview_p
         assert configuration["laser_enable_mask"] == 1
         assert configuration["dfd_reference_enable"] == 1
         factory.return_value.check_acquisition_support.assert_called_once_with(dfd=True)
-        for name in ("comboLaserSeq_1", "checkBox_laser0", "spinBox_range_x", "checkBox_DFD_LaserDebug"):
+        for name in ("comboLaserSeq_1", "checkBox_laser0", "spinBox_range_z", "checkBox_DFD_LaserDebug"):
             assert not getattr(window.ui, name).isEnabled()
+        for axis in "xy":
+            assert getattr(window.ui, f"spinBox_range_{axis}").isEnabled()
+            assert getattr(window.ui, f"spinBox_off_{axis}_um").isEnabled()
         controller._busy(False)
         assert window.ui.comboLaserSeq_1.isEnabled()
         controller.runner = controller.run_job = None
+
+
+def test_dfd_preview_geometry_is_committed_live_and_retained_next_frame(preview_panel):
+    window, controller = preview_panel
+    window.ui.checkBox_DFD.setChecked(True)
+    with (
+        patch("brighteyes_mcs.ui.controllers.flare.FlareJob") as job,
+        patch("brighteyes_mcs.hardware.flare.FlareClient") as factory,
+        patch("brighteyes_mcs.acquisition.flare.FlareAcquisition") as acquisition,
+    ):
+        job.return_value.isRunning.return_value = False
+        factory.return_value.firmware = {"clock_hz": 100000000}
+        controller.begin(True)
+        job.call_args.args[0]()
+        first = dict(acquisition.call_args.args[1])
+        window.ui.spinBox_range_x.setValue(0.6)
+        window.ui.spinBox_off_x_um.setValue(0.3)
+        factory.return_value.write_register.side_effect = lambda name, value: {"name": name, "value": value}
+        controller._start_live_write()
+        task = job.call_args.args[0]
+        assert task.action == "live"
+        task()
+        writes = factory.return_value.write_register.call_args_list
+        assert [call.args[0] for call in writes] == [
+            "axis_start_offset_volts", "axis_calibration_volts_per_step", "command",
+        ]
+        assert writes[0].args[1][0] == 0
+        assert writes[1].args[1][0] == round(0.6 / 3 * 32768 / 10)
+        assert writes[2].args == ("command", 1)
+        assert controller.live_controls.geometry()["offset_x_um"] == 0.3
+        controller.live_job = None
+        controller._acquisition_result({"complete": True, "result": "complete"}, None)
+        controller._run_finished()
+        controller._repeat.stop()
+        controller.begin(True)
+        job.call_args.args[0]()
+        second = acquisition.call_args.args[1]
+        assert second["x_start"] != first["x_start"]
+        assert second["x_step"] == round(0.6 / 3 * 32768 / 10)
+        controller.run_job = None
+
+
+@pytest.mark.parametrize("preview", [True, False])
+def test_dfd_geometry_lock_depends_on_preview_or_recording(preview_panel, preview):
+    window, controller = preview_panel
+    window.ui.checkBox_DFD.setChecked(True)
+    controller.preview = preview
+    controller._busy(True)
+    for axis in "xyz":
+        for name in (f"spinBox_range_{axis}", f"spinBox_off_{axis}_um"):
+            assert getattr(window.ui, name).isEnabled() == (preview and axis in "xy")
+    controller._busy(False)
 
 
 @pytest.mark.parametrize("channel", ["RGBDFD", "LIFETIME_HSV", "LIFETIME", "QUALITY", "Sum"])

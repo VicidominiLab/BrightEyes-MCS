@@ -1,4 +1,4 @@
-"""DFD1 acquisition adapter for the schema-4 Flare service (fc5f8a9)."""
+"""DFD1/DFD2 acquisition adapter for the schema-4 Flare service."""
 
 import numpy as np
 
@@ -23,6 +23,8 @@ def sequence_from_gui(values, slots=6):
 
 
 def layout_for(configuration):
+    if "stream_format" in configuration:
+        return Layout.from_metadata(configuration)
     return Layout(configuration["channels"], **{
         key: configuration[key] for key in ("pixels", "lines", "frames", "repetitions")
     })
@@ -69,7 +71,9 @@ def validate_dfd_request(c):
 
 def validate_accepted(requested, accepted, clock_hz):
     layout = Layout.from_metadata(accepted)
-    if layout != layout_for(requested) or any(
+    requested_layout = layout_for(requested)
+    if (layout.detector_channels != requested_layout.detector_channels or
+        layout.total_records != requested_layout.total_records) or any(
         accepted.get("holdoff_cycles" if k == "detector_fpga_holdoff_cycles" else k) != v
         for k, v in requested.items()
     ):
@@ -134,8 +138,10 @@ class DfdPreview:
             self.hist_sum.fill(0)
             self.hist_records = 0
             self.selection = selection
-        detector = counts[:, :, :channels]
-        histogram = (detector if selection is None else detector[:, :, selection]).sum(axis=2, dtype=np.uint64)
+        selected = tuple(range(channels)) if selection is None else tuple(selection)
+        if any(type(i) is not int or not 0 <= i < self.configuration["stream_channels"] for i in selected):
+            raise ValueError("Selected channel is outside the negotiated DFD layout")
+        histogram = counts[:, :, selected].sum(axis=2, dtype=np.uint64)
         self.hist_live = histogram.sum(axis=0, dtype=np.uint64)
         self.hist_sum += self.hist_live
         self.live_records = len(counts)
@@ -149,13 +155,17 @@ class DfdPreview:
             peak_idx=int(self.hist_sum.argmax()), total_bins=91,
         )
         hcl = np.stack(flim_map_to_hcl(tau, brightness, quality, valid, 0, 1), axis=-1)
-        for offset in range(len(counts)):
-            pixel = (index + offset) % self.image.size
-            y, x = divmod(pixel, self.image.shape[1])
-            self.image[y, x] = histogram[offset].sum(dtype=np.uint64)
-            self.rgb[y, x] = rgb[offset]
-            self.hcl[y, x] = hcl[offset]
-        return histogram.sum(axis=1, dtype=np.uint64)
+        sums = histogram.sum(axis=1, dtype=np.uint64)
+        # Keep only the last visit to each pixel when a batch crosses frames.
+        # Unique indices make the final-write behavior explicit without a
+        # Python loop over every pixel in the incoming batch.
+        first = max(0, len(counts) - self.image.size)
+        pixel = (index + np.arange(first, len(counts))) % self.image.size
+        y, x = np.divmod(pixel, self.image.shape[1])
+        self.image[y, x] = sums[first:]
+        self.rgb[y, x] = rgb[first:]
+        self.hcl[y, x] = hcl[first:]
+        return sums
 
     def snapshot(self):
         return dict(
@@ -163,4 +173,8 @@ class DfdPreview:
             hcl_image=self.hcl.copy(), rgb_image=self.rgb.copy(),
             dfd_laser_hz=self.configuration["laser_hz"], dfd_bins=91,
             dfd_live_records=self.live_records, dfd_hist_records=self.hist_records,
+            dfd_layout={key: self.configuration[key] for key in (
+                "stream_format", "stream_format_version", "detector_channels", "stream_channels",
+                "reference_channel_index", "extra_channel_index", "extra_channel_physical_io",
+            ) if key in self.configuration},
         )
