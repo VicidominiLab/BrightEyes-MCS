@@ -159,8 +159,9 @@ class FlareClient:
     def configure(self, configuration):
         return self.request("PUT", "/configuration", configuration)
 
-    def stream_settings(self, settings):
-        return self.request("POST", "/streams", settings)
+    def stream_settings(self, settings, *, stream=None):
+        path = "/streams" if stream is None else "/streams/" + stream
+        return self.request("POST", path, settings)
 
     def command(self, command):
         if command not in ("start", "stop", "reset"):

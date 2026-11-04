@@ -6,6 +6,10 @@ Created: 2026-10-20. Branch: `flare`, created from `on_the_road_v2` at `c1ebc99a
 
 ## Progress and resuming work
 
+Firmware 1.9 follow-up: [current implementation and resume checklist](flare-1.9-status.md).
+The requested increment selects DMA1 only for normal mode and DMA2 only for DFD,
+with PL circular arrays. PS position streaming and concurrent outputs are deferred.
+
 Check a task only when its acceptance condition passes. After each implementation session, update this file with completed task IDs, validation results, remaining blockers and the next task. Keep blocked tasks unchecked and record the dependency. Hardware checks require actual measurements; simulator results do not complete them.
 
 - [x] P00 Create and switch to branch `flare`.

@@ -60,6 +60,18 @@ class FlareTask:
         try:
             if self.action == "live":
                 return self.controls.apply(client)
+            if self.action == "reference_factor":
+                from .detectors.flare.dfd import REFERENCE_FACTOR
+
+                discovery = client.discover()
+                if not discovery["firmware"].get("board_capabilities", 0) & 0x400:
+                    return {"action": self.action, "discovery": discovery, "result": None}
+                # Share the configure/START lock: the toggle cannot insert a
+                # raw write between an accepted configuration and START.
+                result = self.controls.write(client, REFERENCE_FACTOR, args["value"])
+                if result["value"] != args["value"]:
+                    raise RuntimeError("Reference decimation readback differs from the requested factor")
+                return {"action": "write", "discovery": discovery, "result": result}
             cached = args.get("discovery")
             if cached and self.action in ("read", "write", "read_all", "status"):
                 discovery = dict(cached)
@@ -95,6 +107,7 @@ class FlareTask:
             configuration = configuration_from_gui(
                 values, client.firmware["clock_hz"], self.settings,
                 preview=args["preview"], dummy=args["dummy"],
+                firmware=client.firmware,
             )
         finally:
             client.close()

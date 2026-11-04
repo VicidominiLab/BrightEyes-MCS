@@ -16,7 +16,7 @@ class FlareSettings:
     bind_host: str = "0.0.0.0"
     receiver_host: str = ""
     receiver_port: int = 9000
-    packet_bins: int = 4
+    packet_bins: int = 0  # Zero selects automatic sizing; positive values are manual.
     buffer_seconds: float = 0.25
     timeout_seconds: float = 2.0
     http_timeout_seconds: float = 5.0
@@ -27,7 +27,7 @@ class FlareSettings:
         for name, low, high in (
             ("port", 1, 65535),
             ("receiver_port", 0, 65535),
-            ("packet_bins", 1, 4096),
+            ("packet_bins", 0, 4096),
         ):
             _integer(name, getattr(self, name), low, high)
         if self.mode not in ("master", "slave"):
@@ -59,6 +59,9 @@ def _integer(name, value, low, high):
 
 
 def validate_configuration(config):
+    if "dma1_stream_enable" in config:
+        from .v19 import validate_request
+        return validate_request(config)
     if config.get("acquisition_mode") == "dfd":
         from .dfd import validate_dfd_request
         return validate_dfd_request(config)
@@ -99,6 +102,9 @@ def validate_configuration(config):
 
 
 def total_bins(config):
+    if "dma1_stream_enable" in config or config.get("stream_format") == "DFD3":
+        from .v19 import record_count
+        return record_count(config)
     return math.prod(
         config[k] for k in (("pixels", "lines", "frames", "repetitions") if config.get("acquisition_mode") == "dfd"
                            else ("pixels", "lines", "frames", "repetitions", "bins_per_pixel"))
@@ -120,6 +126,11 @@ def bin_bytes(channels):
 
 def check_transport(config, clock_hz, settings):
     size, dwell, packet = stream_parameters(config)
+    if "dma1_stream_enable" in config:
+        if settings.buffer_seconds > 0.25:
+            raise ValueError("FLARE 1.9 supports at most 0.25 seconds of buffering")
+        # Firmware 1.9 negotiates its ring and permits one complete long window.
+        return max(1, int(settings.buffer_seconds * clock_hz / (dwell * packet))) * packet * size
     slots = int(settings.buffer_seconds * clock_hz / (dwell * packet))
     capacity = slots * packet * size
     if slots < 1 or capacity > 256 * 1024 * 1024:
@@ -129,6 +140,29 @@ def check_transport(config, clock_hz, settings):
             "Flare buffer is too small for a DMA completion burst; reduce packet bins or increase buffer seconds"
         )
     return capacity
+
+
+def automatic_packet_bins(config, clock_hz, settings):
+    """Balance DMA overhead with latency and space for 32-descriptor bursts.
+
+    Target 16 KiB per packet, capped at 2 ms of exposure (one record for
+    slower scans). Reserve half the time-derived ring for scheduling jitter.
+    This estimates batching, not the maximum sustainable hardware data rate.
+    """
+    size, dwell, _ = stream_parameters(config)
+    target = math.ceil(16384 / size)
+    latency_limit = max(1, int(0.002 * clock_hz / dwell))
+    burst_limit = max(1, int(settings.buffer_seconds * clock_hz / (64 * dwell)))
+    packet = min(target, latency_limit, burst_limit, total_bins(config), 4096, 8388607 // size)
+    result = dict(config)
+    result["packet_records" if config.get("acquisition_mode") == "dfd" else "packet_bins"] = packet
+    check_transport(result, clock_hz, settings)
+    log.info(
+        "Flare automatic DMA packet: %d %s, %d bytes, %.3f ms exposure per packet",
+        packet, "DFD records" if config.get("acquisition_mode") == "dfd" else "bins",
+        packet * size, 1000 * packet * dwell / clock_hz,
+    )
+    return packet
 
 
 def axis_registers_from_gui(values):
@@ -163,12 +197,11 @@ def axis_registers_from_gui(values):
     return {"axis_start_offset_volts": starts, "axis_calibration_volts_per_step": steps}
 
 
-def configuration_from_gui(values, clock_hz, settings, *, preview=False, dummy=False):
+def configuration_from_gui(values, clock_hz, settings, *, preview=False, dummy=False, firmware=None):
     """Translate UI physical units without inheriting NI register encodings."""
     unsupported = [
         name
         for name in (
-            "circular_active",
             "lissajous_active",
             "slave_mode_enable",
             "sw_trigger_enable",
@@ -184,7 +217,7 @@ def configuration_from_gui(values, clock_hz, settings, *, preview=False, dummy=F
         "repetitions": 1 if preview else int(values["nrep"]),
         "bins_per_pixel": int(values["timebin_per_pixel"]),
         "dwell": round(float(values["time_resolution"]) * 1e-6 * clock_hz),
-        "packet_bins": settings.packet_bins,
+        "packet_bins": settings.packet_bins or 1,
         "channels": int(values["spad_channels"]),
         "dummy": int(dummy),
     }
@@ -194,5 +227,13 @@ def configuration_from_gui(values, clock_hz, settings, *, preview=False, dummy=F
         c[f"{axis}_step"] = registers["axis_calibration_volts_per_step"][index]
     if values.get("DFD", values.get("dfd_enable", False)):
         from .dfd import dfd_configuration
-        return dfd_configuration(c, values)
-    return validate_configuration(c)
+        c = dfd_configuration(c, values, firmware=firmware)
+    from .v19 import configure, supported
+    c = configure(c, values, firmware or {})
+    if supported(firmware or {}):
+        c.update(z_start=registers["axis_start_offset_volts"][2], z_step=registers["axis_calibration_volts_per_step"][2])
+    c = validate_configuration(c)
+    if settings.packet_bins == 0:
+        key = "packet_records" if c.get("acquisition_mode") == "dfd" else "packet_bins"
+        c[key] = automatic_packet_bins(c, clock_hz, settings)
+    return c

@@ -18,7 +18,7 @@ from ...acquisition.detectors.flare.config import (
     FlareSettings, axis_registers_from_gui,
 )
 from ...acquisition.detectors.flare.controls import FlareLiveControls
-from ...acquisition.detectors.flare.dfd import sequence_from_gui
+from ...acquisition.detectors.flare.dfd import sequence_from_gui, REFERENCE_FACTOR
 from ...acquisition.detectors.flare.dfd_format import pack_sequence
 from ...acquisition.detectors.models import detector_uses_flare
 from ...acquisition.flare_worker import FlareTask, initialize_worker
@@ -81,6 +81,7 @@ class FlareController(QObject):
         self._display_geometry = None
         self._profile_widgets = {}
         self._clock_label = None
+        self._reference_active = None
         self._repeat = QTimer(self)
         self._repeat.setSingleShot(True)
         self._repeat.timeout.connect(lambda: self.begin(True))
@@ -135,7 +136,10 @@ class FlareController(QObject):
         self.ui.tableWidget_flare_registers.horizontalHeader().setStretchLastSection(True)
         self._channel_items = []
         self.ui.checkBox_DFD.toggled.connect(self.update_display)
+        self.ui.checkBox_DFD.toggled.connect(self._dfd_toggled)
         self.ui.comboBox_spad_channels.currentTextChanged.connect(self.update_display)
+        self.ui.spinBox_flare_reference_decimation.valueChanged.connect(self.update_display)
+        self._refresh_reference_decimation()
 
     def _ensure_processes(self):
         if self._process_pool is not None and not self._pool_failed:
@@ -303,8 +307,11 @@ class FlareController(QObject):
         )
         if self.selected:
             self.update_display()
+            if self.ui.checkBox_DFD.isChecked():
+                self._start_reference_write()
         else:
             self._sync_channel_items(None)
+            self._refresh_reference_decimation()
 
     def _display_layout(self):
         if not self.selected or not self.ui.checkBox_DFD.isChecked():
@@ -315,10 +322,63 @@ class FlareController(QObject):
             return layout
         firmware = (self._discovery or {}).get("firmware", {})
         formats = firmware.get("supported_dfd_formats", [])
-        version = 2 if "DFD2" in formats else 1
+        version = 2 if any(f in formats for f in ("DFD2", "DFD3")) else 1
         return dict(detector_channels=physical, stream_channels=physical + version,
                     reference_channel_index=physical + version - 1,
                     extra_channel_index=physical if version == 2 else None)
+
+    def _refresh_reference_decimation(self):
+        widget = self.ui.spinBox_flare_reference_decimation
+        requested = widget.value()
+        firmware = (self._discovery or {}).get("firmware")
+        supported = bool(firmware.get("board_capabilities", 0) & 0x400) if firmware else None
+        enabled = self.selected
+        widget.setEnabled(enabled and supported is not False)
+        active = self._reference_active if self._acquisition_active() else None
+        if active:
+            factor = active.get(REFERENCE_FACTOR, 1)
+            legacy = active.get("reference_histogram_counting") == "legacy_shared_detector_holdoff"
+            text = "Active: legacy reference counting (factor 1)" if legacy else f"Active: 1 in {factor} triggers"
+            if not legacy and factor != requested:
+                target = "next preview run" if self.preview else "next acquisition"
+                text += f"; requested 1 in {requested} for {target}"
+        elif supported is False:
+            text = "Legacy reference counting (factor 1); decimation unavailable"
+        else:
+            text = f"Requested: 1 in {requested} triggers"
+            if supported is None:
+                text += "; support checked on connection"
+        self.ui.label_flare_reference_decimation_status.setText(text + "; calibration full-rate")
+
+    def _dfd_toggled(self, enabled):
+        if enabled and self.selected:
+            self._start_reference_write()
+
+    def _start_reference_write(self):
+        """Submit the desired factor immediately on entering Flare DFD mode."""
+        if not self.selected:
+            return
+        try:
+            task = self._task("reference_factor", self.settings(),
+                              value=self.ui.spinBox_flare_reference_decimation.value())
+            job = FlareJob(task, self)
+        except Exception as error:
+            self.log("Reference decimation write could not start: " + str(error))
+            return
+        self.register_jobs.add(job)
+        self.ui.comboBox_detector_model.setEnabled(False)
+        job.result.connect(self._reference_written)
+        job.finished.connect(lambda job=job: self._diagnostic_finished(job))
+        job.start()
+
+    def _reference_written(self, result, error):
+        if not error and result and result["result"] is None:
+            if self.selected:
+                self._discovery = result["discovery"]
+                self.update_display()
+                self.log("Reference decimation unavailable on this firmware; using legacy counting")
+            return
+        self._diagnostic_result(result, error)
 
     def _sync_channel_items(self, layout):
         combo = self.ui.comboBox_plot_channel
@@ -354,6 +414,10 @@ class FlareController(QObject):
     def queue_registers(self, registers, *, geometry=None):
         if not self.selected:
             return
+        if self._modern_scan() and self._acquisition_active():
+            # V3 freezes scan geometry and counting controls while queues exist.
+            # Preview reads current widgets when configuring its next finite run.
+            return
         self.live_controls.request(registers, geometry=geometry)
         if (self.connected or (self.run_job and self.run_job.isRunning())) and not self._live_timer.isActive():
             self._live_timer.start()
@@ -366,6 +430,11 @@ class FlareController(QObject):
             self.queue_registers({"laser_excitation_sequence": pack_sequence(sequence_from_gui(values))})
         except ValueError as error:
             self.log(str(error))
+
+    def _modern_scan(self):
+        from ...acquisition.detectors.flare.v19 import supported
+        firmware = (self.last_snapshot or {}).get("firmware") or (self._discovery or {}).get("firmware", {})
+        return supported(firmware)
 
     def geometry_changed(self, *_, navigation=False):
         if not self.selected:
@@ -389,7 +458,7 @@ class FlareController(QObject):
             registers = axis_registers_from_gui(values)
             self._preserve_view = navigation
             self._display_geometry = dict(values)
-            if not (self.ui.checkBox_DFD.isChecked() and self._acquisition_active() and not self.preview):
+            if not ((self.ui.checkBox_DFD.isChecked() or self._modern_scan()) and self._acquisition_active() and not self.preview):
                 self.queue_registers(registers, geometry=values)
             if isinstance(getattr(self.window, "currentImage", None), np.ndarray):
                 # Remap cached pixels in this mouse event, before the 80 ms
@@ -400,7 +469,7 @@ class FlareController(QObject):
 
     def navigate_preview(self):
         """Keep the mouse's view and update controls once without NI callbacks."""
-        if self.ui.checkBox_DFD.isChecked() and self._acquisition_active() and not self.preview:
+        if (self.ui.checkBox_DFD.isChecked() or self._modern_scan()) and self._acquisition_active() and not self.preview:
             return  # DFD firmware freezes its scan layout through draining; view-only navigation remains available.
         projection = self.ui.comboBox_view_projection.currentText()
         if projection not in ("xy", "yx"):
@@ -516,6 +585,8 @@ class FlareController(QObject):
             "checkBox_uttmActivate",
             "checkBox_pispad23ttmActivate",
         )
+        frozen += ("checkBox_circular", "spinBox_circular_points", "spinBox_circular_repetition",
+                   "spinBox_circular_radius_nm", "checkBox_lissajous")
         frozen += tuple(
             widget.objectName()
             for _, _, widget, _ in self.configuration_fields().values()
@@ -526,7 +597,7 @@ class FlareController(QObject):
             *(f"spinBox_range_{axis}" for axis in "xyz"),
             *(f"spinBox_off_{axis}_um" for axis in "xyz"),
         ))
-        if self.ui.checkBox_DFD.isChecked():
+        if self.ui.checkBox_DFD.isChecked() or self._modern_scan():
             # XY preview geometry is read afresh between finite frames. Z
             # remains unsupported by the DFD REST configuration.
             frozen += tuple(name for axis in ("z" if self.preview else "xyz") for name in (
@@ -548,6 +619,7 @@ class FlareController(QObject):
                 self.ui.comboBox_detector_model.setEnabled(False)
 
     def update_display(self):
+        self._refresh_reference_decimation()
         layout = self._display_layout()
         self._sync_channel_items(layout)
         if not self.selected:
@@ -567,6 +639,8 @@ class FlareController(QObject):
                 self.display_channels = (index,)
                 role = ("Laser reference" if index == layout["reference_channel_index"]
                         else "Extra (unconnected)")
+                if index == layout["reference_channel_index"]:
+                    role += " — " + self.ui.label_flare_reference_decimation_status.text()
         self.ui.label_plot_channel.setText(f"Ch. selected: {text}" + (f" — {role}" if role else ""))
         if self._display is not None:
             self._display["channels"] = self.display_channels
@@ -732,11 +806,12 @@ class FlareController(QObject):
                 )
             values = dict(self.window.getGUI_data())
             values["dfd_enable"] = self.ui.checkBox_DFD.isChecked()
+            values[REFERENCE_FACTOR] = self.ui.spinBox_flare_reference_decimation.value()
+            for i in range(4):
+                values[f"laser_{i + 1}_enable"] = getattr(self.ui, f"checkBox_laser{i}").isChecked()
             if values["dfd_enable"]:
                 for i in range(1, 13):
                     values[f"laser_sequence_{i}"] = int(getattr(self.ui, f"comboLaserSeq_{i}").currentText())
-                for i in range(4):
-                    values[f"laser_{i + 1}_enable"] = getattr(self.ui, f"checkBox_laser{i}").isChecked()
                 values["DFD_laser_debug"] = self.ui.checkBox_DFD_LaserDebug.isChecked()
             if values.get("fingerprint_visualization", "Cumulative") != "Cumulative":
                 raise ValueError("Select Cumulative fingerprint visualization for Flare")
@@ -744,7 +819,6 @@ class FlareController(QObject):
                 key
                 for key in (
                     "fcs",
-                    "circular_active",
                     "lissajous_active",
                     "slave_mode_enable",
                     "sw_trigger_enable",
@@ -753,6 +827,10 @@ class FlareController(QObject):
             ]
             if unsupported_flags:
                 raise ValueError("Flare does not support: " + ", ".join(unsupported_flags))
+            if values.get("circular_active"):
+                self.window.define_circular(int(values["circular_points"]))
+                for axis in "xyz":
+                    values[f"circular_scan_{axis}_volts"] = getattr(self.window, f"{axis.upper()}_array").tolist()
             filename = None if preview else self.window.defineFilename()
             if filename:
                 path = Path(filename)
@@ -781,7 +859,7 @@ class FlareController(QObject):
                 f"laser_{index + 1}_enable": 1 for index in range(4)
                 if getattr(self.ui, f"checkBox_laser{index}").isChecked()
             })
-            if values["dfd_enable"]:
+            if values["dfd_enable"] or self._modern_scan():
                 self.live_controls.discard_pending()
             else:
                 self.live_controls.request(registers, geometry=values)
@@ -803,6 +881,7 @@ class FlareController(QObject):
         if initial_image is None:
             self._preserve_view = False
             self._display_geometry = None
+            self._reference_active = None
         self.preview, self.stopping = preview, False
         self.window.started_preview, self.window.started_normal = preview, not preview
         self.window.do_not_save = preview
@@ -852,6 +931,7 @@ class FlareController(QObject):
         self.run_job.result.connect(self._acquisition_result)
         self.run_job.finished.connect(self._run_finished)
         self.run_job.start()
+        self._refresh_reference_decimation()
 
     def render(self, snapshot):
         previous_geometry = (self.last_snapshot or {}).get("geometry")
@@ -863,14 +943,24 @@ class FlareController(QObject):
             )
         )
         self.last_snapshot = snapshot
+        if self._modern_scan() and self._acquisition_active():
+            # Acquisition can discover V3 before an explicit Connect action.
+            # Extend the frozen controls once that discovery reaches Qt.
+            for axis in ("z" if self.preview else "xyz"):
+                for name in (f"spinBox_range_{axis}", f"spinBox_off_{axis}_um", f"spinBox_offExtra_{axis}_V"):
+                    if name not in self._frozen:
+                        self._frozen[name] = getattr(self.ui, name).isEnabled()
+                    getattr(self.ui, name).setEnabled(False)
         if "dfd_layout" in snapshot:
+            self._reference_active = snapshot["dfd_layout"]
             self.update_display()
         self.connected = True
         if not self._status_timer.isActive():
             self._status_timer.start()
         self.ui.label_flare_status.setText(
             f"Bins {snapshot['bins']}/{snapshot['total_bins']}; received {snapshot['receiver_bytes']}/{snapshot['expected_bytes']} bytes; "
-            f"DMA {snapshot['status'].get('dma')}"
+            + (f"DMA packet: {snapshot['dma_packet_bins']}; " if "dma_packet_bins" in snapshot else "")
+            + f"DMA {snapshot['status'].get('dma')}"
         )
         self.ui.progressBar_frame.setMaximum(100)
         self.ui.progressBar_frame.setValue(int(100 * snapshot["bins"] / snapshot["total_bins"]))
@@ -882,10 +972,11 @@ class FlareController(QObject):
         fingerprint = snapshot["fingerprint"].reshape(dim, dim).astype(float) / duration
         self.window.draw_fingerprint(fingerprint, np.zeros_like(fingerprint))
         if "dfd_hist_sum" in snapshot:
-            exposure = snapshot["bin_seconds"] / snapshot["dfd_bins"]
+            live_seconds = snapshot.get("dfd_live_seconds", snapshot["bin_seconds"] * snapshot["dfd_live_records"])
+            hist_seconds = snapshot.get("dfd_hist_seconds", snapshot["bin_seconds"] * snapshot["dfd_hist_records"])
             self.window.renderDfdTrace(
-                snapshot["dfd_hist_live"] / max(exposure * snapshot["dfd_live_records"], 1e-15),
-                snapshot["dfd_hist_sum"] / max(exposure * snapshot["dfd_hist_records"], 1e-15),
+                snapshot["dfd_hist_live"] / max(live_seconds / snapshot["dfd_bins"], 1e-15),
+                snapshot["dfd_hist_sum"] / max(hist_seconds / snapshot["dfd_bins"], 1e-15),
                 snapshot["dfd_laser_hz"], snapshot["dfd_bins"],
             )
             auto_correct = getattr(self.window, "_maybeAutoCorrectLifetimeAfterFirstFrameProgress", None)
@@ -1008,6 +1099,7 @@ class FlareController(QObject):
             self.window.plugin_signals.signal.emit("acquisitionDone " + filename)
         self.window.started_preview = self.window.started_normal = False
         self._busy(False)
+        self._refresh_reference_decimation()
         complete = bool(result and result.get("complete"))
         self.window._set_program_state(
             self.window.PROGRAM_STATE_ACQUISITION_DONE

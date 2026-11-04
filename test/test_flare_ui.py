@@ -40,6 +40,9 @@ def panel(monkeypatch):
     window.mcs_manager = SimpleNamespace(is_connected=False)
     window._set_program_state = Mock()
     controller = FlareController(window)
+    # Mode-switch I/O is tested explicitly below; other panel tests never
+    # contact the configured physical board when they toggle DFD.
+    monkeypatch.setattr(controller, "_start_reference_write", Mock())
     # Keep device mocks in this interpreter for focused UI tests. Real spawn
     # and IPC integration is exercised separately in test_flare_process.py.
     def local_workers():
@@ -65,6 +68,9 @@ def test_tabs_defaults_and_inactive_controls_never_construct_flare(panel):
     assert controller.settings().port == 8081
     assert controller.settings().mode == "master"
     assert controller.settings().receiver_port == 9000
+    assert ui.spinBox_flare_packet_bins.value() == 0
+    assert ui.spinBox_flare_packet_bins.text() == "Auto"
+    assert controller.settings().packet_bins == 0
     with patch(
         "brighteyes_mcs.hardware.flare.FlareClient",
         side_effect=AssertionError("Flare must stay inactive"),
@@ -84,7 +90,7 @@ def test_tabs_defaults_and_inactive_controls_never_construct_flare(panel):
 
 
 @pytest.mark.parametrize("physical", [25, 49])
-@pytest.mark.parametrize("version", [1, 2])
+@pytest.mark.parametrize("version", [1, 2, 3])
 def test_flare_reference_selection_bypasses_detector_mask(panel, physical, version):
     window, controller = panel
     controller.selection_changed("TCP/IP - FPGA Flare")
@@ -93,7 +99,7 @@ def test_flare_reference_selection_bypasses_detector_mask(panel, physical, versi
     controller._discovery = {"firmware": {"supported_dfd_formats": [f"DFD{version}"]}}
     window.ui.checkBox_DFD.setChecked(True)
     controller._display = {}
-    reference = physical + version - 1
+    reference = physical + min(version, 2) - 1
     combo = window.ui.comboBox_plot_channel
     assert combo.findText(str(reference)) >= 0
     combo.setCurrentText(str(reference))
@@ -101,7 +107,7 @@ def test_flare_reference_selection_bypasses_detector_mask(panel, physical, versi
     assert controller.display_channels == (reference,)
     assert controller._display['channels'] == (reference,)
     assert "Laser reference" in window.ui.label_plot_channel.text()
-    if version == 2:
+    if version >= 2:
         combo.setCurrentText(str(physical))
         controller.update_display()
         assert controller.display_channels == (physical,)
@@ -114,6 +120,148 @@ def test_flare_reference_selection_bypasses_detector_mask(panel, physical, versi
     assert controller.display_channels == tuple(range(physical))
     controller.selection_changed("FPGA - SPAD")
     assert combo.findText(str(reference)) < 0
+
+
+def test_flare_circular_array_upload_bypasses_ni_register_encoding():
+    window = SimpleNamespace(flare=SimpleNamespace(selected=True), setRegistersDict=Mock())
+    MainWindow.load_circular(window)
+    window.setRegistersDict.assert_not_called()
+
+
+@pytest.mark.parametrize("preview", [False, True])
+def test_v19_geometry_and_circular_controls_are_frozen_during_finite_runs(panel, preview):
+    window, controller = panel
+    controller.selection_changed("TCP/IP - FPGA Flare")
+    controller._discovery = {"firmware": dict(multi_dma_supported=True, multi_dma_abi_version=3)}
+    controller.preview = preview
+    controller.run_job = Mock()
+    controller.run_job.isRunning.return_value = True
+    try:
+        controller._busy(True)
+        assert not window.ui.checkBox_circular.isEnabled()
+        assert not window.ui.spinBox_circular_points.isEnabled()
+        assert not window.ui.spinBox_circular_repetition.isEnabled()
+        if not preview:
+            assert not window.ui.spinBox_range_x.isEnabled()
+        controller.queue_registers({"axis_start_offset_volts": [1, 2, 3]})
+        assert not controller.live_controls.has_pending()
+    finally:
+        controller.run_job = None
+        controller._busy(False)
+    assert window.ui.checkBox_circular.isEnabled()
+
+
+def test_reference_decimation_is_requested_for_next_preview_without_live_write(preview_panel):
+    window, controller = preview_panel
+    factor_key = 'dfd_reference_histogram_decimation_factor'
+    widget = window.ui.spinBox_flare_reference_decimation
+    controller._discovery = {'firmware': {'board_capabilities': 2046, 'supported_dfd_formats': ['DFD2']}}
+    window.ui.checkBox_DFD.setChecked(True)
+    assert widget.value() == 101 and widget.isEnabled()
+    assert (widget.minimum(), widget.maximum()) == (1, 65535)
+    with patch('brighteyes_mcs.ui.controllers.flare.FlareJob') as job:
+        job.return_value.isRunning.return_value = False
+        controller.begin(True)
+        assert job.called, window.ui.plainTextEdit_flare_log.toPlainText()
+        first = job.call_args.args[0]
+        assert first.arguments['values'][factor_key] == 101
+        controller._reference_active = {factor_key: 101, 'reference_histogram_counting': 'first_then_every_nth_raw_reference_edge'}
+        widget.setValue(7)
+        assert widget.isEnabled()
+        text = window.ui.label_flare_reference_decimation_status.text()
+        assert 'Active: 1 in 101 triggers' in text
+        assert 'requested 1 in 7 for next preview run' in text
+        assert factor_key not in controller.live_controls._pending
+        assert first.arguments['values'][factor_key] == 101
+        controller.begin(True)
+        assert job.call_args.args[0].arguments['values'][factor_key] == 7
+        controller._reference_active = {factor_key: 7, 'reference_histogram_counting': 'first_then_every_nth_raw_reference_edge'}
+        controller.preview = False
+        window.started_preview, window.started_normal = False, True
+        widget.setValue(11)
+        assert 'Active: 1 in 7 triggers' in window.ui.label_flare_reference_decimation_status.text()
+        assert 'requested 1 in 11 for next acquisition' in window.ui.label_flare_reference_decimation_status.text()
+        assert factor_key not in controller.live_controls._pending
+        controller.runner = controller.run_job = None
+
+
+def test_reference_decimation_reports_legacy_and_stays_inactive_for_ni(panel):
+    window, controller = panel
+    widget = window.ui.spinBox_flare_reference_decimation
+    assert not widget.isEnabled()
+
+
+    controller.selection_changed('TCP/IP - FPGA Flare')
+    window.ui.checkBox_DFD.setChecked(True)
+    controller._discovery = {'firmware': {'board_capabilities': 1022}}
+    controller.update_display()
+    assert not widget.isEnabled()
+    assert 'Legacy reference counting (factor 1)' in window.ui.label_flare_reference_decimation_status.text()
+    assert widget.value() == 101  # Retain the saved request for a supporting board.
+    controller._discovery = {'firmware': {'board_capabilities': 2046}}
+    controller.update_display()
+    assert widget.isEnabled()
+    controller.selection_changed('FPGA - SPAD')
+    assert not widget.isEnabled()
+
+
+def test_reference_decimation_profile_round_trip(panel, tmp_path):
+    from brighteyes_mcs.ui.controllers.configuration import ConfigurationController
+
+    window, controller = panel
+    window.flare = controller
+    fields = MainWindow.configuration_helper_init(window)
+    key = 'dfd_reference_histogram_decimation_factor'
+    window.configuration_helper = {key: fields[key]}
+    window.plugin_signals = SimpleNamespace(signal=Mock())
+    window.ui.spinBox_flare_reference_decimation.setValue(65535)
+    payload = MainWindow.getGUI_data(window)
+    path = tmp_path / 'reference.cfg'
+    codec = ConfigurationController()
+    codec.save(path, payload)
+    window.ui.spinBox_flare_reference_decimation.setValue(101)
+    loaded, _ = codec.load(path)
+    MainWindow.setGUI_data(window, loaded)
+    assert window.ui.spinBox_flare_reference_decimation.value() == 65535
+
+
+def test_reference_decimation_lives_in_flare_tab_and_can_be_set_before_dfd(panel):
+    window, controller = panel
+    controller.selection_changed('TCP/IP - FPGA Flare')
+    assert window.ui.tab_fpga_flare.isAncestorOf(window.ui.spinBox_flare_reference_decimation)
+    window.ui.checkBox_DFD.setChecked(False)
+    assert window.ui.spinBox_flare_reference_decimation.isEnabled()
+    window.ui.spinBox_flare_reference_decimation.setValue(7)
+    controller._start_reference_write.reset_mock()
+    window.ui.checkBox_DFD.setChecked(True)
+    controller._start_reference_write.assert_called_once_with()
+    window.ui.checkBox_DFD.setChecked(False)
+    assert controller._start_reference_write.call_count == 1
+
+
+def test_dfd_mode_switch_submits_reference_write_immediately(panel, monkeypatch):
+    window, controller = panel
+    controller.selection_changed('TCP/IP - FPGA Flare')
+    monkeypatch.setattr(controller, '_start_reference_write',
+                        FlareController._start_reference_write.__get__(controller))
+    window.ui.spinBox_flare_reference_decimation.setValue(65535)
+    with patch('brighteyes_mcs.ui.controllers.flare.FlareJob') as factory:
+        window.ui.checkBox_DFD.setChecked(True)
+        factory.assert_called_once()
+        task = factory.call_args.args[0]
+        assert task.action == 'reference_factor' and task.arguments['value'] == 65535
+        factory.return_value.start.assert_called_once_with()
+        assert factory.return_value in controller.register_jobs
+        assert not controller._live_timer.isActive()
+        controller.register_jobs.clear()
+
+
+def test_selecting_flare_with_dfd_already_enabled_sends_reference(panel):
+    window, controller = panel
+    window.ui.checkBox_DFD.setChecked(True)
+    controller._start_reference_write.assert_not_called()
+    controller.selection_changed('TCP/IP - FPGA Flare')
+    controller._start_reference_write.assert_called_once_with()
 
 
 def test_selection_restores_existing_widget_state_and_slave_is_blocked(panel):
@@ -340,6 +488,26 @@ def preview_panel(panel):
     window.draw_fingerprint = Mock()
     window.ui.checkBox_showPreview.setChecked(True)
     return window, controller
+
+
+def test_circular_begin_uses_the_existing_spad_offsets_in_volts(preview_panel):
+    window, controller = preview_panel
+    getter = window.getGUI_data
+    window.getGUI_data = lambda: dict(getter(), circular_active=True, circular_points=3, circular_repetition=2)
+    window.define_circular = Mock()
+    window.X_array = np.array([0.01, -0.01, 0.0])
+    window.Y_array = np.array([0.0, 0.01, -0.01])
+    window.Z_array = np.zeros(3)
+    with patch("brighteyes_mcs.ui.controllers.flare.FlareJob") as job:
+        job.return_value.isRunning.return_value = False
+        controller.begin(True)
+        assert job.called, window.ui.plainTextEdit_flare_log.toPlainText()
+        values = job.call_args.args[0].arguments["values"]
+        window.define_circular.assert_called_once_with(3)
+        assert values["circular_scan_x_volts"] == [0.01, -0.01, 0.0]
+        assert values["circular_scan_y_volts"] == [0.0, 0.01, -0.01]
+        assert values["circular_scan_z_volts"] == [0.0, 0.0, 0.0]
+        controller.run_job = None
 
 
 @pytest.mark.parametrize("continuing,stopping", [(True, False), (False, False), (True, True)])

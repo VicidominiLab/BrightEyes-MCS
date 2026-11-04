@@ -16,6 +16,7 @@ from brighteyes_mcs.acquisition.detectors.flare.config import (
 )
 from brighteyes_mcs.acquisition.detectors.flare.dfd import (
     FlareDfdDecoder, DfdPreview, sequence_from_gui, layout_for, validate_accepted,
+    REFERENCE_FACTOR, REFERENCE_METADATA, reference_configuration, validate_dfd_request,
 )
 from brighteyes_mcs.acquisition.detectors.flare.dfd_format import pack_sequence
 from brighteyes_mcs.acquisition.flare import FlareAcquisition
@@ -50,6 +51,9 @@ def accepted(c, version=1):
         result.update(extra_channel_count=1, extra_channel_index=c["channels"], extra_channel_physical_io=False,
                       padded_channels=layout.padded_channels, padding_channel_indices=[layout.stream_channels],
                       channel_roles=["detector"] * c["channels"] + ["extra", "laser_reference"])
+    if REFERENCE_FACTOR in c:
+        result.update(excitation_calibration_decimation_factor=1,
+                      reference_histogram_counting='first_then_every_nth_raw_reference_edge')
     return result
 
 
@@ -180,11 +184,13 @@ def test_batched_recording_preserves_pixels_across_rows_frames_and_repetitions(t
 
 
 class Service:
-    def __init__(self, c, *, truncate=False, fault=False, version=1):
+    def __init__(self, c, *, truncate=False, fault=False, version=1, decimation=False):
         self.c, self.truncate, self.fault = c, truncate, fault
         self.version = version
         self.firmware = dict(board_id=0x464c5234, schema_version=0x40000, clock_hz=100000000,
                              supported_acquisition_modes=['normal', 'dfd'], supported_dfd_formats=[f'DFD{version}'])
+        if decimation:
+            self.firmware['board_capabilities'] = 2046
         self.done = threading.Event()
         self.calls = []
         self.run_id = 0x12345678
@@ -240,6 +246,54 @@ class Service:
             assert not sender.is_alive()
             return self.stream
         return {"command": name}
+
+
+@pytest.mark.parametrize("estimator", ["integer_reference_aperture_v1", "integer_reference_half_height_v2"])
+def test_reference_alignment_survives_capture_preview_and_conversion(tmp_path, estimator):
+    import json
+
+    c = request()
+    settings = FlareSettings(host='127.0.0.1', bind_host='127.0.0.1', receiver_host='127.0.0.1', receiver_port=0)
+    service = Service(c, version=2, decimation=True)
+    alignment = dict(
+        excitation_reference_source=0, excitation_reference_requested_source=0,
+        excitation_reference_pending=False, excitation_reference_status=0x41e,
+        excitation_reference_ready=True, excitation_reference_fault=0,
+        excitation_alignment_generation=7, excitation_phase_offset_bins=87,
+        excitation_reference_span_bins=9, excitation_phase_residual=None,
+        excitation_phase_residual_valid=False, excitation_phase_registration=estimator,
+        excitation_phase_integer_correction_applied=True,
+    )
+    configure = service.configure
+
+    def configure_with_alignment(configuration):
+        result = configure(configuration)
+        result.update(alignment)
+        return result
+
+    service.configure = configure_with_alignment
+    path = tmp_path / 'aligned.h5'
+    snapshots = []
+    result = FlareAcquisition(settings, c, filename=path, on_snapshot=snapshots.append,
+                             client_factory=lambda _: service).run()
+    assert result.get('error') is None, result
+    assert result['complete']
+    sidecar = json.loads(path.with_suffix('.flare.json').read_text())
+    for key, value in alignment.items():
+        assert sidecar['configuration'][key] == value
+        assert snapshots[-1]['dfd_layout'][key] == value
+    converted = tmp_path / 'converted.h5'
+    convert_raw_acquisition(path.with_suffix('.flare.json'), converted)
+    with h5py.File(path) as original, h5py.File(converted) as offline:
+        expected = np.stack([record(service.effective, i)[1] for i in range(6)])
+        for output in (original, offline):
+            np.testing.assert_array_equal(output['data'][:].reshape(expected.shape), expected)
+            for attrs in (output.attrs, output['data'].attrs, output['raw/metadata'].attrs):
+                for key, value in alignment.items():
+                    if value is None:
+                        assert key not in attrs
+                    else:
+                        assert attrs[key] == value
 
 
 @pytest.mark.parametrize("channels", [25, 49])
@@ -376,3 +430,87 @@ def test_dfd2_rejects_wrong_layout_padding_and_incomplete_data(channels):
         decoder.feed(incomplete)
         with pytest.raises(ValueError):
             decoder.finish()
+
+
+@pytest.mark.parametrize("factor", [1, 101, 65535])
+@pytest.mark.parametrize("channels", [25, 49])
+def test_reference_decimation_capture_display_and_conversion(tmp_path, channels, factor):
+    c = request(channels, **{REFERENCE_FACTOR: factor})
+    service = Service(c, version=2, decimation=True)
+    settings = FlareSettings(host='127.0.0.1', bind_host='127.0.0.1', receiver_host='127.0.0.1', receiver_port=0)
+    path = tmp_path / 'decimated.h5'
+    snapshots = []
+    run = FlareAcquisition(settings, c, filename=path, on_snapshot=snapshots.append, client_factory=lambda _: service)
+    run.display_channels = (channels + 1,)
+    result = run.run()
+    assert result.get('error') is None, result
+    assert result['complete']
+    assert service.calls[0][1][REFERENCE_FACTOR] == factor
+    effective = service.effective
+    expected = np.stack([record(effective, i)[1] for i in range(6)])
+    # The mock transmits large U16 values irrespective of N. MCS must preserve
+    # exactly those values, without scaling, wrapping or estimating full rate.
+    np.testing.assert_array_equal(snapshots[-1]['image'], np.full((2, 3), 91 * 60000))
+    np.testing.assert_array_equal(snapshots[-1]['dfd_hist_sum'], np.full(91, 6 * 60000))
+    assert snapshots[-1]['dfd_layout'][REFERENCE_FACTOR] == factor
+    np.testing.assert_array_equal(snapshots[-1]['fingerprint'], expected[:, :, :channels].sum(axis=(0, 1)))
+    converted = tmp_path / 'converted.h5'
+    convert_raw_acquisition(path.with_suffix('.flare.json'), converted)
+    for filename in (path, converted):
+        with h5py.File(filename) as output:
+            np.testing.assert_array_equal(output['data'][:].reshape(expected.shape), expected)
+            for key in REFERENCE_METADATA:
+                assert output.attrs[key] == effective[key]
+                assert output['data'].attrs[key] == effective[key]
+                assert output['raw/metadata'].attrs[key] == effective[key]
+    import json
+    sidecar = json.loads(path.with_suffix('.flare.json').read_text())
+    assert sidecar['configuration'][REFERENCE_FACTOR] == factor
+
+
+@pytest.mark.parametrize("factor", [0, 65536, True, 1.5, '101'])
+def test_reference_decimation_rejects_invalid_requests(factor):
+    with pytest.raises(ValueError, match='Reference decimation'):
+        validate_dfd_request(request(**{REFERENCE_FACTOR: factor}))
+
+
+def test_reference_decimation_defaults_and_legacy_negotiation():
+    c = request()
+    assert reference_configuration(c, {'board_capabilities': 2046})[REFERENCE_FACTOR] == 65535
+    assert reference_configuration(dict(c, **{REFERENCE_FACTOR: 101}), {'board_capabilities': 2046})[REFERENCE_FACTOR] == 101
+    assert REFERENCE_FACTOR not in reference_configuration(dict(c, **{REFERENCE_FACTOR: 101}), {})
+    for version in (1, 2):
+        service = Service(c, version=version)
+        settings = FlareSettings(host='127.0.0.1', bind_host='127.0.0.1', receiver_host='127.0.0.1', receiver_port=0)
+        run = FlareAcquisition(settings, dict(c, **{REFERENCE_FACTOR: 101}), client_factory=lambda _, device=service: device)
+        result = run.run()
+        assert result['complete'], result
+        assert REFERENCE_FACTOR not in service.calls[0][1]
+        assert result['configuration'][REFERENCE_FACTOR] == 1
+        assert result['configuration']['reference_histogram_counting'] == 'legacy_shared_detector_holdoff'
+
+
+@pytest.mark.parametrize("changes", [
+    {REFERENCE_FACTOR: 7}, {'excitation_calibration_decimation_factor': 101},
+    {'reference_histogram_counting': 'unknown'},
+])
+def test_reference_decimation_rejects_inconsistent_accepted_metadata(changes):
+    c = request(**{REFERENCE_FACTOR: 101})
+    with pytest.raises(ValueError):
+        validate_accepted(c, dict(accepted(c, version=2), **changes), 100000000)
+
+
+def test_reference_decimation_start_must_match_accepted_factor():
+    c = request(**{REFERENCE_FACTOR: 101})
+    service = Service(c, version=2, decimation=True)
+    command = service.command
+
+    def mismatched_start(name):
+        response = command(name)
+        return dict(response, **{REFERENCE_FACTOR: 7}) if name == 'start' else response
+
+    service.command = mismatched_start
+    settings = FlareSettings(host='127.0.0.1', bind_host='127.0.0.1', receiver_host='127.0.0.1', receiver_port=0)
+    result = FlareAcquisition(settings, c, client_factory=lambda _: service).run()
+    assert not result['complete']
+    assert 'reference decimation disagrees' in result['error']

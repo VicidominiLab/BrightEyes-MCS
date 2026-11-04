@@ -40,6 +40,11 @@ class FlareLiveControls:
         with self._lock:
             return bool(self._pending)
 
+    def requested(self):
+        """Snapshot GUI requests for atomic firmware-1.9 configuration."""
+        with self._lock:
+            return dict(self._requested)
+
     def discard_pending(self):
         with self._lock:
             self._pending.clear()

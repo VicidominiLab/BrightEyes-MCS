@@ -11,7 +11,10 @@ import numpy as np
 
 from .detectors.flare.config import check_transport, total_bins, validate_configuration, stream_parameters
 from .detectors.flare.decoder import FlareDecoder
-from .detectors.flare.dfd import is_dfd, validate_accepted, FlareDfdDecoder, DfdPreview
+from .detectors.flare import v19
+from .detectors.flare.dfd import (
+    is_dfd, validate_accepted, FlareDfdDecoder, DfdPreview, reference_configuration, REFERENCE_METADATA,
+)
 from ..hardware.flare import FlareClient, FlareError
 from ..storage.flare import FlareRecording
 
@@ -110,6 +113,13 @@ class FlareAcquisition:
             else:
                 client.check_acquisition_support()
             client.require_idle()
+            modern = v19.supported(client.firmware)
+            if "dma1_stream_enable" in self.configuration and not modern:
+                raise FlareError("Firmware no longer advertises multi-DMA ABI 3; reconnect and reconfigure")
+            if modern and "dma1_stream_enable" not in self.configuration:
+                # Direct API callers must supply the same explicit selection as the GUI.
+                self.configuration = v19.configure(self.configuration, {}, client.firmware)
+                validate_configuration(self.configuration)
             check_transport(self.configuration, client.firmware["clock_hz"], self.settings)
             if self.cancel.is_set():
                 raise InterruptedError("Flare acquisition cancelled before configuration")
@@ -123,6 +133,8 @@ class FlareAcquisition:
                 initial_registers = client.read_all()
                 requested = dict(self.configuration)
                 if self.dfd:
+                    requested = reference_configuration(requested, client.firmware)
+                if self.dfd or modern:
                     if "detector_enable" in initial_registers:
                         requested["physical_mask"] = [
                             int(initial_registers["detector_enable"]) & (0x1ffffff if requested["channels"] == 25 else 0xffffffff),
@@ -130,21 +142,32 @@ class FlareAcquisition:
                         ]
                     if "detector_fpga_holdoff_cycles" in initial_registers:
                         requested["detector_fpga_holdoff_cycles"] = int(initial_registers["detector_fpga_holdoff_cycles"])
+                if modern and not self.dfd and self.live_controls:
+                    desired = self.live_controls.requested()
+                    requested.setdefault("laser_enable_mask", sum(
+                        1 << i for i in range(4) if desired.get(f"laser_{i + 1}_enable", 0)
+                    ))
                 response = client.configure(requested)
-                accepted = (validate_accepted(requested, response, client.firmware["clock_hz"])
+                accepted = (v19.validate_accepted(requested, response, client.firmware["clock_hz"]) if modern else
+                            validate_accepted(requested, response, client.firmware["clock_hz"])
                             if self.dfd else validate_configuration(response))
                 if self.dfd:
                     advertised = client.firmware.get("supported_dfd_formats", ["DFD1"])
                     if accepted["stream_format"] not in advertised:
                         raise FlareError("Accepted DFD format was not advertised by the device")
-                if not self.dfd and accepted != self.configuration:
+                    if (client.firmware.get("board_capabilities", 0) & 0x400 and
+                        accepted["reference_histogram_counting"] != "first_then_every_nth_raw_reference_edge"):
+                        raise FlareError("Accepted reference counting disagrees with advertised decimation support")
+                if not modern and not self.dfd and accepted != self.configuration:
                     raise FlareError("Flare accepted settings differ from the requested scan")
                 detector_settings = {}
                 for name in ("detector_enable", "detector_enable_high", "detector_fpga_holdoff_cycles"):
-                    if not self.dfd and name in initial_registers:
+                    if not modern and not self.dfd and name in initial_registers:
                         detector_settings[name] = client.write_register(name, initial_registers[name])["value"]
-                if self.live_controls and not self.dfd:
+                if self.live_controls and not self.dfd and not modern:
                     self.live_controls.apply(client, restore=True)
+                if modern and self.live_controls:
+                    self.live_controls.discard_pending()
                 size, dwell, packet = stream_parameters(accepted)
                 metadata.update(
                     configuration=accepted,
@@ -162,14 +185,14 @@ class FlareAcquisition:
             listener.listen(1)
             listener.settimeout(0.2)
             host = receiver_address(self.settings)
-            metadata["stream_settings"] = client.stream_settings(
-                {
-                    "host": host,
-                    "port": listener.getsockname()[1],
-                    "buffer_seconds": self.settings.buffer_seconds,
-                    "timeout_seconds": self.settings.timeout_seconds,
-                }
-            )
+            destination = {
+                "host": host, "port": listener.getsockname()[1],
+                "buffer_seconds": self.settings.buffer_seconds,
+                "timeout_seconds": self.settings.timeout_seconds,
+            }
+            metadata["stream_settings"] = (client.stream_settings(
+                destination, stream="dfd" if self.dfd else "intensity",
+            ) if modern else client.stream_settings(destination))
             clock_hz = client.firmware["clock_hz"]
             inactivity = max(
                 10,
@@ -268,14 +291,19 @@ class FlareAcquisition:
             configuration_guard.close()
             metadata["stream"] = stream
             metadata["stream_id"] = stream["id"]
-            metadata["run_id"] = client.read_register("run_id")["value"]
-            if self.dfd and any(stream.get(key) != accepted[key] for key in (
+            metadata["run_id"] = stream["run_id"] if modern else client.read_register("run_id")["value"]
+            if modern:
+                v19.validate_stream(stream, accepted)
+            if self.dfd and not modern and any(stream.get(key) != accepted[key] for key in (
                 "stream_format", "stream_format_version", "record_bytes", "stream_channels", "histogram_bins",
                 "total_records", "total_bytes", "reference_channel_index", "detector_channels",
                 "extra_channel_index", "extra_channel_count", "extra_channel_physical_io",
                 "padded_channels", "padding_channel_indices", "channel_roles", "excitation_alignment_generation",
             ) if key in accepted):
                 raise FlareError("Started Flare DFD stream disagrees with its accepted layout")
+            if self.dfd and not modern and client.firmware.get("board_capabilities", 0) & 0x400:
+                if any(stream.get(key) != accepted[key] for key in REFERENCE_METADATA):
+                    raise FlareError("Started Flare reference decimation disagrees with accepted configuration")
             if recording:
                 recording.checkpoint(metadata)
             decoder = (FlareDfdDecoder if self.dfd else FlareDecoder)(accepted, metadata["run_id"])
@@ -324,14 +352,19 @@ class FlareAcquisition:
                 index = decoder.index
                 counts = decoder.feed(chunk)
                 if recording:
-                    recording.append(index, counts)
+                    if modern and self.dfd:
+                        recording.append(index, counts, windows=decoder.windows)
+                    else:
+                        recording.append(index, counts)
                 if len(counts):
                     selection = (self.display_state.get("channels")
                                  if self.display_state is not None else self.display_channels)
                     if selection != displayed_channels:
                         image.fill(0)
                         displayed_channels = selection
-                    sums = dfd_preview.update(counts, index, selection) if self.dfd else (
+                    sums = dfd_preview.update(counts, index, selection, **(
+                        {"windows": decoder.windows} if modern else {}
+                    )) if self.dfd else (
                         counts.sum(axis=1, dtype=np.uint64)
                         if selection is None
                         else counts[:, selection].sum(axis=1, dtype=np.uint64)
@@ -368,7 +401,9 @@ class FlareAcquisition:
                             "receiver_bytes": self.received_bytes,
                             "expected_bytes": expected_bytes,
                             "status": status,
+                            "firmware": dict(client.firmware),
                             "bin_seconds": dwell / clock_hz,
+                            "dma_packet_bins": packet,
                             **(dfd_preview.snapshot() if self.dfd else {}),
                         }
                     )
@@ -390,6 +425,8 @@ class FlareAcquisition:
                 if self.cancel.wait(0.05):
                     raise InterruptedError("Flare acquisition cancelled")
             metadata["final_status"] = status
+            if modern:
+                v19.validate_completion(status, metadata["run_id"], accepted)
             if self.dfd:
                 metadata["dfd_fault_flags"] = client.read_register("dfd_fault_flags")["value"]
                 if metadata["dfd_fault_flags"]:
@@ -413,7 +450,9 @@ class FlareAcquisition:
                     "receiver_bytes": self.received_bytes,
                     "expected_bytes": expected_bytes,
                     "status": status,
+                    "firmware": dict(client.firmware),
                     "bin_seconds": dwell / clock_hz,
+                    "dma_packet_bins": packet,
                     **(dfd_preview.snapshot() if self.dfd else {}),
                 }
             )
@@ -429,7 +468,7 @@ class FlareAcquisition:
                     metadata["final_status"] = client.status()
                     current = metadata["final_status"].get("stream") or {}
                     if (
-                        isinstance(error, InterruptedError)
+                        (isinstance(error, InterruptedError) or v19.supported(client.firmware))
                         and metadata.get("stream_id") == current.get("id")
                         and metadata.get("stream_id")
                     ):

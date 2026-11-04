@@ -19,6 +19,42 @@ from brighteyes_mcs.acquisition.flare_worker import FlareTask, publish_latest
 from test.test_flare import FakeClient
 
 
+@pytest.mark.parametrize('supported', [True, False])
+def test_dfd_mode_switch_writes_reference_and_checks_readback(supported):
+    from unittest.mock import Mock
+    from brighteyes_mcs.acquisition.detectors.flare.dfd import REFERENCE_FACTOR
+
+    controls = FlareLiveControls()
+    client = Mock()
+    discovery = {'firmware': {'board_capabilities': 2046 if supported else 1022}}
+    client.discover.return_value = discovery
+    client.write_register.return_value = {'name': REFERENCE_FACTOR, 'value': 7}
+    task = FlareTask('reference_factor', FlareSettings(), controls, {'value': 7})
+    with patch('brighteyes_mcs.hardware.flare.FlareClient', return_value=client):
+        result = task()
+    if supported:
+        client.write_register.assert_called_once_with(REFERENCE_FACTOR, 7)
+        assert result['result']['value'] == 7
+        assert controls.events()[0]['readback'] == 7
+    else:
+        client.write_register.assert_not_called()
+        assert result['result'] is None
+    client.command.assert_not_called()
+    client.close.assert_called_once_with()
+
+
+def test_dfd_mode_switch_rejects_incorrect_reference_readback():
+    from unittest.mock import Mock
+
+    client = Mock()
+    client.discover.return_value = {'firmware': {'board_capabilities': 2046}}
+    client.write_register.return_value = {'value': 101}
+    task = FlareTask('reference_factor', FlareSettings(), FlareLiveControls(), {'value': 7})
+    with patch('brighteyes_mcs.hardware.flare.FlareClient', return_value=client):
+        with pytest.raises(RuntimeError, match='readback differs'):
+            task()
+
+
 def simulated_acquisition(task):
     """Install the fake inside the child, rather than relying on forked mocks."""
     config = configuration_from_gui(

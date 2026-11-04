@@ -1,5 +1,35 @@
 # Kria Flare acquisition
 
+Firmware 1.9 support and resume status: [integration status](flare-1.9-status.md).
+The application discovers multi-DMA ABI 3 capabilities at every run. In this
+release, normal mode enables **DMA1 intensity only** and DFD mode enables
+**DMA2 DFD3 only**. PS-to-PL position streaming is deferred; positions come from
+the PL raster and circular XYZ arrays.
+
+With firmware 1.9, enable the existing Circular control and set radius, point
+count (1–32), and repetitions, as with SPAD. MCS uses the same generated offsets,
+converts their calibrated volts to signed native DAC counts, and sends the three
+arrays with configuration before START. Circular dimensions are positive counts.
+Intensity HDF5 data retains repetition/Z/Y/X/circular repetition/circular
+point/ordinary time-bin/channel axes when circles expand the scan. Its preview
+integrates all visits belonging to each raster pixel. These files use container
+identifier `brighteyes-flare-circular-1`.
+
+DFD3 uses ungrouped circular-point scope and 32-bit counts. HDF5 `data` has
+window/phase/channel axes, with exposure ticks, coordinate ranges, scope,
+grouping flags and run/trajectory identities in `dfd_windows`, under container
+identifier `brighteyes-flare-dfd-3`. Channels are
+physical detectors, extra, then laser reference. Counts and metadata survive
+RAW conversion. General line/frame/grouped scopes are deferred; do not reshape
+these files using the older six-axis DFD1/DFD2 assumptions. Existing analysis
+tools may need explicit support for the window axis.
+
+Firmware 1.9 freezes configuration while a run is active. Use Stop and a new
+acquisition to change finite-run geometry. Preview reads geometry again between
+finite runs; changes do not modify the active scan. Earlier service behavior
+described below remains available on earlier firmware. No connected microscope
+acceptance has yet been performed for this update.
+
 Select **TCP/IP - FPGA Flare** in the detector combobox, then open **Config / FPGA / Kria Flare**. Existing FPGA settings are under **Config / FPGA / NI**. Existing detector selections keep their NI control and detector pipelines; they do not connect to Flare or require a reachable Flare board.
 
 ## Connection and modes
@@ -13,6 +43,10 @@ Click **Connect** to read device identity, supported registers and status. Conne
 The board initiates a separate TCP connection to the GUI computer. The default **GUI receiver port is 9000**; it is independent of HTTP port 8081. Keep the advertised GUI address empty for automatic route selection, or enter an address the board can reach. The bind address controls the local listener. Port 0 requests an automatic ephemeral port, which needs corresponding network/firewall access. Integration checks on this workstation succeeded on 9000 after an ephemeral-port callback timed out.
 
 If HTTP works but start reports a connection timeout, check the advertised address, receiver port and inbound TCP access on the GUI computer. No firewall changes are made by the application. Optional REST authentication reads `FLARE_API_TOKEN` from the environment; the token is not saved in profiles or acquisition metadata.
+
+**Bins per DMA packet** defaults to **Auto** (stored as `flare_packet_bins=0`). MCS estimates it before every run using the discovered fabric clock, exposure per record, record size, finite acquisition length and buffer duration. This also recalculates sizing when switching between normal and DFD acquisition. Auto targets 16 KiB packets, caps packet exposure at 2 ms (or one record for slower scans), and leaves room for two 32-descriptor DMA batches where possible. Hardware packet-count/byte limits and the existing buffer-capacity checks still apply. The selected count appears in the Flare log and acquisition status, and the accepted configuration saves the actual positive count in recording metadata.
+
+Positive values select a manual override; DFD counts histogram records per packet rather than normal time bins. Existing profiles retain their saved manual values. To enable automatic sizing in an existing profile, select **Auto** at the minimum of the field and save the profile. Auto reduces overhead from tiny packets; it does not guarantee that every acquisition rate is sustainable by the board and network.
 
 ## Preview and recording
 
@@ -46,6 +80,10 @@ Read, Write and Read all run in independent background workers and reuse connect
 
 Raw writes retain their hardware semantics. Geometry, dwell, masks and axis arrays are staged; writing 1 to `command` commits them. Staging alone does not alter the active scan. Raw channel/packet writes and raw lifecycle commands do not update the application's expected geometry, receive buffers or recording metadata and can invalidate a capture. Use the normal acquisition controls and Stop/Reset for managed runs.
 
+Reference alignment registers are discovered from the service, including `excitation_reference_capabilities` at `0x8120`. Firmware 1.6.0 adds bit 3 for the half-height estimator; internal reference capabilities are 13 (previously 5). The service reports `excitation_phase_registration` as `integer_reference_half_height_v2` when that bit is set, otherwise `integer_reference_aperture_v1`. These are metadata identifiers. Register addresses and DFD2 framing are unchanged. Reconnect after updating the firmware/service to refresh the register catalog.
+
+`excitation_phase_offset_bins` at `0x8110` reports the integer offset already applied to payload bins. `excitation_reference_span` at `0x811c` reports the thresholded first-to-last aperture span with the new estimator. MCS preserves the service's estimator, offset, span, epoch and correction flag in JSON, preview metadata and HDF5 root/dataset and reader metadata attributes, including after RAW conversion. An unavailable fractional residual stays null in JSON and is omitted from HDF5 scalar attributes; its validity flag is retained.
+
 For normal intensity scans, stream dimensions, channel mode and dummy generation are staged afresh for each run. Current detector enable masks and hold-off settings are reapplied after configuration resets them. The latest requested axis arrays and L1-L4 states are then reapplied and the axes committed before starting. GUI writes and configuration share a lock in their background workers; the GUI thread stays responsive. Saved metadata includes initial register readback and live register events.
 
 ### Laser registers
@@ -77,6 +115,10 @@ Sequence selectors 1-6 map 0 to off and 1-4 to L1-L4. Slots 7-12 must be zero fo
 DFD uses pixel-end timing: pixel integration is `dwell * bins_per_pixel / sys_hz`. These scan timing fields determine exposure, while the 91 histogram bins divide the 25 ns laser cycle. MCS supports negotiated DFD1 and DFD2 layouts. In DFD2 (firmware 1.4.0), zero-based channel 25 is **Extra (unconnected)** and channel 26 is **Laser reference** for 25 physical detectors; in 49-detector mode these indices are 49 and 50. Legacy DFD1 has only the reference at index 25/49. Select the numeric index in the preview channel selector; its tooltip and selection label show the role. Enable the reference checkbox to collect reference counts; disabling it leaves the reference slot present with zeros. The production extra input is unconnected and normally zero, but any injected counts are retained. Extra/reference selections bypass the fingerprint mask. Sum, the fingerprint and ordinary detector/lifetime sums include only physical detectors. Selecting a single extra/reference channel displays that channel's intensity and phase histogram. The existing RGBDFD, lifetime/quality images, histogram peak alignment, time axis and decay-fit controls are available. Histogram rates use the exposure per phase bin. Both backends share the lifetime estimator and histogram rendering. Firmware reference correction is already applied to payload bins and is not applied again by MCS.
 
 The current REST DFD configuration supports XY scanning with Z range and offsets at zero; frames repeat XY. DFD geometry, masks, hold-off, sequence, reference and laser enables are submitted together before START. START checks the accepted configuration against hardware, so live writes wait until configure/start completes. During DFD preview, XY range and position remain editable, including through preview navigation; changes send the axis arrays and COMMIT to Flare while preview runs and are also retained in the next finite frame configuration. Snapshot geometry follows the accepted live writes. Recording geometry stays fixed until acquisition/draining finishes. Z range and offsets remain locked because the DFD REST configuration requires zero. Normal intensity scans retain live position/range and laser controls. The register browser remains asynchronous and server-authoritative in either mode.
+
+**Reference decimation (Flare)** in **Config / FPGA / Kria Flare** controls reference histogram counting on firmware advertising capability bit 10 (firmware 1.5.0). Set it before enabling DFD. Switching DFD on, or selecting Flare with DFD already enabled, immediately submits a background write to `dfd_reference_histogram_decimation_factor` and verifies readback. Unsupported firmware is discovered before accessing this register. This request shares the configure/START lock, so it cannot modify registers between accepted configuration and START. Each managed acquisition also explicitly includes the desired factor in configuration after any reset. The profile saves an integer factor from 1 to 65535; the GUI default is 101. Factor 1 retains every eligible reference edge; N retains the first edge and then every Nth edge. Default 101 preserves phase coverage for the current clock profile. Calibration, readiness and fault monitoring always remain full-rate; detector and extra counts are unaffected. The prescaler continues across pixels and resets at acquisition START. Longer pixel exposures can still saturate U16 counts and may require a larger factor.
+
+The factor remains editable during preview and recording. An edit changes the next run's configuration, without writing the active acquisition's factor; the label distinguishes active and requested values and states when the change applies. Each finite preview run uses the latest request. On firmware without capability bit 10, the field is disabled, no unsupported configuration field/register is sent, and metadata identifies legacy reference counting at factor 1 with its original detector-holdoff behavior. The saved requested factor is retained for supporting firmware. Reference images, traces, histograms and HDF5/RAW conversion retain the measured decimated counts and rates without multiplying by N. Accepted configuration, JSON and HDF5 root/dataset attributes save `dfd_reference_histogram_decimation_factor`, `excitation_calibration_decimation_factor` (1), and `reference_histogram_counting`. DFD2 indices and byte framing are unchanged.
 
 DFD reception validates the negotiated DFD1/DFD2 layout, channel roles, full 32-bit run ID, record ordinal/coordinates, flags, padding, tail and exact length across arbitrary TCP fragmentation. DFD2 has a different magic and channel count despite unchanged record byte sizes; layout selection never uses byte length alone. A partial pixel or nonzero `dfd_fault_flags` prevents a successful completion. No automatic switch to intensity decoding occurs on an invalid DFD stream.
 

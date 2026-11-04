@@ -1506,6 +1506,10 @@ class MainWindow(QMainWindow):
             self.ui.checkBox_DFD_LaserDebug,
             False,
         )
+        configuration_helper["dfd_reference_histogram_decimation_factor"] = (
+            "Flare reference histogram decimation", int,
+            self.ui.spinBox_flare_reference_decimation, False,
+        )
         configuration_helper["clk_base_multiplier"] = (
             "Clock Base Multiplier",
             int,
@@ -4734,6 +4738,11 @@ class MainWindow(QMainWindow):
         """
         load the circular scan position to the FPGA registers
         """
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            # FLARE uploads calibrated native arrays atomically with configuration.
+            # The NI path below expects floating volts and remains unchanged.
+            return
         # CIRCULAR MODE
         # ScanXVoltages <==== self.X_array
         # ScanYVoltages <==== self.Y_array

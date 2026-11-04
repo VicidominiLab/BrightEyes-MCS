@@ -768,9 +768,9 @@ class Ui_MainWindowDesign(object):
 
         self.spinBox_flare_packet_bins = QSpinBox(self.tab_fpga_flare)
         self.spinBox_flare_packet_bins.setObjectName(u"spinBox_flare_packet_bins")
-        self.spinBox_flare_packet_bins.setMinimum(1)
+        self.spinBox_flare_packet_bins.setMinimum(0)
         self.spinBox_flare_packet_bins.setMaximum(4096)
-        self.spinBox_flare_packet_bins.setValue(4)
+        self.spinBox_flare_packet_bins.setValue(0)
 
         self.gridLayout_flare_settings.addWidget(self.spinBox_flare_packet_bins, 6, 1, 1, 1)
 
@@ -815,6 +815,25 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_flare_http_timeout_seconds.setValue(5.000000000000000)
 
         self.gridLayout_flare_settings.addWidget(self.doubleSpinBox_flare_http_timeout_seconds, 9, 1, 1, 1)
+
+        self.label_flare_reference_decimation = QLabel(self.tab_fpga_flare)
+        self.label_flare_reference_decimation.setObjectName(u"label_flare_reference_decimation")
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_reference_decimation, 10, 0, 1, 1)
+
+        self.spinBox_flare_reference_decimation = QSpinBox(self.tab_fpga_flare)
+        self.spinBox_flare_reference_decimation.setObjectName(u"spinBox_flare_reference_decimation")
+        self.spinBox_flare_reference_decimation.setMinimum(1)
+        self.spinBox_flare_reference_decimation.setMaximum(65535)
+        self.spinBox_flare_reference_decimation.setValue(101)
+
+        self.gridLayout_flare_settings.addWidget(self.spinBox_flare_reference_decimation, 10, 1, 1, 1)
+
+        self.label_flare_reference_decimation_status = QLabel(self.tab_fpga_flare)
+        self.label_flare_reference_decimation_status.setObjectName(u"label_flare_reference_decimation_status")
+        self.label_flare_reference_decimation_status.setWordWrap(True)
+
+        self.gridLayout_flare_settings.addWidget(self.label_flare_reference_decimation_status, 11, 0, 1, 2)
 
 
         self.verticalLayout_flare.addLayout(self.gridLayout_flare_settings)
@@ -4913,9 +4932,18 @@ class Ui_MainWindowDesign(object):
         self.label_flare_4.setText(QCoreApplication.translate("MainWindowDesign", u"Advertised GUI address (empty = automatic)", None))
         self.label_flare_5.setText(QCoreApplication.translate("MainWindowDesign", u"GUI receiver port (0 = automatic)", None))
         self.label_flare_6.setText(QCoreApplication.translate("MainWindowDesign", u"Bins per DMA packet", None))
+#if QT_CONFIG(tooltip)
+        self.spinBox_flare_packet_bins.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Auto estimates packet size for each acquisition from timing, record size and buffering. Positive values override it manually. In DFD mode the value counts histogram records per packet.", None))
+#endif // QT_CONFIG(tooltip)
+        self.spinBox_flare_packet_bins.setSpecialValueText(QCoreApplication.translate("MainWindowDesign", u"Auto", None))
         self.label_flare_7.setText(QCoreApplication.translate("MainWindowDesign", u"Buffer seconds", None))
         self.label_flare_8.setText(QCoreApplication.translate("MainWindowDesign", u"Socket timeout seconds", None))
         self.label_flare_9.setText(QCoreApplication.translate("MainWindowDesign", u"HTTP timeout seconds", None))
+        self.label_flare_reference_decimation.setText(QCoreApplication.translate("MainWindowDesign", u"Reference decimation (Flare)", None))
+#if QT_CONFIG(tooltip)
+        self.spinBox_flare_reference_decimation.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Retain 1 in N reference triggers. Applies at the next acquisition start; calibration stays full-rate. Default 101 preserves phase coverage. Counts and rates show retained events.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_flare_reference_decimation_status.setText(QCoreApplication.translate("MainWindowDesign", u"Flare DFD reference counting", None))
         self.pushButton_flare_connect.setText(QCoreApplication.translate("MainWindowDesign", u"Connect", None))
         self.pushButton_flare_disconnect.setText(QCoreApplication.translate("MainWindowDesign", u"Disconnect", None))
         self.pushButton_flare_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status", None))

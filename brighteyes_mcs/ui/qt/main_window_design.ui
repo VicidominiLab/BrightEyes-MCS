@@ -1216,14 +1216,20 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </item>
                       <item row="6" column="1">
                        <widget class="QSpinBox" name="spinBox_flare_packet_bins">
+                        <property name="toolTip">
+                         <string>Auto estimates packet size for each acquisition from timing, record size and buffering. Positive values override it manually. In DFD mode the value counts histogram records per packet.</string>
+                        </property>
+                        <property name="specialValueText">
+                         <string>Auto</string>
+                        </property>
                         <property name="minimum">
-                         <number>1</number>
+                         <number>0</number>
                         </property>
                         <property name="maximum">
                          <number>4096</number>
                         </property>
                         <property name="value">
-                         <number>4</number>
+                         <number>0</number>
                         </property>
                        </widget>
                       </item>
@@ -1294,6 +1300,29 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                         <property name="value">
                          <double>5</double>
                         </property>
+                       </widget>
+                      </item>
+                      <item row="10" column="0">
+                       <widget class="QLabel" name="label_flare_reference_decimation">
+                        <property name="text">
+                         <string>Reference decimation (Flare)</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="10" column="1">
+                       <widget class="QSpinBox" name="spinBox_flare_reference_decimation">
+                        <property name="minimum"><number>1</number></property>
+                        <property name="maximum"><number>65535</number></property>
+                        <property name="value"><number>101</number></property>
+                        <property name="toolTip">
+                         <string>Retain 1 in N reference triggers. Applies at the next acquisition start; calibration stays full-rate. Default 101 preserves phase coverage. Counts and rates show retained events.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="11" column="0" colspan="2">
+                       <widget class="QLabel" name="label_flare_reference_decimation_status">
+                        <property name="text"><string>Flare DFD reference counting</string></property>
+                        <property name="wordWrap"><bool>true</bool></property>
                        </widget>
                       </item>
                      </layout>
