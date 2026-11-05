@@ -9,7 +9,7 @@ sys.path.insert(1, os.getcwd())
 
 import h5py
 import numpy as np
-from PySide6.QtCore import QEventLoop, QTimer
+from PySide6.QtCore import QCoreApplication, QEvent, QEventLoop, QTimer
 from PySide6.QtWidgets import QApplication, QComboBox
 
 from brighteyes_mcs.plugins.builtin.channel_delay_skew import channel_delay_skew_extractor
@@ -36,6 +36,16 @@ class TestChannelDelaySkewWidget(unittest.TestCase):
     def setUp(self):
         self.main_window = DummyMainWindow()
         self.widget = ChannelDelaySkewWidget(main_window=self.main_window)
+
+    def tearDown(self):
+        # Release Qt objects while the application/event loop still exists,
+        # rather than during pytest's final cyclic garbage collection.
+        self.widget.threadpool.waitForDone(5000)
+        self.widget.close()
+        self.widget.deleteLater()
+        self.main_window.ui.comboBox_spad_channels.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+        self.app.processEvents()
 
     def _wait_for_analysis(self, timeout_ms=3000):
         if not self.widget.analysis_lock:

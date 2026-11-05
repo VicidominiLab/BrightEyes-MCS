@@ -12,6 +12,7 @@ import numpy as np
 from .detectors.flare.config import check_transport, total_bins, validate_configuration, stream_parameters
 from .detectors.flare.decoder import FlareDecoder
 from .detectors.flare import v19
+from .flare_trace import FlareTrace, records_per_trace_bin
 from .detectors.flare.dfd import (
     is_dfd, validate_accepted, FlareDfdDecoder, DfdPreview, reference_configuration, REFERENCE_METADATA,
 )
@@ -20,6 +21,15 @@ from ..storage.flare import FlareRecording
 
 
 log = logging.getLogger(__name__)
+
+
+def _preview_snapshot_interval(image, dfd):
+    """Bound full-resolution preview copying/IPC independently of scan rate."""
+    # DFD sends intensity plus three-channel float64 HCL and uint64 RGB.
+    # Leave processing/transport headroom instead of sending every large
+    # image at the small-image refresh rate (14 MB per frame at 500 x 500).
+    snapshot_bytes = image.nbytes * (7 if dfd else 1)
+    return max(0.2 if dfd else 0.1, snapshot_bytes / (32 * 1024 * 1024))
 
 
 def _update_preview_image(image, sums, start_bin, bins_per_pixel):
@@ -57,6 +67,7 @@ class FlareAcquisition:
         raw_only=False,
         on_snapshot=None,
         initial_image=None,
+        initial_preview=None,
         live_controls=None,
         client_factory=FlareClient,
     ):
@@ -85,6 +96,10 @@ class FlareAcquisition:
             if initial_image is not None and initial_image.shape == shape
             else np.zeros(shape, dtype=np.uint64)
         )
+        self._initial_preview = (
+            initial_preview or {}
+            if initial_image is not None and initial_image.shape == shape else {}
+        )
 
     def stop(self):
         # The acquisition worker owns commands. UI cancellation never blocks Qt.
@@ -92,6 +107,7 @@ class FlareAcquisition:
 
     def run(self):
         client = self.client_factory(self.settings)
+        log_throughput = None
         recording = None
         decoder = None
         listener = connection = thread = None
@@ -181,6 +197,10 @@ class FlareAcquisition:
             if self.filename:
                 recording = FlareRecording(self.filename, accepted, raw_only=self.raw_only)
             listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                listener.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4 * 1024 * 1024)
+            except OSError as error:
+                log.warning("Could not enlarge Flare TCP receive buffer: %s", error)
             listener.bind((self.settings.bind_host, self.settings.receiver_port))
             listener.listen(1)
             listener.settimeout(0.2)
@@ -248,6 +268,7 @@ class FlareAcquisition:
                                 ) from None
                     if connection is None:
                         return
+                    log.info("Flare TCP receive buffer: %d bytes", connection.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF))
                     connection.settimeout(0.05)
                     last_data = time.monotonic()
                     while not self._stop_receiver.is_set():
@@ -308,12 +329,37 @@ class FlareAcquisition:
                 recording.checkpoint(metadata)
             decoder = (FlareDfdDecoder if self.dfd else FlareDecoder)(accepted, metadata["run_id"])
             image = self._image
-            dfd_preview = DfdPreview(accepted, image) if self.dfd else None
+            displayed_channels = self._initial_preview.get("display_channels", self.display_channels)
+            dfd_preview = DfdPreview(
+                accepted, image, initial_hcl=self._initial_preview.get("hcl_image"),
+                initial_rgb=self._initial_preview.get("rgb_image"), selection=displayed_channels,
+            ) if self.dfd else None
             fingerprint = np.zeros(accepted["channels"], dtype=np.uint64)
-            displayed_channels = self.display_channels
-            trace = []
+            trace = FlareTrace()
+            display = {}
+            last_display_update = float("-inf")
+            trace_reset_generation = 0
             expected_bytes = total_bins(accepted) * size
             last_snapshot = 0.0
+            snapshot_interval = _preview_snapshot_interval(image, self.dfd)
+            required_rate = size * clock_hz / dwell
+            processing_seconds = 0.0
+            stats_started = time.monotonic()
+            last_stats = stats_started
+            max_backlog = 0
+            log.info("Flare input requires %.1f MB/s; full-resolution preview interval %.3f s",
+                     required_rate / 1e6, snapshot_interval)
+
+            def log_throughput():
+                decoded_bytes = decoder.index * size
+                log.info(
+                    "Flare throughput: received %.1f MB, decoded %.1f MB, host backlog %.1f MB "
+                    "(maximum %.1f MB), queue %d/%d, processing capacity %.1f MB/s, required %.1f MB/s",
+                    self.received_bytes / 1e6, decoded_bytes / 1e6,
+                    max(0, self.received_bytes - decoded_bytes) / 1e6,
+                    max_backlog / 1e6, chunks.qsize(), chunks.maxsize,
+                    decoded_bytes / max(processing_seconds, 1e-9) / 1e6, required_rate / 1e6,
+                )
             status = {}
 
             def poll_status():
@@ -350,6 +396,7 @@ class FlareAcquisition:
                         break
                     chunk = b""
                 index = decoder.index
+                processing_started = time.monotonic()
                 counts = decoder.feed(chunk)
                 if recording:
                     if modern and self.dfd:
@@ -357,10 +404,25 @@ class FlareAcquisition:
                     else:
                         recording.append(index, counts)
                 if len(counts):
-                    selection = (self.display_state.get("channels")
-                                 if self.display_state is not None else self.display_channels)
+                    now = time.monotonic()
+                    if self.display_state is not None and now - last_display_update >= 0.1:
+                        # Manager reads are synchronous IPC. Fetch all settings
+                        # together at preview cadence, never once per packet.
+                        display = self.display_state.copy()
+                        last_display_update = now
+                    generation = display.get("trace_reset_generation", 0)
+                    if generation != trace_reset_generation:
+                        trace.reset()
+                        trace.elapsed = 0.0
+                        if self.dfd:
+                            dfd_preview.hist_sum.fill(0)
+                            dfd_preview.hist_records = 0
+                            dfd_preview.hist_seconds = 0.0
+                        trace_reset_generation = generation
+                    selection = display.get("channels", self.display_channels)
                     if selection != displayed_channels:
                         image.fill(0)
+                        trace.reset()
                         displayed_channels = selection
                     sums = dfd_preview.update(counts, index, selection, **(
                         {"windows": decoder.windows} if modern else {}
@@ -373,9 +435,23 @@ class FlareAcquisition:
                         _update_preview_image(image, sums, index, accepted["bins_per_pixel"])
                     fingerprint += (counts[:, :, :accepted["channels"]].sum(axis=(0, 1), dtype=np.uint64)
                                     if self.dfd else counts.sum(axis=0, dtype=np.uint64))
-                    trace.extend((sums.astype(float) * clock_hz / dwell).tolist())
-                    trace = trace[-3000:]
+                    durations = (
+                        np.asarray([w.last_tick - w.first_tick for w in decoder.windows]) / clock_hz
+                        if self.dfd and modern else dwell / clock_hz
+                    )
+                    trace_bin_seconds = display.get("trace_bin_seconds", 0.01)
+                    trace.update(
+                        sums, durations, trace_bin_seconds,
+                        display.get("trace_history_seconds", 300.0),
+                        records_per_bin=(records_per_trace_bin(trace_bin_seconds, dwell / clock_hz)
+                                         if self.dfd else None),
+                    )
                 now = time.monotonic()
+                processing_seconds += now - processing_started
+                max_backlog = max(max_backlog, self.received_bytes - decoder.index * size)
+                if now - last_stats >= 1.0:
+                    log_throughput()
+                    last_stats = now
                 try:
                     sample, poll_error = poll_results.get_nowait()
                 except queue.Empty:
@@ -390,12 +466,13 @@ class FlareAcquisition:
                         raise FlareError("Flare stream identity changed during acquisition")
                     if any(active.get(key, 0) for key in ("stream_error", "acquisition_error")):
                         raise FlareError(f"Flare delivery failed: {active}")
-                if now - last_snapshot >= 0.1:
+                if now - last_snapshot >= snapshot_interval:
+                    copying_started = time.monotonic()
                     self.on_snapshot(
                         {
                             "image": image.copy(),
                             "fingerprint": fingerprint.copy(),
-                            "trace": np.asarray(trace),
+                            **trace.snapshot(),
                             "bins": decoder.index,
                             "total_bins": decoder.expected_bins,
                             "receiver_bytes": self.received_bytes,
@@ -404,13 +481,16 @@ class FlareAcquisition:
                             "firmware": dict(client.firmware),
                             "bin_seconds": dwell / clock_hz,
                             "dma_packet_bins": packet,
+                            "display_channels": displayed_channels,
                             **(dfd_preview.snapshot() if self.dfd else {}),
                         }
                     )
+                    processing_seconds += time.monotonic() - copying_started
                     last_snapshot = now
             if not self._eof.is_set() or self.received_bytes != expected_bytes:
                 raise FlareError("Flare EOF/byte count validation failed")
             decoder.finish()
+            log_throughput()
             deadline = time.monotonic() + self.settings.http_timeout_seconds
             while True:
                 status = client.status()
@@ -444,7 +524,7 @@ class FlareAcquisition:
                 {
                     "image": image.copy(),
                     "fingerprint": fingerprint.copy(),
-                    "trace": np.asarray(trace),
+                    **trace.snapshot(),
                     "bins": decoder.index,
                     "total_bins": decoder.expected_bins,
                     "receiver_bytes": self.received_bytes,
@@ -453,11 +533,14 @@ class FlareAcquisition:
                     "firmware": dict(client.firmware),
                     "bin_seconds": dwell / clock_hz,
                     "dma_packet_bins": packet,
+                    "display_channels": displayed_channels,
                     **(dfd_preview.snapshot() if self.dfd else {}),
                 }
             )
             metadata.update(complete=True, result="complete", validated_bins=decoder.index)
         except Exception as error:
+            if log_throughput is not None:
+                log_throughput()
             metadata.update(
                 error=str(error),
                 result="cancelled" if isinstance(error, InterruptedError) else "partial",

@@ -197,14 +197,17 @@ class FlareDfdDecoder:
 
 
 class DfdPreview:
-    def __init__(self, configuration, image):
+    def __init__(self, configuration, image, *, initial_hcl=None, initial_rgb=None, selection=None):
         self.configuration = configuration
         self.image = image
-        self.hcl = np.zeros((*image.shape, 3), dtype=float)
-        self.rgb = np.zeros((*image.shape, 3), dtype=np.uint64)
+        shape = (*image.shape, 3)
+        self.hcl = (np.array(initial_hcl, dtype=float, copy=True)
+                    if initial_hcl is not None and initial_hcl.shape == shape else np.zeros(shape, dtype=float))
+        self.rgb = (np.array(initial_rgb, dtype=np.uint64, copy=True)
+                    if initial_rgb is not None and initial_rgb.shape == shape else np.zeros(shape, dtype=np.uint64))
         self.hist_live = np.zeros(91, dtype=np.uint64)
         self.hist_sum = np.zeros(91, dtype=np.uint64)
-        self.selection = None
+        self.selection = selection
         self.live_records = self.hist_records = 0
         self.live_seconds = self.hist_seconds = 0.0
 

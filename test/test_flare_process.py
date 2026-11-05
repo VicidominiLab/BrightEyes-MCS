@@ -6,6 +6,7 @@ import multiprocessing
 import os
 import queue
 import time
+import threading
 from unittest.mock import patch
 from types import SimpleNamespace
 
@@ -15,8 +16,57 @@ import pytest
 from brighteyes_mcs.acquisition.detectors.flare.config import FlareSettings, configuration_from_gui
 from brighteyes_mcs.acquisition.detectors.flare.controls import FlareLiveControls
 from brighteyes_mcs.acquisition.flare import FlareAcquisition
-from brighteyes_mcs.acquisition.flare_worker import FlareTask, publish_latest
+from brighteyes_mcs.acquisition.flare_worker import FlareTask, SnapshotPublisher, publish_latest
 from test.test_flare import FakeClient
+
+
+def test_blocked_gui_publisher_does_not_block_acquisition_and_keeps_latest_frame():
+    entered, release, produced = threading.Event(), threading.Event(), threading.Event()
+    received = []
+
+    def slow_gui(frame):
+        if frame == 1:
+            entered.set()
+            assert release.wait(5)
+        received.append(frame)
+
+    publisher = SnapshotPublisher(slow_gui)
+    producer = None
+    try:
+        publisher.publish(1)
+        assert entered.wait(2)
+
+        def acquire():
+            for frame in range(2, 101):
+                publisher.publish(frame)
+            produced.set()
+
+        producer = threading.Thread(target=acquire)
+        producer.start()
+        assert produced.wait(2), "Acquisition waited for GUI IPC"
+        assert publisher.mailbox.qsize() == 1
+    finally:
+        release.set()
+        if producer:
+            producer.join(2)
+        publisher.close(timeout=2)
+    assert received == [1, 100]
+    assert not publisher.thread.is_alive()
+
+
+def test_preview_delivery_error_does_not_stop_publishing(caplog):
+    received = []
+
+    def callback(frame):
+        received.append(frame)
+        raise RuntimeError("GUI connection lost")
+
+    publisher = SnapshotPublisher(callback)
+    publisher.publish(100)
+    publisher.close(timeout=2)
+    assert received == [100]
+    assert "Flare preview delivery failed" in caplog.text
+    assert not publisher.thread.is_alive()
 
 
 @pytest.mark.parametrize('supported', [True, False])

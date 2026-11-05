@@ -15,6 +15,7 @@ from pathlib import Path
 from time import localtime, strftime
 
 from ._log_file import LogFileLock, open_append
+from ._stderr_capture import StderrCapture
 
 
 LOGGER_NAME = "brighteyes_mcs"
@@ -128,6 +129,7 @@ logger = ResilientLogger(logging.getLogger(LOGGER_NAME), {})
 _action = ContextVar("log_action", default="-")
 _action_sequence = count(1)
 _fault_file = None
+_stderr_capture = None
 
 
 def verbosity() -> int:
@@ -197,7 +199,7 @@ def _configure_logging(*, verbosity=None, debug_enabled=None, log_dir=None):
     All processes append to one file, serializing complete records and tracebacks.
     Level zero creates neither a directory nor a file.
     """
-    global _fault_file
+    global _fault_file, _stderr_capture
     selected = (int(os.environ.get(VERBOSITY_ENV_VAR, DEFAULT_VERBOSITY))
                 if verbosity is None else verbosity)
     if debug_enabled is not None and verbosity is None:
@@ -211,6 +213,12 @@ def _configure_logging(*, verbosity=None, debug_enabled=None, log_dir=None):
     destination = Path(log_dir) if log_dir is not None else default_log_dir()
     destination = destination.resolve()
     os.environ[LOG_DIR_ENV_VAR] = str(destination)
+    if _stderr_capture is not None:
+        try:
+            _stderr_capture.close()
+        except Exception as error:
+            report_logging_failure("stderr capture cleanup", error)
+        _stderr_capture = None
     for handler in list(logger.handlers):
         if getattr(handler, "_brighteyes_handler", False):
             logger.removeHandler(handler)
@@ -253,6 +261,10 @@ def _configure_logging(*, verbosity=None, debug_enabled=None, log_dir=None):
             _fault_file = None
     safe_log(logging.INFO, "Logging started verbosity=%s session=%s python=%s", selected,
              _session_timestamp(), sys.version.split()[0])
+    try:
+        _stderr_capture = StderrCapture(log_file)
+    except Exception as error:
+        report_logging_failure("stderr capture", error)
     return log_file
 
 
@@ -385,6 +397,7 @@ def logged_worker(function):
 def install_exception_logging():
     """Capture startup and background-thread failures while retaining stderr."""
     original_sys, original_thread = sys.excepthook, threading.excepthook
+    original_unraisable = sys.unraisablehook
 
     def application_error(kind, error, traceback):
         safe_log(logging.CRITICAL, "Unhandled application exception", exc_info=(kind, error, traceback))
@@ -395,8 +408,41 @@ def install_exception_logging():
                  exc_info=(args.exc_type, args.exc_value, args.exc_traceback))
         original_thread(args)
 
+    def unraisable_error(args):
+        safe_log(logging.CRITICAL, "Unraisable exception: %s", args.err_msg or "callback/finalizer",
+                 exc_info=(args.exc_type, args.exc_value, args.exc_traceback))
+        original_unraisable(args)
+
     sys.excepthook, threading.excepthook = application_error, thread_error
+    sys.unraisablehook = unraisable_error
 
     def restore():
         sys.excepthook, threading.excepthook = original_sys, original_thread
+        sys.unraisablehook = original_unraisable
+    return restore
+
+
+def install_qt_message_logging():
+    """Capture Qt diagnostics, including qFatal, before Qt aborts the process."""
+    from PySide6.QtCore import QtMsgType, qInstallMessageHandler
+
+    levels = {QtMsgType.QtDebugMsg: logging.DEBUG, QtMsgType.QtInfoMsg: logging.INFO,
+              QtMsgType.QtWarningMsg: logging.WARNING, QtMsgType.QtCriticalMsg: logging.ERROR,
+              QtMsgType.QtFatalMsg: logging.CRITICAL}
+
+    def qt_message(kind, context, message):
+        safe_log(levels.get(kind, logging.ERROR), "Qt %s: %s (%s:%s %s)", kind.name, message,
+                 context.file or "?", context.line, context.function or "?")
+        if previous is not None:
+            previous(kind, context, message)
+        elif sys.stderr is not None:
+            try:
+                print(f"Qt {kind.name}: {message}", file=sys.stderr, flush=True)
+            except Exception:
+                pass
+
+    previous = qInstallMessageHandler(qt_message)
+
+    def restore():
+        qInstallMessageHandler(previous)
     return restore

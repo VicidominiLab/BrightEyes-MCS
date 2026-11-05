@@ -72,17 +72,21 @@ def main(argv=None):
         _argument_parser().print_help()
         return 0
 
-    from ..logging_setup import configure_logging, install_exception_logging, logger
+    from ..logging_setup import configure_logging, install_exception_logging, install_qt_message_logging, logger
 
     argv, log_level = _logging_options(argv)
     configure_logging(verbosity=log_level)
     restore_exception_logging = install_exception_logging()
+    restore_qt_logging = None
     try:
+        restore_qt_logging = install_qt_message_logging()
         return _run_application(argv)
     except BaseException:
         logger.exception("Application startup or event loop failed")
         raise
     finally:
+        if restore_qt_logging is not None:
+            restore_qt_logging()
         restore_exception_logging()
 
 

@@ -20,6 +20,17 @@ from brighteyes_mcs.acquisition.manager import McsManager
 
 class TestMcsManager(unittest.TestCase):
 
+    def test_idle_trace_and_fcs_reset_without_preview_process(self):
+        instance = McsManager()
+        instance.previewProcess = None
+        instance.trace_reset()
+        instance.FCS_reset()
+        instance.previewProcess = MagicMock()
+        instance.trace_reset()
+        instance.FCS_reset()
+        instance.previewProcess.trace_reset.assert_called_once_with()
+        instance.previewProcess.FCS_reset.assert_called_once_with()
+
     def test_timestamp_restart_never_starts_intensity_receiver_or_storage(self):
         for model in (DETECTOR_PISPAD23_TS_UIMG,):
             instance = McsManager()

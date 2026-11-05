@@ -30,6 +30,19 @@ writes logs to a user-writable location. `%LOCALAPPDATA%/BrightEyes-MCS/log` is
 used on Windows, with `BRIGHTEYES_LOG_DIR` available as an explicit override.
 The old `core.logging.print_debug` module and package have been removed.
 
+The session file `mcs-log-<session>.log` also receives Python stderr (including
+binary writes), native descriptor 2 and the Windows standard-error handle.
+Python stderr remains visible in the console. Native output is redirected
+directly to the append-only file without a pipe, reader thread or logger lock;
+each Python stderr write is flushed immediately. Main and worker processes use
+the same session file. Qt warnings, critical and fatal messages and Python
+unraisable callback/finalizer exceptions are logged, alongside the existing
+unhandled Python/thread exceptions and faulthandler native crash stacks.
+Native output can be unformatted between normal timestamped records. These
+diagnostics follow the log destination and are disabled by verbosity 0.
+An OS force-kill or power loss cannot produce a new traceback; diagnostics
+already written remain in the file.
+
 ## Plug-in contract
 
 Every built-in plug-in is a package containing `plugin.py` with

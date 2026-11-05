@@ -124,7 +124,7 @@ def test_gui_timing_masks_and_sequence_are_adapted_without_changing_ni_encoding(
                   laser_sequence_1=1, laser_sequence_4=4, laser_1_enable=True, laser_4_enable=True)
     c = configuration_from_gui(values, 100000000, FlareSettings())
     assert c["dwell"] == 200 and c["bins_per_pixel"] == 91
-    assert c["packet_records"] == 4 and "packet_bins" not in c
+    assert c["packet_records"] == 6 and "packet_bins" not in c  # Capped to this six-pixel scan.
     assert c["laser_excitation_sequence"] == [1, 0, 0, 8, 0, 0]
     assert c["laser_enable_mask"] == 9
     assert pack_sequence(c["laser_excitation_sequence"]) == 0x100800
@@ -148,6 +148,15 @@ def test_preview_sums_exclude_reference_and_do_not_overflow(channels):
     assert preview.snapshot()["hcl_image"].shape == (2, 3, 3)
     preview.update(data[:1], 0, (0,))
     assert image[0, 0] == data[0, :, 0].sum(dtype=np.uint64)
+    assert preview.hist_records == 1
+    single = preview.snapshot()["hcl_image"].copy()
+    preview.update(data[:1], 0, (1,))
+    assert image[0, 0] == data[0, :, 1].sum(dtype=np.uint64)
+    assert preview.hist_records == 1
+    assert not np.array_equal(single[0, 0], preview.snapshot()["hcl_image"][0, 0])
+    preview.update(data[:1], 0, None)
+    assert image[0, 0] == data[0, :, :channels].sum(dtype=np.uint64)
+    assert preview.hist_records == 1
 
 
 def test_preview_batch_crossing_frames_keeps_last_visit_to_each_pixel():
@@ -160,6 +169,32 @@ def test_preview_batch_crossing_frames_keeps_last_visit_to_each_pixel():
     for offset, count in enumerate(sums):
         expected.flat[(4 + offset) % image.size] = count
     np.testing.assert_array_equal(image, expected)
+
+
+@pytest.mark.parametrize("version", [1, 2, 3])
+def test_dfd_preview_replaces_only_visited_pixels_across_repetitions(version):
+    if version == 3:
+        from test.test_flare_v19 import accepted as scoped_accepted, request as scoped_request, record as scoped_record
+        c = scoped_accepted(scoped_request(nx=3, ny=2, points=2, circles=1))
+        visits = 2
+        counts = scoped_record(c, 0)[1]
+    else:
+        c = accepted(request(), version)
+        visits = 1
+        counts = record(c, 0)[1]
+    image = np.full((2, 3), 123, dtype=np.uint64)
+    hcl = np.full((2, 3, 3), 0.25)
+    rgb = np.full((2, 3, 3), 456, dtype=np.uint64)
+    preview = DfdPreview(c, image, initial_hcl=hcl, initial_rgb=rgb, selection=(1,))
+    expected = counts[:, 1].sum(dtype=np.uint64)
+    for index in (0, image.size * visits):
+        preview.update(counts[None], index, (1,))
+        assert image[0, 0] == expected
+        np.testing.assert_array_equal(image.ravel()[1:], 123)
+        np.testing.assert_array_equal(preview.hcl.reshape(-1, 3)[1:], 0.25)
+        np.testing.assert_array_equal(preview.rgb.reshape(-1, 3)[1:], 456)
+    np.testing.assert_array_equal(hcl, 0.25)
+    np.testing.assert_array_equal(rgb, 456)
 
 
 @pytest.mark.parametrize("channels", [25, 49])
@@ -248,6 +283,44 @@ class Service:
         return {"command": name}
 
 
+@pytest.mark.parametrize("version", [1, 2, 3])
+def test_repeated_dfd_acquisition_restores_all_preview_planes_before_first_channel_update(monkeypatch, version):
+    if version == 3:
+        from test.test_flare_v19 import request as scoped_request, Service as ScopedService
+        c = scoped_request(nx=3, ny=2)
+        service = ScopedService(c)
+    else:
+        c = request()
+        service = Service(c, version=version)
+    image = np.full((2, 3), 123, dtype=np.uint64)
+    hcl = np.full((2, 3, 3), 0.25)
+    rgb = np.full((2, 3, 3), 456, dtype=np.uint64)
+    observed = []
+    update = DfdPreview.update
+
+    def observe(preview, counts, index, selection, **kwargs):
+        if not observed:
+            observed.append((preview.image.copy(), preview.hcl.copy(), preview.rgb.copy(), preview.selection))
+        return update(preview, counts, index, selection, **kwargs)
+
+    monkeypatch.setattr(DfdPreview, "update", observe)
+    snapshots = []
+    settings = FlareSettings(host='127.0.0.1', bind_host='127.0.0.1', receiver_host='127.0.0.1', receiver_port=0)
+    run = FlareAcquisition(
+        settings, c, client_factory=lambda _: service, on_snapshot=snapshots.append,
+        initial_image=image, initial_preview=dict(hcl_image=hcl, rgb_image=rgb, display_channels=(0, 1)),
+    )
+    run.display_state = dict(channels=(0, 1))
+    result = run.run()
+    assert result.get("error") is None, result
+    assert observed[0][3] == (0, 1)
+    for actual, expected in zip(observed[0][:3], (image, hcl, rgb)):
+        np.testing.assert_array_equal(actual, expected)
+    assert snapshots[-1]["display_channels"] == (0, 1)
+    np.testing.assert_array_equal(hcl, 0.25)
+    np.testing.assert_array_equal(rgb, 456)
+
+
 @pytest.mark.parametrize("estimator", ["integer_reference_aperture_v1", "integer_reference_half_height_v2"])
 def test_reference_alignment_survives_capture_preview_and_conversion(tmp_path, estimator):
     import json
@@ -304,6 +377,7 @@ def test_capture_and_offline_conversion_preserve_histograms_reference_and_reader
     filename = tmp_path / 'dfd.h5'
     snapshots = []
     run = FlareAcquisition(settings, c, filename=filename, on_snapshot=snapshots.append, client_factory=lambda _: service)
+    run.display_state = dict(trace_bin_seconds=0.0003, trace_history_seconds=1)
     result = run.run()
     assert result.get('error') is None, result
     assert result['complete'] and result['validated_records'] == 6
@@ -327,6 +401,27 @@ def test_capture_and_offline_conversion_preserve_histograms_reference_and_reader
     assert snapshots[-1]['bins'] == snapshots[-1]['total_bins'] == 6
     assert snapshots[-1]['bin_seconds'] == 0.0001
     assert len(snapshots[-1]['dfd_hist_sum']) == 91
+    expected_counts = expected.reshape(6, 91, channels + 1)[:, :, :channels].sum(axis=(1, 2))
+    np.testing.assert_allclose(snapshots[-1]['trace'], expected_counts.reshape(2, 3).sum(axis=1) / 0.0003)
+    np.testing.assert_allclose(snapshots[-1]['trace_times'], [0, 0.0003])
+
+
+@pytest.mark.parametrize("version", [1, 2])
+def test_dfd_trace_rounds_nonmultiple_width_to_whole_91_bin_records(version):
+    c = request(bins_per_pixel=91, dwell=200)
+    service = Service(c, version=version)
+    settings = FlareSettings(host='127.0.0.1', bind_host='127.0.0.1', receiver_host='127.0.0.1', receiver_port=0)
+    snapshots = []
+    run = FlareAcquisition(settings, c, on_snapshot=snapshots.append, client_factory=lambda _: service)
+    run.display_state = dict(trace_bin_seconds=0.0004, trace_history_seconds=1)
+    result = run.run()
+    assert result.get('error') is None, result
+    record_seconds = 91 * 2e-6
+    counts = np.stack([record(service.effective, i)[1][:, :25] for i in range(6)])
+    np.testing.assert_allclose(
+        snapshots[-1]['trace'], counts.reshape(2, 3, 91, 25).sum(axis=(1, 2, 3)) / (3 * record_seconds),
+    )
+    np.testing.assert_allclose(snapshots[-1]['trace_times'], [0, 3 * record_seconds])
 
 
 @pytest.mark.parametrize("truncate,fault", [(True, False), (False, True)])

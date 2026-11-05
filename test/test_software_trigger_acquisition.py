@@ -107,3 +107,59 @@ def test_separate_triggers_share_workers_and_one_output(tmp_path, preview, raw, 
         manager.stopAcquisition()
         incoming.close()
         manager.mp_manager.shutdown()
+
+
+def test_dfd_lifetime_source_switch_reaches_real_fpga_worker_and_resets_histogram(tmp_path):
+    manager = McsManager()
+    incoming = mp.Queue()
+    manager.fpga_handle = MagicMock()
+    manager.fpga_handle.configuration = {"queueFifoRead": incoming}
+    manager.fpga_handle.register_read_all.return_value = {}
+    manager.is_connected = True
+    manager.registers_configuration = dict(registers(), max_pixel=1, max_line=1,
+                                           max_time_bins_per_pixel=6, max_frame=1, max_repetition=2)
+    manager.quick_reset_fpga = MagicMock()
+    manager.check_fpga_alive = MagicMock(return_value=0)
+    manager.set_spad_channels(25)
+    manager.set_dfd_enable(True)
+    manager.set_DFD_nbins(6)
+    manager.set_preview_buffer_capacity_samples(64)
+    manager.setActivatedFifo(["stream_out_main"])
+    manager.activateShowPreview(True)
+    manager.shared_dict.update(channel="LIFETIME_HSV", lifetime_channel=None,
+                               activate_autocorrelation=False, activate_trace=True)
+    manager.set_filename_h5(str(tmp_path / "preview.h5"))
+    manager.set_do_not_save(True)
+    session = SoftwareTriggerSession(manager, preview=True)
+    manager.software_trigger_session = session
+    session.prepare()
+    # Native 25-channel FIFO layout: detector 0 starts at bit 5,
+    # detector 1 at bit 9 of each sample's first 64-bit word.
+    first = np.array([1, 1, 2, 2, 3, 3], dtype=np.uint64)
+    second = np.array([3, 3, 2, 2, 1, 1], dtype=np.uint64)
+    packet = np.zeros(12, dtype=np.uint64)
+    packet[::2] = (first << 5) | (second << 9)
+    try:
+        with patch("brighteyes_mcs.acquisition.detectors.spad.pipeline.SpadDetectorPipeline.make_data_preprocess",
+                   return_value=None):
+            manager.run()
+        wait_until(lambda: manager.shared_dict.get("software_trigger_worker_ready"), manager)
+        session.arm()
+        pid = manager.previewProcess.pid
+        for frame, (channel, expected) in enumerate(((None, first + second), (0, first),
+                                                    (1, second), (None, first + second))):
+            manager.shared_dict["lifetime_channel"] = channel
+            time.sleep(0.2)  # Worker display settings are cached at 10 Hz.
+            np.testing.assert_array_equal(manager.shared_trace_dfd.get_numpy_handle()[1:], 0)
+            assert session.trigger()
+            manager.data_queue["stream_out_main"].put(packet)
+            wait_until(lambda frame=frame: session.received_frames() == frame + 1, manager)
+            session.poll()
+            assert manager.previewProcess.pid == pid
+            np.testing.assert_allclose(manager.getPreviewHclImage()[0, 0, 2], expected.sum())
+            np.testing.assert_array_equal(manager.shared_trace_dfd.get_numpy_handle()[1], expected)
+    finally:
+        manager.stopPreview()
+        manager.stopAcquisition()
+        incoming.close()
+        manager.mp_manager.shutdown()

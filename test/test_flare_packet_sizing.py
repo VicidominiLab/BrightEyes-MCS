@@ -53,7 +53,7 @@ def test_auto_recalculates_normal_dfd_normal_without_mutating_settings():
                                            timebin_per_pixel=91), 100000000, settings)
     restored = configuration_from_gui(gui_values(), 100000000, settings)
     assert normal["packet_bins"] == 137  # About 16 KiB, rather than 480-byte packets.
-    assert dfd["packet_records"] == 4
+    assert dfd["packet_records"] == 8
     assert "packet_bins" not in dfd
     assert normal == restored
     assert settings.packet_bins == 0
@@ -66,6 +66,24 @@ def test_auto_uses_discovered_clock_and_record_size():
     assert automatic_packet_bins(dict(config, channels=49), 100000000, settings) == 76
     # At 1 MHz the same cycle count is a much longer exposure.
     assert automatic_packet_bins(config, 1000000, settings) == 4
+
+
+@pytest.mark.parametrize("channels", [25, 49])
+@pytest.mark.parametrize("microseconds,expected", [(2, 8), (5, 4), (100, 1)])
+def test_dfd3_auto_batches_more_records_without_exceeding_latency(channels, microseconds, expected):
+    from test.test_flare_v19 import FIRMWARE
+
+    settings = FlareSettings()
+    config = configuration_from_gui(
+        gui_values(dfd_enable=True, time_resolution=microseconds,
+                   timebin_per_pixel=91, spad_channels=str(channels)),
+        100000000, settings, firmware=FIRMWARE,
+    )
+    size, dwell, packet = stream_parameters(config)
+    assert packet == expected
+    assert packet == 1 or packet * dwell / 100000000 <= 0.002
+    assert packet * size <= 8388607
+    assert check_transport(config, 100000000, settings) > 0
 
 
 def test_auto_small_buffer_reduces_batch_and_impossible_buffer_fails():

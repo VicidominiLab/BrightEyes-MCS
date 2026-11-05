@@ -30,7 +30,7 @@ from brighteyes_mcs.acquisition.detectors.models import (
     detector_uses_nifpga_fifo,
     normalize_detector_model,
 )
-from brighteyes_mcs.acquisition.flare import FlareAcquisition, _update_preview_image
+from brighteyes_mcs.acquisition.flare import FlareAcquisition, _update_preview_image, _preview_snapshot_interval
 from brighteyes_mcs.hardware.flare import FlareClient, FlareError
 from brighteyes_mcs.storage.flare import FlareRecording
 from brighteyes_mcs.storage.raw import convert_raw_acquisition
@@ -55,6 +55,14 @@ def configuration(channels=25, **changes):
     )
     result.update(changes)
     return result
+
+
+@pytest.mark.parametrize("size,dfd,expected", [(200, True, .2), (500, True, 14e6 / (32 * 1024 * 1024)),
+                                            (500, False, .1)])
+def test_full_resolution_preview_cadence_is_bounded_by_transfer_size(size, dfd, expected):
+    image = np.zeros((size, size), dtype=np.uint64)
+    assert _preview_snapshot_interval(image, dfd) == pytest.approx(expected)
+    assert image.shape == (size, size)
 
 
 def raw_fixture(config, run_id=257):
@@ -343,6 +351,41 @@ def test_server_rejects_registers_even_when_catalog_would_disallow_them(policy, 
     assert session.request.call_args.args[0] == "PUT"
 
 
+def test_acquisition_copies_display_settings_without_per_packet_proxy_reads(caplog):
+    caplog.set_level("INFO", logger="brighteyes_mcs.acquisition.flare")
+    config = configuration(frames=1, repetitions=1)
+    settings = FlareSettings(
+        host="127.0.0.1", bind_host="127.0.0.1", receiver_host="127.0.0.1", receiver_port=0,
+    )
+    device = FakeClient(settings, config, early=True)
+
+    class DisplaySettings:
+        copies = 0
+
+        def copy(self):
+            self.copies += 1
+            return dict(channels=(3,), trace_bin_seconds=0.001, trace_history_seconds=10)
+
+        def get(self, *args):
+            raise AssertionError("Per-packet IPC settings reads are forbidden")
+
+    display = DisplaySettings()
+    snapshots = []
+    runner = FlareAcquisition(settings, config, on_snapshot=snapshots.append,
+                              client_factory=lambda _: device)
+    runner.display_state = display
+    result = runner.run()
+    assert result.get("error") is None, result
+    assert display.copies >= 1
+    expected = raw_fixture(config)[1]
+    np.testing.assert_array_equal(
+        snapshots[-1]["image"], expected[:, 3].reshape(2, 3, 3).sum(axis=-1),
+    )
+    assert "Flare TCP receive buffer:" in caplog.text
+    assert "Flare throughput:" in caplog.text
+    assert "host backlog" in caplog.text and "processing capacity" in caplog.text
+
+
 class FakeClient:
     def __init__(self, settings, config, *, truncate=False, service_error=False, early=False):
         self.settings = settings
@@ -619,7 +662,8 @@ def test_acquisition_restores_lasers_and_records_live_position_updates(tmp_path,
 
 
 @pytest.mark.parametrize("same_shape", [True, False])
-def test_preview_run_copies_previous_image_and_discards_incompatible_geometry(monkeypatch, same_shape):
+@pytest.mark.parametrize("channels", [None, (0, 1)])
+def test_preview_run_copies_previous_image_and_discards_incompatible_geometry(monkeypatch, same_shape, channels):
     config = configuration(frames=1, repetitions=1)
     settings = FlareSettings(
         host="127.0.0.1", bind_host="127.0.0.1", receiver_host="127.0.0.1", receiver_port=0
@@ -635,15 +679,18 @@ def test_preview_run_copies_previous_image_and_discards_incompatible_geometry(mo
     monkeypatch.setattr("brighteyes_mcs.acquisition.flare._update_preview_image", observe_update)
     run = FlareAcquisition(
         settings, config, initial_image=seed, on_snapshot=snapshots.append,
+        initial_preview={"display_channels": channels},
         client_factory=lambda settings: fake,
     )
+    run.display_state = {"channels": channels}
     seed.fill(999)  # The GUI's array must not be shared with the acquisition worker.
     assert run.run()["complete"]
     np.testing.assert_array_equal(before_updates[0], np.full((2, 3), 123 if same_shape else 0))
     np.testing.assert_array_equal(seed, np.full(seed.shape, 999))
     _, expected = raw_fixture(config)
+    selected = expected if channels is None else expected[:, channels]
     np.testing.assert_array_equal(
-        snapshots[-1]["image"], expected.astype(np.uint64).sum(axis=1).reshape(2, 3, 3).sum(axis=-1)
+        snapshots[-1]["image"], selected.astype(np.uint64).sum(axis=1).reshape(2, 3, 3).sum(axis=-1)
     )
 
 

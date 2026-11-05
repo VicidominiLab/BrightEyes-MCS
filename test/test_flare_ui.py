@@ -14,7 +14,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
 import numpy as np
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow, QCheckBox, QDoubleSpinBox, QComboBox
 from PySide6.QtTest import QTest
 from PySide6.QtCore import Qt, QTimer
 
@@ -36,6 +36,21 @@ def panel(monkeypatch):
                 setattr(window, name, lambda *args: None)
     window.ui = Ui_MainWindowDesign()
     window.ui.setupUi(window)
+    for name in ("lifetime_auto_counts", "lifetime_auto_counts_zero", "lifetime_auto_quality", "lifetime_hue_wrap",
+                 "lifetime_equalize_hue", "lifetime_equalize_counts"):
+        setattr(window.ui, "checkBox_" + name, QCheckBox(window))
+    for name in ("low", "high"):
+        setattr(window.ui, "doubleSpinBox_lifetime_percentile_" + name, QDoubleSpinBox(window))
+    window.ui.doubleSpinBox_lifetime_analysis_interval = QDoubleSpinBox(window)
+    window.ui.doubleSpinBox_lifetime_hue_shift = QDoubleSpinBox(window)
+    window.ui.doubleSpinBox_lifetime_value_gamma = QDoubleSpinBox(window)
+    window.ui.doubleSpinBox_lifetime_value_gamma.setValue(1)
+    window.ui.comboBox_lifetime_wrap_mode = QComboBox(window)
+    window.ui.comboBox_lifetime_channel = QComboBox(window)
+    window.ui.comboBox_lifetime_channel.addItem("Sum", None)
+    for channel in range(49):
+        window.ui.comboBox_lifetime_channel.addItem(f"Ch {channel}", channel)
+    window.getLifetimeSourceChannel = lambda: MainWindow.getLifetimeSourceChannel(window)
     window.ui.statusBar = window.statusBar()
     window.mcs_manager = SimpleNamespace(is_connected=False)
     window._set_program_state = Mock()
@@ -87,6 +102,139 @@ def test_tabs_defaults_and_inactive_controls_never_construct_flare(panel):
             controller.selection_changed(label)
         assert controller.job is None
         assert controller.run_job is None
+
+
+def test_enabling_flare_dfd_selects_sum(panel):
+    window, controller = panel
+    controller.selection_changed("TCP/IP - FPGA Flare")
+    window.ui.comboBox_plot_channel.setCurrentText("10")
+    window.ui.checkBox_DFD.setChecked(True)
+    assert window.ui.comboBox_plot_channel.currentText() == "Sum"
+    controller._discovery = {"firmware": {"supported_dfd_formats": ["DFD2"]}}
+    controller.update_display()
+    assert window.ui.comboBox_plot_channel.currentText() == "Sum"
+
+
+@pytest.mark.parametrize("detector", ["FPGA - SPAD", "TCP/IP - FPGA Flare"])
+@pytest.mark.parametrize("channel", ["LIFETIME_HSV", "LIFETIME_HSL", "LIFETIME_HCL", "LIFETIME", "QUALITY"])
+def test_lifetime_channels_warn_without_dfd_and_clear_when_resolved(panel, detector, channel):
+    window, controller = panel
+    controller.selection_changed(detector)
+    combo = window.ui.comboBox_plot_channel
+    combo.setCurrentText(channel)
+    MainWindow.checkAlerts(window)
+    assert "red" in combo.styleSheet()
+    assert "require DFD" in combo.toolTip()
+    window.ui.checkBox_DFD.setChecked(True)
+    combo.setCurrentText(channel)
+    MainWindow.checkAlerts(window)
+    assert combo.styleSheet() == ""
+    assert combo.toolTip() == ""
+    window.ui.checkBox_DFD.setChecked(False)
+    combo.setCurrentText("Sum")
+    MainWindow.checkAlerts(window)
+    assert combo.styleSheet() == ""
+
+
+def test_dfd_trace_minimum_exceeds_phase_histogram_and_updates_live_settings(panel):
+    window, controller = panel
+    window.flare = controller
+    controller.selection_changed("TCP/IP - FPGA Flare")
+    window.ui.checkBox_DFD.setChecked(True)
+    window.ui.spinBox_time_bin_per_px.setValue(91)
+    window.ui.spinBox_timeresolution.setValue(2)
+    window.ui.doubleSpinBox_binsize.setValue(0.01)
+    controller._display = {}
+    MainWindow.trace_parameters_changed(window)
+    assert window.ui.doubleSpinBox_binsize.value() == pytest.approx(0.364)
+    assert window.ui.doubleSpinBox_binsize.singleStep() == pytest.approx(0.182)
+    assert controller._display["trace_bin_seconds"] == pytest.approx(window.ui.doubleSpinBox_binsize.value() / 1000)
+    window.ui.doubleSpinBox_binsize.setValue(10)
+    MainWindow.trace_parameters_changed(window)
+    assert window.ui.doubleSpinBox_binsize.value() == pytest.approx(10.01)
+    assert controller._display["trace_bin_seconds"] == pytest.approx(0.01001)
+    window.ui.doubleSpinBox_binsize.stepUp()
+    MainWindow.trace_parameters_changed(window)
+    assert window.ui.doubleSpinBox_binsize.value() == pytest.approx(10.192)
+    window.ui.spinBox_timeresolution.setValue(5)
+    MainWindow.trace_parameters_changed(window)
+    assert window.ui.doubleSpinBox_binsize.value() == pytest.approx(10.465)
+    assert window.ui.doubleSpinBox_binsize.singleStep() == pytest.approx(0.455)
+    window.ui.checkBox_DFD.setChecked(False)
+    MainWindow.trace_parameters_changed(window)
+    assert window.ui.doubleSpinBox_binsize.minimum() == 0.01
+    assert window.ui.doubleSpinBox_binsize.decimals() == 4
+    assert window.ui.doubleSpinBox_binsize.singleStep() == 1
+
+
+def test_flare_dfd_trace_stays_aligned_with_nondefault_scan_bins_and_fine_resolution(panel):
+    window, controller = panel
+    window.flare = controller
+    controller.selection_changed("TCP/IP - FPGA Flare")
+    window.ui.checkBox_DFD.setChecked(True)
+    window.ui.spinBox_time_bin_per_px.setValue(10)
+    window.ui.spinBox_timeresolution.setValue(2.0001)
+    window.ui.doubleSpinBox_binsize.setValue(10)
+    MainWindow.trace_parameters_changed(window)
+    width_ms = window.ui.doubleSpinBox_binsize.value()
+    scan_bins = width_ms * 1000 / window.ui.spinBox_timeresolution.value()
+    assert scan_bins == pytest.approx(6 * 910)
+    assert scan_bins / 91 == pytest.approx(60)
+    assert scan_bins / 10 == pytest.approx(546)
+
+
+def test_flare_profile_switch_realigns_dfd_trace_and_restores_legacy_control(panel):
+    window, controller = panel
+    window.flare = controller
+    window.trace_parameters_changed = lambda: MainWindow.trace_parameters_changed(window)
+    window.ui.checkBox_DFD.setChecked(True)
+    window.ui.spinBox_time_bin_per_px.setValue(91)
+    window.ui.spinBox_timeresolution.setValue(2)
+    window.ui.doubleSpinBox_binsize.setValue(10)
+    controller.selection_changed("TCP/IP - FPGA Flare")
+    assert window.ui.doubleSpinBox_binsize.value() == pytest.approx(10.01)
+    assert window.ui.doubleSpinBox_binsize.decimals() == 7
+    controller.selection_changed("FPGA - SPAD")
+    assert window.ui.doubleSpinBox_binsize.decimals() == 4
+    assert window.ui.doubleSpinBox_binsize.singleStep() == 1
+
+
+def test_flare_trace_reset_bypasses_missing_fpga_worker(panel):
+    window, controller = panel
+    window.flare = controller
+    window.trace_widget, window.trace_dfd_widget = Mock(), Mock()
+    window.mcs_manager.trace_reset = Mock(side_effect=AssertionError("Flare cannot reset the NI worker"))
+    controller.selection_changed("TCP/IP - FPGA Flare")
+    controller._display = {}
+    MainWindow.traceReset(window)
+    assert controller._display["trace_reset_generation"] == 1
+    window.trace_widget.clear.assert_called_once_with()
+    window.trace_dfd_widget.clear.assert_called_once_with()
+    window.mcs_manager.trace_reset.assert_not_called()
+
+
+@pytest.mark.parametrize("channels", [25, 49])
+@pytest.mark.parametrize("mode", ["LIFETIME_HSV", "LIFETIME_HSL", "LIFETIME_HCL", "LIFETIME", "QUALITY", "RGBDFD"])
+def test_dfd_source_switch_selects_one_detector_or_masked_sum_without_changing_view(panel, channels, mode):
+    window, controller = panel
+    window.ui.comboBox_spad_channels.setCurrentText(str(channels))
+    controller.selection_changed("TCP/IP - FPGA Flare")
+    window.ui.checkBox_DFD.setChecked(True)
+    window.ui.comboBox_plot_channel.setCurrentText(mode)
+    window.fingerprint_mask = np.ones(channels)
+    window.fingerprint_mask[0] = 0
+    controller._display = {}
+    window.ui.comboBox_lifetime_channel.setCurrentText(f"Ch {channels - 1}")
+    controller.update_display()
+    assert controller._display["channels"] == (channels - 1,)
+    assert window.ui.comboBox_plot_channel.currentText() == mode
+    window.ui.comboBox_lifetime_channel.setCurrentText("Sum")
+    controller.update_display()
+    assert controller._display["channels"] == tuple(range(1, channels))
+    window.ui.comboBox_plot_channel.setCurrentText("2")
+    window.ui.comboBox_lifetime_channel.setCurrentText("Ch 10")
+    controller.update_display()
+    assert controller._display["channels"] == (2,)
 
 
 @pytest.mark.parametrize("physical", [25, 49])
@@ -511,11 +659,21 @@ def test_circular_begin_uses_the_existing_spad_offsets_in_volts(preview_panel):
 
 
 @pytest.mark.parametrize("continuing,stopping", [(True, False), (False, False), (True, True)])
-def test_only_continuing_preview_passes_previous_image_to_next_run(preview_panel, continuing, stopping):
+@pytest.mark.parametrize("automatic", [False, True])
+@pytest.mark.parametrize("requested_preview", [False, True])
+def test_only_continuing_preview_passes_previous_image_to_next_run(
+    preview_panel, tmp_path, continuing, stopping, automatic, requested_preview,
+):
     window, controller = preview_panel
+    window.PROGRAM_STATE_ACQUISITION = "acquisition"
+    window.acquisition_run_id = 0
+    window.defineFilename = Mock(return_value=str(tmp_path / "new.h5"))
     controller.preview, controller.stopping = continuing, stopping
     previous = np.full((2, 3), 123, dtype=np.uint64)
-    controller.last_snapshot = {"image": previous}
+    previous_hcl = np.full((2, 3, 3), 0.5)
+    previous_rgb = np.full((2, 3, 3), 321, dtype=np.uint64)
+    controller.last_snapshot = {"image": previous, "hcl_image": previous_hcl,
+                                "rgb_image": previous_rgb, "display_channels": (0, 1)}
     with (
         patch("brighteyes_mcs.ui.controllers.flare.FlareJob") as job,
         patch("brighteyes_mcs.hardware.flare.FlareClient"),
@@ -523,12 +681,31 @@ def test_only_continuing_preview_passes_previous_image_to_next_run(preview_panel
         patch("brighteyes_mcs.acquisition.flare.FlareAcquisition") as acquisition,
     ):
         job.return_value.isRunning.return_value = False
-        controller.begin(True)
+        controller.begin(requested_preview, continuing=automatic)
         assert job.called, window.ui.plainTextEdit_flare_log.toPlainText()
         job.call_args.args[0]()
         seed = acquisition.call_args.kwargs["initial_image"]
-        assert seed is (previous if continuing and not stopping else None)
+        preserve = automatic and requested_preview and continuing and not stopping
+        assert seed is (previous if preserve else None)
+        if preserve:
+            restored = acquisition.call_args.kwargs["initial_preview"]
+            assert restored["hcl_image"] is previous_hcl
+            assert restored["rgb_image"] is previous_rgb
+            assert restored["display_channels"] == (0, 1)
+            window.im_widget.clear.assert_not_called()
+        else:
+            assert acquisition.call_args.kwargs["initial_preview"] is None
+            assert controller.last_snapshot is None
+            window.im_widget.clear.assert_called_once_with()
+            np.testing.assert_array_equal(window.currentImage, 0)
         controller.runner = controller.run_job = None
+
+
+def test_automatic_preview_timer_marks_the_next_run_as_continuing(panel):
+    _, controller = panel
+    with patch.object(controller, "begin") as begin:
+        controller._repeat.timeout.emit()
+    begin.assert_called_once_with(True, continuing=True)
 
 
 @pytest.mark.parametrize("preview", [True, False])
@@ -668,16 +845,19 @@ def test_pan_zoom_updates_display_immediately_and_reuses_it_in_next_scan(preview
         patch("brighteyes_mcs.acquisition.flare.FlareAcquisition") as acquisition,
     ):
         client.return_value.firmware = {"clock_hz": 100000000}
-        acquisition.return_value.run.return_value = {"complete": True, "result": "complete"}
-        controller.begin(True)
-        jobs[0].function()
-        first_configuration = acquisition.call_args.args[1]
-        publish = acquisition.call_args.kwargs["on_snapshot"]
         snapshot = dict(
             image=window.currentImage, bins=1, total_bins=18, receiver_bytes=120,
             expected_bytes=2160, status={}, fingerprint=np.zeros(25), trace=None,
         )
-        publish(snapshot)
+
+        def acquire_frame():
+            acquisition.call_args.kwargs["on_snapshot"](snapshot)
+            return {"complete": True, "result": "complete"}
+
+        acquisition.return_value.run.side_effect = acquire_frame
+        controller.begin(True)
+        jobs[0].function()
+        first_configuration = acquisition.call_args.args[1]
         first_snapshot = jobs[0].function.arguments["snapshots"].get_nowait()
         controller.render(first_snapshot)
         # Exercise the existing preview navigation handler with new view bounds.
@@ -711,13 +891,12 @@ def test_pan_zoom_updates_display_immediately_and_reuses_it_in_next_scan(preview
         controller._acquisition_result({"complete": True, "result": "complete"}, None)
         controller._run_finished()
         controller._repeat.stop()
-        controller.begin(True)
+        controller.begin(True, continuing=True)
         jobs[1].function()
         second_configuration = acquisition.call_args.args[1]
         assert second_configuration["x_start"] != first_configuration["x_start"]
         assert second_configuration["y_start"] != first_configuration["y_start"]
         assert second_configuration["x_step"] == round(2 / 3 * 32768 / 10)
-        acquisition.call_args.kwargs["on_snapshot"](snapshot)
         controller.render(jobs[1].function.arguments["snapshots"].get_nowait())
         assert window.im_widget.setImage.call_args.kwargs["pos"] == (1, -2)
         assert window.im_widget.setImage.call_args.kwargs["autoRange"] is False
@@ -1095,7 +1274,7 @@ def test_dfd_preview_geometry_is_committed_live_and_retained_next_frame(preview_
         controller._acquisition_result({"complete": True, "result": "complete"}, None)
         controller._run_finished()
         controller._repeat.stop()
-        controller.begin(True)
+        controller.begin(True, continuing=True)
         job.call_args.args[0]()
         second = acquisition.call_args.args[1]
         assert second["x_start"] != first["x_start"]
@@ -1115,14 +1294,16 @@ def test_dfd_geometry_lock_depends_on_preview_or_recording(preview_panel, previe
     controller._busy(False)
 
 
-@pytest.mark.parametrize("channel", ["RGBDFD", "LIFETIME_HSV", "LIFETIME", "QUALITY", "Sum"])
+@pytest.mark.parametrize("channel", ["RGBDFD", "LIFETIME_HSV", "LIFETIME_HSL", "LIFETIME_HCL", "LIFETIME", "QUALITY", "Sum"])
 def test_flare_dfd_preview_uses_existing_image_and_trace_controls(preview_panel, channel):
     window, controller = preview_panel
     window.ui.comboBox_plot_channel.setCurrentText(channel)
     window.renderDfdTrace = Mock()
-    window.getLifetimeColorRenderMode = lambda _: "hsv"
+    window.getLifetimeColorRenderMode = lambda name: name.rsplit("_", 1)[-1].lower()
     window.getLifetimeHueDisplayRange = lambda: (0, 1)
     window.getLifetimeForceQualityFull = lambda: False
+    window.getLifetimeScalingOptions = lambda: dict(auto_counts=True, hue_wrap=True,
+                                                   hue_offset=0.125, value_gamma=1.8)
     window.ui.doubleSpinBox_delta_tau_ns = SimpleNamespace(value=lambda: 0)
     snapshot = dict(
         image=np.ones((2, 3), dtype=np.uint64), bins=6, total_bins=6,
@@ -1132,13 +1313,18 @@ def test_flare_dfd_preview_uses_existing_image_and_trace_controls(preview_panel,
         dfd_hist_live=np.ones(91), dfd_hist_sum=np.ones(91),
         dfd_bins=91, dfd_laser_hz=40000000, bin_seconds=0.003,
         dfd_live_records=6, dfd_hist_records=6,
+        dfd_layout=dict(detector_channels=25, stream_channels=27,
+                        reference_channel_index=26, extra_channel_index=25),
     )
     controller.render(snapshot)
     assert window.renderDfdTrace.call_args.args[2:] == (40000000, 91)
-    if channel == "LIFETIME_HSV":
+    if channel.startswith("LIFETIME_"):
+        assert window.im_widget.setFlimImage.call_count == 1
         kwargs = window.im_widget.setFlimImage.call_args.kwargs
         assert kwargs["h_display_max"] == 25
-        assert kwargs["render_mode"] == "hsv"
+        assert kwargs["render_mode"] == channel.rsplit("_", 1)[-1].lower()
+        assert kwargs["auto_counts"] and kwargs["hue_wrap"]
+        assert kwargs["hue_offset"] == 0.125 and kwargs["value_gamma"] == 1.8
     else:
         call = window.im_widget.setImage.call_args
         assert call.args[0].shape == ((3, 2, 3) if channel == "RGBDFD" else (3, 2))

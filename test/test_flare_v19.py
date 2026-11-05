@@ -185,6 +185,20 @@ def test_dfd3_rejects_corrupt_identity_layout_scope_exposure_padding_tail(offset
         FlareDfdDecoder(c, 0x12345678).feed(raw)
 
 
+@pytest.mark.parametrize("channels", [25, 49])
+@pytest.mark.parametrize("phase", [0, 45, 90])
+@pytest.mark.parametrize("byte", [0, 1, 2, 3])
+def test_fast_dfd3_padding_check_covers_first_middle_last_phase_and_all_word_bytes(channels, phase, byte):
+    c = accepted(request(channels=channels, nx=1, ny=1, points=1, circles=1))
+    layout = layout_for(c)
+    raw = bytearray(record(c)[0])
+    # Sixteen scope words + five inner header words precede the uint32 payload.
+    offset = 21 * 8 + (phase * layout.padded_channels + layout.stream_channels) * 4 + byte
+    raw[offset] = 1
+    with pytest.raises(ValueError, match="nonzero DFD3 padding"):
+        FlareDfdDecoder(c, 0x12345678).feed(raw)
+
+
 class Service:
     def __init__(self, c, *, truncate=False, bad_stream=False, service_error=False):
         self.firmware = dict(FIRMWARE)
@@ -270,8 +284,10 @@ def test_single_stream_capture_circular_preview_and_lossless_conversion(tmp_path
     settings = FlareSettings(host="127.0.0.1", bind_host="127.0.0.1", receiver_host="127.0.0.1", receiver_port=0)
     snapshots = []
     filename = tmp_path / "scan.h5"
-    result = FlareAcquisition(settings, c, filename=filename, on_snapshot=snapshots.append,
-                              client_factory=lambda _: service).run()
+    run = FlareAcquisition(settings, c, filename=filename, on_snapshot=snapshots.append,
+                           client_factory=lambda _: service)
+    run.display_state = dict(trace_bin_seconds=0.00025, trace_history_seconds=1)
+    result = run.run()
     assert result.get("error") is None, result
     assert result["complete"]
     assert service.calls == ["configure", "dfd" if dfd else "intensity", "start"]
@@ -291,6 +307,11 @@ def test_single_stream_capture_circular_preview_and_lossless_conversion(tmp_path
             expected = original["data"][:, :, :channels].sum(axis=(1, 2), dtype=np.uint64).reshape(2, 2, 6).sum(axis=2)
             np.testing.assert_array_equal(snapshots[-1]["rgb_image"].sum(axis=2), expected)
             assert snapshots[-1]["dfd_hist_seconds"] == pytest.approx(c["dwell"] * c["bins_per_pixel"] * 24 / FIRMWARE["clock_hz"])
+            # Each point record already sums all 91 phases. A 0.25 ms
+            # request integrates three complete 0.1 ms point records.
+            totals = original["data"][:, :, :channels].sum(axis=(1, 2), dtype=np.uint64)
+            np.testing.assert_allclose(snapshots[-1]["trace"], totals.reshape(8, 3).sum(axis=1) / 0.0003)
+            np.testing.assert_allclose(snapshots[-1]["trace_times"], np.arange(8) * 0.0003)
         else:
             assert original["data"].shape == (1, 1, 2, 2, 2, 3, 2, channels)
             expected = original["data"][0, 0].sum(axis=(2, 3, 4, 5), dtype=np.uint64)

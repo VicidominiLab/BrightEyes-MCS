@@ -21,10 +21,8 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
-    QPushButton,
     QFrame,
     QWidget,
-    QHBoxLayout,
     QVBoxLayout,
     QTextBrowser,
     QHeaderView,
@@ -40,6 +38,7 @@ from PySide6.QtCore import (
     QFile,
     QCoreApplication,
     QElapsedTimer,
+    QSignalBlocker,
 )
 from PySide6.QtCore import QEvent, QMutex, QMimeData, QUrl
 from PySide6.QtGui import QPixmap, QIcon, QGuiApplication, QDesktopServices
@@ -74,13 +73,16 @@ PISPAD23_TIMETAGGING_CONFIGURATION_KEYS = (
     "no_mcs_save_with_ttm",
 )
 from .flim_image_view import FlimImageView, ModifierGatedViewBox
+from .lifetime_controls import LifetimeControls
+from .workspace_layout import configure_workspace_layout, scroll_tool_contents, size_default_docks
 from .qt_locale import install_scientific_locale
-from .support import DoubleClickDoubleSpinBox, PluginSignals, RectROIWithoutHandles
+from .support import PluginSignals, RectROIWithoutHandles
 
 from .console_widget import ConsoleWidget
 from .graphics_shutdown import disable_viewbox_item_change_callbacks
 from .system_profile_dialog import SystemProfileDialog
 from ...acquisition.manager import McsManager
+from ...acquisition.flare_trace import records_per_trace_bin
 from ..table_manager import TableManager
 
 from .dict_to_tree import TreeModel
@@ -260,6 +262,7 @@ class MainWindow(QMainWindow):
         self.webcam_capture = None
         self.ui = Ui_MainWindowDesign()
         self.ui.setupUi(self)
+        configure_workspace_layout(self.ui)
         self.pispad23_timetagging = PISPAD23Timetagging(self.ui, self)
         self.pispad23_timetagging.ready.connect(self._start_after_pispad23_ready)
         self.pispad23_timetagging.failed.connect(self._pispad23_recording_failed)
@@ -399,53 +402,12 @@ class MainWindow(QMainWindow):
         ):
             if self.ui.comboBox_plot_channel.findText(special_channel) < 0:
                 self.ui.comboBox_plot_channel.addItem(special_channel)
-        self.ui.label_delta_tau_ns = QLabel("Corr. delta_tau [ns]")
-        self.ui.doubleSpinBox_delta_tau_ns = DoubleClickDoubleSpinBox(self)
-        self.ui.doubleSpinBox_delta_tau_ns.setDecimals(4)
-        self.ui.doubleSpinBox_delta_tau_ns.setRange(0.0, 1e6)
-        self.ui.doubleSpinBox_delta_tau_ns.setSingleStep(0.1)
-        self.ui.doubleSpinBox_delta_tau_ns.setSuffix(" ns")
-        self.ui.pushButton_delta_tau_auto = QPushButton("A", self)
-        self.ui.pushButton_delta_tau_auto.setToolTip(
-            "Automatic lifetime correction from the cumulative fit. "
-            "In DFD LIFETIME_HSV mode it runs once after 20% of the first frame."
-        )
-        self.ui.pushButton_delta_tau_auto.setFixedWidth(28)
-        self.ui.gridLayout_4.addWidget(self.ui.label_delta_tau_ns, 2, 6, 1, 1)
-        self.ui.gridLayout_4.addWidget(self.ui.doubleSpinBox_delta_tau_ns, 2, 7, 1, 1)
-        self.ui.gridLayout_4.addWidget(self.ui.pushButton_delta_tau_auto, 2, 8, 1, 1)
-        self.ui.doubleSpinBox_delta_tau_ns.valueChanged.connect(
-            self.colorLifetimeDeltaTauChanged
-        )
-        self.ui.pushButton_delta_tau_auto.clicked.connect(
-            self.colorLifetimeDeltaTauUseHistogramMean
-        )
-        self.ui.label_lifetime_hue_range = QLabel("Hue vis. [0..1]")
-        self.ui.doubleSpinBox_lifetime_hue_min = QDoubleSpinBox(self)
-        self.ui.doubleSpinBox_lifetime_hue_max = QDoubleSpinBox(self)
-        self.ui.checkBox_lifetime_force_quality_full = QCheckBox("Force S/C=1", self)
-        self.ui.checkBox_lifetime_force_quality_full.setChecked(True)
-        for spinbox, value in (
-            (self.ui.doubleSpinBox_lifetime_hue_min, 2.0 / 3.0),
-            (self.ui.doubleSpinBox_lifetime_hue_max, 0.0),
-        ):
-            spinbox.setDecimals(4)
-            spinbox.setRange(0.0, 1.0)
-            spinbox.setSingleStep(0.01)
-            spinbox.setValue(value)
-        self.ui.widget_lifetime_hue_range = QWidget(self)
-        self.ui.layout_lifetime_hue_range = QHBoxLayout(self.ui.widget_lifetime_hue_range)
-        self.ui.layout_lifetime_hue_range.setContentsMargins(0, 0, 0, 0)
-        self.ui.layout_lifetime_hue_range.setSpacing(4)
-        self.ui.layout_lifetime_hue_range.addWidget(self.ui.label_lifetime_hue_range)
-        self.ui.layout_lifetime_hue_range.addWidget(self.ui.doubleSpinBox_lifetime_hue_min)
-        self.ui.layout_lifetime_hue_range.addWidget(QLabel("to"))
-        self.ui.layout_lifetime_hue_range.addWidget(self.ui.doubleSpinBox_lifetime_hue_max)
-        self.ui.layout_lifetime_hue_range.addWidget(self.ui.checkBox_lifetime_force_quality_full)
-        self.ui.gridLayout_4.addWidget(self.ui.widget_lifetime_hue_range, 0, 6, 1, 4)
-        self.ui.doubleSpinBox_lifetime_hue_min.valueChanged.connect(self.plotSettingsChanged)
-        self.ui.doubleSpinBox_lifetime_hue_max.valueChanged.connect(self.plotSettingsChanged)
-        self.ui.checkBox_lifetime_force_quality_full.toggled.connect(self.plotSettingsChanged)
+        self.ui.widget_lifetime_controls = LifetimeControls(self)
+        self.ui.gridLayout_4.addWidget(self.ui.widget_lifetime_controls, 3, 0, 1, 6)
+        spacer = self.ui.gridLayout_4.itemAtPosition(0, 4)
+        if spacer is not None:
+            self.ui.gridLayout_4.removeItem(spacer)
+        self.ui.gridLayout_4.addWidget(self.ui.widget_preview_gamma, 0, 4)
         self.updateColorLifetimeShiftControls()
         self.updateImageInteractionHints()
         self.latest_dfd_tau_fit_ns = None
@@ -453,6 +415,11 @@ class MainWindow(QMainWindow):
             self.updatePreviewConfiguration
         )
         self.ui.checkBox_trace_dfd_time_axis.toggled.connect(self.plotSettingsChanged)
+        self.ui.checkBox_DFD.toggled.connect(self.checkAlerts)
+        self.ui.checkBox_DFD.toggled.connect(self.trace_parameters_changed)
+        self.ui.spinBox_DFD_nbins.valueChanged.connect(self.trace_parameters_changed)
+        self.ui.spinBox_timeresolution.valueChanged.connect(self.trace_parameters_changed)
+        self.ui.spinBox_time_bin_per_px.valueChanged.connect(self.trace_parameters_changed)
         self.ui.checkBox_trace_dfd_align_peak.toggled.connect(self.plotSettingsChanged)
         self.ui.doubleSpinBox_trace_dfd_start_percent.valueChanged.connect(self.plotSettingsChanged)
         self.ui.doubleSpinBox_trace_dfd_end_percent.valueChanged.connect(self.plotSettingsChanged)
@@ -564,7 +531,7 @@ class MainWindow(QMainWindow):
         self.ui.gridLayout_trace.addWidget(self.trace_separator, 1, 0)
         self.trace_widget.show()
         self.trace_widget.setDownsampling(1, True, "mean")
-        self.trace_widget.setMinimumSize(100, 130)
+        self.trace_widget.setMinimumSize(100, 100)
         self.trace_dfd_widget = pg.PlotWidget(self)
         self.trace_dfd_widget.setToolTip("Double-click for reset the DFD trace")
         self.trace_dfd_widget.setLabel("left", "Freq.", "Hz")
@@ -573,7 +540,7 @@ class MainWindow(QMainWindow):
         self.trace_dfd_widget.hideAxis("bottom")
         self.ui.gridLayout_trace.addWidget(self.trace_dfd_widget, 0, 0)
         self.trace_dfd_widget.setDownsampling(1, True, "mean")
-        self.trace_dfd_widget.setMinimumSize(100, 130)
+        self.trace_dfd_widget.setMinimumSize(100, 100)
         self.trace_dfd_widget.hide()
         self.fcs_widget = pg.PlotWidget(self)
         self.fcs_widget.setLabel("left", "Autocorr. (Norm.)")
@@ -808,7 +775,7 @@ class MainWindow(QMainWindow):
 
         # Size the shared left column after its tab groups are assembled.
         # Qt can still expand it for larger fonts and user resizing.
-        self.resizeDocks([self.ui.dockWidget_preview], [340], Qt.Horizontal)
+        size_default_docks(self, self.ui)
 
         self.ui.tabWidget.tabBarDoubleClicked.connect(self.tabDoubleClick)
 
@@ -1178,6 +1145,21 @@ class MainWindow(QMainWindow):
             self.ui.checkBox_autoscale_img,
             False,
         )
+        for key, label, kind, widget in (
+            ("lifetime_auto_counts", "Lifetime Auto V/L", bool, self.ui.checkBox_lifetime_auto_counts),
+            ("lifetime_auto_counts_zero", "Lifetime Auto V/L From Zero", bool, self.ui.checkBox_lifetime_auto_counts_zero),
+            ("lifetime_auto_quality", "Lifetime Auto S/C", bool, self.ui.checkBox_lifetime_auto_quality),
+            ("lifetime_hue_wrap", "Lifetime Wrap H", bool, self.ui.checkBox_lifetime_hue_wrap),
+            ("lifetime_wrap_mode", "Lifetime Wrap Mode", str, self.ui.comboBox_lifetime_wrap_mode),
+            ("lifetime_hue_shift", "Lifetime Hue Shift (degrees)", float, self.ui.doubleSpinBox_lifetime_hue_shift),
+            ("lifetime_value_gamma", "Preview Gamma", float, self.ui.doubleSpinBox_lifetime_value_gamma),
+            ("lifetime_equalize_hue", "Lifetime Equalize H", bool, self.ui.checkBox_lifetime_equalize_hue),
+            ("lifetime_equalize_counts", "Lifetime Equalize V/L", bool, self.ui.checkBox_lifetime_equalize_counts),
+            ("lifetime_analysis_interval", "Lifetime Histogram Update (s)", float, self.ui.doubleSpinBox_lifetime_analysis_interval),
+            ("lifetime_percentile_low", "Lifetime Lower Percentile", float, self.ui.doubleSpinBox_lifetime_percentile_low),
+            ("lifetime_percentile_high", "Lifetime Upper Percentile", float, self.ui.doubleSpinBox_lifetime_percentile_high),
+        ):
+            configuration_helper[key] = (label, kind, widget, False)
         configuration_helper["preview_invert_ctrl"] = (
             "Invert Preview Ctrl Behavior",
             bool,
@@ -1419,6 +1401,9 @@ class MainWindow(QMainWindow):
             str,
             self.ui.comboBox_spad_channels,
             False,
+        )
+        configuration_helper["lifetime_channel"] = (
+            "DFD Lifetime Source", str, self.ui.comboBox_lifetime_channel, False,
         )
 
         configuration_helper["detector_model"] = (
@@ -1934,6 +1919,10 @@ class MainWindow(QMainWindow):
         It resets the time trace
         """
         logger.debug("traceReset")
+        flare = getattr(self, "flare", None)
+        if flare is not None and flare.selected is True:
+            flare.reset_trace()
+            return
         self.mcs_manager.trace_reset()
 
     @Slot()
@@ -2211,6 +2200,8 @@ class MainWindow(QMainWindow):
     def addCentralTab(self, widget, caption):
         """Add a central tab immediately before the permanent About tab."""
 
+        if isinstance(widget, QWidget):
+            scroll_tool_contents(widget)
         about_widget = getattr(self, "about_widget", None)
         if about_widget is not None:
             about_index = self.ui.tabWidget.indexOf(about_widget)
@@ -2270,6 +2261,7 @@ class MainWindow(QMainWindow):
         logger.debug("Launch the QTimer.singleShot")
         QTimer.singleShot(100, self.raise_)
         QTimer.singleShot(250, self.showMaximized)
+        QTimer.singleShot(300, lambda: size_default_docks(self, self.ui))
 
     @Slot()
     def showEvent(self, event):
@@ -4229,6 +4221,7 @@ class MainWindow(QMainWindow):
                     render_mode=self.getLifetimeColorRenderMode(channel),
                     hue_display_range=self.getLifetimeHueDisplayRange(),
                     force_quality_full=self.getLifetimeForceQualityFull(),
+                    **self.getLifetimeScalingOptions(),
                     autoLevels=auto_levels,
                     autoRange=True,
                     pos=position,
@@ -6191,8 +6184,11 @@ Have fun!
         self.DFD_nbins = self.ui.spinBox_DFD_nbins.value()
         self.trace_dfd_widget.setVisible(self.ui.checkBox_DFD.isChecked())
         if self.ui.checkBox_DFD.isChecked():
+            self.ui.comboBox_plot_channel.setCurrentText("Sum")
             self.ui.spinBox_time_bin_per_px.setValue(self.DFD_nbins)
             self.ui.spinBox_timeresolution.setValue(2.0)
+        self.trace_parameters_changed()
+        self.checkAlerts()
         self.updateLaserForcePulsingAvailability()
 
     def _currentLaserRegisterValue(self, register_name):
@@ -6534,7 +6530,22 @@ Have fun!
         self.ui.label_delta_tau_ns.setVisible(visible)
         self.ui.doubleSpinBox_delta_tau_ns.setVisible(visible)
         self.ui.pushButton_delta_tau_auto.setVisible(visible)
-        self.ui.widget_lifetime_hue_range.setVisible(visible)
+        dfd_source = visible or current_channel in ("LIFETIME", "QUALITY", "RGBDFD")
+        self.ui.widget_lifetime_controls.set_lifetime_mode(visible, dfd_source_active=dfd_source)
+        self.ui.comboBox_lifetime_channel.setEnabled(self.ui.checkBox_DFD.isChecked())
+        hsv = self.getLifetimeColorRenderMode(current_channel) == "hsv"
+        self.ui.label_lifetime_gamma.setText("Gamma V (HSV)" if visible else "Gamma")
+        for widget in (self.ui.label_lifetime_gamma, self.ui.doubleSpinBox_lifetime_value_gamma,
+                       self.ui.slider_lifetime_value_gamma):
+            widget.setEnabled(not visible or hsv)
+        for name in ("im_widget", "circular_preview_widget"):
+            view = getattr(self, name, None)
+            if view is not None:
+                view.setImageGamma(self.ui.doubleSpinBox_lifetime_value_gamma.value())
+        self.ui.comboBox_lifetime_wrap_mode.setEnabled(self.ui.checkBox_lifetime_hue_wrap.isChecked())
+        self.ui.checkBox_lifetime_auto_quality.setEnabled(
+            not self.ui.checkBox_lifetime_force_quality_full.isChecked()
+        )
         self.updateImageInteractionHints()
 
         clk_multiplier = 1
@@ -6544,7 +6555,8 @@ Have fun!
         tcycle_ns = 1e3 / (dfd_cycle_mhz * clk_multiplier)
         if getattr(getattr(self, "flare", None), "selected", False) is True:
             tcycle_ns = 25.0  # Negotiated 40MHz_91 profile, independent of NI metadata.
-        self.ui.label_delta_tau_ns.setText(f"Corr. delta_tau [ns] (T={tcycle_ns:.4f})")
+        self.ui.label_delta_tau_ns.setText("Lifetime correction")
+        self.ui.label_delta_tau_ns.setToolTip(f"Lifetime correction; laser period {tcycle_ns:.4f} ns")
 
         self.ui.doubleSpinBox_delta_tau_ns.blockSignals(True)
         self.ui.doubleSpinBox_delta_tau_ns.setRange(0.0, max(tcycle_ns, 1e-12))
@@ -6615,6 +6627,42 @@ Have fun!
 
     def getLifetimeForceQualityFull(self):
         return bool(self.ui.checkBox_lifetime_force_quality_full.isChecked())
+
+    def getLifetimeScalingOptions(self):
+        return dict(
+            auto_counts=self.ui.checkBox_lifetime_auto_counts.isChecked(),
+            auto_counts_zero=self.ui.checkBox_lifetime_auto_counts_zero.isChecked(),
+            auto_quality=self.ui.checkBox_lifetime_auto_quality.isChecked(),
+            hue_wrap=self.ui.checkBox_lifetime_hue_wrap.isChecked(),
+            hue_wrap_mode="arc" if self.ui.comboBox_lifetime_wrap_mode.currentIndex() == 1 else "repeat",
+            hue_offset=self.ui.doubleSpinBox_lifetime_hue_shift.value() / 360.0,
+            value_gamma=self.ui.doubleSpinBox_lifetime_value_gamma.value(),
+            equalize_hue=self.ui.checkBox_lifetime_equalize_hue.isChecked(),
+            equalize_counts=self.ui.checkBox_lifetime_equalize_counts.isChecked(),
+            analysis_interval=self.ui.doubleSpinBox_lifetime_analysis_interval.value(),
+            percentiles=(self.ui.doubleSpinBox_lifetime_percentile_low.value(),
+                         self.ui.doubleSpinBox_lifetime_percentile_high.value()),
+        )
+
+    def getLifetimeSourceChannel(self):
+        channel = self.ui.comboBox_lifetime_channel.currentData()
+        count = int(self.ui.comboBox_spad_channels.currentText())
+        return channel if isinstance(channel, int) and 0 <= channel < count else None
+
+    @Slot()
+    def lifetimeDisplaySettingsChanged(self):
+        self.plotSettingsChanged()
+        # Flare refreshes the current snapshot in update_display. Refresh the
+        # retained NI image too, so display edits work while acquisition is idle.
+        if (not getattr(getattr(self, "flare", None), "selected", False)
+                and self.isLifetimeColorChannel()
+                and getattr(getattr(self, "im_widget", None), "_hcl_source", None) is not None):
+            self.plotPreviewImage()
+
+    def refreshLifetimeEqualization(self, channel):
+        for view in (self.im_widget, getattr(self, "circular_preview_widget", None)):
+            if view is not None and hasattr(view, "refreshEqualization"):
+                view.refreshEqualization(channel)
 
     def updateImageInteractionHints(self):
         visible = not self.isLifetimeColorChannel()
@@ -7163,6 +7211,45 @@ Have fun!
     @trace_action
     def trace_parameters_changed(self):
         """trace parameters changed event"""
+        # Integrate beyond a complete DFD phase histogram. Round upward to
+        # the precision offered by the millisecond control.
+        minimum = max(0.01, np.ceil(self.ui.spinBox_timeresolution.value() * 10.0) / 10000.0)
+        if self.ui.checkBox_DFD.isChecked():
+            minimum = max(minimum, np.ceil(
+                (self.ui.spinBox_DFD_nbins.value() + 1)
+                * self.ui.spinBox_timeresolution.value() * 10.0
+            ) / 10000.0)
+        flare = getattr(self, "flare", None)
+        control = self.ui.doubleSpinBox_binsize
+        with QSignalBlocker(control):
+            if flare is not None and flare.selected is True and self.ui.checkBox_DFD.isChecked():
+                # A Flare record contains all phase bins and spans one pixel
+                # (or circular point). Respect both granularities if the user
+                # changes the scan time bins per pixel from the DFD default.
+                phase_bins = max(1, self.ui.spinBox_DFD_nbins.value())
+                scan_bins = max(1, self.ui.spinBox_time_bin_per_px.value())
+                block_bins = int(np.lcm(phase_bins, scan_bins))
+                block_ms = block_bins * self.ui.spinBox_timeresolution.value() / 1000.0
+                minimum = records_per_trace_bin(minimum, block_ms) * block_ms
+                value = records_per_trace_bin(max(control.value(), minimum), block_ms) * block_ms
+                control.setDecimals(7)
+                control.setMaximum(max(99.99, value))
+                control.setMinimum(minimum)
+                control.setSingleStep(block_ms)
+                control.setValue(value)
+                control.setToolTip(
+                    f"Integrates complete DFD records, summing all {phase_bins} phase bins. "
+                    f"Bin size is rounded up in steps of {block_ms:g} ms."
+                )
+            else:
+                control.setDecimals(4)
+                control.setMinimum(minimum)
+                control.setMaximum(max(99.99, minimum))
+                control.setSingleStep(1.0)
+                control.setToolTip("")
+
+        if flare is not None and flare.selected is True:
+            flare.update_display()
         trace_bins = int(
             self.ui.doubleSpinBox_binsize.value()
             * 1e3
@@ -7348,6 +7435,7 @@ Have fun!
             {
                 "proj": self.ui.comboBox_view_projection.currentText(),
                 "channel": self.selected_channel,
+                "lifetime_channel": self.getLifetimeSourceChannel(),
                 "activate_autocorrelation": self.ui.checkBox_fcs_preview.isChecked(),
                 "activate_trace": self.ui.checkBox_trace_on.isChecked(),
                 "accumulate_preview_photons": self.ui.checkBox_accumulate_preview_photons.isChecked(),
@@ -7915,6 +8003,16 @@ Have fun!
         self.ui.comboBox_view_projection.setStyleSheet("")
 
         self.ui.comboBox_plot_channel.setStyleSheet("")
+        channel = self.ui.comboBox_plot_channel.currentText()
+        lifetime_without_dfd = (
+            channel.startswith(("LIFETIME", "COLOR_LIFETIME")) or channel in ("QUALITY", "RGBDFD")
+        ) and not self.ui.checkBox_DFD.isChecked()
+        self.ui.comboBox_plot_channel.setToolTip(
+            "Lifetime previews require DFD mode. Enable DFD or select Sum/a detector channel."
+            if lifetime_without_dfd else ""
+        )
+        if lifetime_without_dfd:
+            self.ui.comboBox_plot_channel.setStyleSheet("border: 1px solid red;")
         self.ui.checkBox_fifo_analog.setStyleSheet("")
         self.ui.checkBox_fifo_digital.setStyleSheet("")
 
@@ -8500,6 +8598,7 @@ Have fun!
                 render_mode=self.getLifetimeColorRenderMode(ch),
                 hue_display_range=self.getLifetimeHueDisplayRange(),
                 force_quality_full=self.getLifetimeForceQualityFull(),
+                **self.getLifetimeScalingOptions(),
                 autoLevels=autoLevels,
                 autoRange=autoRange,
                 pos=pos,

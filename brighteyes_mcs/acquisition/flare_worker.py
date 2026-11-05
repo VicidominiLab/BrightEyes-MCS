@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 import queue
 import logging
+import threading
 
 from .detectors.flare.config import configuration_from_gui
 
@@ -37,6 +38,37 @@ def publish_latest(mailbox, value):
         except queue.Empty:
             pass
         mailbox.put_nowait(value)
+
+
+class SnapshotPublisher:
+    """Keep GUI IPC off the decoder thread; retain only the newest preview."""
+
+    def __init__(self, callback):
+        self.callback = callback
+        self.mailbox = queue.Queue(maxsize=1)
+        self.stopping = threading.Event()
+        self.thread = threading.Thread(target=self._run, name="Flare preview publisher", daemon=True)
+        self.thread.start()
+
+    def publish(self, value):
+        publish_latest(self.mailbox, value)
+
+    def _run(self):
+        while not self.stopping.is_set() or not self.mailbox.empty():
+            try:
+                value = self.mailbox.get(timeout=0.05)
+            except queue.Empty:
+                continue
+            try:
+                self.callback(value)
+            except Exception:
+                logging.getLogger(__name__).exception("Flare preview delivery failed")
+
+    def close(self, timeout):
+        self.stopping.set()
+        self.thread.join(timeout=timeout)
+        if self.thread.is_alive():
+            logging.getLogger(__name__).warning("Flare preview publisher did not close within its timeout")
 
 
 @dataclass
@@ -117,11 +149,18 @@ class FlareTask:
                 value, geometry=self.controls.geometry() or values,
             ))
 
-        runner = FlareAcquisition(
-            self.settings, configuration, filename=args["filename"], raw_only=args["raw_only"],
-            on_snapshot=snapshot, initial_image=args["initial_image"], live_controls=self.controls,
-        )
-        runner.cancel = args["cancel"]
-        runner.gui_metadata = values
-        runner.display_state = args["display"]
-        return runner.run()
+        publisher = SnapshotPublisher(snapshot)
+        try:
+            runner = FlareAcquisition(
+                self.settings, configuration, filename=args["filename"], raw_only=args["raw_only"],
+                on_snapshot=publisher.publish, initial_image=args["initial_image"], live_controls=self.controls,
+                initial_preview=args.get("initial_preview"),
+            )
+            runner.cancel = args["cancel"]
+            runner.gui_metadata = values
+            runner.display_state = args["display"]
+            return runner.run()
+        finally:
+            # Flush the final preview before reporting task completion. A GUI
+            # failure cannot hold up DMA reception or invalidate captured data.
+            publisher.close(timeout=self.settings.http_timeout_seconds)

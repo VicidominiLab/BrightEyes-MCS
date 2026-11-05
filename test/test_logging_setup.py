@@ -251,6 +251,113 @@ faulthandler._sigsegv()
     assert list(log_session.iterdir()) == [path]
 
 
+def test_python_binary_and_native_stderr_survive_exit_without_cleanup(log_session):
+    path = logs.configure_logging(verbosity=2)
+    source = """
+import os, sys
+from brighteyes_mcs import logging_setup as logs
+logs.configure_logging()
+sys.stderr.write('Python stderr before abrupt exit: café\\n')
+sys.stderr.buffer.write(b'Binary stderr before abrupt exit\\n')
+os.write(2, b'Native descriptor before abrupt exit\\n')
+if os.name == 'nt':
+    import win32api, win32file
+    win32file.WriteFile(win32api.GetStdHandle(-12), b'Windows handle before abrupt exit\\n')
+os._exit(29)
+"""
+    result = subprocess.run([sys.executable, "-c", source], capture_output=True, timeout=20)
+    assert result.returncode == 29
+    content = path.read_text(encoding="utf-8")
+    for marker in ("Python stderr before abrupt exit: café", "Binary stderr before abrupt exit",
+                   "Native descriptor before abrupt exit"):
+        assert marker in content
+    if os.name == "nt":
+        assert "Windows handle before abrupt exit" in content
+    # Python output remains visible in the terminal/debugger as well.
+    assert b"Python stderr before abrupt exit" in result.stderr
+    assert b"Binary stderr before abrupt exit" in result.stderr
+
+
+def test_qt_fatal_message_is_flushed_before_native_abort(log_session):
+    path = logs.configure_logging(verbosity=2)
+    source = """
+import os
+from brighteyes_mcs import logging_setup as logs
+if os.name == 'nt':
+    import ctypes
+    ctypes.windll.kernel32.SetErrorMode(3)
+    ctypes.CDLL('ucrtbase')._set_abort_behavior(0, 3)
+logs.configure_logging()
+logs.install_qt_message_logging()
+from PySide6.QtCore import qWarning, qFatal
+qWarning('Synthetic Qt warning before crash')
+qFatal('Synthetic fatal Qt crash')
+"""
+    result = subprocess.run([sys.executable, "-c", source], capture_output=True, timeout=20)
+    assert result.returncode != 0
+    content = path.read_text(encoding="utf-8")
+    assert "Qt QtWarningMsg: Synthetic Qt warning before crash" in content
+    assert "CRITICAL" in content and "Qt QtFatalMsg:" in content
+    assert "Synthetic fatal Qt crash" in content
+
+
+def test_unraisable_finalizer_errors_are_logged_and_hooks_restored(log_session):
+    path = logs.configure_logging(verbosity=2)
+    source = """
+import gc, sys
+from brighteyes_mcs import logging_setup as logs
+logs.configure_logging()
+original = sys.unraisablehook
+restore = logs.install_exception_logging()
+class BadFinalizer:
+    def __del__(self):
+        raise RuntimeError('Synthetic finalizer crash')
+item = BadFinalizer()
+del item
+gc.collect()
+restore()
+assert sys.unraisablehook is original
+"""
+    result = subprocess.run([sys.executable, "-c", source], capture_output=True, timeout=20)
+    assert result.returncode == 0, result.stderr
+    content = path.read_text(encoding="utf-8")
+    assert "Unraisable exception" in content and "Synthetic finalizer crash" in content
+
+
+def test_native_stderr_moves_with_reconfiguration_and_restores_on_disable(log_session, tmp_path):
+    first = logs.configure_logging(verbosity=2)
+    original = logs._stderr_capture.original
+    os.write(2, b'Only first destination\\n')
+    second = logs.configure_logging(verbosity=2, log_dir=tmp_path / "other")
+    os.write(2, b'Only second destination\\n')
+    logs.configure_logging(verbosity=0)
+    assert sys.stderr is original
+    assert "Only first destination" in first.read_text()
+    assert "Only first destination" not in second.read_text()
+    assert "Only second destination" in second.read_text()
+    assert "Only second destination" not in first.read_text()
+
+
+def test_disabling_capture_restores_native_console_handles(log_session):
+    path = logs.configure_logging(verbosity=2)
+    source = """
+import os
+from brighteyes_mcs import logging_setup as logs
+logs.configure_logging()
+logs.configure_logging(verbosity=0)
+os.write(2, b'Restored native stderr\\n')
+if os.name == 'nt':
+    import win32api, win32file
+    win32file.WriteFile(win32api.GetStdHandle(-12), b'Restored Windows stderr\\n')
+"""
+    result = subprocess.run([sys.executable, "-c", source], capture_output=True, timeout=20)
+    assert result.returncode == 0, result.stderr
+    assert b"Restored native stderr" in result.stderr
+    assert "Restored native stderr" not in path.read_text()
+    if os.name == "nt":
+        assert b"Restored Windows stderr" in result.stderr
+
+
 def test_first_handler_correlates_nested_calls_and_exception(log_session):
     path = logs.configure_logging(verbosity=2)
 

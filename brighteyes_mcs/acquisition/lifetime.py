@@ -20,7 +20,7 @@ def circular_mean_from_positions(weights, phases):
     z = np.sum(weights * np.exp(1j * angles), axis=-1)
 
     wsum = np.sum(weights, axis=-1)
-    z = np.where(wsum > 0, z / wsum, np.nan + 1j * np.nan)
+    z = np.divide(z, wsum, out=np.full_like(z, complex(np.nan, np.nan)), where=wsum > 0)
 
     mean_angle = np.mod(np.angle(z), 2.0 * np.pi)
     mean_phase = mean_angle / (2.0 * np.pi)

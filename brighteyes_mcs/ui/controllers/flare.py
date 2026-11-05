@@ -59,6 +59,8 @@ class FlareController(QObject):
         self._ipc_manager = None
         self._cancel = None
         self._display = None
+        self._display_values = None
+        self._trace_reset_generation = 0
         self._busy_failures = []
         self._reset_prompt = None
         self._closed = False
@@ -84,7 +86,7 @@ class FlareController(QObject):
         self._reference_active = None
         self._repeat = QTimer(self)
         self._repeat.setSingleShot(True)
-        self._repeat.timeout.connect(lambda: self.begin(True))
+        self._repeat.timeout.connect(lambda: self.begin(True, continuing=True))
         self._status_timer = QTimer(self)
         self._status_timer.setInterval(1000)
         self._status_timer.timeout.connect(self.poll_status)
@@ -305,6 +307,7 @@ class FlareController(QObject):
         self.ui.label_flare_status.setText(
             "Disconnected. Slave acquisition awaits external-timing firmware."
         )
+        self.window.trace_parameters_changed()
         if self.selected:
             self.update_display()
             if self.ui.checkBox_DFD.isChecked():
@@ -352,6 +355,8 @@ class FlareController(QObject):
 
     def _dfd_toggled(self, enabled):
         if enabled and self.selected:
+            self.ui.comboBox_plot_channel.setCurrentText("Sum")
+            self.update_display()
             self._start_reference_write()
 
     def _start_reference_write(self):
@@ -618,7 +623,17 @@ class FlareController(QObject):
             if self.register_jobs or (self.live_job and self.live_job.isRunning()):
                 self.ui.comboBox_detector_model.setEnabled(False)
 
-    def update_display(self):
+    def reset_trace(self):
+        self._trace_reset_generation += 1
+        if self._display is not None:
+            self._display["trace_reset_generation"] = self._trace_reset_generation
+        self.window.trace_widget.clear()
+        self.window.trace_dfd_widget.clear()
+        if self.last_snapshot is not None:
+            self.last_snapshot["trace"] = np.asarray([])
+            self.last_snapshot["trace_times"] = np.asarray([])
+
+    def update_display(self, *, replot=True):
         self._refresh_reference_decimation()
         layout = self._display_layout()
         self._sync_channel_items(layout)
@@ -632,7 +647,15 @@ class FlareController(QObject):
             for i in range(channels)
             if i < len(mask) and mask[i] and (not text.isdigit() or i == int(text))
         )
-        role = ""
+        if text.startswith(("LIFETIME", "COLOR_LIFETIME")) or text in ("QUALITY", "RGBDFD"):
+            source = self.window.getLifetimeSourceChannel()
+            if source is not None:
+                self.display_channels = (source,)
+                role = f"Ch {source}"
+            else:
+                role = "Sum"
+        else:
+            role = ""
         if layout and text.isdigit():
             index = int(text)
             if channels <= index < layout["stream_channels"]:
@@ -643,8 +666,18 @@ class FlareController(QObject):
                     role += " — " + self.ui.label_flare_reference_decimation_status.text()
         self.ui.label_plot_channel.setText(f"Ch. selected: {text}" + (f" — {role}" if role else ""))
         if self._display is not None:
-            self._display["channels"] = self.display_channels
-        if self.last_snapshot and "hcl_image" in self.last_snapshot:
+            values = dict(
+                channels=self.display_channels,
+                trace_bin_seconds=self.ui.doubleSpinBox_binsize.value() * 1e-3,
+                trace_history_seconds=self.ui.doubleSpinBox_maxlength.value(),
+                trace_reset_generation=self._trace_reset_generation,
+            )
+            if values != self._display_values:
+                self._display.update(values)
+                self._display_values = values
+        else:
+            self._display_values = None
+        if replot and self.last_snapshot and "hcl_image" in self.last_snapshot:
             self.plot_image()
 
     def diagnostic(self, action):
@@ -771,7 +804,7 @@ class FlareController(QObject):
         )
         self.ui.pushButton_flare_write.setEnabled(True)
 
-    def begin(self, preview=False):
+    def begin(self, preview=False, *, continuing=False):
         if not self.selected or (self.run_job and self.run_job.isRunning()):
             return
         if self.job and self.job.isRunning():
@@ -865,7 +898,12 @@ class FlareController(QObject):
                 self.live_controls.request(registers, geometry=values)
             self._ensure_processes()
             cancel = self._ipc_manager.Event()
-            display = self._ipc_manager.dict(channels=self.display_channels)
+            display = self._ipc_manager.dict(
+                channels=self.display_channels,
+                trace_bin_seconds=self.ui.doubleSpinBox_binsize.value() * 1e-3,
+                trace_history_seconds=self.ui.doubleSpinBox_maxlength.value(),
+                trace_reset_generation=self._trace_reset_generation,
+            )
             snapshots = self._ipc_manager.Queue(maxsize=1)
         except Exception as error:
             self.log(str(error))
@@ -873,15 +911,25 @@ class FlareController(QObject):
             return
         # Finite runs belong to one continuous preview session. Keep the last
         # image visible until each pixel is replaced by the next scan.
-        initial_image = (
-            self.last_snapshot["image"]
-            if preview and self.preview and not self.stopping and self.last_snapshot
+        initial_preview = (
+            {key: self.last_snapshot[key] for key in
+             ("hcl_image", "rgb_image", "display_channels") if key in self.last_snapshot}
+            if continuing and preview and self.preview and not self.stopping and self.last_snapshot
             else None
         )
+        initial_image = self.last_snapshot["image"] if initial_preview is not None else None
+        self._repeat.stop()
         if initial_image is None:
             self._preserve_view = False
             self._display_geometry = None
             self._reference_active = None
+            self.last_snapshot = None
+            self.window.currentImage = np.zeros((values["ny"], values["nx"]), dtype=np.uint64)
+            for name in ("im_widget", "circular_preview_widget"):
+                view = getattr(self.window, name, None)
+                if view is not None:
+                    view.clearFlimImage()
+                    view.clear()
         self.preview, self.stopping = preview, False
         self.window.started_preview, self.window.started_normal = preview, not preview
         self.window.do_not_save = preview
@@ -920,9 +968,11 @@ class FlareController(QObject):
 
         self._cancel = cancel
         self._display = display
+        self._display_values = None
         task = self._task(
             "acquire", settings, values=values, preview=preview, dummy=dummy,
             filename=filename, raw_only=raw_only, initial_image=initial_image,
+            initial_preview=initial_preview,
             cancel=self._cancel, display=self._display,
             snapshots=snapshots,
         )
@@ -953,7 +1003,7 @@ class FlareController(QObject):
                     getattr(self.ui, name).setEnabled(False)
         if "dfd_layout" in snapshot:
             self._reference_active = snapshot["dfd_layout"]
-            self.update_display()
+            self.update_display(replot=False)
         self.connected = True
         if not self._status_timer.isActive():
             self._status_timer.start()
@@ -985,8 +1035,11 @@ class FlareController(QObject):
         trace = snapshot.get("trace")
         if trace is not None and self.ui.checkBox_trace_on.isChecked():
             step = snapshot.get("bin_seconds", 1)
+            times = snapshot.get("trace_times")
+            if times is None:
+                times = np.arange(snapshot["bins"] - len(trace), snapshot["bins"]) * step
             self.window.trace_widget.plot(
-                np.arange(snapshot["bins"] - len(trace), snapshot["bins"]) * step, trace, clear=True
+                times, trace, clear=True
             )
 
     def plot_image(self, image=None, *, fit_view=False, transform_only=False):
@@ -1042,6 +1095,7 @@ class FlareController(QObject):
                         h_shift=self.ui.doubleSpinBox_delta_tau_ns.value() / period_ns,
                         render_mode=self.window.getLifetimeColorRenderMode(channel),
                         hue_display_range=self.window.getLifetimeHueDisplayRange(),
+                        **self.window.getLifetimeScalingOptions(),
                         force_quality_full=self.window.getLifetimeForceQualityFull(), **kwargs,
                     )
                 else:

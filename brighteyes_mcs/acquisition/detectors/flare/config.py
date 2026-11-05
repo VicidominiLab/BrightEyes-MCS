@@ -145,12 +145,14 @@ def check_transport(config, clock_hz, settings):
 def automatic_packet_bins(config, clock_hz, settings):
     """Balance DMA overhead with latency and space for 32-descriptor bursts.
 
-    Target 16 KiB per packet, capped at 2 ms of exposure (one record for
-    slower scans). Reserve half the time-derived ring for scheduling jitter.
+    Target 16 KiB per packet, or at least eight histogram records for DFD,
+    capped at 2 ms of exposure (one record for slower scans). Reserve half
+    the time-derived ring for scheduling jitter.
     This estimates batching, not the maximum sustainable hardware data rate.
     """
     size, dwell, _ = stream_parameters(config)
-    target = math.ceil(16384 / size)
+    target = max(8 if config.get("acquisition_mode") == "dfd" else 1,
+                 math.ceil(16384 / size))
     latency_limit = max(1, int(0.002 * clock_hz / dwell))
     burst_limit = max(1, int(settings.buffer_seconds * clock_hz / (64 * dwell)))
     packet = min(target, latency_limit, burst_limit, total_bins(config), 4096, 8388607 // size)

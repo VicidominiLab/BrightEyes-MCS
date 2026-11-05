@@ -106,13 +106,17 @@ class ScopeDecoder:
         self.records = 0
         self.buffer = bytearray()
         self.stopped = False
+        self._record_layout = (layout.record_bytes, layout.stream_channels, layout.padded_channels, layout.payload_words)
 
     def feed(self, data):
         self.buffer.extend(data)
         layout = self.layout
-        while len(self.buffer) >= layout.record_bytes:
-            raw = bytes(self.buffer[: layout.record_bytes])
-            del self.buffer[: layout.record_bytes]
+        # These are immutable for an acquisition. Avoid recomputing nested
+        # layout properties for every padding word of every incoming record.
+        record_bytes, stream_channels, padded_channels, payload_words = self._record_layout
+        while len(self.buffer) >= record_bytes:
+            raw = bytes(self.buffer[:record_bytes])
+            del self.buffer[:record_bytes]
             head = struct.unpack_from("<16Q", raw)
             if head[0] != (SCOPE_MAGIC << 32 | HEADER_WORDS):
                 raise ValueError("invalid DFD scope header")
@@ -139,26 +143,26 @@ class ScopeDecoder:
             if (
                 head[13] & 0xFFFFFFFF != DFD_MAGIC
                 or head[14] != (32 << 32 | 91)
-                or head[15] != (layout.payload_words << 32 | layout.detector_channels)
+                or head[15] != (payload_words << 32 | layout.detector_channels)
             ):
                 raise ValueError("inconsistent scope layout")
             if self.trajectory_id is not None and head[13] >> 32 != self.trajectory_id:
                 raise ValueError("DFD trajectory mismatch")
             inner = struct.unpack_from("<5Q", raw, HEADER_WORDS * 8)
-            if inner[0] != (DFD_MAGIC << 32 | layout.stream_channels << 16 | 91) or inner[1] != head[1]:
+            if inner[0] != (DFD_MAGIC << 32 | stream_channels << 16 | 91) or inner[1] != head[1]:
                 raise ValueError("inconsistent histogram identity")
-            if inner[4] != (layout.payload_words << 32 | int(bool(flags & 1))):
+            if inner[4] != (payload_words << 32 | int(bool(flags & 1))):
                 raise ValueError("inconsistent histogram length/partial flag")
             if struct.unpack_from("<Q", raw, len(raw) - 8)[0] != TAIL:
                 raise ValueError("invalid DFD3 tail")
             payload = raw[(HEADER_WORDS + 5) * 8 : -8]
-            # Padding is checked independently of optional numpy availability.
-            for phase in range(layout.histogram_bins):
-                for channel in range(layout.stream_channels, layout.padded_channels):
-                    if struct.unpack_from("<I", payload, (phase * layout.padded_channels + channel) * 4)[
-                        0
-                    ]:
-                        raise ValueError("nonzero DFD3 padding")
+            # Scan each padding column with a native iterator. Zero is invariant
+            # under byte order, so this check remains valid on either endian.
+            # All phase bins are checked, without requiring numpy here.
+            words = memoryview(payload).cast("I")
+            for channel in range(stream_channels, padded_channels):
+                if any(words[channel::padded_channels]):
+                    raise ValueError("nonzero DFD3 padding")
             first = tuple(word >> 32 for word in head[6:13])
             last = tuple(word & 0xFFFFFFFF for word in head[6:13])
             record = ScopeRecord(

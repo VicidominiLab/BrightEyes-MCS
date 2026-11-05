@@ -1381,10 +1381,12 @@ class McsManager():
         """
         Reset the trace process
         """
-        self.previewProcess.trace_reset()
+        if self.previewProcess is not None:
+            self.previewProcess.trace_reset()
 
     def FCS_reset(self):
         """
         Reset the FCS process
         """
-        self.previewProcess.FCS_reset()
+        if self.previewProcess is not None:
+            self.previewProcess.FCS_reset()
