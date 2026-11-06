@@ -101,6 +101,7 @@ brighteyes_mcs = [
     "images/*.png",
     "images/*.ico",
     "plugins/**/*.ui",
+    "plugins/**/*.ino",
 ]
 
 [tool.pytest.ini_options]
