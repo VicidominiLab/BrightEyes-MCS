@@ -2,7 +2,7 @@
 
 import math
 
-from PySide6.QtCore import QIODevice, QObject, QTimer, Signal
+from PySide6.QtCore import QEventLoop, QIODevice, QObject, QTimer, Signal
 from PySide6.QtSerialPort import QSerialPort
 
 
@@ -130,6 +130,29 @@ class DACController(QObject):
         # Defer polling while a command is awaiting its acknowledgment.
         if self.connected and not self.busy:
             self._send("GET", "GET")
+
+    def set_voltage_confirmed(self, channel, voltage):
+        """Wait with Qt serial events enabled; never start a run before ACK."""
+        self._wait_idle()
+        self.set_voltage(channel, voltage)
+        self._wait_idle()
+
+    def _wait_idle(self):
+        if self.busy and self.connected:
+            loop = QEventLoop()
+            timer = QTimer()
+            timer.setSingleShot(True)
+            timer.timeout.connect(loop.quit)
+            self.state_changed.connect(loop.quit)
+            try:
+                timer.start(2000)
+                while self.busy and self.connected and timer.isActive():
+                    loop.exec()
+            finally:
+                self.state_changed.disconnect(loop.quit)
+                timer.stop()
+        if not self.connected or self.busy:
+            raise RuntimeError("DAC did not confirm the voltage; check its connection and debug log")
 
     def _send(self, command, expected, output=None):
         self.pending = (expected, output)

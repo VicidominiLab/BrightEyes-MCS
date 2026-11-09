@@ -484,6 +484,7 @@ class TestMyClass(unittest.TestCase):
             colorLifetimeDeltaTauUseHistogramMean=MagicMock(
                 return_value=True
             ),
+            getLifetimeEstimator=lambda: "circular",
         )
         instance._syncAutoLifetimeCorrectionWithPlotSelection = (
             lambda: MainWindow._syncAutoLifetimeCorrectionWithPlotSelection(
@@ -553,6 +554,14 @@ class TestMyClass(unittest.TestCase):
             instance, 20, 100
         )
 
+        self.assertFalse(result)
+        self.assertFalse(instance._auto_lifetime_correction_pending)
+        instance.colorLifetimeDeltaTauUseHistogramMean.assert_not_called()
+
+    def test_exponential_lifetime_does_not_receive_phase_offset_correction(self):
+        instance = self._auto_lifetime_fixture()
+        instance.getLifetimeEstimator = lambda: "exponential"
+        result = MainWindow._maybeAutoCorrectLifetimeAfterFirstFrameProgress(instance, 20, 100)
         self.assertFalse(result)
         self.assertFalse(instance._auto_lifetime_correction_pending)
         instance.colorLifetimeDeltaTauUseHistogramMean.assert_not_called()

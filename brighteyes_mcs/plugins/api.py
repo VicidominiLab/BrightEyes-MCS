@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 
-PLUGIN_API_VERSION = "2.0"
+PLUGIN_API_VERSION = "2.1"
 PluginCallback = Callable[..., Any]
 
 
@@ -51,6 +51,16 @@ class PluginContext(MutableMapping[str, Any]):
         """Run ``callback`` whenever the named application event is emitted."""
 
         return self._manager.on(event, callback)
+
+    def on_run(self, before: PluginCallback, after: PluginCallback):
+        """Register paired synchronous hooks receiving 'preview' or 'acquisition'.
+
+        Before must return only when hardware is ready, or raise to abort.
+        After must tolerate partial setup and is called in reverse order on
+        stop, completion, or setup failure, including a failing before hook.
+        Hooks run on the GUI thread; bound any hardware waits.
+        """
+        self._manager.on_run(before, after)
 
     def __getitem__(self, key: str) -> Any:
         return self._state[key]

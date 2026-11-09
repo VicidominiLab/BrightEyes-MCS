@@ -44,6 +44,12 @@ class PluginManager:
         )
         self.instances: dict[str, dict] = {}
         self._callbacks: dict[str, list[Callable]] = defaultdict(list)
+        self._run_hooks = []
+        self._run_cleanup = []
+        self._run_mode = None
+        self._preparing_run = False
+        self._finishing_run = False
+        self._cancel_run = False
         self.main_window.plugin_signals.signal.connect(self.emit)
 
     def available_plugins(self) -> list[str]:
@@ -179,6 +185,61 @@ class PluginManager:
         if callback not in callbacks:
             callbacks.append(callback)
         return callback
+
+    def on_run(self, before, after):
+        self._run_hooks.append((before, after))
+
+    @property
+    def run_active(self):
+        return self._run_mode is not None
+
+    def cancel_run_preparation(self):
+        """Stop can cancel setup while a hook processes serial Qt events."""
+        if self._preparing_run:
+            self._cancel_run = True
+            return True
+        return False
+
+    def prepare_run(self, preview=False):
+        if self._run_mode is not None:
+            raise RuntimeError("A plug-in run is already active")
+        self._run_mode = "preview" if preview else "acquisition"
+        self._preparing_run = True
+        self._cancel_run = False
+        try:
+            for before, after in tuple(self._run_hooks):
+                self._run_cleanup.append(after)
+                before(self._run_mode)
+                if self._cancel_run:
+                    raise RuntimeError("Run cancelled during plug-in preparation")
+        except Exception:
+            self._preparing_run = False
+            self.finish_run()
+            raise
+        finally:
+            self._preparing_run = False
+
+    def finish_run(self):
+        if self.cancel_run_preparation():
+            return
+        if self._finishing_run:
+            return
+        self._finishing_run = True
+        mode = self._run_mode
+        cleanup, self._run_cleanup = self._run_cleanup, []
+        # Keep the run reserved while cleanup pumps Qt events.
+        try:
+            for after in reversed(cleanup):
+                try:
+                    after(mode)
+                except Exception as error:
+                    logger.exception("Plug-in run cleanup failed")
+                    self.main_window.ui.statusBar.showMessage(
+                        f"Plug-in cleanup failed: {error}", 15000
+                    )
+        finally:
+            self._run_mode = None
+            self._finishing_run = False
 
     @Slot(str)
     def emit(self, message: str) -> None:

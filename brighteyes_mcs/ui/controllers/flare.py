@@ -18,7 +18,7 @@ from ...acquisition.detectors.flare.config import (
     FlareSettings, axis_registers_from_gui,
 )
 from ...acquisition.detectors.flare.controls import FlareLiveControls
-from ...acquisition.detectors.flare.dfd import sequence_from_gui, REFERENCE_FACTOR
+from ...acquisition.detectors.flare.dfd import sequence_from_gui, REFERENCE_FACTOR, preview_hcl
 from ...acquisition.detectors.flare.dfd_format import pack_sequence
 from ...acquisition.detectors.models import detector_uses_flare
 from ...acquisition.flare_worker import FlareTask, initialize_worker
@@ -668,6 +668,7 @@ class FlareController(QObject):
         if self._display is not None:
             values = dict(
                 channels=self.display_channels,
+                lifetime_estimator=self.window.getLifetimeEstimator(),
                 trace_bin_seconds=self.ui.doubleSpinBox_binsize.value() * 1e-3,
                 trace_history_seconds=self.ui.doubleSpinBox_maxlength.value(),
                 trace_reset_generation=self._trace_reset_generation,
@@ -805,6 +806,9 @@ class FlareController(QObject):
         self.ui.pushButton_flare_write.setEnabled(True)
 
     def begin(self, preview=False, *, continuing=False):
+        plugin_manager = getattr(self.window, "plugin_manager", None)
+        if not continuing and plugin_manager is not None and plugin_manager.run_active is True:
+            return
         if not self.selected or (self.run_job and self.run_job.isRunning()):
             return
         if self.job and self.job.isRunning():
@@ -900,88 +904,108 @@ class FlareController(QObject):
             cancel = self._ipc_manager.Event()
             display = self._ipc_manager.dict(
                 channels=self.display_channels,
+                lifetime_estimator=self.window.getLifetimeEstimator(),
                 trace_bin_seconds=self.ui.doubleSpinBox_binsize.value() * 1e-3,
                 trace_history_seconds=self.ui.doubleSpinBox_maxlength.value(),
                 trace_reset_generation=self._trace_reset_generation,
             )
             snapshots = self._ipc_manager.Queue(maxsize=1)
+            plugin_manager = getattr(self.window, "plugin_manager", None)
+            if plugin_manager is not None and not continuing:
+                self._busy(True)
+                plugin_manager.prepare_run(preview)
         except Exception as error:
+            plugin_manager = getattr(self.window, "plugin_manager", None)
+            if plugin_manager is not None:
+                plugin_manager.finish_run()
+                self._busy(False)
             self.log(str(error))
             self.ui.statusBar.showMessage(str(error), 15000)
             return
-        # Finite runs belong to one continuous preview session. Keep the last
-        # image visible until each pixel is replaced by the next scan.
-        initial_preview = (
-            {key: self.last_snapshot[key] for key in
-             ("hcl_image", "rgb_image", "display_channels") if key in self.last_snapshot}
-            if continuing and preview and self.preview and not self.stopping and self.last_snapshot
-            else None
-        )
-        initial_image = self.last_snapshot["image"] if initial_preview is not None else None
-        self._repeat.stop()
-        if initial_image is None:
-            self._preserve_view = False
-            self._display_geometry = None
-            self._reference_active = None
-            self.last_snapshot = None
-            self.window.currentImage = np.zeros((values["ny"], values["nx"]), dtype=np.uint64)
-            for name in ("im_widget", "circular_preview_widget"):
-                view = getattr(self.window, name, None)
-                if view is not None:
-                    view.clearFlimImage()
-                    view.clear()
-        self.preview, self.stopping = preview, False
-        self.window.started_preview, self.window.started_normal = preview, not preview
-        self.window.do_not_save = preview
-        self.window.dfd_enable = values["dfd_enable"]
-        self.window.raw_stream_mode = raw_only
-        if values["dfd_enable"]:
-            self.window.DFD_nbins = 91
-        self._busy(True)
-        if initial_image is None:
-            self.window._auto_lifetime_correction_completed = False
-        sync_correction = getattr(self.window, "_syncAutoLifetimeCorrectionWithPlotSelection", None)
-        if sync_correction:
-            sync_correction()
-        self.window._set_program_state(
-            self.window.PROGRAM_STATE_PREVIEW if preview else self.window.PROGRAM_STATE_ACQUISITION,
-            "flare_started",
-        )
-        if initial_image is None:
-            self.ui.statusBar.showMessage(
-                "Starting Flare preview..." if preview else "Starting Flare acquisition...", 5000,
+        try:
+            # Finite runs belong to one continuous preview session. Keep the last
+            # image visible until each pixel is replaced by the next scan.
+            initial_preview = (
+                {key: self.last_snapshot[key] for key in
+                 ("hcl_image", "rgb_image", "display_channels", "lifetime_estimator",
+                  "dfd_hist_sum", "dfd_hist_records", "dfd_hist_seconds", "dfd_trace_reset_generation")
+                 if key in self.last_snapshot}
+                if continuing and preview and self.preview and not self.stopping and self.last_snapshot
+                else None
             )
-        self.window.last_requested_filename = filename or ""
-        self.window.currentImage_size = np.asarray(
-            [values[f"range_{axis}"] for axis in "xyz"], dtype=float
-        )
-        self.window.currentImage_pos = np.asarray(
-            [values[f"offset_{axis}_um"] for axis in "xyz"], dtype=float
-        )
-        self.window.currentImage_pixels = np.asarray([values["nx"], values["ny"], values["nframe"]])
-        if preview:
-            self.window.preview_run_id += 1
-            self.window.last_preview_started_at = self.window._make_status_timestamp()
-        else:
-            self.window.acquisition_run_id += 1
-            self.window.last_acquisition_started_at = self.window._make_status_timestamp()
+            initial_image = self.last_snapshot["image"] if initial_preview is not None else None
+            self._repeat.stop()
+            if initial_image is None:
+                self._preserve_view = False
+                self._display_geometry = None
+                self._reference_active = None
+                self.last_snapshot = None
+                self.window.currentImage = np.zeros((values["ny"], values["nx"]), dtype=np.uint64)
+                for name in ("im_widget", "circular_preview_widget"):
+                    view = getattr(self.window, name, None)
+                    if view is not None:
+                        view.clearFlimImage()
+                        view.clear()
+            self.preview, self.stopping = preview, False
+            self.window.started_preview, self.window.started_normal = preview, not preview
+            self.window.do_not_save = preview
+            self.window.dfd_enable = values["dfd_enable"]
+            self.window.raw_stream_mode = raw_only
+            if values["dfd_enable"]:
+                self.window.DFD_nbins = 91
+            self._busy(True)
+            if initial_image is None:
+                self.window._auto_lifetime_correction_completed = False
+            sync_correction = getattr(self.window, "_syncAutoLifetimeCorrectionWithPlotSelection", None)
+            if sync_correction:
+                sync_correction()
+            self.window._set_program_state(
+                self.window.PROGRAM_STATE_PREVIEW if preview else self.window.PROGRAM_STATE_ACQUISITION,
+                "flare_started",
+            )
+            if initial_image is None:
+                self.ui.statusBar.showMessage(
+                    "Starting Flare preview..." if preview else "Starting Flare acquisition...", 5000,
+                )
+            self.window.last_requested_filename = filename or ""
+            self.window.currentImage_size = np.asarray(
+                [values[f"range_{axis}"] for axis in "xyz"], dtype=float
+            )
+            self.window.currentImage_pos = np.asarray(
+                [values[f"offset_{axis}_um"] for axis in "xyz"], dtype=float
+            )
+            self.window.currentImage_pixels = np.asarray([values["nx"], values["ny"], values["nframe"]])
+            if preview:
+                self.window.preview_run_id += 1
+                self.window.last_preview_started_at = self.window._make_status_timestamp()
+            else:
+                self.window.acquisition_run_id += 1
+                self.window.last_acquisition_started_at = self.window._make_status_timestamp()
 
-        self._cancel = cancel
-        self._display = display
-        self._display_values = None
-        task = self._task(
-            "acquire", settings, values=values, preview=preview, dummy=dummy,
-            filename=filename, raw_only=raw_only, initial_image=initial_image,
-            initial_preview=initial_preview,
-            cancel=self._cancel, display=self._display,
-            snapshots=snapshots,
-        )
-        self.run_job = FlareJob(task, self)
-        self.run_job.snapshot.connect(self.render)
-        self.run_job.result.connect(self._acquisition_result)
-        self.run_job.finished.connect(self._run_finished)
-        self.run_job.start()
-        self._refresh_reference_decimation()
+            self._cancel = cancel
+            self._display = display
+            self._display_values = None
+            task = self._task(
+                "acquire", settings, values=values, preview=preview, dummy=dummy,
+                filename=filename, raw_only=raw_only, initial_image=initial_image,
+                initial_preview=initial_preview,
+                cancel=self._cancel, display=self._display,
+                snapshots=snapshots,
+            )
+            self.run_job = FlareJob(task, self)
+            self.run_job.snapshot.connect(self.render)
+            self.run_job.result.connect(self._acquisition_result)
+            self.run_job.finished.connect(self._run_finished)
+            self.run_job.start()
+            self._refresh_reference_decimation()
+        except Exception as error:
+            self.stopping = True
+            if plugin_manager is not None:
+                plugin_manager.finish_run()
+            self.window.started_preview = self.window.started_normal = False
+            self._busy(False)
+            self.log(str(error))
+            self.ui.statusBar.showMessage(str(error), 15000)
 
     def render(self, snapshot):
         previous_geometry = (self.last_snapshot or {}).get("geometry")
@@ -1051,13 +1075,25 @@ class FlareController(QObject):
         channel = self.ui.comboBox_plot_channel.currentText()
         color_lifetime = False
         if not transform_only and "hcl_image" in snapshot:
+            hcl = snapshot["hcl_image"]
+            method = self.window.getLifetimeEstimator()
+            if (method != snapshot.get("lifetime_estimator", "circular")
+                    and "rgb_image" in snapshot and "dfd_hist_sum" in snapshot):
+                # Retained gates allow changing the method even after a run stops.
+                cache = snapshot.setdefault("_lifetime_hcl_cache", {})
+                if method not in cache:
+                    cache[method] = preview_hcl(
+                        snapshot["rgb_image"], int(snapshot["dfd_hist_sum"].argmax()),
+                        snapshot["dfd_laser_hz"], method,
+                    )
+                hcl = cache[method]
             if channel == "RGBDFD":
                 image = snapshot["rgb_image"]
             elif channel.startswith(("LIFETIME", "COLOR_LIFETIME")) and channel != "LIFETIME":
-                image = snapshot["hcl_image"]
+                image = hcl
                 color_lifetime = True
             elif channel in ("LIFETIME", "QUALITY"):
-                image = snapshot["hcl_image"][:, :, 0 if channel == "LIFETIME" else 1]
+                image = hcl[:, :, 0 if channel == "LIFETIME" else 1]
         ranges = np.asarray(
             [geometry[f"range_{axis}"] if geometry else getattr(self.ui, f"spinBox_range_{axis}").value()
              for axis in "xyz"], dtype=float,
@@ -1068,6 +1104,10 @@ class FlareController(QObject):
         )
         self.window.currentImage_pos = center
         self.window.currentImage_size = ranges
+        # Range/offset edits can request a redraw before the first Flare image,
+        # including immediately after switching from a stopped NI preview.
+        if image is None:
+            return
         if self.ui.checkBox_showPreview.isChecked():
             position = tuple(center[:2] - ranges[:2] / 2)
             scale = (
@@ -1092,7 +1132,8 @@ class FlareController(QObject):
                     period_ns = 1e9 / snapshot["dfd_laser_hz"]
                     self.window.im_widget.setFlimImage(
                         displayed, valid=displayed[:, :, 2], h_display_max=period_ns,
-                        h_shift=self.ui.doubleSpinBox_delta_tau_ns.value() / period_ns,
+                        h_shift=(self.ui.doubleSpinBox_delta_tau_ns.value() / period_ns
+                                 if self.window.getLifetimeEstimator() == "circular" else 0.0),
                         render_mode=self.window.getLifetimeColorRenderMode(channel),
                         hue_display_range=self.window.getLifetimeHueDisplayRange(),
                         **self.window.getLifetimeScalingOptions(),
@@ -1139,6 +1180,9 @@ class FlareController(QObject):
             # A finite preview frame ending is not the end of the preview session.
             self._busy_failures.clear()
             return
+        plugin_manager = getattr(self.window, "plugin_manager", None)
+        if plugin_manager is not None:
+            plugin_manager.finish_run()
         if self.preview:
             self.stopping = True
         if result and result.get("complete") and not self.preview:
@@ -1218,6 +1262,9 @@ class FlareController(QObject):
             self._repeat.start(100)
 
     def stop(self):
+        plugin_manager = getattr(self.window, "plugin_manager", None)
+        if plugin_manager is not None and plugin_manager.cancel_run_preparation():
+            return
         self.stopping = True
         self._repeat.stop()
         if self._cancel is not None:

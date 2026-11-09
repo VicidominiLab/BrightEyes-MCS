@@ -22,6 +22,50 @@ class TestPluginManager(unittest.TestCase):
 
         callback.assert_called_once_with()
 
+    def test_run_hooks_pair_in_reverse_order_and_finish_once(self):
+        calls = []
+        for name in ("a", "b"):
+            self.manager.on_run(
+                lambda mode, n=name: calls.append((n, "before", mode)),
+                lambda mode, n=name: calls.append((n, "after", mode)),
+            )
+        self.manager.prepare_run(True)
+        self.manager.finish_run()
+        self.manager.finish_run()
+        self.assertEqual(calls, [
+            ("a", "before", "preview"), ("b", "before", "preview"),
+            ("b", "after", "preview"), ("a", "after", "preview"),
+        ])
+
+    def test_failed_before_rolls_back_partial_setup_and_other_plugins(self):
+        calls = []
+        self.manager.on_run(lambda mode: None, lambda mode: calls.append("a"))
+
+        def fail(mode):
+            raise RuntimeError("setup failed")
+
+        self.manager.on_run(fail, lambda mode: calls.append("b"))
+        self.manager.on_run(lambda mode: calls.append("never"), lambda mode: None)
+        with self.assertRaisesRegex(RuntimeError, "setup failed"):
+            self.manager.prepare_run()
+        self.assertEqual(calls, ["b", "a"])
+        self.assertIsNone(self.manager._run_mode)
+
+    def test_stop_during_setup_cancels_and_cleans_up(self):
+        after = MagicMock()
+        self.manager.on_run(lambda mode: self.manager.cancel_run_preparation(), after)
+        with self.assertRaisesRegex(RuntimeError, "cancelled"):
+            self.manager.prepare_run()
+        after.assert_called_once_with("acquisition")
+
+    def test_cleanup_failure_does_not_skip_other_plugins(self):
+        after = MagicMock()
+        self.manager.on_run(lambda mode: None, after)
+        self.manager.on_run(lambda mode: None, MagicMock(side_effect=RuntimeError("DAC offline")))
+        self.manager.prepare_run()
+        self.manager.finish_run()
+        after.assert_called_once_with("acquisition")
+
     def test_emit_preserves_event_payload(self):
         callback = MagicMock()
         self.manager.on("beforeRun", callback)

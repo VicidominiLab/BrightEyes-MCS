@@ -159,6 +159,38 @@ def test_preview_sums_exclude_reference_and_do_not_overflow(channels):
     assert preview.hist_records == 1
 
 
+@pytest.mark.parametrize("version", [1, 2, 3])
+def test_exponential_preview_recovers_decay_and_can_switch_methods(version):
+    if version == 3:
+        from test.test_flare_v19 import accepted as scoped_accepted, request as scoped_request
+        c = scoped_accepted(scoped_request(nx=3, ny=2, points=2, circles=1))
+        visits = 2
+    else:
+        c = accepted(request(), version)
+        visits = 1
+    tau_cycles, peak = 0.12, 47
+    arrival = np.rint(50000 * np.exp(-((np.arange(91) - peak) % 91) / (91 * tau_cycles)))
+    counts = np.zeros((6 * visits, 91, c["stream_channels"]), dtype=np.uint16)
+    counts[:, :, 0] = arrival
+    preview = DfdPreview(c, np.zeros((2, 3), dtype=np.uint64))
+    preview.update(counts, 0, (0,))
+    original = preview.hcl.copy()
+    photon_image = preview.image.copy()
+    original_records = preview.hist_records
+    preview.update(counts[:visits], 0, (0,), lifetime_estimator="exponential")
+    np.testing.assert_allclose(preview.hcl[:, :, 0], tau_cycles, rtol=0.002)
+    np.testing.assert_array_equal(preview.image, photon_image)
+    assert preview.hist_records == original_records + visits
+    assert preview.snapshot()["lifetime_estimator"] == "exponential"
+    assert (preview.hcl[:, :, 1] > 0).all()
+    preview = DfdPreview(
+        c, preview.image, initial_hcl=preview.hcl, initial_rgb=preview.rgb,
+        selection=(0,), lifetime_estimator="exponential",
+    )
+    preview.update(counts[:visits], 0, (0,), lifetime_estimator="circular")
+    np.testing.assert_allclose(preview.hcl, original)
+
+
 def test_preview_batch_crossing_frames_keeps_last_visit_to_each_pixel():
     c = accepted(request(25))
     data = np.arange(15 * 91 * 26, dtype=np.uint16).reshape(15, 91, 26)
@@ -284,7 +316,8 @@ class Service:
 
 
 @pytest.mark.parametrize("version", [1, 2, 3])
-def test_repeated_dfd_acquisition_restores_all_preview_planes_before_first_channel_update(monkeypatch, version):
+@pytest.mark.parametrize("reset_trace", [False, True])
+def test_repeated_dfd_acquisition_restores_all_preview_planes_before_first_channel_update(monkeypatch, version, reset_trace):
     if version == 3:
         from test.test_flare_v19 import request as scoped_request, Service as ScopedService
         c = scoped_request(nx=3, ny=2)
@@ -295,12 +328,16 @@ def test_repeated_dfd_acquisition_restores_all_preview_planes_before_first_chann
     image = np.full((2, 3), 123, dtype=np.uint64)
     hcl = np.full((2, 3, 3), 0.25)
     rgb = np.full((2, 3, 3), 456, dtype=np.uint64)
+    previous_histogram = np.full(91, 10000, dtype=np.uint64)
+    previous_records, previous_seconds, previous_generation = 24, 0.02, 3
     observed = []
     update = DfdPreview.update
 
     def observe(preview, counts, index, selection, **kwargs):
         if not observed:
-            observed.append((preview.image.copy(), preview.hcl.copy(), preview.rgb.copy(), preview.selection))
+            observed.append((preview.image.copy(), preview.hcl.copy(), preview.rgb.copy(), preview.selection,
+                             preview.hist_sum.copy(), preview.hist_records, preview.hist_seconds,
+                             preview.trace_reset_generation))
         return update(preview, counts, index, selection, **kwargs)
 
     monkeypatch.setattr(DfdPreview, "update", observe)
@@ -308,17 +345,71 @@ def test_repeated_dfd_acquisition_restores_all_preview_planes_before_first_chann
     settings = FlareSettings(host='127.0.0.1', bind_host='127.0.0.1', receiver_host='127.0.0.1', receiver_port=0)
     run = FlareAcquisition(
         settings, c, client_factory=lambda _: service, on_snapshot=snapshots.append,
-        initial_image=image, initial_preview=dict(hcl_image=hcl, rgb_image=rgb, display_channels=(0, 1)),
+        initial_image=image, initial_preview=dict(
+            hcl_image=hcl, rgb_image=rgb, display_channels=(0, 1),
+            dfd_hist_sum=previous_histogram, dfd_hist_records=previous_records,
+            dfd_hist_seconds=previous_seconds, dfd_trace_reset_generation=previous_generation,
+        ),
     )
-    run.display_state = dict(channels=(0, 1))
+    generation = previous_generation + int(reset_trace)
+    run.display_state = dict(channels=(0, 1), trace_reset_generation=generation)
     result = run.run()
     assert result.get("error") is None, result
     assert observed[0][3] == (0, 1)
     for actual, expected in zip(observed[0][:3], (image, hcl, rgb)):
         np.testing.assert_array_equal(actual, expected)
     assert snapshots[-1]["display_channels"] == (0, 1)
+    np.testing.assert_array_equal(observed[0][4], 0 if reset_trace else previous_histogram)
+    assert observed[0][5] == (0 if reset_trace else previous_records)
+    assert observed[0][6] == (0 if reset_trace else previous_seconds)
+    assert observed[0][7] == generation
+    assert snapshots[-1]["dfd_trace_reset_generation"] == generation
+    assert snapshots[-1]["dfd_hist_records"] == snapshots[-1]["bins"] + (0 if reset_trace else previous_records)
+    np.testing.assert_array_equal(previous_histogram, 10000)
     np.testing.assert_array_equal(hcl, 0.25)
     np.testing.assert_array_equal(rgb, 456)
+
+
+def test_retained_dfd_reference_prevents_peak_relearning_from_first_dim_pixel():
+    c = accepted(request())
+    peak, tau = 47, 0.12
+    strong_histogram = np.rint(100000 * np.exp(-((np.arange(91) - peak) % 91) / (91 * tau))).astype(np.uint64)
+    previous = dict(dfd_hist_sum=strong_histogram, dfd_hist_records=1000)
+    counts = np.zeros((1, 91, c["stream_channels"]), dtype=np.uint16)
+    counts[0, [50, 60, 70], 0] = [6, 3, 1]
+    image = np.zeros((2, 3), dtype=np.uint64)
+    fresh = DfdPreview(c, image.copy(), selection=(0,))
+    fresh.update(counts, 0, (0,), lifetime_estimator="exponential")
+    assert fresh.hist_sum.argmax() == 50
+    retained = DfdPreview(c, image.copy(), selection=(0,), initial_trace=previous)
+    retained.update(counts, 0, (0,), lifetime_estimator="exponential")
+    assert retained.hist_sum.argmax() == peak
+    assert retained.hist_records == 1001
+    diagnostics = retained.lifetime_diagnostics()
+    assert diagnostics["reference_peak_bin"] == peak
+    assert diagnostics["scan_peak_bin"] == 50
+    assert diagnostics["scan_photons"] == 10
+    assert diagnostics["reference_photons"] == int(strong_histogram.sum()) + 10
+    assert diagnostics["illuminated_pixels"] == 1
+    assert diagnostics["median_pixel_photons"] == 10
+    np.testing.assert_array_equal(retained.hist_live, counts[0, :, 0])
+    np.testing.assert_array_equal(retained.hist_sum, strong_histogram + counts[0, :, 0])
+    # A source change must discard history from the previous detector selection.
+    retained.update(counts, 0, (0, 1), lifetime_estimator="exponential")
+    assert retained.hist_sum.argmax() == 50
+    assert retained.hist_records == 1
+    np.testing.assert_array_equal(retained.hist_sum, counts[0, :, 0])
+    assert retained.lifetime_diagnostics()["scan_photons"] == 10
+
+
+def test_empty_lifetime_scan_diagnostics_have_no_fabricated_peak_or_lifetime():
+    preview = DfdPreview(accepted(request()), np.zeros((2, 3), dtype=np.uint64))
+    diagnostics = preview.lifetime_diagnostics()
+    assert diagnostics["reference_peak_bin"] is None
+    assert diagnostics["scan_peak_bin"] is None
+    assert diagnostics["illuminated_pixels"] == diagnostics["valid_pixels"] == 0
+    assert diagnostics["tau_ns_p05_p50_p95"] is None
+    assert diagnostics["median_precision"] is None
 
 
 @pytest.mark.parametrize("estimator", ["integer_reference_aperture_v1", "integer_reference_half_height_v2"])

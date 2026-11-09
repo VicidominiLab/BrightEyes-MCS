@@ -16,6 +16,22 @@ class LifetimeControls(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         self.ui = ui = window.ui
         self.window = window
+        ui.comboBox_lifetime_estimator = QComboBox(self)
+        ui.comboBox_lifetime_estimator.setObjectName("comboBox_lifetime_estimator")
+        ui.comboBox_lifetime_estimator.addItem("Circular mean (3 windows)", "circular")
+        ui.comboBox_lifetime_estimator.addItem("Exponential Poisson (3 windows)", "exponential")
+        ui.comboBox_lifetime_estimator.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
+        ui.comboBox_lifetime_estimator.setMinimumContentsLength(16)
+        ui.comboBox_lifetime_estimator.setToolTip(
+            "Large-preview lifetime method. Exponential Poisson fits a single decay using the "
+            "global DFD peak and actual window widths. Assumes negligible background and a narrow "
+            "instrument response. Range: 1/8 DFD bin to one laser period; unresolved fits are black. "
+            "NI requires DFD trace updates for the peak reference. "
+            "S/C measures estimated precision (disable Full S/C = 1 to show it). "
+            "Changes apply to incoming pixels during acquisition."
+        )
         self.setStyleSheet("""
             QWidget#lifetimeControls QTabWidget::pane {
                 border: 1px solid palette(mid); border-radius: 5px;
@@ -38,6 +54,8 @@ class LifetimeControls(QWidget):
             "Use one detector channel or the sum of detector channels selected by the fingerprint mask."
         )
         source.addWidget(ui.comboBox_lifetime_channel)
+        source.addWidget(QLabel("Lifetime estimator"))
+        source.addWidget(ui.comboBox_lifetime_estimator)
         source.addStretch(1)
         layout.addWidget(self.source_row)
         ui.comboBox_spad_channels.currentTextChanged.connect(self._sync_source_channels)
@@ -158,6 +176,7 @@ class LifetimeControls(QWidget):
             widget.toggled.connect(window.lifetimeDisplaySettingsChanged)
         ui.comboBox_lifetime_wrap_mode.currentTextChanged.connect(window.lifetimeDisplaySettingsChanged)
         ui.comboBox_lifetime_channel.currentTextChanged.connect(window.lifetimeDisplaySettingsChanged)
+        ui.comboBox_lifetime_estimator.currentIndexChanged.connect(window.lifetimeEstimatorChanged)
         ui.doubleSpinBox_lifetime_hue_shift.valueChanged.connect(self._hue_shift_changed)
         ui.slider_lifetime_hue_shift.valueChanged.connect(lambda value: ui.doubleSpinBox_lifetime_hue_shift.setValue(value / 10))
         ui.doubleSpinBox_lifetime_value_gamma.valueChanged.connect(self._gamma_changed)

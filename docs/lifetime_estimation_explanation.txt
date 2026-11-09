@@ -9,7 +9,69 @@ This note explains two different lifetime paths used in the code:
 
 Important: these two paths are not the same algorithm.
 The trace overlay uses a log-linear exponential decay fit.
-The live image uses a much faster 3-sample phase/circular-mean estimator.
+By default the live image uses a fast 3-sample phase/circular-mean estimator.
+The DFD preview controls, beside "DFD source", offer "Lifetime estimator" ->
+"Exponential Poisson (3 windows)". Both NI and Flare use the shared estimator.
+
+Alternative exponential preview estimator
+-----------------------------------------
+This option fits a single exponential to the three integrated window counts.
+It uses their actual lengths and the global cumulative DFD peak as the decay
+origin. The model wraps at the laser period, so the peak may lie inside a
+window. Missing peak information leaves the NI estimate invalid until the
+trace supplies a reference. Enable the DFD trace for NI peak updates.
+
+For each candidate lifetime tau, the expected counts in window i are
+proportional to the sum of exp(-delay/tau) over its DFD bins, where delay is
+the forward cyclic distance from the peak. Normalize these three sums into
+probabilities p_i(tau). Profiling out the unknown amplitude gives the Poisson
+log likelihood, up to constants:
+
+    log L(tau) = sum_i d_i * log(p_i(tau))
+
+The implementation caches 256 logarithmically spaced templates, searches the
+likelihood, and refines the maximum by parabolic interpolation in log(tau).
+The search covers 1/8 DFD bin to 0.999 laser periods. Boundary solutions and
+unidentifiable estimates are invalid and displayed black in lifetime color
+mode. Tau is stored as a fraction of the period for compatibility with the
+existing image/histogram display, but represents an exponential time constant.
+
+Assumptions: a single exponential, negligible background, a narrow instrument
+response, known global timing, and photon counts approximated as Poisson.
+There is no background fit, IRF deconvolution, or multi-exponential separation.
+These assumptions can bias the result when violated.
+
+Saturation/chroma for this option measures estimated precision. With
+F = sum_i p_i * (d log(p_i) / d log(tau))^2 and N total detected counts:
+
+    relative_standard_error ~= 1 / sqrt(N * F)
+    saturation = 1 / (1 + relative_standard_error)
+
+This is conditional uncertainty under the model, not a goodness-of-fit score.
+Disable "Full S/C = 1" to see it. The existing C/S histogram range can rescale
+it. The default circular method continues to use the circular-spread metric.
+
+The phase method's manual lifetime offset and automatic trace-fit correction
+are disabled and ignored in exponential mode. Color rotation remains available.
+The cumulative DFD trace fit is unchanged. Method selection is saved in normal
+configuration files. NI refreshes on incoming pixels and clears old lifetime
+planes when changing methods; Flare also supports recalculating retained gates
+after acquisition stops.
+
+Continuous Flare preview retains the accumulated DFD histogram and its exposure
+counters between finite scans. This keeps the global peak reference from being
+re-estimated from just the first few pixels of every scan. A new preview session,
+a source-channel change, or an explicit trace reset starts a fresh accumulation.
+Retaining the reference does not remove per-pixel photon noise: three coarse
+windows can still give poorly constrained lifetimes, especially for low counts,
+background contamination, or timing/IRF mismatch. Full S/C = 1 hides the precision
+cue, so low-precision estimates can appear just as saturated as precise ones.
+Completed Flare scans in exponential mode log a "Flare DFD lifetime scan" summary:
+the current scan peak, accumulated reference peak, photon counts, valid pixels,
+lifetime percentiles, precision, and available firmware alignment metadata.
+This distinguishes changing timing references from frame-to-frame photon noise.
+
+The following sections describe the default circular method and trace fit.
 
 
 1) Tau fitted on top of the DFD trace

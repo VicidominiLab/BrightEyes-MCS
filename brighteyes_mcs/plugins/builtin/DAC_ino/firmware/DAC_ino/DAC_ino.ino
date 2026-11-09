@@ -2,6 +2,7 @@
 #include <Adafruit_MCP4725.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 /*
   ============================================================
@@ -35,6 +36,9 @@
       -> reply: VALS,code0,code1,code2,code3
       -> codes are 0..4095; ERR,I2C on any failed channel read
 
+    GET,ch
+      -> reply: VAL,ch,code (ch = 0..3)
+
     SET,ch,val
       -> ch  = channel number, allowed values: 0..3
       -> val = DAC code, allowed values: 0..4095
@@ -54,26 +58,13 @@
   SERIAL WATCHDOG (protocol protection only)
   ------------------------------------------------------------
 
-  1. Link timeout:
-     If no recognized command (PING / STATUS / GET / SET,...) arrives
-     for commTimeoutMs, the serial receive state is reset:
-       - any partial command is discarded
-       - pending input bytes are flushed
-       - optionally the serial port is restarted
-         (SERIAL_RESTART_ON_TIMEOUT)
+  USB serial is never restarted on host inactivity. DAC outputs stay
+  at their last value while the host is silent or disconnected.
 
-     The DAC outputs are NOT touched: they stay at the last good
-     value. Nothing is sent over serial on timeout, so LabVIEW's
-     command/reply sequence is not disturbed.
-
-     The host should send GET periodically (e.g. every 10 s) when it
-     has nothing else to send, so the timeout only fires when the
-     host is really gone.
-
-  2. Partial-line timeout:
+  Partial-line timeout:
      If a line is started but no character arrives within
-     rxIdleTimeoutMs, the partial line is discarded, so stray bytes
-     never corrupt the next command.
+     rxIdleTimeoutMs, reject the line through its next newline.
+     Overlong lines are rejected in the same way (ERR,FMT).
 
   ------------------------------------------------------------
   LED FEEDBACK
@@ -101,17 +92,6 @@
 // SERIAL WATCHDOG CONFIGURATION
 // ============================================================
 
-// 1 = call Serial.end() / Serial.begin() on link timeout
-// 0 = only flush and reset the receive buffer
-//
-// NOTE: on boards with native USB serial, Serial.end() may make the
-// COM port briefly disappear on the PC and break LabVIEW's VISA
-// session. If that happens, set this to 0.
-#define SERIAL_RESTART_ON_TIMEOUT 1
-
-// Max time without a recognized command before the serial reset (ms)
-const unsigned long commTimeoutMs = 30000;
-
 // Max gap between characters of the same line (ms)
 const unsigned long rxIdleTimeoutMs = 200;
 
@@ -125,6 +105,7 @@ const unsigned long serialBaud = 9600;
 
 // Adafruit driver object for the MCP4725 DAC
 Adafruit_MCP4725 dac;
+bool dacInitialized = false;
 
 
 // ============================================================
@@ -158,14 +139,12 @@ bool newData = false;
 // Write position in receivedChars
 // (global so the watchdog can reset it)
 byte rxIndex = 0;
+bool rxDiscardLine = false;
 
 
 // ============================================================
 // SERIAL WATCHDOG STATE
 // ============================================================
-
-// Time of the last recognized command
-unsigned long lastCommandTime = 0;
 
 // Time of the last received character
 unsigned long lastRxCharTime = 0;
@@ -232,17 +211,26 @@ void setup(void) {
   // Start in idle visual state
   showIdleLed();
 
-  // Start I2C bus
-  Wire.begin();
+  // Native USB CDC stays initialized for the lifetime of the sketch.
+  // Never wait for a host: the DACs must also initialize without a PC.
+  Serial.begin(serialBaud);
+#if defined(ARDUINO_ARCH_ESP32)
+  Serial.setTxTimeoutMs(50);
+#endif
 
-  // Start DAC communication
-  dac.begin(DAC_ADDR);
+  // Start I2C bus. ESP32 uses milliseconds, unlike AVR setWireTimeout().
+  Wire.begin();
+  Wire.setClock(100000);
+#if defined(ARDUINO_ARCH_ESP32)
+  Wire.setTimeOut(25);
+#elif defined(WIRE_HAS_TIMEOUT)
+  Wire.setWireTimeout(25000, true);
+#endif
+
+  // The DAC driver is initialized lazily after selecting a mux channel.
 
   // For safety, reset all 4 DAC channels to zero at power-up
   resetChannels();
-
-  // Start serial communication for LabVIEW
-  Serial.begin(serialBaud);
 
   // Short delay after boot so the serial interface is stable
   delay(300);
@@ -251,9 +239,7 @@ void setup(void) {
   // useful if LabVIEW opens the port after board reset
   Serial.println("READY");
 
-  // Start the watchdog timers from now
-  lastCommandTime = millis();
-  lastRxCharTime  = lastCommandTime;
+  lastRxCharTime = millis();
 }
 
 
@@ -267,10 +253,7 @@ void loop(void) {
 
   // If a complete command has been received, process it
   if (newData) {
-    if (processCommand()) {
-      // Recognized command -> the host is alive
-      lastCommandTime = millis();
-    }
+    processCommand();
     newData = false;
   }
 
@@ -306,7 +289,23 @@ void recvWithEndMarker() {
     rc = Serial.read();
     lastRxCharTime = millis();
 
+    if (rxDiscardLine) {
+      if (rc == endMarker) {
+        rxDiscardLine = false;
+        rxIndex = 0;
+        sendError("FMT");
+        triggerErrorBlink();
+      }
+      continue;
+    }
+
     if (rc != endMarker) {
+      if (rxIndex >= numChars - 1) {
+        // Reject the entire overlong command rather than execute a prefix.
+        rxDiscardLine = true;
+        rxIndex = 0;
+        continue;
+      }
       receivedChars[rxIndex] = rc;
       rxIndex++;
 
@@ -358,56 +357,21 @@ void trimTrailingCR(char *s) {
     1. Partial-line timeout:
        discard a started line if no character arrived recently.
 
-    2. Link timeout:
-       reset the serial receive state if no recognized command
-       arrived for commTimeoutMs.
-
   DAC outputs and LED are never touched here.
   Unsigned subtraction keeps this correct across millis() rollover.
 */
 void checkSerialWatchdog() {
   unsigned long now = millis();
 
-  // 1. Stale partial line
+  // A timed-out fragment is rejected through its next newline. Its tail
+  // must never be interpreted as a new command.
   if (rxIndex > 0 && (now - lastRxCharTime >= rxIdleTimeoutMs)) {
     rxIndex = 0;
     receivedChars[0] = '\0';
+    rxDiscardLine = true;
   }
 
-  // 2. No command for too long
-  if (now - lastCommandTime >= commTimeoutMs) {
-    resetSerialPort();
-
-    // Restart the timer, so the reset repeats every commTimeoutMs
-    // while the host stays silent (not on every loop)
-    lastCommandTime = millis();
-  }
-}
-
-
-/*
-  resetSerialPort()
-
-  Brings the serial receive side back to a clean state.
-  No message is sent: LabVIEW would read it as the reply to its
-  next command.
-*/
-void resetSerialPort() {
-#if SERIAL_RESTART_ON_TIMEOUT
-  Serial.end();
-  delay(10);
-  Serial.begin(serialBaud);
-#endif
-
-  // Discard any partial command
-  rxIndex = 0;
-  receivedChars[0] = '\0';
-  newData = false;
-
-  // Flush any bytes still waiting in the input buffer
-  while (Serial.available() > 0) {
-    Serial.read();
-  }
+  // Host silence is normal. Do not restart USB CDC or discard queued input.
 }
 
 
@@ -429,8 +393,7 @@ void resetSerialPort() {
 
   Returns true if the line was a recognized command (PING, STATUS, GET,
   or anything starting with "SET,"), even if the SET arguments
-  were invalid. Only recognized commands reset the watchdog, so
-  line noise cannot keep the link "alive".
+  were invalid. The caller does not need this return value.
 */
 bool processCommand() {
   // Handshake / presence check command
@@ -447,6 +410,33 @@ bool processCommand() {
 
   if (strcmp(receivedChars, "GET") == 0) {
     sendAllChannels();
+    return true;
+  }
+
+  if (strncmp(receivedChars, "GET,", 4) == 0) {
+    const char *payload = receivedChars + 4;
+    if (!isIntegerString(payload)) {
+      sendError("FMT");
+      triggerErrorBlink();
+      return true;
+    }
+    errno = 0;
+    unsigned long channel = strtoul(payload, NULL, 10);
+    if (errno == ERANGE || channel > 3) {
+      sendError("CH");
+      triggerErrorBlink();
+      return true;
+    }
+    uint16_t code;
+    if (!readDac(channel, &code)) {
+      sendError("I2C");
+      triggerErrorBlink();
+      return true;
+    }
+    Serial.print("VAL,");
+    Serial.print(channel);
+    Serial.print(',');
+    Serial.println(code);
     return true;
   }
 
@@ -511,33 +501,27 @@ void parseSetCommand(char *payload) {
   }
 
   // Convert ASCII strings to integers
-  int channel = atoi(chStr);
-  int value   = atoi(valStr);
-
-  // Check channel bounds
-  if (channel < 0 || channel > 3) {
+  errno = 0;
+  unsigned long channel = strtoul(chStr, NULL, 10);
+  if (errno == ERANGE || channel > 3) {
     sendError("CH");
     triggerErrorBlink();
     return;
   }
-
-  // Check DAC value bounds
-  if (value < 0 || value > 4095) {
+  errno = 0;
+  unsigned long value = strtoul(valStr, NULL, 10);
+  if (errno == ERANGE || value > 4095) {
     sendError("VAL");
     triggerErrorBlink();
     return;
   }
 
   // Select the appropriate DAC path through the multiplexer
-  if (!selectChannel(channel)) {
+  if (!writeDac(channel, value)) {
     sendError("I2C");
     triggerErrorBlink();
     return;
   }
-
-  // Write value to DAC
-  // false = fast mode, do not write to EEPROM each time
-  dac.setVoltage(value, false);
 
   // Send positive acknowledgment to LabVIEW
   Serial.print("OK,");
@@ -596,21 +580,11 @@ bool isIntegerString(const char *s) {
 void sendAllChannels() {
   uint16_t codes[4];
   for (uint8_t channel = 0; channel < 4; channel++) {
-    if (!selectChannel(channel)) {
+    if (!readDac(channel, &codes[channel])) {
       sendError("I2C");
       triggerErrorBlink();
       return;
     }
-    if (Wire.requestFrom((uint8_t)DAC_ADDR, (uint8_t)3) != 3) {
-      while (Wire.available() > 0) Wire.read();
-      sendError("I2C");
-      triggerErrorBlink();
-      return;
-    }
-    Wire.read();  // EEPROM ready and power-down status
-    uint8_t highByte = Wire.read();
-    uint8_t lowByte = Wire.read();
-    codes[channel] = ((uint16_t)highByte << 4) | (lowByte >> 4);
   }
   Serial.print("VALS");
   for (uint8_t channel = 0; channel < 4; channel++) {
@@ -618,6 +592,19 @@ void sendAllChannels() {
     Serial.print(codes[channel]);
   }
   Serial.println();
+}
+
+bool readDac(uint8_t channel, uint16_t *value) {
+  if (!selectChannel(channel)) return false;
+  if (Wire.requestFrom((uint8_t)DAC_ADDR, (uint8_t)3) != 3) {
+    while (Wire.available() > 0) Wire.read();
+    return false;
+  }
+  Wire.read();  // Status; next two bytes contain the volatile DAC register.
+  uint8_t highByte = Wire.read();
+  uint8_t lowByte = Wire.read();
+  *value = ((uint16_t)highByte << 4) | (lowByte >> 4);
+  return true;
 }
 
 void sendError(const char *code) {
@@ -639,10 +626,23 @@ void sendError(const char *code) {
 */
 void resetChannels() {
   for (int i = 0; i < 4; i++) {
-    if (selectChannel(i)) {
-      dac.setVoltage(0, true);
+    // Set the volatile register only; never rewrite EEPROM at every boot.
+    if (!writeDac(i, 0)) {
+      triggerErrorBlink();
     }
   }
+}
+
+// Select the downstream device before probing it. A failed initialization
+// can be retried by a later SET; it never prevents PING from being serviced.
+bool writeDac(uint8_t channel, uint16_t value) {
+  if (!selectChannel(channel)) return false;
+  if (!dacInitialized) {
+    dacInitialized = dac.begin(DAC_ADDR);
+    if (!dacInitialized) return false;
+  }
+  // The driver's default is 400 kHz: pass 100 kHz explicitly.
+  return dac.setVoltage(value, false, 100000);
 }
 
 

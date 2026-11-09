@@ -8,6 +8,31 @@ from brighteyes_mcs.acquisition.manager import McsManager
 from brighteyes_mcs.hardware.fpga import FpgaHandle
 from brighteyes_mcs.acquisition.workers.fpga import validate_fpga_interface
 from brighteyes_mcs.ui.qt.main_window import MainWindow
+from brighteyes_mcs.application.plugin_service import PluginManager
+
+
+@pytest.mark.parametrize("preview", [False, True])
+def test_plugin_hardware_prepares_before_ni_start_and_cleans_after_stop(preview):
+    window = MagicMock()
+    window.flare = None
+    window.software_trigger = None
+    window.pispad23_timetagging = SimpleNamespace(active=False, stop=MagicMock())
+    window._current_detector_model.return_value = "SPAD Array"
+    for name in ("pispad23ttmActivate", "ttmActivate", "uttmActivate", "noMcsSaveWithTtm"):
+        getattr(window.ui, "checkBox_" + name).isChecked.return_value = False
+    window.ttm_remote_is_up.return_value = False
+    calls = []
+    window.plugin_manager = PluginManager(window)
+    window.plugin_manager.on_run(
+        lambda mode: calls.append(("prepare", mode)),
+        lambda mode: calls.append(("cleanup", mode)),
+    )
+    window.initializeAcquisition.side_effect = lambda **kw: calls.append(("start", kw["do_not_save"]))
+    window.stopAcquisition.side_effect = lambda: calls.append(("stop",))
+    MainWindow.beginAcquisition(window, is_preview=preview)
+    MainWindow.stop(window)
+    mode = "preview" if preview else "acquisition"
+    assert calls == [("prepare", mode), ("start", preview), ("stop",), ("cleanup", mode)]
 
 
 def bare_manager():

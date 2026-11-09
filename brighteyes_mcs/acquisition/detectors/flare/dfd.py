@@ -196,8 +196,19 @@ class FlareDfdDecoder:
         return self.decoder.finish(cancelled=cancelled)
 
 
+def preview_hcl(rgb, peak_idx, laser_hz, method="circular"):
+    """Convert the Flare 30/30/31-bin gates using the shared lifetime estimator."""
+    tau, brightness, quality, valid = flim_parameters_from_3samples(
+        *np.moveaxis(rgb, -1, 0), T_cycle=1 / laser_hz,
+        sample_idx=np.array([14.5, 44.5, 75.0]),
+        peak_idx=peak_idx, total_bins=91, method=method, window_lengths=(30, 30, 31),
+    )
+    return np.stack(flim_map_to_hcl(tau, brightness, quality, valid, 0, 1), axis=-1)
+
+
 class DfdPreview:
-    def __init__(self, configuration, image, *, initial_hcl=None, initial_rgb=None, selection=None):
+    def __init__(self, configuration, image, *, initial_hcl=None, initial_rgb=None, selection=None,
+                 lifetime_estimator="circular", initial_trace=None):
         self.configuration = configuration
         self.image = image
         shape = (*image.shape, 3)
@@ -206,18 +217,28 @@ class DfdPreview:
         self.rgb = (np.array(initial_rgb, dtype=np.uint64, copy=True)
                     if initial_rgb is not None and initial_rgb.shape == shape else np.zeros(shape, dtype=np.uint64))
         self.hist_live = np.zeros(91, dtype=np.uint64)
-        self.hist_sum = np.zeros(91, dtype=np.uint64)
+        self.scan_hist_sum = np.zeros(91, dtype=np.uint64)
+        trace = initial_trace or {}
+        histogram = trace.get("dfd_hist_sum")
+        retained_trace = histogram is not None and np.shape(histogram) == (91,)
+        self.hist_sum = (np.array(histogram, dtype=np.uint64, copy=True)
+                         if retained_trace else np.zeros(91, dtype=np.uint64))
         self.selection = selection
-        self.live_records = self.hist_records = 0
-        self.live_seconds = self.hist_seconds = 0.0
+        self.lifetime_estimator = lifetime_estimator
+        self.live_records = 0
+        self.live_seconds = 0.0
+        self.hist_records = int(trace.get("dfd_hist_records", 0)) if retained_trace else 0
+        self.hist_seconds = float(trace.get("dfd_hist_seconds", 0.0)) if retained_trace else 0.0
+        self.trace_reset_generation = int(trace.get("dfd_trace_reset_generation", 0))
 
-    def update(self, counts, index, selection, *, windows=None):
+    def update(self, counts, index, selection, *, windows=None, lifetime_estimator="circular"):
         channels = self.configuration["channels"]
         if selection != self.selection:
             self.image.fill(0)
             self.hcl.fill(0)
             self.rgb.fill(0)
             self.hist_sum.fill(0)
+            self.scan_hist_sum.fill(0)
             self.hist_records = 0
             self.hist_seconds = 0.0
             self.selection = selection
@@ -227,6 +248,13 @@ class DfdPreview:
         histogram = counts[:, :, selected].sum(axis=2, dtype=np.uint64)
         self.hist_live = histogram.sum(axis=0, dtype=np.uint64)
         self.hist_sum += self.hist_live
+        self.scan_hist_sum += self.hist_live
+        if lifetime_estimator != self.lifetime_estimator:
+            self.lifetime_estimator = lifetime_estimator
+            self.hcl[:] = preview_hcl(
+                self.rgb, int(self.hist_sum.argmax()), self.configuration["laser_hz"],
+                self.lifetime_estimator,
+            )
         self.live_records = len(counts)
         self.hist_records += len(counts)
         if windows is not None:
@@ -235,12 +263,6 @@ class DfdPreview:
         rgb = np.stack([part.sum(axis=1, dtype=np.uint64) for part in (
             histogram[:, :30], histogram[:, 30:60], histogram[:, 60:],
         )], axis=-1)
-        tau, brightness, quality, valid = flim_parameters_from_3samples(
-            *rgb.T, T_cycle=1 / self.configuration["laser_hz"],
-            sample_idx=np.array([14.5, 44.5, 75.0]),
-            peak_idx=int(self.hist_sum.argmax()), total_bins=91,
-        )
-        hcl = np.stack(flim_map_to_hcl(tau, brightness, quality, valid, 0, 1), axis=-1)
         sums = histogram.sum(axis=1, dtype=np.uint64)
         # Keep only the last visit to each pixel when a batch crosses frames.
         # Unique indices make the final-write behavior explicit without a
@@ -254,26 +276,47 @@ class DfdPreview:
                 _update_preview_image(self.rgb[:, :, channel], rgb[:, channel], index, visits)
             pixels = np.unique((index + np.arange(len(counts))) // visits % self.image.size)
             y, x = np.divmod(pixels, self.image.shape[1])
-            tau, brightness, quality, valid = flim_parameters_from_3samples(
-                *self.rgb[y, x].T, T_cycle=1 / self.configuration["laser_hz"],
-                sample_idx=np.array([14.5, 44.5, 75.0]),
-                peak_idx=int(self.hist_sum.argmax()), total_bins=91,
+            self.hcl[y, x] = preview_hcl(
+                self.rgb[y, x], int(self.hist_sum.argmax()), self.configuration["laser_hz"],
+                self.lifetime_estimator,
             )
-            self.hcl[y, x] = np.stack(flim_map_to_hcl(tau, brightness, quality, valid, 0, 1), axis=-1)
             return sums
         first = max(0, len(counts) - self.image.size)
         pixel = (index + np.arange(first, len(counts))) % self.image.size
         y, x = np.divmod(pixel, self.image.shape[1])
         self.image[y, x] = sums[first:]
         self.rgb[y, x] = rgb[first:]
-        self.hcl[y, x] = hcl[first:]
+        self.hcl[y, x] = preview_hcl(
+            rgb[first:], int(self.hist_sum.argmax()), self.configuration["laser_hz"],
+            self.lifetime_estimator,
+        )
         return sums
+
+    def lifetime_diagnostics(self):
+        """Summarize one finite scan without logging or copying pixel arrays."""
+        counts = self.rgb.sum(axis=-1, dtype=np.uint64)
+        illuminated = counts > 0
+        valid = self.hcl[:, :, 2] > 0
+        tau_ns = self.hcl[:, :, 0][valid] * 1e9 / self.configuration["laser_hz"]
+        return dict(
+            reference_peak_bin=int(self.hist_sum.argmax()) if np.any(self.hist_sum) else None,
+            scan_peak_bin=int(self.scan_hist_sum.argmax()) if np.any(self.scan_hist_sum) else None,
+            reference_photons=int(self.hist_sum.sum(dtype=np.uint64)),
+            scan_photons=int(self.scan_hist_sum.sum(dtype=np.uint64)),
+            illuminated_pixels=int(illuminated.sum()), valid_pixels=int(valid.sum()),
+            median_pixel_photons=float(np.median(counts[illuminated])) if np.any(illuminated) else None,
+            tau_ns_p05_p50_p95=np.percentile(tau_ns, [5, 50, 95]).tolist() if tau_ns.size else None,
+            median_precision=float(np.median(self.hcl[:, :, 1][valid])) if tau_ns.size else None,
+            trace_reset_generation=self.trace_reset_generation,
+        )
 
     def snapshot(self):
         return dict(
             dfd_hist_live=self.hist_live.copy(), dfd_hist_sum=self.hist_sum.copy(),
             hcl_image=self.hcl.copy(), rgb_image=self.rgb.copy(),
             dfd_laser_hz=self.configuration["laser_hz"], dfd_bins=91,
+            lifetime_estimator=self.lifetime_estimator,
+            dfd_trace_reset_generation=self.trace_reset_generation,
             dfd_live_records=self.live_records, dfd_hist_records=self.hist_records,
             **(dict(dfd_live_seconds=self.live_seconds, dfd_hist_seconds=self.hist_seconds)
                if scoped(self.configuration) else {}),

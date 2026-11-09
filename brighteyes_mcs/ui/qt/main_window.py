@@ -828,6 +828,7 @@ class MainWindow(QMainWindow):
         self.plugin_configuration = {}
         self.plugin_autoload = ["script_launcher", "channel_delay_skew"]
         self.plugin_configuration_files = {
+            "DAC_ino": "cfg/plugins_cfg/DAC_ino.cfg",
             "channel_delay_skew": "cfg/plugins_cfg/channel_delay_skew.cfg",
             "dfd": "cfg/plugins_cfg/dfd.cfg",
             "pispad23_timetagging": "cfg/plugins_cfg/pispad23_timetagging.cfg",
@@ -1404,6 +1405,9 @@ class MainWindow(QMainWindow):
         )
         configuration_helper["lifetime_channel"] = (
             "DFD Lifetime Source", str, self.ui.comboBox_lifetime_channel, False,
+        )
+        configuration_helper["lifetime_estimator"] = (
+            "DFD Preview Lifetime Estimator", str, self.ui.comboBox_lifetime_estimator, False,
         )
 
         configuration_helper["detector_model"] = (
@@ -3129,6 +3133,10 @@ class MainWindow(QMainWindow):
         except Exception:
             logger.exception("Could not stop acquisition processes")
 
+        plugin_manager = getattr(self, "plugin_manager", None)
+        if plugin_manager is not None:
+            plugin_manager.finish_run()
+
         if trigger is not None and trigger.active:
             try:
                 trigger.finish()
@@ -3162,6 +3170,11 @@ class MainWindow(QMainWindow):
     @trace_action
     def closeEvent(self, event):
         """Shut down hardware and workers before accepting the close event."""
+        plugin_manager = getattr(self, "plugin_manager", None)
+        if plugin_manager is not None and plugin_manager.cancel_run_preparation():
+            event.ignore()
+            self.ui.statusBar.showMessage("Cancelling plug-in setup; close again after cleanup.", 5000)
+            return
         from ..controllers.flare import FlareShutdownError
         try:
             self.shutdown()
@@ -4209,7 +4222,7 @@ class MainWindow(QMainWindow):
                     * max(int(self.mcs_manager.clk_multiplier), 1)
                 )
                 h_shift = 0.0
-                if tcycle_ns > 0.0:
+                if tcycle_ns > 0.0 and self.getLifetimeEstimator() == "circular":
                     h_shift = (
                         self.ui.doubleSpinBox_delta_tau_ns.value() % tcycle_ns
                     ) / tcycle_ns
@@ -6308,6 +6321,7 @@ Have fun!
             and not getattr(self, "raw_stream_mode", False)
             and self.ui.checkBox_DFD.isChecked()
             and self.ui.comboBox_plot_channel.currentText() == "LIFETIME_HSV"
+            and self.getLifetimeEstimator() == "circular"
         )
         self._auto_lifetime_correction_pending = bool(
             eligible
@@ -6530,6 +6544,10 @@ Have fun!
         self.ui.label_delta_tau_ns.setVisible(visible)
         self.ui.doubleSpinBox_delta_tau_ns.setVisible(visible)
         self.ui.pushButton_delta_tau_auto.setVisible(visible)
+        circular = self.getLifetimeEstimator() == "circular"
+        for widget in (self.ui.label_delta_tau_ns, self.ui.doubleSpinBox_delta_tau_ns,
+                       self.ui.pushButton_delta_tau_auto):
+            widget.setEnabled(circular)
         dfd_source = visible or current_channel in ("LIFETIME", "QUALITY", "RGBDFD")
         self.ui.widget_lifetime_controls.set_lifetime_mode(visible, dfd_source_active=dfd_source)
         self.ui.comboBox_lifetime_channel.setEnabled(self.ui.checkBox_DFD.isChecked())
@@ -6576,7 +6594,7 @@ Have fun!
     @Slot()
     @trace_action
     def colorLifetimeDeltaTauUseHistogramMean(self):
-        if not self.isLifetimeColorChannel():
+        if not self.isLifetimeColorChannel() or self.getLifetimeEstimator() != "circular":
             return False
 
         tcycle_ns = 1e3 / (
@@ -6648,6 +6666,15 @@ Have fun!
         channel = self.ui.comboBox_lifetime_channel.currentData()
         count = int(self.ui.comboBox_spad_channels.currentText())
         return channel if isinstance(channel, int) and 0 <= channel < count else None
+
+    def getLifetimeEstimator(self):
+        return self.ui.comboBox_lifetime_estimator.currentData() or "circular"
+
+    @Slot()
+    def lifetimeEstimatorChanged(self):
+        self._syncAutoLifetimeCorrectionWithPlotSelection()
+        self.updateColorLifetimeShiftControls()
+        self.lifetimeDisplaySettingsChanged()
 
     @Slot()
     def lifetimeDisplaySettingsChanged(self):
@@ -7436,6 +7463,7 @@ Have fun!
                 "proj": self.ui.comboBox_view_projection.currentText(),
                 "channel": self.selected_channel,
                 "lifetime_channel": self.getLifetimeSourceChannel(),
+                "lifetime_estimator": self.getLifetimeEstimator(),
                 "activate_autocorrelation": self.ui.checkBox_fcs_preview.isChecked(),
                 "activate_trace": self.ui.checkBox_trace_on.isChecked(),
                 "accumulate_preview_photons": self.ui.checkBox_accumulate_preview_photons.isChecked(),
@@ -7533,6 +7561,9 @@ Have fun!
             is_preview (bool): If True, run in preview mode (limited repetitions, no saving).
                              If False, run in normal acquisition mode.
         """
+        plugin_manager = getattr(self, "plugin_manager", None)
+        if plugin_manager is not None and plugin_manager.run_active is True:
+            return
         flare = getattr(self, "flare", None)
         if flare is not None and flare.selected is True:
             return flare.begin(is_preview)
@@ -7643,8 +7674,11 @@ Have fun!
             self.ui.checkBox_ttmActivate.setEnabled(False)
             self.ui.pushButton_externalProgram.setEnabled(False)
 
-        # Initialize acquisition with appropriate mode flag
+        # Prepare plug-in hardware before workers, recorders, or run commands.
         try:
+            plugin_manager = getattr(self, "plugin_manager", None)
+            if plugin_manager is not None:
+                plugin_manager.prepare_run(is_preview)
             self.initializeAcquisition(
                 do_not_save=is_preview,
                 do_run=True,
@@ -8288,6 +8322,9 @@ Have fun!
         """
         stop the acquisition clicked event
         """
+        plugin_manager = getattr(self, "plugin_manager", None)
+        if plugin_manager is not None and plugin_manager.cancel_run_preparation():
+            return
         flare = getattr(self, "flare", None)
         if flare is not None and flare.selected is True:
             return flare.stop()
@@ -8335,7 +8372,12 @@ Have fun!
         self.ui.checkBox_uttmActivate.setEnabled(True)
         self.ui.checkBox_ttmActivate.setEnabled(True)
 
-        self.stopAcquisition()
+        try:
+            self.stopAcquisition()
+        finally:
+            plugin_manager = getattr(self, "plugin_manager", None)
+            if plugin_manager is not None:
+                plugin_manager.finish_run()
 
         # self.timerPreviewImg.stop()
         self.update()
@@ -8586,7 +8628,7 @@ Have fun!
             )
             self.updateColorLifetimeShiftControls()
             h_shift = 0.0
-            if tcycle_ns > 0.0:
+            if tcycle_ns > 0.0 and self.getLifetimeEstimator() == "circular":
                 h_shift = (
                     self.ui.doubleSpinBox_delta_tau_ns.value() % tcycle_ns
                 ) / tcycle_ns

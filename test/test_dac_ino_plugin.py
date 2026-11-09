@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from PySide6.QtCore import QObject, QSettings, Signal
+from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtWidgets import QApplication
 
 from brighteyes_mcs.plugins.api import PluginContext
@@ -271,9 +271,6 @@ def test_get_vals_maps_all_four_channels(controller):
 
 
 def test_plugin_setup_and_converter_serial_matching(app, monkeypatch, tmp_path):
-    settings = QSettings(str(tmp_path / "dac.ini"), QSettings.Format.IniFormat)
-    settings.setValue("serial_number", "TTL-123")
-    monkeypatch.setattr(plugin_form, "QSettings", lambda *args: settings)
     ports = [
         SimpleNamespace(portName=lambda: "COM3", description=lambda: "Other",
                         serialNumber=lambda: "OTHER"),
@@ -281,14 +278,21 @@ def test_plugin_setup_and_converter_serial_matching(app, monkeypatch, tmp_path):
                         serialNumber=lambda: "TTL-123"),
     ]
     monkeypatch.setattr(plugin_form, "QSerialPortInfo", SimpleNamespace(availablePorts=lambda: ports))
-    manager = SimpleNamespace(add_tab=MagicMock())
+    window = SimpleNamespace(
+        plugin_configuration={"DAC_ino": {"serial_number": "TTL-123"}},
+        plugin_configuration_files={},
+        _load_plugin_config_file=MagicMock(),
+        SavePluginConfiguration=MagicMock(),
+    )
+    manager = SimpleNamespace(main_window=window, add_tab=MagicMock(), on_run=MagicMock(), on=MagicMock())
     context = PluginContext(manager)
     widget = plugin.setup(context)
     form = context["form"]
+    manager.on_run.assert_called_once_with(form.before_run, form.after_run)
     manager.add_tab.assert_called_once_with(widget, "DAC_ino")
     assert form.ports.currentData() == "COM12"
     assert len(form.voltages) == 4
-    assert all(not button.isEnabled() for button in form.set_buttons)
+    assert all(not voltage.isEnabled() for voltage in form.voltages)
     ports[1].portName = lambda: "COM24"
     form.refresh_ports()
     assert form.ports.currentData() == "COM24"
@@ -307,4 +311,100 @@ def test_plugin_setup_and_converter_serial_matching(app, monkeypatch, tmp_path):
     assert form.serial_number.text() == "3C8427C3B50C"
     connect.assert_called_once_with("COM3")
     widget.close()
+    widget.deleteLater()
+
+
+def test_confirmed_voltage_waits_for_ack(controller):
+    ctl, port = controller
+    QTimer.singleShot(10, lambda: port.reply(b"OK,0,4095\n"))
+    ctl.set_voltage_confirmed(0, 5)
+    assert not ctl.busy
+    assert port.writes[-1] == b"SET,0,4095\n"
+
+
+def test_confirmed_voltage_rejects_failed_ack(controller):
+    ctl, port = controller
+    QTimer.singleShot(10, lambda: port.reply(b"ERR,I2C\n"))
+    with pytest.raises(RuntimeError, match="did not confirm"):
+        ctl.set_voltage_confirmed(0, 5)
+
+
+def test_automatic_channels_snapshot_and_restore_idle_voltage(app, monkeypatch, tmp_path):
+    from PySide6.QtWidgets import QWidget
+    widget = QWidget()
+    form = plugin_form.myForm()
+    form.setupUi(widget)
+    apply = MagicMock()
+    monkeypatch.setattr(form.controller, "set_voltage_confirmed", apply)
+    form.run_enabled[1].setChecked(True)
+    form.run_voltages[1].setValue(3.2)
+    form.voltages[1].setValue(1.25)
+    form.before_run("preview")
+    apply.assert_called_once_with(1, 3.2)
+    assert not form.run_enabled[1].isEnabled()
+    assert not form.voltages[1].isEnabled()
+    form.after_run("preview")
+    assert apply.call_args_list == [((1, 3.2),), ((1, 1.25),)]
+    assert form.run_enabled[1].isEnabled()
+    widget.deleteLater()
+
+
+def test_idle_voltage_applies_only_when_editing_finishes(app, monkeypatch, tmp_path):
+    from PySide6.QtWidgets import QWidget, QPushButton
+
+    widget = QWidget()
+    form = plugin_form.myForm()
+    form.setupUi(widget)
+    form.controller.connected = True
+    form._update_state()
+    apply = MagicMock()
+    monkeypatch.setattr(form.controller, "set_voltage_confirmed", apply)
+    assert not any(button.text() == "Set" for button in widget.findChildren(QPushButton))
+    form.voltages[2].setValue(2.4)
+    apply.assert_not_called()
+    form.voltages[2].editingFinished.emit()
+    apply.assert_called_once_with(2, 2.4)
+    assert form.voltages[2].isEnabled()
+    widget.deleteLater()
+
+
+@pytest.mark.parametrize("auto_connect", [False, True])
+def test_cfg_applied_before_optional_auto_connect(app, monkeypatch, auto_connect):
+    from PySide6.QtWidgets import QWidget
+
+    port = SimpleNamespace(portName=lambda: "COM7", description=lambda: "DAC",
+                           serialNumber=lambda: "CFG-123")
+    monkeypatch.setattr(plugin_form, "QSerialPortInfo", SimpleNamespace(availablePorts=lambda: [port]))
+    widget = QWidget()
+    form = plugin_form.myForm()
+    form.setupUi(widget)
+    configuration = {
+        "serial_number": "CFG-123", "auto_connect": auto_connect,
+        "idle_voltages": [1, 2, 3, 4], "run_voltages": [5, 4, 3, 2],
+        "enabled": [True, False, True, False],
+    }
+    window = SimpleNamespace(plugin_configuration={"DAC_ino": configuration},
+                             SavePluginConfiguration=MagicMock())
+    seen = []
+
+    def connect(name):
+        seen.append((name, [v.value() for v in form.voltages],
+                     [v.value() for v in form.run_voltages],
+                     [c.isChecked() for c in form.run_enabled]))
+
+    monkeypatch.setattr(form.controller, "connect_port", connect)
+    form.bind_configuration(window)
+    assert seen == ([("COM7", [1, 2, 3, 4], [5, 4, 3, 2], [True, False, True, False])]
+                    if auto_connect else [])
+    # Editing updates the payload consumed by the normal plugin CFG saver.
+    form.run_voltages[0].setValue(4.5)
+    form.save_configuration.click()
+    window.SavePluginConfiguration.assert_called_once_with("DAC_ino")
+    assert window.plugin_configuration["DAC_ino"]["run_voltages"][0] == 4.5
+    assert window.plugin_configuration["DAC_ino"]["auto_connect"] is auto_connect
+    # Applying a CFG while already connected must not disconnect or reopen.
+    seen.clear()
+    monkeypatch.setattr(form.controller.port, "isOpen", lambda: True)
+    form.apply_configuration()
+    assert seen == []
     widget.deleteLater()

@@ -333,12 +333,14 @@ class FlareAcquisition:
             dfd_preview = DfdPreview(
                 accepted, image, initial_hcl=self._initial_preview.get("hcl_image"),
                 initial_rgb=self._initial_preview.get("rgb_image"), selection=displayed_channels,
+                lifetime_estimator=self._initial_preview.get("lifetime_estimator", "circular"),
+                initial_trace=self._initial_preview,
             ) if self.dfd else None
             fingerprint = np.zeros(accepted["channels"], dtype=np.uint64)
             trace = FlareTrace()
             display = {}
             last_display_update = float("-inf")
-            trace_reset_generation = 0
+            trace_reset_generation = dfd_preview.trace_reset_generation if self.dfd else 0
             expected_bytes = total_bins(accepted) * size
             last_snapshot = 0.0
             snapshot_interval = _preview_snapshot_interval(image, self.dfd)
@@ -418,15 +420,19 @@ class FlareAcquisition:
                             dfd_preview.hist_sum.fill(0)
                             dfd_preview.hist_records = 0
                             dfd_preview.hist_seconds = 0.0
+                            dfd_preview.trace_reset_generation = generation
                         trace_reset_generation = generation
                     selection = display.get("channels", self.display_channels)
                     if selection != displayed_channels:
                         image.fill(0)
                         trace.reset()
                         displayed_channels = selection
-                    sums = dfd_preview.update(counts, index, selection, **(
-                        {"windows": decoder.windows} if modern else {}
-                    )) if self.dfd else (
+                    sums = dfd_preview.update(
+                        counts, index, selection,
+                        lifetime_estimator=display.get("lifetime_estimator", "circular"), **(
+                            {"windows": decoder.windows} if modern else {}
+                        ),
+                    ) if self.dfd else (
                         counts.sum(axis=1, dtype=np.uint64)
                         if selection is None
                         else counts[:, selection].sum(axis=1, dtype=np.uint64)
@@ -537,6 +543,15 @@ class FlareAcquisition:
                     **(dfd_preview.snapshot() if self.dfd else {}),
                 }
             )
+            if self.dfd and dfd_preview.lifetime_estimator == "exponential":
+                log.info(
+                    "Flare DFD lifetime scan run=%s channels=%s diagnostics=%s alignment=%s",
+                    metadata["run_id"], displayed_channels, dfd_preview.lifetime_diagnostics(),
+                    {key: accepted[key] for key in (
+                        "excitation_alignment_generation", "excitation_phase_offset_bins",
+                        "excitation_phase_integer_correction_applied", "excitation_reference_source",
+                    ) if key in accepted},
+                )
             metadata.update(complete=True, result="complete", validated_bins=decoder.index)
         except Exception as error:
             if log_throughput is not None:

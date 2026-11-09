@@ -68,7 +68,13 @@ On an I2C read error it returns ERR,I2C instead of a partial snapshot.
 Register decoding follows the MCP4725 read format in section 6.2 of the
 [Microchip datasheet](https://ww1.microchip.com/downloads/aemDocuments/documents/MSLD/ProductDocuments/DataSheets/MCP4725-Data-Sheet-20002039E.pdf).
 
-The bundled firmware extends the serial watchdog from 5 to 30 seconds.
-The original Desktop file
-is unchanged. Firmware compilation/upload and hardware readback must be
-verified on the target board.
+The bundled firmware keeps native USB CDC running during host inactivity;
+it never calls Serial.end() or flushes pending input on an inactivity timer.
+On Nano ESP32 it configures a 25 ms I2C transaction timeout and a 50 ms USB
+transmit timeout. DAC writes explicitly use 100 kHz and return ERR,I2C on
+failure. The driver is initialized after mux selection. Boot still sets all
+four volatile DAC registers to zero, without rewriting EEPROM. GET,ch is also
+supported. Overlong or timed-out partial commands are rejected through the
+next newline. The original Desktop file is unchanged.
+Firmware compilation/upload and hardware readback must be verified on the
+target board.

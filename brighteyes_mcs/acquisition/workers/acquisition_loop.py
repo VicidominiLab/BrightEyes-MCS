@@ -655,7 +655,10 @@ class BaseAcquisitionLoopProcess(mp.Process):
         # self.shm_loc_acquired["stream_out_main"] = self.shm_loc_acquired["stream_out_main"]
 
         self.shared_dict_proxy = {}
-        self._preview_selection = (self.shared_dict["channel"], self.shared_dict.get("lifetime_channel"))
+        self._preview_selection = (
+            self.shared_dict["channel"], self.shared_dict.get("lifetime_channel"),
+            self.shared_dict.get("lifetime_estimator", "circular"),
+        )
         self.update_dictionary_slowly(0.1)
 
         # This seams redundant but it is for optimize the performances
@@ -774,13 +777,20 @@ class BaseAcquisitionLoopProcess(mp.Process):
             self.shared_dict["software_trigger_worker_ready"] = True
         source_unset = object()
         previous_lifetime_source = source_unset
+        previous_lifetime_estimator = None
         while not stop_event_proxy.is_set():
-            selected_channel, lifetime_channel = self._preview_selection
+            selected_channel, lifetime_channel, lifetime_estimator = self._preview_selection
             lifetime_view = isinstance(selected_channel, str) and selected_channel.startswith(
                 ("LIFETIME", "COLOR_LIFETIME", "QUALITY", "RGBDFD")
             )
             if self.dfd_enable and lifetime_view:
                 source = lifetime_channel
+                if lifetime_estimator != previous_lifetime_estimator:
+                    with self.image_xy_rgb_lock:
+                        self.image_xy_rgb.fill(0)
+                    with self.image_xy_hcl_lock:
+                        self.image_xy_hcl.fill(0)
+                    previous_lifetime_estimator = lifetime_estimator
                 if source != previous_lifetime_source:
                     with self.image_xy_rgb_lock:
                         self.image_xy_rgb.fill(0)
@@ -1245,6 +1255,8 @@ class BaseAcquisitionLoopProcess(mp.Process):
                                         sample_idx=sample_idx,
                                         peak_idx=peak_idx,
                                         total_bins=self.DFD_nbins,
+                                        method=lifetime_estimator,
+                                        window_lengths=chunk_lengths,
                                     )
                                     h, c, l = flim_map_to_hcl(
                                         tau,
@@ -1604,7 +1616,10 @@ class BaseAcquisitionLoopProcess(mp.Process):
         while not (self.stop_event.is_set() or self.thread_for_dict_stop.is_set()):
             # print(self.shared_dict_proxy)
             self.selected_channel = self.shared_dict["channel"]
-            self._preview_selection = (self.selected_channel, self.shared_dict.get("lifetime_channel"))
+            self._preview_selection = (
+                self.selected_channel, self.shared_dict.get("lifetime_channel"),
+                self.shared_dict.get("lifetime_estimator", "circular"),
+            )
             self.accumulate_preview_photons = self.shared_dict.get(
                 "accumulate_preview_photons", False
             )

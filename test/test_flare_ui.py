@@ -51,6 +51,10 @@ def panel(monkeypatch):
     for channel in range(49):
         window.ui.comboBox_lifetime_channel.addItem(f"Ch {channel}", channel)
     window.getLifetimeSourceChannel = lambda: MainWindow.getLifetimeSourceChannel(window)
+    window.ui.comboBox_lifetime_estimator = QComboBox(window)
+    window.ui.comboBox_lifetime_estimator.addItem("Circular mean (3 windows)", "circular")
+    window.ui.comboBox_lifetime_estimator.addItem("Exponential Poisson (3 windows)", "exponential")
+    window.getLifetimeEstimator = lambda: MainWindow.getLifetimeEstimator(window)
     window.ui.statusBar = window.statusBar()
     window.mcs_manager = SimpleNamespace(is_connected=False)
     window._set_program_state = Mock()
@@ -72,6 +76,38 @@ def panel(monkeypatch):
     controller.close()
     window.close()
     app.processEvents()
+
+
+def test_lifetime_estimator_is_sent_to_flare_preview_worker(panel):
+    window, controller = panel
+    controller.selection_changed("TCP/IP - FPGA Flare")
+    controller._display = {}
+    window.ui.comboBox_lifetime_estimator.setCurrentIndex(1)
+    controller.update_display()
+    assert controller._display["lifetime_estimator"] == "exponential"
+    window.ui.comboBox_lifetime_estimator.setCurrentIndex(0)
+    controller.update_display()
+    assert controller._display["lifetime_estimator"] == "circular"
+
+
+def test_dfd_panel_exposes_both_lifetime_methods_and_emits_selection(panel):
+    from brighteyes_mcs.ui.qt.lifetime_controls import LifetimeControls
+
+    window, _ = panel
+    for name in ("lifetimeDisplaySettingsChanged", "lifetimeEstimatorChanged",
+                 "colorLifetimeDeltaTauChanged", "colorLifetimeDeltaTauUseHistogramMean"):
+        setattr(window, name, Mock())
+    original_width = window.ui.groupBox_15.minimumSizeHint().width()
+    controls = LifetimeControls(window)
+    combo = window.ui.comboBox_lifetime_estimator
+    assert combo.currentData() == "circular"
+    assert controls.source_row.layout().itemAt(3).widget() is combo
+    assert combo.parentWidget() is controls.source_row
+    assert window.ui.groupBox_15.minimumSizeHint().width() == original_width
+    combo.setCurrentIndex(1)
+    assert combo.currentData() == "exponential"
+    window.lifetimeEstimatorChanged.assert_called_once()
+    controls.close()
 
 
 def test_tabs_defaults_and_inactive_controls_never_construct_flare(panel):
@@ -494,6 +530,45 @@ def test_preview_completion_keeps_controls_locked_until_stop_between_frames(pane
     assert window.ui.comboBox_flare_mode.isEnabled()
 
 
+def test_plugin_run_hooks_span_all_flare_preview_frames(preview_panel):
+    from brighteyes_mcs.application.plugin_service import PluginManager
+
+    window, controller = preview_panel
+    window.plugin_signals = Mock()
+    window.plugin_manager = PluginManager(window)
+    before, after = Mock(), Mock()
+    window.plugin_manager.on_run(before, after)
+    with patch("brighteyes_mcs.ui.controllers.flare.FlareJob") as job:
+        job.return_value.isRunning.return_value = False
+        controller.begin(True)
+        before.assert_called_once_with("preview")
+        assert job.return_value.start.called
+        controller._acquisition_result({"complete": True}, None)
+        after.assert_not_called()
+        controller.run_job = None
+        controller.begin(True, continuing=True)
+        before.assert_called_once_with("preview")
+        controller.run_job = None
+        controller.stop()
+        controller._acquisition_result({"complete": False, "result": "cancelled"}, None)
+        after.assert_called_once_with("preview")
+
+
+def test_plugin_setup_failure_prevents_flare_job_start(preview_panel):
+    from brighteyes_mcs.application.plugin_service import PluginManager
+
+    window, controller = preview_panel
+    window.plugin_signals = Mock()
+    window.plugin_manager = PluginManager(window)
+    after = Mock()
+    window.plugin_manager.on_run(Mock(side_effect=RuntimeError("DAC offline")), after)
+    with patch("brighteyes_mcs.ui.controllers.flare.FlareJob") as job:
+        controller.begin(True)
+        job.assert_not_called()
+    after.assert_called_once_with("preview")
+    assert window.ui.pushButton_previewStart.isEnabled()
+
+
 @pytest.mark.parametrize("preview", [True, False])
 def test_repeated_busy_failures_offer_reset_only_after_user_accepts(preview_panel, preview):
     from PySide6.QtWidgets import QMessageBox
@@ -672,8 +747,11 @@ def test_only_continuing_preview_passes_previous_image_to_next_run(
     previous = np.full((2, 3), 123, dtype=np.uint64)
     previous_hcl = np.full((2, 3, 3), 0.5)
     previous_rgb = np.full((2, 3, 3), 321, dtype=np.uint64)
+    previous_trace = np.full(91, 10000, dtype=np.uint64)
     controller.last_snapshot = {"image": previous, "hcl_image": previous_hcl,
-                                "rgb_image": previous_rgb, "display_channels": (0, 1)}
+                                "rgb_image": previous_rgb, "display_channels": (0, 1),
+                                "dfd_hist_sum": previous_trace, "dfd_hist_records": 24,
+                                "dfd_hist_seconds": 0.02, "dfd_trace_reset_generation": 3}
     with (
         patch("brighteyes_mcs.ui.controllers.flare.FlareJob") as job,
         patch("brighteyes_mcs.hardware.flare.FlareClient"),
@@ -692,6 +770,10 @@ def test_only_continuing_preview_passes_previous_image_to_next_run(
             assert restored["hcl_image"] is previous_hcl
             assert restored["rgb_image"] is previous_rgb
             assert restored["display_channels"] == (0, 1)
+            assert restored["dfd_hist_sum"] is previous_trace
+            assert restored["dfd_hist_records"] == 24
+            assert restored["dfd_hist_seconds"] == 0.02
+            assert restored["dfd_trace_reset_generation"] == 3
             window.im_widget.clear.assert_not_called()
         else:
             assert acquisition.call_args.kwargs["initial_preview"] is None
@@ -902,6 +984,30 @@ def test_pan_zoom_updates_display_immediately_and_reuses_it_in_next_scan(preview
         assert window.im_widget.setImage.call_args.kwargs["autoRange"] is False
         assert window.im_widget.getView().setRange.call_count == 1
         controller.runner = controller.run_job = None
+
+
+@pytest.mark.parametrize("transform_only", [False, True])
+def test_flare_geometry_edits_without_an_image_wait_for_preview_data(preview_panel, transform_only):
+    window, controller = preview_panel
+    window.currentImage = None
+    window.flare = controller
+    window.ui.spinBox_range_x.setValue(200)
+    window.ui.spinBox_off_x_um.setValue(12)
+    if transform_only:
+        controller.plot_image(transform_only=True)
+    else:
+        # The redraw requested by rangeValueChanged -> offset_um_update.
+        MainWindow.plotPreviewImage(window, window.currentImage)
+    assert window.currentImage is None
+    assert window.currentImage_size[0] == 200
+    assert window.currentImage_pos[0] == 12
+    assert not window.im_widget.mock_calls
+    # The missing image must not prevent rendering when data becomes available.
+    controller.plot_image(np.ones((2, 3)), transform_only=transform_only)
+    if transform_only:
+        window.im_widget.getImageItem.return_value.setTransform.assert_called_once()
+    else:
+        window.im_widget.setImage.assert_called_once()
 
 
 def test_stream_updates_preserve_manual_view_range(preview_panel):
@@ -1280,6 +1386,48 @@ def test_dfd_preview_geometry_is_committed_live_and_retained_next_frame(preview_
         assert second["x_start"] != first["x_start"]
         assert second["x_step"] == round(0.6 / 3 * 32768 / 10)
         controller.run_job = None
+
+
+def test_exponential_method_is_present_before_the_first_acquisition_packet(preview_panel):
+    window, controller = preview_panel
+    window.ui.comboBox_lifetime_estimator.setCurrentIndex(1)
+    with patch("brighteyes_mcs.ui.controllers.flare.FlareJob") as job:
+        job.return_value.isRunning.return_value = False
+        controller.begin(True)
+        assert job.called, window.ui.plainTextEdit_flare_log.toPlainText()
+        assert controller._display["lifetime_estimator"] == "exponential"
+        controller.run_job = None
+
+
+def test_stopped_flare_image_can_switch_to_physical_lifetime_without_phase_correction(preview_panel):
+    window, controller = preview_panel
+    window.ui.comboBox_plot_channel.setCurrentText("LIFETIME_HSV")
+    window.getLifetimeColorRenderMode = lambda name: "hsv"
+    window.getLifetimeHueDisplayRange = lambda: (0, 1)
+    window.getLifetimeForceQualityFull = lambda: False
+    window.getLifetimeScalingOptions = lambda: {}
+    window.ui.doubleSpinBox_delta_tau_ns = SimpleNamespace(value=lambda: 5)
+    tau, peak = 0.12, 47
+    histogram = np.exp(-((np.arange(91) - peak) % 91) / (91 * tau)) * 10000
+    gates = [histogram[:30].sum(), histogram[30:60].sum(), histogram[60:].sum()]
+    original = np.full((2, 3, 3), 0.5)
+    controller.last_snapshot = dict(
+        image=window.currentImage, hcl_image=original,
+        rgb_image=np.broadcast_to(gates, (2, 3, 3)), dfd_hist_sum=histogram,
+        dfd_laser_hz=40000000, lifetime_estimator="circular",
+    )
+    window.ui.comboBox_lifetime_estimator.setCurrentIndex(1)
+    controller.plot_image()
+    call = window.im_widget.setFlimImage.call_args
+    np.testing.assert_allclose(call.args[0][:, :, 0], tau, rtol=0.002)
+    assert call.kwargs["h_shift"] == 0
+    assert not controller.preview
+    window.ui.comboBox_lifetime_estimator.setCurrentIndex(0)
+    controller.plot_image()
+    np.testing.assert_array_equal(
+        window.im_widget.setFlimImage.call_args.args[0], original.transpose(1, 0, 2),
+    )
+    assert window.im_widget.setFlimImage.call_args.kwargs["h_shift"] == pytest.approx(0.2)
 
 
 @pytest.mark.parametrize("preview", [True, False])
