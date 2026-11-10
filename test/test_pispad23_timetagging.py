@@ -46,6 +46,9 @@ def ui(app):
         MainWindow._pispad23_timetagging_bindings(adapter)
     )
     MainWindow._apply_pispad23_timetagging_configuration(adapter, settings)
+    # This suite preserves the explicitly selectable external-recorder workflow.
+    # The library backend is covered separately with the same GUI and simulator.
+    ui.comboBox_pispad23ttm_backend.setCurrentText("Legacy executable")
     yield ui
     window.close()
 

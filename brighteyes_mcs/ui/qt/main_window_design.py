@@ -2073,112 +2073,124 @@ class Ui_MainWindowDesign(object):
         self.tab_pi_timetagging.setObjectName(u"tab_pi_timetagging")
         self.gridLayout_pi_timetagging = QGridLayout(self.tab_pi_timetagging)
         self.gridLayout_pi_timetagging.setObjectName(u"gridLayout_pi_timetagging")
+        self.label_pispad23ttm_backend = QLabel(self.tab_pi_timetagging)
+        self.label_pispad23ttm_backend.setObjectName(u"label_pispad23ttm_backend")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_backend, 0, 0, 1, 1)
+
+        self.comboBox_pispad23ttm_backend = QComboBox(self.tab_pi_timetagging)
+        self.comboBox_pispad23ttm_backend.addItem("")
+        self.comboBox_pispad23ttm_backend.addItem("")
+        self.comboBox_pispad23ttm_backend.setObjectName(u"comboBox_pispad23ttm_backend")
+
+        self.gridLayout_pi_timetagging.addWidget(self.comboBox_pispad23ttm_backend, 0, 1, 1, 2)
+
         self.label_pispad23ttm_executable = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_executable.setObjectName(u"label_pispad23ttm_executable")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_executable, 0, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_executable, 1, 0, 1, 1)
 
         self.lineEdit_pispad23ttm_h5_executable = QLineEdit(self.tab_pi_timetagging)
         self.lineEdit_pispad23ttm_h5_executable.setObjectName(u"lineEdit_pispad23ttm_h5_executable")
 
-        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_h5_executable, 0, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_h5_executable, 1, 1, 1, 1)
 
         self.toolButton_pispad23ttm_h5 = QToolButton(self.tab_pi_timetagging)
         self.toolButton_pispad23ttm_h5.setObjectName(u"toolButton_pispad23ttm_h5")
 
-        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_h5, 0, 2, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_h5, 1, 2, 1, 1)
 
         self.label_pispad23ttm_raw = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_raw.setObjectName(u"label_pispad23ttm_raw")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_raw, 1, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_raw, 2, 0, 1, 1)
 
         self.lineEdit_pispad23ttm_raw_executable = QLineEdit(self.tab_pi_timetagging)
         self.lineEdit_pispad23ttm_raw_executable.setObjectName(u"lineEdit_pispad23ttm_raw_executable")
 
-        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_raw_executable, 1, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_raw_executable, 2, 1, 1, 1)
 
         self.toolButton_pispad23ttm_raw = QToolButton(self.tab_pi_timetagging)
         self.toolButton_pispad23ttm_raw.setObjectName(u"toolButton_pispad23ttm_raw")
 
-        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_raw, 1, 2, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_raw, 2, 2, 1, 1)
 
         self.label_pispad23ttm_folder = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_folder.setObjectName(u"label_pispad23ttm_folder")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_folder, 2, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_folder, 3, 0, 1, 1)
 
         self.lineEdit_pispad23ttm_folder = QLineEdit(self.tab_pi_timetagging)
         self.lineEdit_pispad23ttm_folder.setObjectName(u"lineEdit_pispad23ttm_folder")
 
-        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_folder, 2, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_folder, 3, 1, 1, 1)
 
         self.toolButton_pispad23ttm_folder = QToolButton(self.tab_pi_timetagging)
         self.toolButton_pispad23ttm_folder.setObjectName(u"toolButton_pispad23ttm_folder")
 
-        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_folder, 2, 2, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_folder, 3, 2, 1, 1)
 
         self.label_pispad23ttm_format = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_format.setObjectName(u"label_pispad23ttm_format")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_format, 3, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_format, 4, 0, 1, 1)
 
         self.comboBox_pispad23ttm_format = QComboBox(self.tab_pi_timetagging)
         self.comboBox_pispad23ttm_format.addItem("")
         self.comboBox_pispad23ttm_format.addItem("")
         self.comboBox_pispad23ttm_format.setObjectName(u"comboBox_pispad23ttm_format")
 
-        self.gridLayout_pi_timetagging.addWidget(self.comboBox_pispad23ttm_format, 3, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.comboBox_pispad23ttm_format, 4, 1, 1, 1)
 
         self.label_pispad23ttm_address = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_address.setObjectName(u"label_pispad23ttm_address")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_address, 4, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_address, 5, 0, 1, 1)
 
         self.lineEdit_pispad23ttm_address = QLineEdit(self.tab_pi_timetagging)
         self.lineEdit_pispad23ttm_address.setObjectName(u"lineEdit_pispad23ttm_address")
 
-        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_address, 4, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_address, 5, 1, 1, 1)
 
         self.label_pispad23ttm_margin = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_margin.setObjectName(u"label_pispad23ttm_margin")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_margin, 6, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_margin, 7, 0, 1, 1)
 
         self.doubleSpinBox_pispad23ttm_margin = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pispad23ttm_margin.setObjectName(u"doubleSpinBox_pispad23ttm_margin")
         self.doubleSpinBox_pispad23ttm_margin.setMinimum(0.100000000000000)
         self.doubleSpinBox_pispad23ttm_margin.setMaximum(86400.000000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_margin, 6, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_margin, 7, 1, 1, 1)
 
         self.label_pispad23ttm_settle = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_settle.setObjectName(u"label_pispad23ttm_settle")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_settle, 7, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_settle, 8, 0, 1, 1)
 
         self.doubleSpinBox_pispad23ttm_settle = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pispad23ttm_settle.setObjectName(u"doubleSpinBox_pispad23ttm_settle")
         self.doubleSpinBox_pispad23ttm_settle.setMaximum(3600.000000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_settle, 7, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_settle, 8, 1, 1, 1)
 
         self.label_pispad23ttm_timeout = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_timeout.setObjectName(u"label_pispad23ttm_timeout")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_timeout, 8, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_timeout, 9, 0, 1, 1)
 
         self.doubleSpinBox_pispad23ttm_timeout = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pispad23ttm_timeout.setObjectName(u"doubleSpinBox_pispad23ttm_timeout")
         self.doubleSpinBox_pispad23ttm_timeout.setMinimum(1.000000000000000)
         self.doubleSpinBox_pispad23ttm_timeout.setMaximum(3600.000000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_timeout, 8, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_timeout, 9, 1, 1, 1)
 
         self.label_pispad23ttm_stream_port = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_stream_port.setObjectName(u"label_pispad23ttm_stream_port")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_stream_port, 5, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_stream_port, 6, 0, 1, 1)
 
         self.spinBox_pispad23ttm_stream_port = QSpinBox(self.tab_pi_timetagging)
         self.spinBox_pispad23ttm_stream_port.setObjectName(u"spinBox_pispad23ttm_stream_port")
@@ -2186,12 +2198,12 @@ class Ui_MainWindowDesign(object):
         self.spinBox_pispad23ttm_stream_port.setMaximum(65535)
         self.spinBox_pispad23ttm_stream_port.setValue(19000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_stream_port, 5, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_stream_port, 6, 1, 1, 1)
 
         self.label_pispad23ttm_preview_margin = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_preview_margin.setObjectName(u"label_pispad23ttm_preview_margin")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_preview_margin, 9, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_preview_margin, 10, 0, 1, 1)
 
         self.doubleSpinBox_pispad23ttm_preview_margin = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pispad23ttm_preview_margin.setObjectName(u"doubleSpinBox_pispad23ttm_preview_margin")
@@ -2201,12 +2213,12 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_pispad23ttm_preview_margin.setSingleStep(0.100000000000000)
         self.doubleSpinBox_pispad23ttm_preview_margin.setValue(0.500000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_preview_margin, 9, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_preview_margin, 10, 1, 1, 1)
 
         self.label_pispad23ttm_uimg_buffer = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_uimg_buffer.setObjectName(u"label_pispad23ttm_uimg_buffer")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_uimg_buffer, 10, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_uimg_buffer, 11, 0, 1, 1)
 
         self.spinBox_pispad23ttm_uimg_buffer = QSpinBox(self.tab_pi_timetagging)
         self.spinBox_pispad23ttm_uimg_buffer.setObjectName(u"spinBox_pispad23ttm_uimg_buffer")
@@ -2214,12 +2226,12 @@ class Ui_MainWindowDesign(object):
         self.spinBox_pispad23ttm_uimg_buffer.setMaximum(8388608)
         self.spinBox_pispad23ttm_uimg_buffer.setValue(1048576)
 
-        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_uimg_buffer, 10, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_uimg_buffer, 11, 1, 1, 1)
 
         self.label_pispad23ttm_uimg_batch = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_uimg_batch.setObjectName(u"label_pispad23ttm_uimg_batch")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_uimg_batch, 11, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_uimg_batch, 12, 0, 1, 1)
 
         self.spinBox_pispad23ttm_uimg_batch = QSpinBox(self.tab_pi_timetagging)
         self.spinBox_pispad23ttm_uimg_batch.setObjectName(u"spinBox_pispad23ttm_uimg_batch")
@@ -2227,25 +2239,25 @@ class Ui_MainWindowDesign(object):
         self.spinBox_pispad23ttm_uimg_batch.setMaximum(65536)
         self.spinBox_pispad23ttm_uimg_batch.setValue(4096)
 
-        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_uimg_batch, 11, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_uimg_batch, 12, 1, 1, 1)
 
         self.pushButton_pispad23ttm_force_calibration = QPushButton(self.tab_pi_timetagging)
         self.pushButton_pispad23ttm_force_calibration.setObjectName(u"pushButton_pispad23ttm_force_calibration")
 
-        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23ttm_force_calibration, 12, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23ttm_force_calibration, 13, 0, 1, 3)
 
         self.label_pispad23ttm_status = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_status.setObjectName(u"label_pispad23ttm_status")
         self.label_pispad23ttm_status.setWordWrap(True)
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_status, 13, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_status, 14, 0, 1, 3)
 
         self.plainTextEdit_pispad23ttm_log = QPlainTextEdit(self.tab_pi_timetagging)
         self.plainTextEdit_pispad23ttm_log.setObjectName(u"plainTextEdit_pispad23ttm_log")
         self.plainTextEdit_pispad23ttm_log.setReadOnly(True)
         self.plainTextEdit_pispad23ttm_log.setMaximumBlockCount(5000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pispad23ttm_log, 14, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pispad23ttm_log, 15, 0, 1, 3)
 
         self.tabWidget_3.addTab(self.tab_pi_timetagging, "")
         self.tab_6 = QWidget()
@@ -5106,9 +5118,16 @@ class Ui_MainWindowDesign(object):
         self.checkBox_uttm_watchdog.setText(QCoreApplication.translate("MainWindowDesign", u"Activate watchdog", None))
         self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_uTTM), QCoreApplication.translate("MainWindowDesign", u"u(TTM)", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_15), QCoreApplication.translate("MainWindowDesign", u"BrightEyes-TTM", None))
-        self.label_pispad23ttm_executable.setText(QCoreApplication.translate("MainWindowDesign", u"HDF5 recorder", None))
+        self.label_pispad23ttm_backend.setText(QCoreApplication.translate("MainWindowDesign", u"Acquisition backend", None))
+        self.comboBox_pispad23ttm_backend.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Python library", None))
+        self.comboBox_pispad23ttm_backend.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Legacy executable", None))
+
+#if QT_CONFIG(tooltip)
+        self.comboBox_pispad23ttm_backend.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Python library transfers microimages directly from the acquisition worker. Legacy executable uses the existing local TCP preview server.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_pispad23ttm_executable.setText(QCoreApplication.translate("MainWindowDesign", u"Legacy HDF5 recorder", None))
         self.toolButton_pispad23ttm_h5.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.label_pispad23ttm_raw.setText(QCoreApplication.translate("MainWindowDesign", u"RAW recorder", None))
+        self.label_pispad23ttm_raw.setText(QCoreApplication.translate("MainWindowDesign", u"Legacy RAW recorder", None))
         self.toolButton_pispad23ttm_raw.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
         self.label_pispad23ttm_folder.setText(QCoreApplication.translate("MainWindowDesign", u"Data folder", None))
         self.lineEdit_pispad23ttm_folder.setPlaceholderText(QCoreApplication.translate("MainWindowDesign", u"Empty: use the MCS destination folder", None))
@@ -5130,7 +5149,7 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_pispad23ttm_settle.setSuffix(QCoreApplication.translate("MainWindowDesign", u" s", None))
         self.label_pispad23ttm_timeout.setText(QCoreApplication.translate("MainWindowDesign", u"Calibration / startup timeout", None))
         self.doubleSpinBox_pispad23ttm_timeout.setSuffix(QCoreApplication.translate("MainWindowDesign", u" s", None))
-        self.label_pispad23ttm_stream_port.setText(QCoreApplication.translate("MainWindowDesign", u"Stream image TCP/IP port", None))
+        self.label_pispad23ttm_stream_port.setText(QCoreApplication.translate("MainWindowDesign", u"Legacy preview TCP/IP port", None))
 #if QT_CONFIG(tooltip)
         self.spinBox_pispad23ttm_stream_port.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Local tdc_raw_acquire image server port. img previews the detector sum; uimg streams each dwell's 25 channel counts for the scan image and detector fingerprint. PI SPAD23R TTM also saves RAW timestamps.", None))
 #endif // QT_CONFIG(tooltip)

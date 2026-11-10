@@ -109,7 +109,7 @@ def test_regular_image_gamma_uses_display_levels_and_preserves_raw_values(view, 
     np.testing.assert_array_equal(view.image, source)
     np.testing.assert_array_equal(item.image, source)
     np.testing.assert_array_equal(item.levels, [10, 110])
-    for before, after in zip(histogram, view.ui.histogram.item.plot.getData()):
+    for before, after in zip(histogram, view.ui.histogram.item.plot.getData(), strict=True):
         np.testing.assert_array_equal(before, after)
 
 

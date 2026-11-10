@@ -5,6 +5,9 @@ at Istituto Italiano di Tecnologia for our own microscope workflows. It is our
 own tool, not an official Pi Imaging tool, and is not presented as endorsed or
 supported by Pi Imaging.
 
+The default timestamp backend uses **brighteyes-pispad-libs**. The legacy
+executable/TCP workflow remains explicitly selectable.
+
 The GUI names this detector **PI SPAD23R**; implementation modules and identifiers
 use `PISPAD23` or `pispad23`. Configuration fields and HDF5 metadata use the
 `pispad23` prefix. The external recorder's `PI23_ARMED` / `PI23_DISARMED` messages
@@ -20,6 +23,89 @@ manual for device commands and version compatibility. Vendor documentation and
 examples retain their own copyright and terms; BrightEyes-MCS's license does
 not grant rights to that material. The local image/microimage server protocol
 described below belongs to our integration and is separate from the vendor API.
+
+## Python library backend
+
+Install the locally built library wheel into the same Python environment that
+runs MCS. For example, after building the wheel in the library checkout:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install --no-deps "C:\path\to\BrightEyes-MCS-pispad-libs\dist\brighteyes_pispad_libs-0.1.0-cp313-cp313-win_amd64.whl"
+```
+
+Use a wheel matching the interpreter and platform. MCS also declares the optional
+`pispad` dependency extra; install the local library first while it remains
+unpublished. The required public API includes `AcquisitionSession` as well as
+`AcquisitionConfig`. Missing/older installations produce an explicit error;
+MCS does not silently switch to an executable.
+
+Under **Config → TimeTagging → PI SPAD23R (Timestamp mode)** choose
+**Acquisition backend: Python library**. New configurations use this backend.
+Select the device **TTM endpoint**, output folder, **RAW** or **HDF5**, and
+buffer/batch sizes. Executable paths and the legacy preview port are disabled
+and unused for this backend. Settings cannot change during an acquisition.
+Older configurations without a backend field use the new default; choose
+**Legacy executable** explicitly to retain the old transport.
+
+Select **TCP/IP - PI SPAD23R (TS mode - uimg)** for microimage-based images and
+fingerprints. The existing MCS acquisition process calls the library's public
+`AcquisitionSession` API. Rust threads in that process receive the device TCP
+stream, record timestamps, and count completed 25-channel dwells. Python reads
+batches directly from the bounded native ring and publishes the existing MCS
+shared-memory preview arrays. There is no local preview TCP connection, helper
+executable, nested Python process, or GUI event dependency in this data path.
+Intensity/CS acquisition and other detector pipelines retain their existing paths.
+
+**Preview** always runs without timestamp files and repeats SB windows. For
+**Acquire**, the PI SPAD23R TTM checkbox enables timestamp recording in exactly
+one format, RAW or decoded schema-v3 HDF5. HDF5 timestamp recording is also
+available with microimage previews. The ordinary MCS microimage HDF5 output
+remains independent of this checkbox and retains its data shape, snake
+corrections, validity masks, and metadata conventions described below. The
+existing option to suppress MCS output when TTM is enabled still applies.
+
+Both RAW and HDF5 wait for an actual armed SB window and a configured consumer,
+then apply the ready delay before issuing the FPGA start. A new SB window resets
+the pending ready delay; an expired window cannot trigger a scan. This is host
+readiness, not a hardware acknowledgement. Measurement budgets use the same
+recording/preview margins, circular dwell integration, and wait settings as the
+legacy backend. Ensure those budgets cover external trigger delays.
+
+Stop signals the worker and closes received complete records normally. Startup,
+device disconnects, writer errors, preview overflow, and device FIFO overflow
+are reported to MCS rather than silently skipping data. Native acquisition
+completion is followed by final microimage processing and file closure before
+MCS announces completion. A recording with missing MCS pixels reports an error
+and preserves its incomplete validity map. Manual Stop preserves partial output.
+
+An independent stop thread allows five seconds for the owned worker to exit,
+then terminates that worker if necessary and logs that files may be incomplete.
+The process owns all its Rust threads and creates no acquisition descendants.
+Forced termination can interrupt calibration or file I/O and cannot guarantee
+HDF5 recovery. Live readers should use the preview arrays; timestamp HDF5 does
+not enable SWMR and should be opened after recording closes.
+
+### Simulated integration checks
+
+The library's deterministic TCP simulator replaces both detector and vendor
+software. Worker tests check timestamp bytes, decoded HDF5, per-channel MCS
+images, snake coordinates, partial-record stopping, and errors. Qt tests gate
+the simulated data on the ready callback, exercising arming and the FPGA-start
+boundary without contacting an FPGA or detector:
+
+```powershell
+$env:QT_QPA_PLATFORM = "offscreen"
+.\.venv\Scripts\python.exe -m pytest -q test/test_pispad23_library.py test/test_pispad23_library_gui.py
+```
+
+Real detector/software compatibility, trigger timing, sustained throughput, and
+repeated physical scans still require a hardware session.
+
+## Legacy executable backend
+
+The following executable, TCP READ, console, and process-tree details apply to
+**Acquisition backend: Legacy executable**. The original MCS image/fingerprint
+and microimage HDF5 conventions remain shared with the library backend.
 
 The recorder settings are under **Config → TimeTagging → PI SPAD23R (Timestamp mode)**.
 Choose the HDF5 or RAW executable, output format, endpoint, and destination
@@ -193,6 +279,25 @@ Physical first-run and repeated-run behavior still needs verification with
 the connected FPGA and its firmware.
 
 ## Verification
+
+Local integration validation on 2026-11-10 used Windows/Python 3.13 and the
+library's simulated TCP device, with no detector or FPGA connection:
+
+- The full non-hardware, non-isolated MCS suite passed 937 tests and 45 subtests.
+- The final library worker/Qt checks passed all 17 integration cases, including
+  repeated preview windows and an unsuccessful worker exit after file closure.
+- The library's own Python suite passed 35 tests.
+- Documentation, lint, Python compilation, wheel/sdist build, Twine metadata,
+  and distribution-content checks passed.
+- The four isolated channel-delay tests passed. All five console tests passed
+  individually in fresh interpreters; running that console file as one process
+  hit a Windows access violation inside QtConsole/Jupyter after two tests.
+  Console implementation/tests were unchanged by the integration.
+
+These local results do not replace the hardware acceptance checks. The wheel
+and installed development dependency remain local; nothing was published.
+
+The legacy backend retains its existing regression checks:
 
 `python -m pytest test/test_pispad23_timetagging.py test/test_pispad23_stream_image.py test/test_pispad23_microimage_batches.py test/test_fpga_idle_control.py`
 tests UI placement, exclusion, timing, stop behavior, saving suppression, and

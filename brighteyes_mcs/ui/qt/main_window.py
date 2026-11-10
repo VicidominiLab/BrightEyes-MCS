@@ -56,22 +56,6 @@ from ..controllers.statistics import (
     scan_duration_seconds,
 )
 
-PISPAD23_TIMETAGGING_CONFIGURATION_KEYS = (
-    "pispad23ttm_enabled",
-    "pispad23ttm_h5_executable",
-    "pispad23ttm_raw_executable",
-    "pispad23ttm_folder",
-    "pispad23ttm_format",
-    "pispad23ttm_address",
-    "pispad23ttm_stream_port",
-    "pispad23ttm_uimg_buffer",
-    "pispad23ttm_uimg_batch",
-    "pispad23ttm_margin",
-    "pispad23ttm_preview_margin",
-    "pispad23ttm_settle",
-    "pispad23ttm_timeout",
-    "no_mcs_save_with_ttm",
-)
 from .flim_image_view import FlimImageView, ModifierGatedViewBox
 from .lifetime_controls import LifetimeControls
 from .workspace_layout import configure_workspace_layout, scroll_tool_contents, size_default_docks
@@ -142,6 +126,25 @@ except ImportError:
 
 
 # ================== end of imports ====================================
+
+PISPAD23_TIMETAGGING_CONFIGURATION_KEYS = (
+    "pispad23ttm_enabled",
+    "pispad23ttm_backend",
+    "pispad23ttm_h5_executable",
+    "pispad23ttm_raw_executable",
+    "pispad23ttm_folder",
+    "pispad23ttm_format",
+    "pispad23ttm_address",
+    "pispad23ttm_stream_port",
+    "pispad23ttm_uimg_buffer",
+    "pispad23ttm_uimg_batch",
+    "pispad23ttm_margin",
+    "pispad23ttm_preview_margin",
+    "pispad23ttm_settle",
+    "pispad23ttm_timeout",
+    "no_mcs_save_with_ttm",
+)
+
 
 pg.setConfigOption("background", "k")
 pg.setConfigOption("foreground", "w")
@@ -274,6 +277,9 @@ class MainWindow(QMainWindow):
         self._mcs_saving_suppressed = False
         self._waiting_for_pispad23 = False
         self.ui.checkBox_pispad23ttmActivate.toggled.connect(self._sync_pispad23_ttm_detector)
+        self.ui.comboBox_pispad23ttm_backend.currentTextChanged.connect(
+            self._sync_pispad23_ttm_detector
+        )
         for button, field, directory in (
             (self.ui.toolButton_pispad23ttm_h5, self.ui.lineEdit_pispad23ttm_h5_executable, False),
             (self.ui.toolButton_pispad23ttm_raw, self.ui.lineEdit_pispad23ttm_raw_executable, False),
@@ -1641,9 +1647,15 @@ class MainWindow(QMainWindow):
         timestamp_image = detector_uses_pispad23_timestamp(combo.currentText())
         self.ui.checkBox_rawStreamAcquisition.setEnabled(not busy and not timestamp_image)
         ttm.setEnabled(not busy and (detector_uses_nifpga_fifo(combo.currentText()) or timestamp_image))
-        self.ui.comboBox_pispad23ttm_format.setEnabled(not busy and not timestamp_image)
-        if timestamp_image:
+        library = self.ui.comboBox_pispad23ttm_backend.currentText() == "Python library"
+        self.ui.comboBox_pispad23ttm_backend.setEnabled(not busy)
+        self.ui.comboBox_pispad23ttm_format.setEnabled(not busy and (library or not timestamp_image))
+        if timestamp_image and not library:
             self.ui.comboBox_pispad23ttm_format.setCurrentText("RAW")
+        for name in ("lineEdit_pispad23ttm_h5_executable", "lineEdit_pispad23ttm_raw_executable",
+                     "toolButton_pispad23ttm_h5", "toolButton_pispad23ttm_raw",
+                     "spinBox_pispad23ttm_stream_port"):
+            getattr(self.ui, name).setEnabled(not busy and not library)
         microimage = combo.currentText() == DETECTOR_PISPAD23_TS_UIMG
         if microimage:
             self.ui.comboBox_spad_channels.setCurrentText("25")
@@ -2588,6 +2600,7 @@ class MainWindow(QMainWindow):
     def _pispad23_timetagging_bindings(self):
         return {
             "pispad23ttm_enabled": (bool, self.ui.checkBox_pispad23ttmActivate),
+            "pispad23ttm_backend": (str, self.ui.comboBox_pispad23ttm_backend),
             "pispad23ttm_h5_executable": (str, self.ui.lineEdit_pispad23ttm_h5_executable),
             "pispad23ttm_raw_executable": (str, self.ui.lineEdit_pispad23ttm_raw_executable),
             "pispad23ttm_folder": (str, self.ui.lineEdit_pispad23ttm_folder),
@@ -7198,6 +7211,7 @@ Have fun!
                self.pushButton_uttm_start_clicked()
 
         self.mcs_manager.pispad23_stream_port = self.ui.spinBox_pispad23ttm_stream_port.value()
+        self.mcs_manager.pispad23_backend = self.ui.comboBox_pispad23ttm_backend.currentText()
         self.mcs_manager.pispad23_batch_size = self.ui.spinBox_pispad23ttm_uimg_batch.value()
         trigger = getattr(self, "software_trigger", None)
         if do_run and trigger is not None and trigger.selected():

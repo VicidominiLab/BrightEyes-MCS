@@ -35,6 +35,7 @@ QT_MODULES = {
     "test_flare_ui.py",
     "test_action_logging.py",
     "test_pispad23_timetagging.py",
+    "test_pispad23_library_gui.py",
     "test_h5_metadata_compatibility.py",
     "test_first_run_wizard.py",
     "test_mainwindow.py",

@@ -31,6 +31,7 @@ flowchart TB
     Detector --> PISPAD23[PI SPAD23R TCP pipeline]
     SPAD --> Workers[Multiprocessing workers]
     PISPAD23 --> Workers
+    PiTimestamp[brighteyes-pispad-libs<br/>timestamp receive / recording / microimages] --> Workers
 
     Workers --> Shared[Shared-memory preview data]
     Shared --> Qt
