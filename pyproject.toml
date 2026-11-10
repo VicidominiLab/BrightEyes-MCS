@@ -64,7 +64,7 @@ dependencies = [
 [project.optional-dependencies]
 ao = ["pyserial"]
 flim = ["brighteyes-flim>=0.9.4"]
-pispad = ["brighteyes-pispad-libs>=0.1.0"]
+pispad = ["brighteyes-pispad-libs>=0.2.0"]
 all = [
     "pyserial",
     "brighteyes-flim>=0.9.4",

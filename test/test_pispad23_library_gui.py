@@ -23,7 +23,6 @@ class FailingTeardownWorker(LibraryMicroimageWorker):
 
 
 def configure(ui, addr, format="HDF5"):
-    ui.comboBox_pispad23ttm_backend.setCurrentText("Python library")
     ui.comboBox_pispad23ttm_format.setCurrentText(format)
     ui.lineEdit_pispad23ttm_address.setText(addr)
     ui.lineEdit_pispad23ttm_folder.setText("")
@@ -35,15 +34,18 @@ def configure(ui, addr, format="HDF5"):
     ui.doubleSpinBox_pispad23ttm_timeout.setValue(10)
 
 
+@pytest.mark.parametrize("mode", ["timestamp", "intensity"])
 @pytest.mark.parametrize("format,record", [("RAW", True), ("HDF5", True), ("HDF5", False)])
-def test_library_gui_waits_for_armed_then_records_and_finishes(app, ui, tmp_path, format, record):
+def test_library_gui_waits_for_armed_then_records_and_finishes(app, ui, tmp_path, format, record, mode):
     gate = threading.Event()
     simulation = simulator.SimulationConfig(width=3, height=2, frames=2, fragment_bytes=7)
     with mp.Manager() as manager, simulator.SimulatedDevice(simulation, acquisition_gate=gate) as device:
         configure(ui, device.addr, format)
+        if mode == "intensity":
+            ui.doubleSpinBox_pispad23_intensity_dwell.setValue(2000)
         shared = manager.dict(channel="Sum")
         mcs_path = tmp_path / "scan.h5"
-        worker = LibraryMicroimageWorker(3, 2, 7, {}, shared, saving=dict(
+        worker = LibraryMicroimageWorker(3, 2, 7, {}, shared, mode=mode, saving=dict(
             filename=str(mcs_path), frames=2, repetitions=1, dwell_seconds=0.001))
         worker.start()
         recorder = PISPAD23Timetagging(ui)
@@ -56,8 +58,7 @@ def test_library_gui_waits_for_armed_then_records_and_finishes(app, ui, tmp_path
         recorder.ready.connect(trigger)
         recorder.failed.connect(failures.append)
         try:
-            recorder.start(str(mcs_path), stream_microimage=True, microimage_worker=worker, record=record)
-            assert not ui.spinBox_pispad23ttm_stream_port.isEnabled()
+            recorder.start(str(mcs_path), stream_microimage=True, microimage_worker=worker, record=record, mode=mode)
             wait_for(app, lambda: not recorder.active, timeout=20)
             assert starts == [(True, True)]
             assert not failures
@@ -65,7 +66,7 @@ def test_library_gui_waits_for_armed_then_records_and_finishes(app, ui, tmp_path
             if record:
                 assert recorder.path.is_file()
                 if format == "RAW":
-                    assert recorder.path.read_bytes() == device.payload
+                    assert recorder.path.read_bytes() == (device.payload if mode == "timestamp" else simulator.simulated_intensity(3, 2, 2))
                 else:
                     with h5py.File(recorder.path) as saved:
                         assert saved.attrs["acquisition_status"] == "complete"
@@ -74,6 +75,8 @@ def test_library_gui_waits_for_armed_then_records_and_finishes(app, ui, tmp_path
                 assert list(tmp_path.iterdir()) == [mcs_path]
             with h5py.File(mcs_path) as saved:
                 assert saved["pispad23_microimages"].attrs["complete"]
+                assert saved["pispad23_microimages"].attrs["dwell_seconds"] == pytest.approx(
+                    0.002 if mode == "intensity" else 0.001)
             assert "--stream-image-port" not in ui.plainTextEdit_pispad23ttm_log.toPlainText()
         finally:
             recorder.close()
@@ -125,20 +128,37 @@ def test_library_stop_cancels_pending_fpga_trigger_and_closes_file(app, ui, tmp_
 def test_library_format_remains_selectable_in_timestamp_mode(ui):
     from types import SimpleNamespace
 
-    ui.comboBox_pispad23ttm_backend.setCurrentText("Python library")
     ui.comboBox_detector_model.setCurrentText(DETECTOR_PISPAD23_TS_UIMG)
     ui.comboBox_pispad23ttm_format.setCurrentText("HDF5")
-    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False))
+    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False), started_normal=False, started_preview=False)
     MainWindow._sync_pispad23_ttm_detector(window)
     assert ui.comboBox_pispad23ttm_format.isEnabled()
     assert ui.comboBox_pispad23ttm_format.currentText() == "HDF5"
-    assert not ui.lineEdit_pispad23ttm_raw_executable.isEnabled()
+
+
+@pytest.mark.parametrize("model,intensity", [("TCP/IP - PI SPAD23R (Intensity)", True),
+                                            (DETECTOR_PISPAD23_TS_UIMG, False)])
+def test_shared_panel_selects_mode_controls_and_allows_recording(ui, model, intensity):
+    from types import SimpleNamespace
+
+    ui.comboBox_detector_model.setCurrentText(model)
+    ui.checkBox_pispad23ttmActivate.setChecked(True)
+    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False),
+                             started_normal=False, started_preview=False)
+    MainWindow._sync_pispad23_ttm_detector(window)
+    assert ui.checkBox_pispad23ttmActivate.isEnabled()
+    assert ui.spinBox_pispad23_channels.isEnabled() == intensity
+    assert ui.checkBox_pispad23_external_frame.isEnabled() == intensity
+    assert ui.pushButton_pispad23ttm_force_calibration.isEnabled() != intensity
+    assert not ui.checkBox_rawStreamAcquisition.isEnabled()
+    assert ui.comboBox_spad_channels.currentText() == "25"
+    assert not hasattr(ui, "comboBox_pispad23ttm_backend")
+    assert not hasattr(ui, "lineEdit_pispad23_ip_addr")
 
 
 def test_library_missing_dependency_is_reported_without_legacy_fallback(ui, monkeypatch):
     import sys
 
-    ui.comboBox_pispad23ttm_backend.setCurrentText("Python library")
     monkeypatch.setitem(sys.modules, "brighteyes_pispad", None)
     recorder = PISPAD23Timetagging(ui)
     with pytest.raises(RuntimeError, match="Install brighteyes-pispad-libs"):

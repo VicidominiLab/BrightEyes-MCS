@@ -6,8 +6,19 @@ from dwell headers; detector channels remain independent of scan pixels.
 """
 
 from collections import deque
+from dataclasses import dataclass
 
 import numpy as np
+
+
+@dataclass(frozen=True)
+class MicroimageSnapshot:
+    counts: np.ndarray
+    frame: int
+    x: int
+    y: int
+    events: int
+    flags: int
 
 
 class MicroimagePreview:

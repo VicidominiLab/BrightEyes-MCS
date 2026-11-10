@@ -127,10 +127,7 @@ def test_stop_drains_partial_event_and_marks_mcs_incomplete(tmp_path):
         assert not saved["pispad23_microimages"].attrs["complete"]
 
 
-def test_pipeline_selects_library_by_default_and_legacy_explicitly():
+def test_pipeline_uses_only_library_worker():
     acquisition = SimpleNamespace(dim_x=2, dim_y=2, shared_dict={}, shared_objects={})
     assert isinstance(PISPAD23MicroimagePipeline().make_acquisition_loop(acquisition, True),
                       LibraryMicroimageWorker)
-    acquisition.pispad23_backend = "Legacy executable"
-    assert not isinstance(PISPAD23MicroimagePipeline().make_acquisition_loop(acquisition, True),
-                          LibraryMicroimageWorker)

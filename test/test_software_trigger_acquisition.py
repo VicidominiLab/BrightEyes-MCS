@@ -149,7 +149,7 @@ def test_dfd_lifetime_source_switch_reaches_real_fpga_worker_and_resets_histogra
         for frame, (channel, expected) in enumerate(((None, first + second), (0, first),
                                                     (1, second), (None, first + second))):
             manager.shared_dict["lifetime_channel"] = channel
-            time.sleep(0.2)  # Worker display settings are cached at 10 Hz.
+            wait_until(lambda: not manager.shared_trace_dfd.get_numpy_handle()[1:].any(), manager)
             np.testing.assert_array_equal(manager.shared_trace_dfd.get_numpy_handle()[1:], 0)
             assert session.trigger()
             manager.data_queue["stream_out_main"].put(packet)

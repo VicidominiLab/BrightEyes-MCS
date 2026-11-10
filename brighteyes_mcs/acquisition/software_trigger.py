@@ -105,7 +105,6 @@ class SoftwareTriggerSession:
                     self.requested.get("laser_force_pulsing_enable", False))})
             self.manager.setRegistersDict({"stop_command": False, "start_command": False})
             self.manager.setRegistersDict({"start_command": True})
-            self.manager.setRegistersDict({"start_command": False})
             self.issued += 1
             self.timestamps.append(time.time())
             self.started_at = time.monotonic()
@@ -124,6 +123,8 @@ class SoftwareTriggerSession:
             raise
 
     def received_frames(self):
+        if self.needs_receiver_ready:
+            return self.manager.shared_dict.get("software_trigger_frames_stream_out_main", 0)
         counts = []
         for fifo in self.manager.activated_fifos_list:
             if self.manager.raw_stream_mode:

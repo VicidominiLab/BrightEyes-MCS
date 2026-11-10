@@ -7,7 +7,7 @@ import signal
 import time
 
 from .microimage import MicroimagePreview
-from .stream_image import MicroimageSnapshot
+from .microimage import MicroimageSnapshot
 from ....logging_setup import logged_worker, logger
 from ....storage.pispad23_microimage import MicroimageH5Writer
 
@@ -22,13 +22,14 @@ class LibraryMicroimageWorker(mp.Process):
     """
 
     def __init__(self, width, height, batch_size, shared_objects=None, shared_dict=None,
-                 *, snake=False, saving=None):
+                 *, snake=False, saving=None, mode="timestamp", acquisition_done=None):
         super().__init__(daemon=True)
         self.width, self.height = width, height
         self.batch_size = batch_size
         self.shared_objects = shared_objects
         self.shared_dict = shared_dict if shared_dict is not None else {}
         self.snake, self.saving = snake, saving
+        self.mode, self.acquisition_done = mode, acquisition_done
         self.connected, self.done, self.stop_event = mp.Event(), mp.Event(), mp.Event()
         self.commands = mp.Queue(maxsize=1)
         self._status = mp.Array("c", 16384)
@@ -95,15 +96,24 @@ class LibraryMicroimageWorker(mp.Process):
                 return
             from brighteyes_pispad import AcquisitionConfig, AcquisitionSession
 
+            if options.get("mode", "timestamp") != self.mode:
+                raise ValueError("PI SPAD23R worker mode and acquisition configuration differ")
+
             if self.saving is not None:
+                saving = dict(self.saving)
+                if self.mode == "intensity" and options.get("intensity_dwell_us", 0) > 0:
+                    saving["dwell_seconds"] = options["intensity_dwell_us"] * 1e-6
                 writer = MicroimageH5Writer(width=self.width, height=self.height,
-                                           snake=self.snake, **self.saving)
+                                           snake=self.snake, **saving)
             if self.shared_objects is not None:
                 preview = MicroimagePreview(self.width, self.height, snake=self.snake,
                                             shared_objects=self.shared_objects)
             session = AcquisitionSession(AcquisitionConfig(**options)).start()
+            if self.shared_dict.get("software_trigger_enabled", False):
+                self.shared_dict["software_trigger_worker_ready"] = True
             last_publish = 0
             sequence = 0
+            processed_frames = 0
             while not self.stop_event.is_set():
                 # Sample completion BEFORE reading: finished=True then guarantees
                 # no producer can append another native tail after an empty read.
@@ -116,10 +126,15 @@ class LibraryMicroimageWorker(mp.Process):
                             int(record["flags"]))
                         if writer is not None:
                             writer.consume(snapshot)
-                        preview.consume(snapshot)
+                        accepted = preview.consume(snapshot)
+                        if accepted and preview.frame_dwells == self.width * self.height:
+                            processed_frames += 1
+                            self.shared_dict["software_trigger_frames_stream_out_main"] = processed_frames
                 sequence += len(batch)
                 if native.get("runs_started", 0):
                     self.connected.set()
+                    if self.shared_dict.get("software_trigger_enabled", False):
+                        self.shared_dict["software_trigger_receiver_ready"] = native["runs_started"]
                 if native.get("device_overflows", 0):
                     raise ValueError("PI SPAD23R device FIFO overflow; timestamp data may be incomplete")
                 pending = max(0, native.get("microimages", 0) - sequence) if preview is not None else 0
@@ -162,6 +177,8 @@ class LibraryMicroimageWorker(mp.Process):
             status.update(finished=True, armed=False, error=error,
                           state="failed" if error else "complete" if natural else "interrupted")
             self._publish_status(status)
+            if self.acquisition_done is not None and natural and not error:
+                self.acquisition_done.set()
             if self.shared_objects is not None:
                 self.shared_dict["pispad23_uimg_error"] = error
             self.done.set()

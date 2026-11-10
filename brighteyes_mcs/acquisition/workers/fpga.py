@@ -356,11 +356,11 @@ class FpgaHandleProcess(mp.Process):
         p.nice(psutil.HIGH_PRIORITY_CLASS)
         logger.debug("%s %s %s %s", self.process_label, "RUN - PID:", os.getpid(), p.nice())
 
-        logger.debug("nifpga.Session(self.bitfile, self.ni_address)")
+        logger.debug("nifpga.Session(self.bitfile, self.ni_address, no_run=True)")
         # print(self.configuration)
         try:
-            self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address)
-            logger.debug("nifpga.Session(self.bitfile, self.ni_address) DONE!")
+            self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address, no_run=True)
+            logger.debug("nifpga.Session(self.bitfile, self.ni_address, no_run=True) DONE!")
             available_registers = set(self.nifpga_session.registers.keys())
             available_fifos = set(self.nifpga_session.fifos.keys())
             required_fifos = (
@@ -401,7 +401,7 @@ class FpgaHandleProcess(mp.Process):
                 logger.debug("%s %s", self.process_label, "FIFOs disabled")
             logger.debug("%s %s", "Registers: ", self.list_registers)
 
-            # self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address)
+            # self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address, no_run=True)
 
             self.nifpga_session.reset()
 

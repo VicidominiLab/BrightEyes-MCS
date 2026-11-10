@@ -1,312 +1,121 @@
-# PI SPAD23R time-tag recording
+# PI SPAD23R acquisition
 
-This integration was built by the Molecular Microscopy and Spectroscopy group
-at Istituto Italiano di Tecnologia for our own microscope workflows. It is our
-own tool, not an official Pi Imaging tool, and is not presented as endorsed or
-supported by Pi Imaging.
+This integration was developed at Istituto Italiano di Tecnologia for our
+microscope workflows. It is our tool, not an official or endorsed Pi Imaging tool.
 
-The default timestamp backend uses **brighteyes-pispad-libs**. The legacy
-executable/TCP workflow remains explicitly selectable.
+Both **TCP/IP - PI SPAD23R (Intensity)** and **TS mode - uimg** use
+`brighteyes-pispad-libs>=0.2.0`. The executable backend, subprocess launcher,
+Python CS receiver/SPAD packer, and localhost TCP preview server were removed.
+The vendor device endpoint remains TCP/IP.
 
-The GUI names this detector **PI SPAD23R**; implementation modules and identifiers
-use `PISPAD23` or `pispad23`. Configuration fields and HDF5 metadata use the
-`pispad23` prefix. The external recorder's `PI23_ARMED` / `PI23_DISARMED` messages
-remain unchanged because they are emitted by the recorder executable.
+## Install the local library
 
-See the [detector support overview](README.md#detector-support) and
-[detector performance disclaimer](README.md#detector-support).
-
-The device API source is the
-[Pi Imaging Technology pSPAD system manual](https://piimaging.com/doc-pspad),
-especially its Remote command interface and Command guide. Consult the vendor
-manual for device commands and version compatibility. Vendor documentation and
-examples retain their own copyright and terms; BrightEyes-MCS's license does
-not grant rights to that material. The local image/microimage server protocol
-described below belongs to our integration and is separate from the vendor API.
-
-## Python library backend
-
-Install the locally built library wheel into the same Python environment that
-runs MCS. For example, after building the wheel in the library checkout:
+Choose the wheel matching the Python running MCS. For Python 3.12 on Windows x64:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install --no-deps "C:\path\to\BrightEyes-MCS-pispad-libs\dist\brighteyes_pispad_libs-0.1.0-cp313-cp313-win_amd64.whl"
+python -m pip install "C:\path\to\brighteyes_pispad_libs-0.2.0-cp312-cp312-win_amd64.whl"
 ```
 
-Use a wheel matching the interpreter and platform. MCS also declares the optional
-`pispad` dependency extra; install the local library first while it remains
-unpublished. The required public API includes `AcquisitionSession` as well as
-`AcquisitionConfig`. Missing/older installations produce an explicit error;
-MCS does not silently switch to an executable.
+Use the cp313 wheel for Python 3.13. These wheels contain native Rust and static
+HDF5 code; another machine does not need Rust, maturin, MSYS2 or the source tree.
+NumPy is a Python dependency. Install the local library before installing the
+MCS `pispad` extra while the library remains unpublished.
 
-Under **Config → TimeTagging → PI SPAD23R (Timestamp mode)** choose
-**Acquisition backend: Python library**. New configurations use this backend.
-Select the device **TTM endpoint**, output folder, **RAW** or **HDF5**, and
-buffer/batch sizes. Executable paths and the legacy preview port are disabled
-and unused for this backend. Settings cannot change during an acquisition.
-Older configurations without a backend field use the new default; choose
-**Legacy executable** explicitly to retain the old transport.
+## Shared configuration
 
-Select **TCP/IP - PI SPAD23R (TS mode - uimg)** for microimage-based images and
-fingerprints. The existing MCS acquisition process calls the library's public
-`AcquisitionSession` API. Rust threads in that process receive the device TCP
-stream, record timestamps, and count completed 25-channel dwells. Python reads
-batches directly from the bounded native ring and publishes the existing MCS
-shared-memory preview arrays. There is no local preview TCP connection, helper
-executable, nested Python process, or GUI event dependency in this data path.
-Intensity/CS acquisition and other detector pipelines retain their existing paths.
+Select the detector mode in the detector selector. Both modes use the single
+**PI SPAD23R** configuration tab: endpoint, destination, RAW/HDF5 choice,
+preview buffer/batch limits, readiness timeout, startup delay, status and log.
+An internal intensity dwell overrides the rate denominator and saved dwell
+duration; external dwell uses the FPGA timing settings.
 
-**Preview** always runs without timestamp files and repeats SB windows. For
-**Acquire**, the PI SPAD23R TTM checkbox enables timestamp recording in exactly
-one format, RAW or decoded schema-v3 HDF5. HDF5 timestamp recording is also
-available with microimage previews. The ordinary MCS microimage HDF5 output
-remains independent of this checkbox and retains its data shape, snake
-corrections, validity masks, and metadata conventions described below. The
-existing option to suppress MCS output when TTM is enabled still applies.
+Intensity additionally enables detector channel count (25 for SPAD23R, 23 for
+SPAD23G), external frame clock, and dwell time in microseconds (0 = external).
+Timestamp mode enables duration margins and Force Calibration.
 
-Both RAW and HDF5 wait for an actual armed SB window and a configured consumer,
-then apply the ready delay before issuing the FPGA start. A new SB window resets
-the pending ready delay; an expired window cannot trigger a scan. This is host
-readiness, not a hardware acknowledgement. Measurement budgets use the same
-recording/preview margins, circular dwell integration, and wait settings as the
-legacy backend. Ensure those budgets cover external trigger delays.
+The PI recording checkbox saves the selected mode alongside acquisition.
+The choice RAW or HDF5 is fixed at startup; simultaneous RAW and HDF5 recording
+is not supported. Preview does not create recording files. Both modes always
+provide microimage preview independently of the recording checkbox. The generic
+SPAD raw-stream checkbox is unavailable for PI acquisition.
 
-Stop signals the worker and closes received complete records normally. Startup,
-device disconnects, writer errors, preview overflow, and device FIFO overflow
-are reported to MCS rather than silently skipping data. Native acquisition
-completion is followed by final microimage processing and file closure before
-MCS announces completion. A recording with missing MCS pixels reports an error
-and preserves its incomplete validity map. Manual Stop preserves partial output.
+Settings are stored in `cfg/plugins_cfg/pispad23_timetagging.cfg`. Older top-level
+PI settings still load. The former intensity IP/port migrate to the shared
+endpoint for intensity configurations. Retired executable paths/backend/preview
+port settings are ignored. They never reactivate the removed tools.
 
-An independent stop thread allows five seconds for the owned worker to exit,
-then terminates that worker if necessary and logs that files may be incomplete.
-The process owns all its Rust threads and creates no acquisition descendants.
-Forced termination can interrupt calibration or file I/O and cannot guarantee
-HDF5 recovery. Live readers should use the preview arrays; timestamp HDF5 does
-not enable SWMR and should be opened after recording closes.
+## Acquisition and preview
 
-### Simulated integration checks
+One application-owned worker process runs native acquisition, decoding, recording
+and microimage processing. No nested Python acquisition process is needed.
+Python receives completed 25-channel dwell rows in batches. Preview image,
+fingerprints, masks, accumulation and saving use these same rows in both modes.
+The Rust backend reports preview overflow instead of silently dropping rows;
+recording continues independently at the library level. MCS surfaces the error.
 
-The library's deterministic TCP simulator replaces both detector and vendor
-software. Worker tests check timestamp bytes, decoded HDF5, per-channel MCS
-images, snake coordinates, partial-record stopping, and errors. Qt tests gate
-the simulated data on the ready callback, exercising arming and the FPGA-start
-boundary without contacting an FPGA or detector:
+Timestamp mode uses SB windows and includes zero-photon dwells. Preview repeats
+windows without issuing another FPGA start. Intensity uses length-framed CS
+channel planes, strips wire row padding to a multiple of four pixels, and
+preserves full unsigned 8-bit counts. It does not clip counts to SPAD FIFO bit
+fields. Intensity preview arrives after a complete frame's channel planes.
+Set the microimage buffer to hold at least one full scan frame, with headroom
+for consumer delays. Continuous intensity preview uses CS frames=0.
+
+Software triggering supports SPAD and PI intensity. The worker arms CS for
+one frame, waits indefinitely for the first data byte, and rearms after DONE.
+Stop cancels the wait; stalls after a frame begins retain a timeout. The GUI
+waits for receiver readiness before enabling the trigger and never starts the
+FPGA automatically in this mode. Timestamp software triggering is unavailable.
+
+## Files
+
+The regular MCS HDF5 `data` array has axes
+`(repetition, z, y, x, timebin, channel)`, uint32 counts and 25 channels.
+There is one integrated time bin per dwell. XY/Z snake coordinates are corrected
+when saving. Display selection and masks do not alter saved counts.
+`pispad23_microimages/valid`, `flags`, `frame_complete` and `frame_id` preserve
+missing-pixel and saturation information; group attributes record completion,
+stop reason and errors. Natural completion waits for writer closure before MCS
+adds metadata. Manual Stop preserves a partial acquisition as incomplete.
+
+Optional timestamp recordings use `-ts.raw` or `-tsraw.h5` (schema-v3 events).
+Optional intensity recordings use `-intensity.raw` with a required adjacent
+`.raw.json` sidecar, or `-intensity.h5` with `counts`, `valid`, `frame_complete`
+and intensity schema version 1. The library provides `read_intensity`,
+`iter_intensity_raw` and `convert_intensity_to_h5`. Intensity datasets use
+`(frame, y, x, detector)` axes. Existing files are not overwritten.
+
+**Do not save MCS data when TTM is active** can suppress the regular MCS file
+while selected PI stream recording and preview continue. Live previews use shared
+memory; read HDF5 recordings after the writer closes (no SWMR).
+
+## FPGA startup
+
+The primary FPGA session opens without automatically running the VI. Every acquisition first
+resets the FSM, holding Stop until idle and clearing Run before releasing Stop.
+Requested scan/laser/sequencer controls are replayed after VI startup/reset.
+Run remains asserted until Stop/reset for both settings of Keep FPGA On. An
+immediate host True/False pulse could previously be missed by the FPGA loop.
+Startup readback is retained separately and does not overwrite requested controls.
+Register-write failures propagate. Software triggers use the same held Run rule.
+
+## Validation
+
+Tests exercise the native library and application worker against a local
+simulator, including both modes, RAW/HDF5, fragmented transfers, partial frames,
+preview-only acquisition, readiness before FPGA start, repeated preview,
+software-trigger waits and clean cancellation. FPGA tests simulate delayed
+sampling and repeated runs. Local validation passed 874 tests and 45 subtests in the full MCS suite,
+with subsequent focused startup/GUI regressions also passing. All four isolated
+channel-delay tests and all five console tests passed (console cases in fresh
+interpreters). The native core passed 19 tests; installed CPython 3.12 and 3.13
+library wheels each passed all 42 library tests. Documentation/lint, compilation,
+package metadata and distribution-content checks passed.
+
+No physical detector, vendor software or FPGA was
+available; first/repeated-run hardware behavior and USB throughput still need
+measurement on the instrument.
 
 ```powershell
-$env:QT_QPA_PLATFORM = "offscreen"
-.\.venv\Scripts\python.exe -m pytest -q test/test_pispad23_library.py test/test_pispad23_library_gui.py
+python -m pytest -q test/test_pispad23_library.py test/test_pispad23_library_gui.py test/test_fpga_idle_control.py
 ```
-
-Real detector/software compatibility, trigger timing, sustained throughput, and
-repeated physical scans still require a hardware session.
-
-## Legacy executable backend
-
-The following executable, TCP READ, console, and process-tree details apply to
-**Acquisition backend: Legacy executable**. The original MCS image/fingerprint
-and microimage HDF5 conventions remain shared with the library backend.
-
-The recorder settings are under **Config → TimeTagging → PI SPAD23R (Timestamp mode)**.
-Choose the HDF5 or RAW executable, output format, endpoint, and destination
-folder. An empty PI SPAD23R folder uses the MCS destination folder. Enable
-**PI SPAD23R TTM (record with acquisition)** in the Time Tagging group.
-
-Select **TCP/IP - PI SPAD23R (TS mode - uimg)** for per-channel scan imaging and the
-detector fingerprint. Each microimage contains 25 photon counts, one per detector
-channel, for one completed scan dwell. MCS launches `--stream-microimage` and
-retrieves batches with `READ <sequence> <maximum-count>` on the configurable
-local port (default **19000**), set by **Stream image TCP/IP port** in the
-timestamp panel. This local server port is separate from the device's TTM
-endpoint. The uimg command omits `--stream-image-pixel`:
-microimage mode always retains all 25 channels separately.
-
-Rust retains completed dwells from acquisition start, independently of client
-connections. The buffer and sequence numbers survive repeated SB measurements.
-**Uimg buffer (dwells)** defaults to **1,048,576** (128 MiB of packed records when
-full); **Uimg batch size (dwells)** defaults to **4,096**. Both settings persist in
-the PI SPAD23R configuration. A request for 100 returns immediately with 0 through 100
-available dwells. Reads are non-destructive: an interrupted transfer can be
-retried at the same sequence. Session IDs prevent mixing data after a recorder
-restart. If unread data is overwritten, MCS reports the missing dwell count and
-stops instead of silently skipping pixels. Increase the buffer to absorb longer
-delays; sustained processing must still keep up with acquisition.
-
-A dedicated acquisition **process** performs image and fingerprint accumulation.
-Its network **thread** retrieves batches into a bounded queue (32 MiB with the
-default batch size). Qt only reads the normal shared preview buffers; delayed GUI
-redraws do not stop reception or count processing. MCS waits for a successful
-batch connection and the recorder's armed message before starting the FPGA.
-**Preview delay [s]** estimates queued acquisition time from all unprocessed
-dwells, both on the recorder and in the local processing queue, multiplied by
-the configured dwell duration (including circular points/repetitions). The label
-blinks red above **1 second** and returns to normal when the backlog falls below
-that threshold. This estimate excludes scan waits and events Rust has not yet
-decoded; it is not a measurement of end-to-end hardware latency.
-Choose **Sum** or channel **0-24** for the scan image; Sum respects the detector
-mask. XY/YX views, snake scanning, and accumulation across preview frames are
-supported. The preview retains each pixel's latest counts across frame boundaries
-until a new dwell replaces that pixel, including zero-photon dwells. The final
-preview remains visible when acquisition ends. The existing fingerprint display shows the current frame, rolling
-10,000 dwells, or previous frame, normalized by their actual dwell durations.
-Microimages contain dwell counts, so sub-dwell time traces, lifetime channels,
-and other projections are not produced by this mode.
-
-At natural completion Rust allows up to 30 seconds for the primary batch client
-to retrieve the buffered tail. MCS waits for its local worker to finish processing
-before completing acquisition. Explicit Stop cancels this drain and retains the
-bounded termination behavior described below. A dwell must be closed by a
-subsequent scan boundary marker; DONE alone does not complete an active dwell.
-Invalid dwells following device FIFO overflow are excluded until the next frame.
-The old PREVIEW, LAST, and STREAM requests remain compatible with other clients;
-BrightEyes uimg uses READ. Rebuild older Rust executables for the batch protocol.
-
-TS Preview runs with `--no-output --repeat`. Its `--measurement-ms` budget is:
-
-`one frame's pixel dwell time + laser wait + frame wait + ready delay + preview margin`
-
-The frame includes circular points/repetitions. Frame count and scan repetitions
-do not multiply this budget. **Preview margin** is configurable in the timestamp
-panel (default **0.5 s**, minimum **0.001 s**) and is separate from **Recording
-margin**. The result is rounded up to whole milliseconds. For example, a
-200 x 200 frame at 10 microseconds/pixel, no laser/frame waits, a 0.5 s ready delay, and a
-0.5 s preview margin uses `--measurement-ms 1400 --repeat`. Increase the preview
-margin for communication, scheduling, or external trigger delays. **Stop** ends
-the repeated preview cleanly. Repeated SB windows are time based, not locked to
-FPGA frame boundaries; the margin provides additional capture time.
-For a normal acquisition, enable **PI SPAD23R TTM** to save RAW timestamps while the
-same Rust process serves the image. In **TS mode - uimg**, **Acquire** also saves
-the normal MCS `.h5` file, including when PI SPAD23R TTM is unchecked. The existing
-**Do not save MCS data when TTM is active** option can suppress this HDF5 output
-when a timetagger is enabled. Preview never saves HDF5. Timestamp mode does not use
-the intensity/SPAD raw-stream saving option.
-
-The uimg HDF5 `data` dataset has axes `(repetition, z, y, x, timebin, channel)`
-and stores all 25 channels as uint32 counts, independent of display channel,
-mask, or preview accumulation. There is **one integrated time bin per dwell**;
-the stream cannot recover individual FPGA time bins. Dataset attributes specify
-the dwell duration and integration, including circular points/repetitions.
-Acquisition GUI/FPGA metadata retain their original hardware settings.
-XY and Z snake coordinates are corrected when saving.
-
-The acquisition process writes fresh frame buffers independently of the rolling
-preview. `pispad23_microimages/valid` distinguishes measured zero counts from missing
-pixels; `flags` preserves saturation flags, and `frame_complete` and `frame_id`
-describe each saved frame. Missing frames are not renumbered. The group's
-`complete`, `stop_reason`, and `error` attributes record completion or interruption.
-Natural completion waits for file closure before adding normal MCS metadata.
-An incomplete natural acquisition reports an error; manual Stop preserves the
-processed portion as incomplete. Forced termination can prevent file finalization.
-Existing output files are never overwritten by this writer.
-Normal TS acquisitions finish when the timed Rust measurement closes. Manual
-Stop interrupts both preview and timestamp recording.
-
-The **TCP/IP - PI SPAD23R (Intensity)** mode and PI SPAD23R TTM remain mutually
-exclusive: the intensity receiver's `CS` command competes with the recorder's
-`SB` command. Use SPAD imaging or PI SPAD23R **TS mode - uimg** with PI SPAD23R TTM.
-Conflicting loaded configurations cannot start a scan.
-Select **TCP/IP - PI SPAD23R (Intensity)** for intensity mode. Intensity keeps its existing `CS` receiver on the intensity panel's port
-(default **9997**). TS mode never starts that receiver: only the Rust recorder
-connects to the device's timestamp endpoint, while the MCS image client connects
-to the separate local image port (default **19000**).
-
-For RAW recording and TS microimage preview, MCS prepares its workers, launches
-the recorder, and waits for `PI23_ARMED SB,<ms>`. Rust emits this only after the
-SB command has been successfully written/flushed and its receive buffers are
-ready. MCS then waits the configured **Delay after armed / ready** (default
-0.5 s) before issuing FPGA `start_command`. Microimage mode also waits for its
-first valid batch response. The earlier `Press Ctrl+C to stop.` banner
-cannot trigger a RAW scan. `PI23_DISARMED` cancels a pending start if that SB
-window finishes; a subsequent repeated SB must arm again. Later SB windows do
-not issue additional FPGA start commands.
-
-Rebuild older RAW executables: without the armed message MCS times out rather
-than starting prematurely. The configured release executable has been rebuilt.
-This message confirms host-side readiness and SB transmission; the device
-protocol supplies no separate hardware-arm acknowledgement. The ready delay
-allows device processing time and is included in the measurement budget.
-HDF5 recording retains its existing post-calibration banner and ready-delay
-sequence. Calibration/startup has a configurable timeout (default 120 s).
-
-For recording acquisitions, `--measurement-ms` includes pixel dwell time, image dimensions, frames,
-repetitions, circular points/repetitions, laser startup waits, frame waits,
-the ready delay, and the recording margin (default 2 s). Calibration itself
-happens before the device starts this measurement timer, so it is awaited
-separately rather than subtracted from the recording budget. Increase the
-margin for external trigger delays or additional hardware overhead.
-
-Files use the MCS acquisition stem, e.g. `data-…-tsraw.h5` or
-`data-…-ts.raw`; collisions receive a numeric suffix. Commands and recorder
-stdout/stderr appear in the PI-Timetagging panel and the application log under
-`%LOCALAPPDATA%/BrightEyes-MCS/log`. Recorder exits, image connection errors,
-waiting for scan markers, and the first received image are logged even when
-debug logging is disabled. All settings persist in the
-`cfg/plugins_cfg/pispad23_timetagging.cfg` plug-in configuration, which is loaded
-with the other plug-in configuration files at startup. Older main MCS
-configurations containing top-level `pispad23ttm_*` settings remain supported.
-
-Natural MCS completion lets the recorder finish its timed measurement. New
-acquisitions wait until it closes. Manual Stop, including during the recording
-tail, immediately requests Ctrl+C and cancels any pending FPGA start. In the
-rebuilt RAW recorder, Ctrl+C closes the device socket to interrupt calibration,
-setup, and acquisition reads/writes. The Windows launcher uses a hidden isolated
-console so the recorder can normally flush and close its output safely.
-
-Stopping is bounded: the launcher allows **2 seconds** for a clean exit, then
-force-terminates an unresponsive recorder. An independent **5-second watchdog**
-terminates the launcher and its recorder if the launcher or its command pipe is
-stuck. On Windows a dedicated Job Object owns this process tree; no process-name
-matching or `taskkill` is used. Closing the GUI also closes its job handle and
-terminates remaining recorder processes. Stop remains available during the
-recording tail and automatic MCS completion. New scans wait for recorder exit.
-
-A forced termination is logged and may leave the last data incomplete or an
-HDF5 file unfinalized. The fallback works during connection/startup, calibration,
-streaming, and file closing, without depending on Qt timers.
-
-**Adv2. → Time tagging / MCS saving → Do not save MCS data when TTM is active**
-suppresses MCS HDF5/RAW output while continuing the finite scan and preview.
-External TTM, automatic uTTM, and PI SPAD23R TTM recording remain enabled. No empty
-MCS metadata-only file is created in this mode.
-
-## Register startup
-
-Requested controls are replayed after the FPGA VI starts and after the scan
-reset. Forced pulsing is explicitly applied on each acquisition; hardware
-read-back no longer replaces requested settings. Register-write failures
-propagate instead of silently leaving a cached value that was never written.
-Physical first-run and repeated-run behavior still needs verification with
-the connected FPGA and its firmware.
-
-## Verification
-
-Local integration validation on 2026-11-10 used Windows/Python 3.13 and the
-library's simulated TCP device, with no detector or FPGA connection:
-
-- The full non-hardware, non-isolated MCS suite passed 937 tests and 45 subtests.
-- The final library worker/Qt checks passed all 17 integration cases, including
-  repeated preview windows and an unsuccessful worker exit after file closure.
-- The library's own Python suite passed 35 tests.
-- Documentation, lint, Python compilation, wheel/sdist build, Twine metadata,
-  and distribution-content checks passed.
-- The four isolated channel-delay tests passed. All five console tests passed
-  individually in fresh interpreters; running that console file as one process
-  hit a Windows access violation inside QtConsole/Jupyter after two tests.
-  Console implementation/tests were unchanged by the integration.
-
-These local results do not replace the hardware acceptance checks. The wheel
-and installed development dependency remain local; nothing was published.
-
-The legacy backend retains its existing regression checks:
-
-`python -m pytest test/test_pispad23_timetagging.py test/test_pispad23_stream_image.py test/test_pispad23_microimage_batches.py test/test_fpga_idle_control.py`
-tests UI placement, exclusion, timing, stop behavior, saving suppression, and
-register startup. When the supplied recorder builds are available, the tests
-also run both real executables against a local fake TCP detector, including
-calibration, complete microimage raster delivery,
-channel selection, fingerprints, repeated frames, optional RAW recording, and clean
-interruption; no microscope hardware is contacted. Batch tests also cover
-fragmented responses, retries without duplication, session changes, buffer
-overrun, and a 30,000-dwell worker run without GUI event processing.
-
-For UI changes, follow the central [Qt UI generation instructions](../CONTRIBUTING.md#editing-the-qt-ui).

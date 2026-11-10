@@ -43,13 +43,14 @@ def bare_manager():
     return manager
 
 
-def test_quick_reset_pulses_stop_and_waits_for_idle():
+def test_quick_reset_holds_stop_until_idle():
     manager = bare_manager()
     manager.wait_for_fpga_idle = MagicMock()
 
     manager.quick_reset_fpga(timeout=2.5)
 
     assert manager.fpga_handle.register_write_checked.call_args_list == [
+        call("start_command", False),
         call("stop_command", True),
         call("stop_command", False),
     ]
@@ -70,6 +71,58 @@ def test_wait_for_fpga_idle_returns_on_status_zero():
 
     assert manager.registers_configuration["debug_scan_fsm_status"] == 0
     assert manager.fpga_handle.register_read.call_count == 2
+
+
+def test_reset_is_observed_by_a_delayed_fpga_control_loop():
+    manager = bare_manager()
+    hardware = {"start_command": True, "stop_command": False}
+    manager.fpga_handle.register_write_checked.side_effect = hardware.__setitem__
+
+    def sample_idle(**kwargs):
+        # Sampling occurs after host writes, as on an independent FPGA loop.
+        assert hardware == {"start_command": False, "stop_command": True}
+
+    manager.wait_for_fpga_idle = sample_idle
+    manager.quick_reset_fpga()
+    assert hardware == {"start_command": False, "stop_command": False}
+
+
+@pytest.mark.parametrize("keep", [False, True])
+def test_repeated_runs_keep_start_visible_to_delayed_fpga(keep):
+    window = SimpleNamespace(flare=None, ui=SimpleNamespace(
+        pushButton_fpga_connection_cmd=MagicMock(isChecked=lambda: keep)))
+    hardware = {"start_command": False, "stop_command": False}
+    window.setRegistersDict = hardware.update
+    for _ in range(3):
+        MainWindow.sendCmdRun(window)
+        assert hardware["start_command"] and not hardware["stop_command"]
+        MainWindow.sendCmdStop(window)
+        assert not hardware["start_command"] and hardware["stop_command"]
+
+
+@pytest.mark.parametrize("model", ["SPAD Array", "PISPAD23", "TCP/IP - PI SPAD23R (TS mode - uimg)"])
+def test_requested_lasers_and_sequencer_reach_first_and_reused_runs(model):
+    hardware = {}
+    requested = {"laser_1_enable": True, "laser_excitation_sequence": [True, False],
+                 "start_command": True, "stop_command": True}
+
+    def reset(**kwargs):
+        hardware.update(laser_1_enable=False, laser_excitation_sequence=[False, False],
+                        start_command=False, stop_command=False)
+
+    window = SimpleNamespace(flare=None, configurationFPGA_dict=requested,
+        FPGA_IDLE_TIMEOUT_SECONDS=5, setRegistersDict=hardware.update,
+        mcs_manager=SimpleNamespace(is_connected=True, quick_reset_fpga=reset,
+                                    detector_model=model),
+        ui=SimpleNamespace(checkBox_pulsing_forced=MagicMock(isChecked=lambda: False),
+                           checkBox_DFD=MagicMock(isChecked=lambda: False)))
+    for enabled, sequence in [(True, [True, False]), (False, [False, True]), (True, [True, True])]:
+        requested.update(laser_1_enable=enabled, laser_excitation_sequence=sequence)
+        MainWindow._prepare_fpga_for_acquisition(window)
+        MainWindow.sendCmdRun(window)
+        assert hardware["start_command"] and not hardware["stop_command"]
+        assert hardware["laser_1_enable"] is enabled
+        assert hardware["laser_excitation_sequence"] == sequence
 
 
 def test_wait_for_fpga_idle_raises_after_timeout():
@@ -181,7 +234,7 @@ def test_run_command_stays_asserted_when_connection_will_close():
     ]
 
 
-def test_run_command_is_pulsed_when_connection_is_kept():
+def test_run_command_stays_asserted_when_connection_is_kept():
     window = MainWindow.__new__(MainWindow)
     window.ui = SimpleNamespace(
         pushButton_fpga_connection_cmd=MagicMock(
@@ -193,8 +246,8 @@ def test_run_command_is_pulsed_when_connection_is_kept():
     window.sendCmdRun()
 
     assert window.setRegistersDict.call_args_list == [
-        call({"stop_command": False, "start_command": True}),
-        call({"start_command": False}),
+        call({"stop_command": False, "start_command": False}),
+        call({"start_command": True}),
     ]
 
 

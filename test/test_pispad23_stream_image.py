@@ -1,15 +1,11 @@
 """Protocol validation uses local sockets only."""
 
-import socket
-import threading
 from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
-from brighteyes_mcs.acquisition.detectors.pispad23.stream_image import (
-    HEADER, TRAILER, read_microimage, stream_microimages, MicroimageSnapshot,
-)
+from brighteyes_mcs.acquisition.detectors.pispad23.microimage import MicroimageSnapshot
 from brighteyes_mcs.acquisition.detectors.factory import create_detector_pipeline
 from brighteyes_mcs.acquisition.detectors.models import (
     DETECTOR_DISABLED, DETECTOR_PISPAD23_TS_UIMG, DETECTOR_PISPAD23, DETECTOR_PISPAD23_TT, DETECTOR_PISPAD23_UI,
@@ -50,59 +46,6 @@ def test_intensity_detector_selects_its_pipeline(label):
     expected = DETECTOR_PISPAD23_TT if label == DETECTOR_PISPAD23_TT else DETECTOR_PISPAD23
     assert normalize_detector_model(label) == expected
     assert isinstance(create_detector_pipeline(label), PISPAD23DetectorPipeline)
-
-
-@pytest.mark.parametrize("fault", [None, "not_ready", "dimensions", "size", "trailer", "truncated", "version", "magic"])
-def test_microimage_snapshot_framing_and_channel_order(fault):
-    payload = np.arange(25, dtype="<u4").tobytes()
-    status = 1 if fault == "not_ready" else 0
-    if status:
-        payload = b""
-    size = len(payload)
-    packet = HEADER.pack(
-        b"INVALID!" if fault == "magic" else b"TDCMIC01",
-        2 if fault == "version" else 1, status,
-        2 if fault == "dimensions" else 25,
-        1, -1, 3, 7, 2, 1, 15,
-        2**40 if fault == "size" else size,
-    ) + payload + TRAILER.pack(b"BADEND01" if fault == "trailer" else b"TDCEND01", 7, size)
-    if fault == "truncated":
-        packet = packet[:70]
-    with socket.socket() as server:
-        server.bind(("127.0.0.1", 0))
-        server.listen(1)
-        requests = []
-
-        def serve():
-            connection, _ = server.accept()
-            with connection:
-                connection.settimeout(2)
-                requests.append(connection.recv(64))
-                try:
-                    # Deliberately fragment both header and payload.
-                    for offset in range(0, len(packet), 7):
-                        connection.sendall(packet[offset:offset + 7])
-                except OSError:
-                    pass
-
-        thread = threading.Thread(target=serve, daemon=True)
-        thread.start()
-        def read():
-            return read_microimage(server.getsockname()[1])
-        if fault not in (None, "not_ready"):
-            with pytest.raises(ValueError):
-                read()
-        else:
-            snapshot = read()
-            if status:
-                assert snapshot is None
-            else:
-                expected = np.arange(25)
-                np.testing.assert_array_equal(snapshot.counts, expected)
-                assert snapshot.frame == 7 and snapshot.events == 15
-                assert (snapshot.x, snapshot.y) == (2, 1)
-        thread.join(timeout=3)
-        assert requests == [b"LAST\n"]
 
 
 def microimage(frame=0, x=0, y=0, flags=3, counts=None):
@@ -191,45 +134,3 @@ def test_microimage_recent_fingerprint_is_rolling_10000_dwells():
         preview.consume(microimage(frame=frame, counts=counts))
     np.testing.assert_array_equal(preview.fingerprints[2], np.full((5, 5), sum(range(5, 10005))))
     np.testing.assert_array_equal(preview.fingerprints[0], np.full((5, 5), 10004))
-
-
-@pytest.mark.parametrize("clean_end", [True, False])
-def test_microimage_subscription_delivers_burst_and_rejects_unexpected_disconnect(clean_end):
-    def packet(index=None):
-        payload = b"" if index is None else np.full(25, index, dtype="<u4").tobytes()
-        frame = 0 if index is None else index // 200
-        return (HEADER.pack(b"TDCMIC01", 1, int(index is None), 25, 1, -1,
-                            3, frame, 0 if index is None else index % 200,
-                            0, 0 if index is None else index * 25, len(payload))
-                + payload + TRAILER.pack(b"TDCEND01", frame, len(payload)))
-
-    with socket.socket() as server:
-        server.bind(("127.0.0.1", 0))
-        server.listen(1)
-        requests = []
-        def serve():
-            connection, _ = server.accept()
-            with connection:
-                requests.append(connection.recv(64))
-                data = packet() + b"".join(packet(i) for i in range(2000))
-                if clean_end:
-                    data += packet()
-                for offset in range(0, len(data), 1001):
-                    connection.sendall(data[offset:offset + 1001])
-        worker = threading.Thread(target=serve, daemon=True)
-        worker.start()
-        connected = threading.Event()
-        snapshots = []
-        def receive():
-            for batch in stream_microimages(server.getsockname()[1], threading.Event(), connected):
-                snapshots.extend(batch)
-        if clean_end:
-            receive()
-            assert len(snapshots) == 2000
-            assert [s.events for s in snapshots] == list(range(0, 2000 * 25, 25))
-        else:
-            with pytest.raises(ValueError, match="disconnected before completion"):
-                receive()
-        assert connected.is_set()
-        worker.join(timeout=2)
-        assert requests == [b"STREAM\n"]

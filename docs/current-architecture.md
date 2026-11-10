@@ -508,7 +508,7 @@ and RAW acquisition, stop/reconnect, HDF5 conversion, TTM, plug-ins and REST.
 | Scan start/stop or orchestration | `ui/qt/main_window.py`, `acquisition/manager.py`, `acquisition/coordinator.py` |
 | NI register/FIFO behavior | `hardware/fpga.py`, `acquisition/workers/fpga.py`, `acquisition/fifo.py` |
 | SPAD processing | `acquisition/detectors/spad/` and `acquisition/workers/detectors/spad/` |
-| PI SPAD23R receive/processing/emulation | `acquisition/detectors/pispad23/` and `acquisition/workers/detectors/pispad23/` |
+| PI SPAD23R acquisition/preview | `acquisition/detectors/pispad23/`; native receive/decoding and simulation in `brighteyes-pispad-libs` |
 | Preview math/shared arrays | `acquisition/workers/acquisition_loop.py`, `acquisition/shared_memory.py`, `acquisition/preview.py` |
 | Preview presentation | `ui/controllers/preview.py`, `ui/qt/main_window.py`, `ui/qt/flim_image_view.py` |
 | HDF5 or RAW format | `storage/`; update schema/compatibility tests and documentation |

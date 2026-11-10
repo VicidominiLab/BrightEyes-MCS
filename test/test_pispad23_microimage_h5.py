@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from brighteyes_mcs.storage.pispad23_microimage import MicroimageH5Writer
-from brighteyes_mcs.acquisition.detectors.pispad23.stream_image import MicroimageSnapshot
+from brighteyes_mcs.acquisition.detectors.pispad23.microimage import MicroimageSnapshot
 from brighteyes_mcs.acquisition.detectors.pispad23.timestamp_pipeline import PISPAD23MicroimagePipeline
 
 

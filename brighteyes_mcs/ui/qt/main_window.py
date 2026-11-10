@@ -84,6 +84,7 @@ from ...acquisition.detectors.models import (
     DETECTOR_SPAD_UI,
     detector_uses_pispad23_pipeline,
     detector_uses_pispad23_timestamp,
+    detector_uses_pispad23,
     detector_uses_nifpga_fifo,
     normalize_detector_model,
 )
@@ -129,13 +130,12 @@ except ImportError:
 
 PISPAD23_TIMETAGGING_CONFIGURATION_KEYS = (
     "pispad23ttm_enabled",
-    "pispad23ttm_backend",
-    "pispad23ttm_h5_executable",
-    "pispad23ttm_raw_executable",
+    "pispad23_channels",
+    "pispad23_external_frame",
+    "pispad23_intensity_dwell_us",
     "pispad23ttm_folder",
     "pispad23ttm_format",
     "pispad23ttm_address",
-    "pispad23ttm_stream_port",
     "pispad23ttm_uimg_buffer",
     "pispad23ttm_uimg_batch",
     "pispad23ttm_margin",
@@ -277,12 +277,7 @@ class MainWindow(QMainWindow):
         self._mcs_saving_suppressed = False
         self._waiting_for_pispad23 = False
         self.ui.checkBox_pispad23ttmActivate.toggled.connect(self._sync_pispad23_ttm_detector)
-        self.ui.comboBox_pispad23ttm_backend.currentTextChanged.connect(
-            self._sync_pispad23_ttm_detector
-        )
         for button, field, directory in (
-            (self.ui.toolButton_pispad23ttm_h5, self.ui.lineEdit_pispad23ttm_h5_executable, False),
-            (self.ui.toolButton_pispad23ttm_raw, self.ui.lineEdit_pispad23ttm_raw_executable, False),
             (self.ui.toolButton_pispad23ttm_folder, self.ui.lineEdit_pispad23ttm_folder, True),
         ):
             button.clicked.connect(
@@ -1423,20 +1418,6 @@ class MainWindow(QMainWindow):
             False,
         )
 
-        configuration_helper["pispad23_ip_addr"] = (
-            "PI SPAD23R IP addr.",
-            str,
-            self.ui.lineEdit_pispad23_ip_addr,
-            False,
-        )
-
-        configuration_helper["pispad23_port"] = (
-            "PI SPAD23R Port",
-            int,
-            self.ui.spinBox_pispad23_port,
-            False,
-        )
-
         configuration_helper["comment"] = (
             "Comment",
             str,
@@ -1640,23 +1621,22 @@ class MainWindow(QMainWindow):
 
     @trace_action
     def _sync_pispad23_ttm_detector(self, _checked=None):
-        """The PI SPAD23R CS image receiver and SB timetagger cannot run together."""
+        """Share acquisition controls between Rust intensity and timestamp modes."""
         combo = self.ui.comboBox_detector_model
         ttm = self.ui.checkBox_pispad23ttmActivate
-        busy = self.pispad23_timetagging.active or getattr(self, "started_normal", False) or getattr(self, "started_preview", False)
-        timestamp_image = detector_uses_pispad23_timestamp(combo.currentText())
-        self.ui.checkBox_rawStreamAcquisition.setEnabled(not busy and not timestamp_image)
-        ttm.setEnabled(not busy and (detector_uses_nifpga_fifo(combo.currentText()) or timestamp_image))
-        library = self.ui.comboBox_pispad23ttm_backend.currentText() == "Python library"
-        self.ui.comboBox_pispad23ttm_backend.setEnabled(not busy)
-        self.ui.comboBox_pispad23ttm_format.setEnabled(not busy and (library or not timestamp_image))
-        if timestamp_image and not library:
-            self.ui.comboBox_pispad23ttm_format.setCurrentText("RAW")
-        for name in ("lineEdit_pispad23ttm_h5_executable", "lineEdit_pispad23ttm_raw_executable",
-                     "toolButton_pispad23ttm_h5", "toolButton_pispad23ttm_raw",
-                     "spinBox_pispad23ttm_stream_port"):
-            getattr(self.ui, name).setEnabled(not busy and not library)
-        microimage = combo.currentText() == DETECTOR_PISPAD23_TS_UIMG
+        busy = self.pispad23_timetagging.active or self.started_normal or self.started_preview
+        microimage = detector_uses_pispad23(combo.currentText())
+        intensity = detector_uses_pispad23_pipeline(combo.currentText())
+        self.ui.checkBox_rawStreamAcquisition.setEnabled(not busy and not microimage)
+        ttm.setEnabled(not busy)
+        self.ui.comboBox_pispad23ttm_format.setEnabled(not busy)
+        self.ui.label_pispad23_mode.setText("Intensity" if intensity else "Timestamp")
+        for name in ("spinBox_pispad23_channels", "checkBox_pispad23_external_frame",
+                     "doubleSpinBox_pispad23_intensity_dwell"):
+            getattr(self.ui, name).setEnabled(not busy and intensity)
+        for name in ("doubleSpinBox_pispad23ttm_margin", "doubleSpinBox_pispad23ttm_preview_margin",
+                     "pushButton_pispad23ttm_force_calibration"):
+            getattr(self.ui, name).setEnabled(not busy and not intensity)
         if microimage:
             self.ui.comboBox_spad_channels.setCurrentText("25")
         self.ui.comboBox_spad_channels.setEnabled(not microimage and not busy)
@@ -1671,7 +1651,7 @@ class MainWindow(QMainWindow):
         self.ui.checkBox_accumulate_preview_photons.setEnabled(True)
         for index in range(combo.count()):
             if detector_uses_pispad23_pipeline(combo.itemText(index)):
-                combo.model().item(index).setEnabled(not ttm.isChecked())
+                combo.model().item(index).setEnabled(not busy)
 
     def _current_detector_model(self):
         if getattr(self.ui, "comboBox_detector_model", None) is not None:
@@ -2600,13 +2580,12 @@ class MainWindow(QMainWindow):
     def _pispad23_timetagging_bindings(self):
         return {
             "pispad23ttm_enabled": (bool, self.ui.checkBox_pispad23ttmActivate),
-            "pispad23ttm_backend": (str, self.ui.comboBox_pispad23ttm_backend),
-            "pispad23ttm_h5_executable": (str, self.ui.lineEdit_pispad23ttm_h5_executable),
-            "pispad23ttm_raw_executable": (str, self.ui.lineEdit_pispad23ttm_raw_executable),
+            "pispad23_channels": (int, self.ui.spinBox_pispad23_channels),
+            "pispad23_external_frame": (bool, self.ui.checkBox_pispad23_external_frame),
+            "pispad23_intensity_dwell_us": (float, self.ui.doubleSpinBox_pispad23_intensity_dwell),
             "pispad23ttm_folder": (str, self.ui.lineEdit_pispad23ttm_folder),
             "pispad23ttm_format": (str, self.ui.comboBox_pispad23ttm_format),
             "pispad23ttm_address": (str, self.ui.lineEdit_pispad23ttm_address),
-            "pispad23ttm_stream_port": (int, self.ui.spinBox_pispad23ttm_stream_port),
             "pispad23ttm_uimg_buffer": (int, self.ui.spinBox_pispad23ttm_uimg_buffer),
             "pispad23ttm_uimg_batch": (int, self.ui.spinBox_pispad23ttm_uimg_batch),
             "pispad23ttm_margin": (float, self.ui.doubleSpinBox_pispad23ttm_margin),
@@ -2766,6 +2745,16 @@ class MainWindow(QMainWindow):
             for name in PISPAD23_TIMETAGGING_CONFIGURATION_KEYS
             if name in configuration
         }
+        # Migrate the former intensity endpoint into the shared PI settings.
+        host = configuration.pop("pispad23_ip_addr", None)
+        port = configuration.pop("pispad23_port", None)
+        if host is not None:
+            model = configuration.get("detector_model") or self._current_detector_model()
+            if detector_uses_pispad23_pipeline(model):
+                legacy_pispad23_timetagging.setdefault("pispad23ttm_address", f"{host}:{port or 9997}")
+        for obsolete in ("pispad23ttm_backend", "pispad23ttm_h5_executable",
+                         "pispad23ttm_raw_executable", "pispad23ttm_stream_port"):
+            configuration.pop(obsolete, None)
         # FPGA connection is live hardware state, not a saved GUI preference.
         configuration.pop("load_firmware_once", None)
         configuration.pop("keep_fpga_connected", None)
@@ -5087,9 +5076,9 @@ class MainWindow(QMainWindow):
             self.timerPreviewImg_tick_mutex.unlock()
             return
 
-        if detector_uses_pispad23_timestamp(self._current_detector_model()):
+        if detector_uses_pispad23(self._current_detector_model()):
             # Snapshots arrive asynchronously; no detector FIFO exists in TS mode.
-            if self._current_detector_model() == DETECTOR_PISPAD23_TS_UIMG:
+            if detector_uses_pispad23(self._current_detector_model()):
                 self._plot_pispad23_microimage()
             self.timerPreviewImg_tick_mutex.unlock()
             return
@@ -6901,15 +6890,10 @@ Have fun!
         # Now initialize circular motion with correct DFD state
         self.circularMotionActivateChanged()
 
-        if self._current_detector_model() == DETECTOR_PISPAD23_TS_UIMG:
+        if detector_uses_pispad23(self._current_detector_model()):
             self._sync_pispad23_ttm_detector()
         self.spadChannelsChanged()
         self.mcs_manager.set_spad_channels(int(self.ui.comboBox_spad_channels.currentText()))
-        if detector_uses_pispad23_pipeline(self._current_detector_model()):
-            self.mcs_manager.set_pispad23_connection(
-                self.ui.lineEdit_pispad23_ip_addr.text(),
-                self.ui.spinBox_pispad23_port.value(),
-            )
 
         self.mcs_manager.set_dfd_enable(self.dfd_enable)
         self.mcs_manager.set_DFD_nbins(self.DFD_nbins)
@@ -7210,8 +7194,6 @@ Have fun!
            not do_not_save :
                self.pushButton_uttm_start_clicked()
 
-        self.mcs_manager.pispad23_stream_port = self.ui.spinBox_pispad23ttm_stream_port.value()
-        self.mcs_manager.pispad23_backend = self.ui.comboBox_pispad23ttm_backend.currentText()
         self.mcs_manager.pispad23_batch_size = self.ui.spinBox_pispad23ttm_uimg_batch.value()
         trigger = getattr(self, "software_trigger", None)
         if do_run and trigger is not None and trigger.selected():
@@ -7221,15 +7203,17 @@ Have fun!
         self.plugin_signals.signal.emit("beforeRun")
 
         if do_run:
-            if trigger is not None and trigger.active:
-                trigger.arm()
-            elif detector_uses_pispad23_timestamp(self._current_detector_model()):
+            if detector_uses_pispad23(self._current_detector_model()):
                 self._waiting_for_pispad23 = True
                 self.pispad23_timetagging.start(
                     filename, stream_microimage=True, preview=do_not_save,
                     microimage_worker=self.mcs_manager.previewProcess,
                     record=not do_not_save and self.ui.checkBox_pispad23ttmActivate.isChecked(),
+                    mode="intensity" if detector_uses_pispad23_pipeline(self._current_detector_model()) else "timestamp",
+                    wait_for_trigger=trigger is not None and trigger.active,
                 )
+            elif trigger is not None and trigger.active:
+                trigger.arm()
             elif (not do_not_save and self.ui.checkBox_pispad23ttmActivate.isChecked()
                     and self._current_detector_model() != DETECTOR_DISABLED):
                 self._waiting_for_pispad23 = True
@@ -7596,9 +7580,6 @@ Have fun!
         )
         if self._current_detector_model() == DETECTOR_DISABLED:
             self._mcs_saving_suppressed = True
-        if self.ui.checkBox_pispad23ttmActivate.isChecked() and detector_uses_pispad23_pipeline(self._current_detector_model()):
-            QMessageBox.warning(self, "Conflicting PI SPAD23R modes", "PI SPAD23R intensity imaging and PI SPAD23R TTM cannot be selected together. Select SPAD or PI SPAD23R (TS mode - uimg), or uncheck PI SPAD23R TTM.")
-            return
 
         # Enable TTM if requested
         if self.ui.checkBox_ttmActivate.isChecked():
@@ -7647,7 +7628,7 @@ Have fun!
         self._sync_pispad23_ttm_detector()
         self.ui.comboBox_detector_model.setEnabled(False)
         self._pending_program_state_after_stop = None
-        raw_stream_mode = (not is_preview) and not self._mcs_saving_suppressed and self.ui.checkBox_rawStreamAcquisition.isChecked() and not detector_uses_pispad23_timestamp(self._current_detector_model())
+        raw_stream_mode = (not is_preview) and not self._mcs_saving_suppressed and self.ui.checkBox_rawStreamAcquisition.isChecked() and not detector_uses_pispad23(self._current_detector_model())
         self.raw_stream_mode = raw_stream_mode
         self._auto_lifetime_correction_completed = False
         self._syncAutoLifetimeCorrectionWithPlotSelection()
@@ -7730,7 +7711,11 @@ Have fun!
         if self._waiting_for_pispad23 and (self.started_normal or self.started_preview):
             self._waiting_for_pispad23 = False
             try:
-                self.sendCmdRun()
+                trigger = getattr(self, "software_trigger", None)
+                if trigger is not None and trigger.active:
+                    trigger.arm()
+                else:
+                    self.sendCmdRun()
             except Exception as error:
                 self._pispad23_recording_failed(str(error))
 
@@ -7741,7 +7726,9 @@ Have fun!
         self.ui.statusBar.showMessage(message, 15000)
 
     def _pispad23_recording_finished(self):
-        if detector_uses_pispad23_timestamp(self._current_detector_model()) and not self.pispad23_timetagging.stopping:
+        if detector_uses_pispad23(self._current_detector_model()) and not self.pispad23_timetagging.stopping:
+            if not self._software_trigger_can_finalize():
+                return
             if self.started_normal:
                 self.finalizeAcquisition()
             elif self.started_preview:
@@ -7754,12 +7741,16 @@ Have fun!
             self._sync_pispad23_ttm_detector()
 
     def _plot_pispad23_microimage(self):
-        if self._current_detector_model() != DETECTOR_PISPAD23_TS_UIMG:
+        if not detector_uses_pispad23(self._current_detector_model()):
             return
         status = self.mcs_manager.shared_dict.get("pispad23_uimg_status", {})
         dwell_seconds = self.ui.spinBox_timeresolution.value() * self.ui.spinBox_time_bin_per_px.value() * 1e-6
         if self.ui.checkBox_circular.isChecked():
             dwell_seconds *= self.ui.spinBox_circular_points.value() * self.ui.spinBox_circular_repetition.value()
+        if detector_uses_pispad23_pipeline(self._current_detector_model()):
+            internal_dwell = self.ui.doubleSpinBox_pispad23_intensity_dwell.value()
+            if internal_dwell > 0:
+                dwell_seconds = internal_dwell * 1e-6
         delay = status.get("pending_dwells", 0) * dwell_seconds
         self.ui.label_preview_delay.setText(f"{delay:.3f}")
         self.ui.label_preview_delay.setToolTip(
@@ -8436,15 +8427,10 @@ Have fun!
         flare = getattr(self, "flare", None)
         if flare is not None and flare.selected is True:
             raise RuntimeError("Flare starts through its acquisition coordinator; NI start pulses are unavailable")
-        if self.ui.pushButton_fpga_connection_cmd.isChecked():
-            # A reused VI needs a fresh edge for every acquisition.
-            self.setRegistersDict({"stop_command": False, "start_command": True})
-            self.setRegistersDict({"start_command": False})
-        else:
-            # Preserve the normal firmware protocol: Run remains asserted until
-            # the acquisition is stopped and the FPGA session is closed.
-            self.setRegistersDict({"stop_command": False, "start_command": False})
-            self.setRegistersDict({"start_command": True})
+        # Hold Run until Stop/reset: a host-side True/False pulse can be
+        # shorter than one FPGA control-loop iteration, particularly on reuse.
+        self.setRegistersDict({"start_command": False, "stop_command": False})
+        self.setRegistersDict({"start_command": True})
 
     def sendCmdStop(self):
         """
@@ -8453,7 +8439,7 @@ Have fun!
         flare = getattr(self, "flare", None)
         if flare is not None and flare.selected is True:
             return flare.stop()
-        self.setRegistersDict({"stop_command": False})
+        self.setRegistersDict({"start_command": False})
         self.setRegistersDict({"stop_command": True})
 
     def getPreviewImage(self, projection="xy", rgb=False):
