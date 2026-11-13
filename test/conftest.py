@@ -11,6 +11,19 @@ from pathlib import Path
 import pytest
 
 
+@pytest.fixture
+def h5_writer():
+    """The same dedicated writer service allocated by the acquisition manager."""
+    from types import SimpleNamespace
+    from brighteyes_mcs.acquisition.storage import AcquisitionStorage
+
+    storage = AcquisitionStorage()
+    commands, responses, process = storage.start(None)
+    yield SimpleNamespace(process=process, shared_objects={
+        "h5_command_queue": commands, "h5_response_queue": responses})
+    storage.stop()
+
+
 @pytest.fixture(autouse=True)
 def forbid_flare_activation_in_existing_workflows(request, monkeypatch):
     """The existing suite must pass with Flare acquisition/control unavailable."""
@@ -36,6 +49,7 @@ QT_MODULES = {
     "test_action_logging.py",
     "test_pispad23_timetagging.py",
     "test_pispad23_library_gui.py",
+    "test_tdc_conversion_gui.py",
     "test_h5_metadata_compatibility.py",
     "test_first_run_wizard.py",
     "test_mainwindow.py",

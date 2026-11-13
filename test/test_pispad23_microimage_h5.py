@@ -95,3 +95,44 @@ def test_duplicate_and_existing_output_are_rejected(tmp_path):
     with h5py.File(path) as saved:
         assert saved["data"][0, 0, 0, 0, 0, 0] == 4
         assert saved["pispad23_microimages"].attrs["stop_reason"] == "error"
+
+
+def test_standard_writer_process_preserves_full_precision_and_reports_write_errors(tmp_path, h5_writer):
+    from brighteyes_mcs.storage.h5 import H5ManagerProcessClient
+
+    client = H5ManagerProcessClient(**{
+        "command_queue": h5_writer.shared_objects["h5_command_queue"],
+        "response_queue": h5_writer.shared_objects["h5_response_queue"],
+    })
+    path = tmp_path / "process.h5"
+    writer = MicroimageH5Writer(path, 1, 1, 1, 2, 0.01, manager=client)
+    try:
+        # Acknowledged writes must propagate storage errors to the consumer.
+        with pytest.raises(RuntimeError, match="broadcast"):
+            client.add_to_dataset("data", np.zeros((2, 2, 2, 2)), 0, 0, wait=True)
+        writer.consume(dwell(0, 0, 0, 90000))
+        writer.consume(dwell(1, 0, 0, 2**32 - 1, flags=7))
+        assert writer.close(finished=True)
+    finally:
+        client.shutdown()
+    with h5py.File(path) as saved:
+        assert saved["data"].maxshape[0] is None
+        assert saved["data"].dtype == np.uint32
+        assert saved["data"][0, 0, 0, 0, 0, 24] == 90000
+        assert saved["data"][1, 0, 0, 0, 0, 24] == 2**32 - 1
+        assert saved["pispad23_microimages/flags"][1, 0, 0, 0] == 7
+
+
+def test_standard_writer_rejects_an_existing_output_without_overwriting(tmp_path, h5_writer):
+    from brighteyes_mcs.storage.h5 import H5ManagerProcessClient
+
+    path = tmp_path / "keep.h5"
+    path.write_bytes(b"existing acquisition")
+    client = H5ManagerProcessClient(h5_writer.shared_objects["h5_command_queue"],
+                                    h5_writer.shared_objects["h5_response_queue"])
+    try:
+        with pytest.raises(RuntimeError):
+            MicroimageH5Writer(path, 1, 1, 1, 1, 0.01, manager=client)
+    finally:
+        client.shutdown()
+    assert path.read_bytes() == b"existing acquisition"

@@ -277,25 +277,26 @@ flowchart LR
     end
 
     subgraph PISPAD23_path[PI SPAD23R or PISPAD23TT]
-        PISPAD23TCP[PI SPAD23R TCP stream] --> Receiver[PISPAD23ReceiverProcess]
-        Receiver --> PiQueue[receiver queue]
-        PiQueue --> PiPre[PISPAD23DataPreProcess]
-        PiQueue --> PiRaw[PISPAD23RawStreamWriterProcess]
+        PISPAD23TCP[PI SPAD23R TCP stream] --> PiRust[Packaged Rust worker process]
+        PiRust --> PiRing[Mapped microimage FIFO]
+        PiRust --> PiRecord[Native TDC RAW or HDF5 recording]
+        PiRing --> PiLoop[LibraryMicroimageWorker]
+        PiLoop --> SharedMem
+        PiLoop --> H5Queue
     end
 
     SpadPre --> DataQueues[per-stream data queues]
-    PiPre --> DataQueues
     DataQueues --> Loop[detector acquisition-loop process]
     Loop --> SharedMem[shared preview arrays]
     Loop --> H5Queue[HDF5 command queue]
     H5Queue --> H5Process[H5ManagerProcess]
     H5Process --> H5File[standard HDF5 file]
     SpadRaw --> RawFiles[RAW files]
-    PiRaw --> RawFiles
 ```
 
 For PI SPAD23R, NI-FPGA remains the scan-control surface, but its detector FIFO is not
-used. Detector payload comes from the PI SPAD23R TCP receiver. The PI SPAD23R emulator in
+used. The library Rust process receives and decodes detector payloads, and the
+MCS Python acquisition worker pulls available microimages from its mapped FIFO. The PI SPAD23R emulator in
 [`detectors/pispad23/emulator.py`](../brighteyes_mcs/acquisition/detectors/pispad23/emulator.py)
 provides a software source for development.
 
@@ -305,7 +306,8 @@ provides a software source for development.
 | --- | --- | --- |
 | Qt main thread | GUI, timers, configuration and orchestration | Qt signals, manager API, shared-array reads |
 | `NiFpgaControlProcess` | NI session, register and SPAD FIFO control | manager queues/events and Rust FIFO reader |
-| PI SPAD23R receiver process | Receive detector TCP bunches | multiprocessing receiver queue |
+| PI SPAD23R Rust worker | TCP receive, buffering, decoding and optional TDC RAW/HDF5 recording | mapped microimage FIFO and native status/controls |
+| `LibraryMicroimageWorker` | Pull completed microimages; MCS dwell processing, preview and frame assembly | mapped FIFO, shared preview arrays, standard HDF5 command queue |
 | detector preprocessor process | Batch/repack receiver payloads | receiver queue to per-stream data queues |
 | detector acquisition-loop process | Decode, aggregate, preview and request HDF5 writes | shared memory, shared dict, HDF5 command queue |
 | detector RAW writer process | Write native stream payloads directly | receiver queue to `.raw` files |

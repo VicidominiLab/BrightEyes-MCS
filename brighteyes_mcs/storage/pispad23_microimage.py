@@ -1,14 +1,14 @@
-"""Save original PISPAD23 dwell counts independently of rolling preview pixels."""
+"""Assemble original PI dwell counts into frames for the standard MCS HDF5 writer."""
 
-import h5py
 import numpy as np
 
+from .h5 import H5Manager
 from .h5_schema import DATA_FORMAT_VERSION
 
 
 class MicroimageH5Writer:
     def __init__(self, filename, width, height, frames, repetitions, dwell_seconds,
-                 *, snake=False, snake_z=False):
+                 *, snake=False, snake_z=False, manager=None):
         if min(width, height, frames, repetitions) < 1 or dwell_seconds <= 0:
             raise ValueError("Invalid PISPAD23 HDF5 acquisition dimensions or dwell duration")
         self.width, self.height = width, height
@@ -18,30 +18,32 @@ class MicroimageH5Writer:
         self.saved_dwells = self.complete_frames = 0
         self.counts = np.zeros((height, width, 1, 25), dtype=np.uint32)
         self.flags = np.zeros((height, width), dtype=np.uint8)
-        # Never overwrite an existing acquisition if a filename collision occurs.
-        self.file = h5py.File(filename, "x")
+        # MCS supplies its standard H5ManagerProcessClient. The direct manager
+        # also supports the frame assembler outside an acquisition pipeline.
+        self.manager = manager or H5Manager(filename, exclusive=True)
         try:
-            self.file.attrs.update(default="data", data_format_version=DATA_FORMAT_VERSION)
-            self.data = self.file.create_dataset(
-                "data", (repetitions, frames, height, width, 1, 25), dtype="uint32",
-                chunks=(1, 1, min(height, 32), min(width, 32), 1, 25), fillvalue=0,
-            )
-            self.data.attrs.update(axes="repetition,z,y,x,timebin,channel", units="photon counts",
-                                   timebins_per_pixel=1, dwell_seconds=dwell_seconds,
-                                   integration="one complete dwell per time bin")
-            self.info = self.file.create_group("pispad23_microimages")
-            self.info.attrs.update(complete=False, stop_reason="recording", saved_dwells=0,
-                                   dwell_seconds=dwell_seconds, expected_frames=frames * repetitions,
-                                   detector_channels=25, snake_walk_xy=snake, snake_walk_z=snake_z)
+            if manager is not None:
+                manager.init(filename, exclusive=True)
+            self.manager.set_attributes("/", dict(default="data", data_format_version=DATA_FORMAT_VERSION))
+            self.manager.init_dataset("data", (width, height, frames), 1, 25, np.uint32)
+            self.manager.set_attributes("data", dict(
+                axes="repetition,z,y,x,timebin,channel", units="photon counts",
+                timebins_per_pixel=1, dwell_seconds=dwell_seconds,
+                integration="one complete dwell per time bin"))
+            self.manager.set_attributes("pispad23_microimages", dict(
+                complete=False, stop_reason="recording", saved_dwells=0,
+                dwell_seconds=dwell_seconds, expected_frames=frames * repetitions,
+                detector_channels=25, snake_walk_xy=snake, snake_walk_z=snake_z))
             shape = (repetitions, frames, height, width)
             chunks = (1, 1, min(height, 64), min(width, 64))
-            self.valid = self.info.create_dataset("valid", shape, dtype="bool", chunks=chunks)
-            self.pixel_flags = self.info.create_dataset("flags", shape, dtype="uint8", chunks=chunks)
-            self.pixel_flags.attrs["meaning"] = "bit 0 complete dwell; bit 1 valid; bit 2 saturated"
-            self.frame_complete = self.info.create_dataset("frame_complete", shape[:2], dtype="bool")
-            self.frame_id = self.info.create_dataset("frame_id", shape[:2], dtype="int64", fillvalue=-1)
+            self.manager.create_dataset("pispad23_microimages/valid", shape, "bool", chunks=chunks)
+            self.manager.create_dataset("pispad23_microimages/flags", shape, "uint8", chunks=chunks)
+            self.manager.set_attributes("pispad23_microimages/flags", dict(
+                meaning="bit 0 complete dwell; bit 1 valid; bit 2 saturated"))
+            self.manager.create_dataset("pispad23_microimages/frame_complete", shape[:2], "bool")
+            self.manager.create_dataset("pispad23_microimages/frame_id", shape[:2], "int64", fillvalue=-1)
         except Exception:
-            self.file.close()
+            self.manager.close()
             raise
 
     def consume(self, snapshot):
@@ -73,23 +75,23 @@ class MicroimageH5Writer:
             z = self.frames - 1 - z
         valid = self.flags & 3 == 3
         complete = bool(valid.all())
-        self.data[rep, z] = self.counts
-        self.valid[rep, z] = valid
-        self.pixel_flags[rep, z] = self.flags
-        self.frame_id[rep, z] = self.frame
-        self.frame_complete[rep, z] = complete
+        # Each acknowledged frame write is complete before its source buffer
+        # is reused. Counts retain uint32 precision through the standard writer.
+        self.manager.add_to_dataset("data", self.counts, rep, z, wait=True)
+        for name, values in (("valid", valid), ("flags", self.flags),
+                             ("frame_id", self.frame), ("frame_complete", complete)):
+            self.manager.write_slice(f"pispad23_microimages/{name}", (rep, z), values)
         self.complete_frames += int(complete)
-        self.info.attrs["saved_dwells"] = self.saved_dwells
-        self.file.flush()
+        self.manager.set_attributes("pispad23_microimages", dict(saved_dwells=self.saved_dwells))
         self.frame = None
 
     def close(self, *, finished=False, error=""):
         try:
             self._flush_frame()
             complete = finished and not error and self.complete_frames == self.frames * self.repetitions
-            self.info.attrs.update(complete=complete, saved_dwells=self.saved_dwells,
+            self.manager.set_attributes("pispad23_microimages", dict(complete=complete, saved_dwells=self.saved_dwells,
                                    stop_reason=("error" if error else "complete" if complete else
-                                                "incomplete" if finished else "stopped"), error=error)
+                                                "incomplete" if finished else "stopped"), error=error))
             return complete
         finally:
-            self.file.close()
+            self.manager.close()

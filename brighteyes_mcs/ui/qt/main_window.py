@@ -275,6 +275,7 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_pispad23ttm_force_calibration.clicked.connect(
             self.pispad23_timetagging.force_calibration
         )
+        self.ui.pushButton_pispad23_convert_tdc.clicked.connect(self.cmd_convertTdcRaw)
         self._mcs_saving_suppressed = False
         self._waiting_for_pispad23 = False
         self.ui.checkBox_pispad23ttmActivate.toggled.connect(self._sync_pispad23_ttm_detector)
@@ -1629,8 +1630,10 @@ class MainWindow(QMainWindow):
         microimage = detector_uses_pispad23(combo.currentText())
         intensity = detector_uses_pispad23_pipeline(combo.currentText())
         self.ui.checkBox_rawStreamAcquisition.setEnabled(not busy and not microimage)
-        ttm.setEnabled(not busy)
-        self.ui.comboBox_pispad23ttm_format.setEnabled(not busy)
+        ttm.setEnabled(not busy and not intensity)
+        for name in ("comboBox_pispad23ttm_format", "lineEdit_pispad23ttm_folder",
+                     "toolButton_pispad23ttm_folder"):
+            getattr(self.ui, name).setEnabled(not busy and not intensity)
         self.ui.comboBox_pispad23_verbosity.setEnabled(not busy)
         self.ui.label_pispad23_mode.setText("Intensity" if intensity else "Timestamp")
         for name in ("spinBox_pispad23_channels", "checkBox_pispad23_external_frame",
@@ -2029,6 +2032,20 @@ class MainWindow(QMainWindow):
             self.ui.lineEdit_destinationfolder.setText(
                 "/".join(filepath.split("/")[:-1])
             )
+
+    @Slot()
+    @trace_action
+    def cmd_convertTdcRaw(self):
+        from .tdc_conversion import TdcConversionDialog
+        from ...storage.tdc_metadata import ScanGeometry
+        dwell = self.ui.spinBox_timeresolution.value() * self.ui.spinBox_time_bin_per_px.value() * 1e-6
+        if self.ui.checkBox_circular.isChecked():
+            dwell *= self.ui.spinBox_circular_points.value() * self.ui.spinBox_circular_repetition.value()
+        dialog = TdcConversionDialog(self, initial_folder=self.ui.lineEdit_destinationfolder.text(),
+            geometry=ScanGeometry(self.ui.spinBox_nx.value(), self.ui.spinBox_ny.value(),
+                self.ui.spinBox_nframe.value(), self.ui.spinBox_nrepetition.value(), dwell,
+                self.ui.checkBox_snake.isChecked(), self.ui.checkBox_snake_z.isChecked()))
+        dialog.exec()
 
     @Slot()
     @trace_action
@@ -7211,16 +7228,18 @@ Have fun!
                 self.pispad23_timetagging.start(
                     filename, stream_microimage=True, preview=do_not_save,
                     microimage_worker=self.mcs_manager.previewProcess,
-                    record=not do_not_save and self.ui.checkBox_pispad23ttmActivate.isChecked(),
+                    record=(not do_not_save and self.ui.checkBox_pispad23ttmActivate.isChecked()
+                            and not detector_uses_pispad23_pipeline(self._current_detector_model())),
                     mode="intensity" if detector_uses_pispad23_pipeline(self._current_detector_model()) else "timestamp",
                     wait_for_trigger=trigger is not None and trigger.active,
+                    metadata=self._pispad23_metadata_snapshot(),
                 )
             elif trigger is not None and trigger.active:
                 trigger.arm()
             elif (not do_not_save and self.ui.checkBox_pispad23ttmActivate.isChecked()
                     and self._current_detector_model() != DETECTOR_DISABLED):
                 self._waiting_for_pispad23 = True
-                self.pispad23_timetagging.start(filename)
+                self.pispad23_timetagging.start(filename, metadata=self._pispad23_metadata_snapshot())
             else:
                 self.sendCmdRun()
 
@@ -7576,10 +7595,12 @@ Have fun!
         if self.pispad23_timetagging.active:
             self.ui.statusBar.showMessage("Wait for PI SPAD23R TTM to finish closing its recording.", 5000)
             return
+        self.pispad23_timetagging.metadata_source = None
         self._mcs_saving_suppressed = not is_preview and self.ui.checkBox_noMcsSaveWithTtm.isChecked() and (
             self.ui.checkBox_ttmActivate.isChecked()
             or (self.ui.checkBox_uttmActivate.isChecked() and self.ui.checkBox_uttm_auto.isChecked())
-            or self.ui.checkBox_pispad23ttmActivate.isChecked()
+            or (self.ui.checkBox_pispad23ttmActivate.isChecked()
+                and not detector_uses_pispad23_pipeline(self._current_detector_model()))
         )
         if self._current_detector_model() == DETECTOR_DISABLED:
             self._mcs_saving_suppressed = True
@@ -7709,6 +7730,15 @@ Have fun!
             path, _ = QFileDialog.getOpenFileName(self, "PI SPAD23R recorder", field.text(), "Executables (*.exe);;All files (*)")
         if path:
             field.setText(path)
+
+    def _pispad23_metadata_snapshot(self):
+        return dict(comment=self.ui.lineEdit_comment.toPlainText(),
+            mcs_filename=self.mcs_manager.shared_dict["filenameh5"], groups={
+            "configurationSpadFCSmanager": dict(self.mcs_manager.registers_configuration),
+            "configurationFPGA": dict(self.configurationFPGA_dict),
+            "configurationGUI": self._gui_config_for_h5(self.getGUI_data()),
+            "configurationGUI_beforeStart": self._gui_config_for_h5(self.configurationGUI_dict_beforeStart),
+        })
 
     def _start_after_pispad23_ready(self):
         if self._waiting_for_pispad23 and (self.started_normal or self.started_preview):
@@ -8229,6 +8259,11 @@ Have fun!
                 self.finalizeImage()
 
             h5mgr.close()
+            if getattr(self, "pispad23_timetagging", None) is not None:
+                try:
+                    self.pispad23_timetagging.preserve_final_metadata(self.last_saved_filename)
+                except Exception:
+                    logger.exception("Could not preserve final MCS metadata beside TDC RAW")
             self._publish_filename_to_console(self.last_saved_filename)
 
             if self.ttm_remote_is_up():

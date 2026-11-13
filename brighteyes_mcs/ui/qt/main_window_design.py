@@ -2195,14 +2195,14 @@ class Ui_MainWindowDesign(object):
         self.label_pispad23ttm_status.setObjectName(u"label_pispad23ttm_status")
         self.label_pispad23ttm_status.setWordWrap(True)
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_status, 14, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_status, 15, 0, 1, 3)
 
         self.plainTextEdit_pispad23ttm_log = QPlainTextEdit(self.tab_pi_timetagging)
         self.plainTextEdit_pispad23ttm_log.setObjectName(u"plainTextEdit_pispad23ttm_log")
         self.plainTextEdit_pispad23ttm_log.setReadOnly(True)
         self.plainTextEdit_pispad23ttm_log.setMaximumBlockCount(5000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pispad23ttm_log, 15, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pispad23ttm_log, 16, 0, 1, 3)
 
         self.label_pispad23_mode = QLabel(self.tab_pi_timetagging)
         self.label_pispad23_mode.setObjectName(u"label_pispad23_mode")
@@ -2252,6 +2252,11 @@ class Ui_MainWindowDesign(object):
         self.comboBox_pispad23_verbosity.setObjectName(u"comboBox_pispad23_verbosity")
 
         self.gridLayout_pi_timetagging.addWidget(self.comboBox_pispad23_verbosity, 12, 1, 1, 2)
+
+        self.pushButton_pispad23_convert_tdc = QPushButton(self.tab_pi_timetagging)
+        self.pushButton_pispad23_convert_tdc.setObjectName(u"pushButton_pispad23_convert_tdc")
+
+        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23_convert_tdc, 14, 0, 1, 3)
 
         self.tabWidget_3.addTab(self.tab_pi_timetagging, "")
 
@@ -5058,10 +5063,10 @@ class Ui_MainWindowDesign(object):
         self.checkBox_uttm_watchdog.setText(QCoreApplication.translate("MainWindowDesign", u"Activate watchdog", None))
         self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_uTTM), QCoreApplication.translate("MainWindowDesign", u"u(TTM)", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_15), QCoreApplication.translate("MainWindowDesign", u"BrightEyes-TTM", None))
-        self.label_pispad23ttm_folder.setText(QCoreApplication.translate("MainWindowDesign", u"Data folder", None))
+        self.label_pispad23ttm_folder.setText(QCoreApplication.translate("MainWindowDesign", u"TDC data folder", None))
         self.lineEdit_pispad23ttm_folder.setPlaceholderText(QCoreApplication.translate("MainWindowDesign", u"Empty: use the MCS destination folder", None))
         self.toolButton_pispad23ttm_folder.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.label_pispad23ttm_format.setText(QCoreApplication.translate("MainWindowDesign", u"Output format", None))
+        self.label_pispad23ttm_format.setText(QCoreApplication.translate("MainWindowDesign", u"TDC event format", None))
         self.comboBox_pispad23ttm_format.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"HDF5", None))
         self.comboBox_pispad23ttm_format.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"RAW", None))
 
@@ -5105,6 +5110,10 @@ class Ui_MainWindowDesign(object):
 
 #if QT_CONFIG(tooltip)
         self.comboBox_pispad23_verbosity.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Independent of MCS logging. Minimal: lifecycle/errors. Normal: all commands, replies and receive sizes without data payloads. Full: also save every received byte; large logs and slower acquisition.", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_pispad23_convert_tdc.setText(QCoreApplication.translate("MainWindowDesign", u"Convert TDC RAW files\u2026", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_pispad23_convert_tdc.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Convert one or multiple pSPAD TDC RAW files to TDC HDF5 and/or standard MCS intensity HDF5, preserving acquisition metadata.", None))
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_pi_timetagging), QCoreApplication.translate("MainWindowDesign", u"PI SPAD23R", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"External Integration", None))
@@ -5170,7 +5179,7 @@ class Ui_MainWindowDesign(object):
         self.checkBox_ttmActivate.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the TTM data receiver (external software) when start the acquisition</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_ttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"TTM", None))
-        self.checkBox_pispad23ttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"PI SPAD23R recording", None))
+        self.checkBox_pispad23ttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"PI SPAD23R TDC recording", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_uttmActivate.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the TTM data receiver (external software) when start the acquisition</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

@@ -4,16 +4,16 @@ This integration was developed at Istituto Italiano di Tecnologia for our
 microscope workflows. It is our tool, not an official or endorsed Pi Imaging tool.
 
 Both **TCP/IP - PI SPAD23R (Intensity)** and **TS mode - uimg** use
-`brighteyes-pispad-libs>=0.2.1`. The executable backend, subprocess launcher,
-Python CS receiver/SPAD packer, and localhost TCP preview server were removed.
-The vendor device endpoint remains TCP/IP.
+`brighteyes-pispad-libs>=0.3.0`. The library launches its packaged Rust worker
+for TCP reception, buffering, decoding and recording. MCS pulls completed
+microimages from the worker's memory-mapped FIFO.
 
 ## Install the local library
 
 Choose the wheel matching the Python running MCS. For Python 3.12 on Windows x64:
 
 ```powershell
-python -m pip install "C:\path\to\brighteyes_pispad_libs-0.2.1-cp312-cp312-win_amd64.whl"
+python -m pip install "C:\path\to\brighteyes_pispad_libs-0.3.0-cp312-cp312-win_amd64.whl"
 ```
 
 Use the cp313 wheel for Python 3.13. These wheels contain native Rust and static
@@ -44,11 +44,12 @@ MCS application logging is off. Full mode creates large files and may slow
 acquisition; reserve it for short diagnostic runs. Measurement RAW/HDF5
 recording remains a separate setting.
 
-The PI recording checkbox saves the selected mode alongside acquisition.
-The choice RAW or HDF5 is fixed at startup; simultaneous RAW and HDF5 recording
-is not supported. Preview does not create recording files. Both modes always
-provide microimage preview independently of the recording checkbox. The generic
-SPAD raw-stream checkbox is unavailable for PI acquisition.
+**PI SPAD23R TDC recording** enables a Rust RAW or HDF5 event recording alongside
+timestamp acquisition. Its format and destination controls apply only to TDC
+mode. Intensity acquisition uses the normal MCS HDF5 destination, writer and
+metadata flow. Preview does not create measurement files. Both modes provide
+microimages independently of the TDC recording checkbox. The generic SPAD
+raw-stream checkbox is unavailable for PI acquisition.
 
 Settings are stored in `cfg/plugins_cfg/pispad23_timetagging.cfg`. Older top-level
 PI settings still load. The former intensity IP/port migrate to the shared
@@ -57,12 +58,23 @@ port settings are ignored. They never reactivate the removed tools.
 
 ## Acquisition and preview
 
-One application-owned worker process runs native acquisition, decoding, recording
-and microimage processing. No nested Python acquisition process is needed.
-Python receives completed 25-channel dwell rows in batches. Preview image,
+The MCS acquisition worker owns a separate Rust process. Rust receives and
+buffers the TCP stream, optionally records TDC RAW/HDF5, decodes microimages, and publishes
+them directly into a bounded memory-mapped FIFO. Python pulls available
+25-channel dwell rows in batches, then processes the standard MCS preview and
+saving arrays. Rust reception and decoding continue independently of Python's
+GIL or polling. The library detects Rust worker crashes; on Windows its process
+ownership prevents orphan workers after an MCS worker dies. Preview image,
 fingerprints, masks, accumulation and saving use these same rows in both modes.
-The Rust backend reports preview overflow instead of silently dropping rows;
-recording continues independently at the library level. MCS surfaces the error.
+The Rust backend reports FIFO overflow instead of silently dropping rows.
+MCS stops acquisition and marks the count file incomplete on delivery failure;
+native TDC recording is independent of microimage delivery at the library level.
+
+The MCS worker assembles original microimages into frames and sends them to
+the same `H5ManagerProcess` used by FPGA SPAD acquisition. Acknowledged frame
+writes preserve uint32 counts and report storage failures. Shared preview
+arrays may retain old display pixels while the new frame arrives; the saved
+frames are assembled separately from the ordered microimages.
 
 Timestamp mode uses SB windows and includes zero-photon dwells. Preview repeats
 windows without issuing another FPGA start. Intensity uses length-framed CS
@@ -90,14 +102,14 @@ stop reason and errors. Natural completion waits for writer closure before MCS
 adds metadata. Manual Stop preserves a partial acquisition as incomplete.
 
 Optional timestamp recordings use `-ts.raw` or `-tsraw.h5` (schema-v3 events).
-Optional intensity recordings use `-intensity.raw` with a required adjacent
-`.raw.json` sidecar, or `-intensity.h5` with `counts`, `valid`, `frame_complete`
-and intensity schema version 1. The library provides `read_intensity`,
-`iter_intensity_raw` and `convert_intensity_to_h5`. Intensity datasets use
-`(frame, y, x, detector)` axes. Existing files are not overwritten.
+Intensity acquisition creates the standard MCS file, with regular configuration,
+FPGA, GUI, comment and thumbnail metadata added by the normal finalizer. MCS
+does not request a second native intensity file. The standalone library retains
+its native intensity export/read/conversion APIs for use outside MCS.
 
 **Do not save MCS data when TTM is active** can suppress the regular MCS file
-while selected PI stream recording and preview continue. Live previews use shared
+while selected TDC event recording and preview continue. A saved PI TDC checkbox
+does not suppress intensity saving. Live previews use shared
 memory; read HDF5 recordings after the writer closes (no SWMR).
 
 ## FPGA startup
@@ -111,6 +123,22 @@ Startup readback is retained separately and does not overwrite requested control
 Register-write failures propagate. Software triggers use the same held Run rule.
 
 ## Validation
+
+The standard MCS storage integration passed 183 focused tests and 5 subtests:
+PI acquisition/preview, HDF5 frame assembly and service writes, normal metadata
+finalization, acquisition-manager storage allocation, FPGA frame writes/startup,
+and software triggering. Checks cover large uint32 counts, partial/missing
+frames, snake coordinates, existing-file protection, acknowledged write errors,
+and intensity acquisition creating only the normal MCS file.
+
+The 0.3 Rust process integration passed 45 focused PI worker/GUI/controller
+tests on Windows, including a distinct Rust PID for timestamp/intensity
+acquisition, readiness before FPGA start, preview and native recording,
+configuration persistence, and independent protocol verbosity. The library
+passed 21 Rust tests and 77 Python tests, including the installed CPython 3.12
+wheel. Both cp312 and cp313 wheels contain the packaged Rust executable.
+
+Earlier validation:
 
 Tests exercise the native library and application worker against a local
 simulator, including both modes, RAW/HDF5, fragmented transfers, partial frames,

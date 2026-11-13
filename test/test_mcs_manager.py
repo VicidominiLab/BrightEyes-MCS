@@ -55,6 +55,29 @@ class TestMcsManager(unittest.TestCase):
                 instance.stopAcquisition()
             instance.acquisition_storage.start.assert_not_called()
 
+    def test_pi_acquisition_allocates_the_standard_hdf5_service(self):
+        from brighteyes_mcs.storage.h5 import H5ManagerProcess, H5ManagerProcessClient
+
+        for model in (DETECTOR_PISPAD23, DETECTOR_PISPAD23_TS_UIMG):
+            with self.subTest(model=model):
+                instance = McsManager()
+                instance.set_detector_model(model)
+                instance.dim_x, instance.dim_y, instance.dim_z = 3, 2, 1
+                instance.fpga_handle = MagicMock()
+                instance.readRegistersDict = MagicMock()
+                instance.set_do_not_save(False)
+                try:
+                    instance.run()
+                    self.assertIsInstance(instance.h5_manager_process, H5ManagerProcess)
+                    self.assertTrue(instance.h5_manager_process.is_alive())
+                    self.assertIs(instance.previewProcess.shared_objects["h5_command_queue"],
+                                  instance.h5_command_queue)
+                    H5ManagerProcessClient(instance.h5_command_queue,
+                                           instance.h5_response_queue).shutdown()
+                finally:
+                    instance.stopPreview()
+                    instance.stopAcquisition()
+
     def test_disabled_runs_fpga_without_data_workers_or_storage(self):
         for preview, raw in ((True, False), (False, False), (False, True)):
             with self.subTest(preview=preview, raw=raw):

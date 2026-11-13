@@ -3209,7 +3209,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                     <item row="1" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_folder">
                       <property name="text">
-                       <string>Data folder</string>
+                       <string>TDC data folder</string>
                       </property>
                      </widget>
                     </item>
@@ -3230,7 +3230,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                     <item row="2" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_format">
                       <property name="text">
-                       <string>Output format</string>
+                       <string>TDC event format</string>
                       </property>
                      </widget>
                     </item>
@@ -3404,7 +3404,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="14" column="0" colspan="3">
+                    <item row="15" column="0" colspan="3">
                      <widget class="QLabel" name="label_pispad23ttm_status">
                       <property name="text">
                        <string>Idle</string>
@@ -3414,7 +3414,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="15" column="0" colspan="3">
+                    <item row="16" column="0" colspan="3">
                      <widget class="QPlainTextEdit" name="plainTextEdit_pispad23ttm_log">
                       <property name="readOnly">
                        <bool>true</bool>
@@ -3443,6 +3443,12 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       <item><property name="text"><string>Minimal</string></property></item>
                       <item><property name="text"><string>Normal</string></property></item>
                       <item><property name="text"><string>Full</string></property></item>
+                     </widget>
+                    </item>
+                    <item row="14" column="0" colspan="3">
+                     <widget class="QPushButton" name="pushButton_pispad23_convert_tdc">
+                      <property name="text"><string>Convert TDC RAW files…</string></property>
+                      <property name="toolTip"><string>Convert one or multiple pSPAD TDC RAW files to TDC HDF5 and/or standard MCS intensity HDF5, preserving acquisition metadata.</string></property>
                      </widget>
                     </item>
 </layout>
@@ -3999,7 +4005,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
           <item row="0" column="2">
            <widget class="QCheckBox" name="checkBox_pispad23ttmActivate">
             <property name="text">
-             <string>PI SPAD23R recording</string>
+             <string>PI SPAD23R TDC recording</string>
             </property>
            </widget>
           </item>

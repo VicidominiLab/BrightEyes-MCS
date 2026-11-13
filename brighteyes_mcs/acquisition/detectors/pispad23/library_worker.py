@@ -1,4 +1,4 @@
-"""Library acquisition and MCS dwell processing inside one owned worker process."""
+"""Pull Rust-process microimages and publish the standard MCS preview arrays."""
 
 import json
 import multiprocessing as mp
@@ -10,15 +10,16 @@ from .microimage import MicroimagePreview
 from .microimage import MicroimageSnapshot
 from ....logging_setup import logged_worker, logger
 from ....storage.pispad23_microimage import MicroimageH5Writer
+from ....storage.h5 import H5ManagerProcessClient
 
 
 class LibraryMicroimageWorker(mp.Process):
-    """Rust threads receive/record; this process publishes existing MCS arrays.
+    """A Rust subprocess receives/decodes; this worker consumes its FIFO.
 
     Configuration arrives after MCS prepares its workers, before SB/FPGA start.
     No Qt callbacks or local TCP preview server participate in data delivery.
-    The worker creates no child processes, so the existing supervisor owns its
-    complete lifetime, including native threads and open recording files.
+    The library owns the executable's lifetime and shared-memory ring. Its
+    native process launcher works inside this daemonic Python worker.
     """
 
     def __init__(self, width, height, batch_size, shared_objects=None, shared_dict=None,
@@ -81,7 +82,7 @@ class LibraryMicroimageWorker(mp.Process):
         # The GUI owns Ctrl+C and requests stop through its supervisor. Native
         # writers must not be interrupted by a console signal in this process.
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-        session = writer = preview = None
+        session = writer = preview = h5_client = None
         error = ""
         status = dict(state="starting", finished=False, armed=False, error="")
         natural = False
@@ -99,12 +100,18 @@ class LibraryMicroimageWorker(mp.Process):
             if options.get("mode", "timestamp") != self.mode:
                 raise ValueError("PI SPAD23R worker mode and acquisition configuration differ")
 
+            if self.mode == "intensity":
+                options["output"] = None
             if self.saving is not None:
                 saving = dict(self.saving)
                 if self.mode == "intensity" and options.get("intensity_dwell_us", 0) > 0:
                     saving["dwell_seconds"] = options["intensity_dwell_us"] * 1e-6
+                queues = self.shared_objects or {}
+                if queues.get("h5_command_queue") is None or queues.get("h5_response_queue") is None:
+                    raise RuntimeError("PI microimage saving requires the standard MCS HDF5 writer process")
+                h5_client = H5ManagerProcessClient(queues["h5_command_queue"], queues["h5_response_queue"])
                 writer = MicroimageH5Writer(width=self.width, height=self.height,
-                                           snake=self.snake, **saving)
+                                           snake=self.snake, manager=h5_client, **saving)
             if self.shared_objects is not None:
                 preview = MicroimagePreview(self.width, self.height, snake=self.snake,
                                             shared_objects=self.shared_objects)
@@ -119,14 +126,14 @@ class LibraryMicroimageWorker(mp.Process):
                 # no producer can append another native tail after an empty read.
                 native = session.statistics()
                 batch = session.read_microimages(self.batch_size, timeout=0.01)
-                if preview is not None:
+                if preview is not None or writer is not None:
                     for record in batch:
                         snapshot = MicroimageSnapshot(record["counts"], int(record["frame"]),
                             int(record["x"]), int(record["y"]), int(record["events"]),
                             int(record["flags"]))
                         if writer is not None:
                             writer.consume(snapshot)
-                        accepted = preview.consume(snapshot)
+                        accepted = preview.consume(snapshot) if preview is not None else False
                         if accepted and preview.frame_dwells == self.width * self.height:
                             processed_frames += 1
                             self.shared_dict["software_trigger_frames_stream_out_main"] = processed_frames
@@ -169,6 +176,11 @@ class LibraryMicroimageWorker(mp.Process):
                         error = "PI SPAD23R HDF5 acquisition incomplete; missing pixels are marked invalid"
                 except Exception as exception:
                     error = error or f"PI SPAD23R HDF5 close failed: {exception}"
+            if h5_client is not None:
+                try:
+                    h5_client.shutdown()
+                except Exception as exception:
+                    error = error or f"MCS HDF5 writer shutdown failed: {exception}"
             if preview is not None:
                 try:
                     self._publish_preview(preview, status)

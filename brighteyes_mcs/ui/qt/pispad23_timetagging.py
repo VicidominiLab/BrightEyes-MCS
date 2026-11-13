@@ -38,7 +38,7 @@ def output_path(folder, mcs_filename, raw=False, mode="timestamp"):
     path = Path(folder) / (Path(mcs_filename).stem + suffix)
     original = path
     index = 1
-    while path.exists():
+    while path.exists() or (raw and Path(str(path) + ".metadata.h5").exists()):
         path = original.with_name(f"{original.stem}-{index}{original.suffix}")
         index += 1
     return path
@@ -62,6 +62,8 @@ class PISPAD23Timetagging(QObject):
         self.armed = False
         self.stopping = False
         self.path = None
+        self.mcs_path = None
+        self.metadata_source = None
         self.protocol_log_path = None
         self.messages = queue.Queue()
         self.timer = QTimer(self)
@@ -111,23 +113,26 @@ class PISPAD23Timetagging(QObject):
                          "checkBox_pispad23_external_frame"):
                 getattr(self.ui, name).setEnabled(intensity)
             for name in ("doubleSpinBox_pispad23ttm_margin", "doubleSpinBox_pispad23ttm_preview_margin",
-                         "pushButton_pispad23ttm_force_calibration"):
+                         "pushButton_pispad23ttm_force_calibration", "comboBox_pispad23ttm_format",
+                         "lineEdit_pispad23ttm_folder", "toolButton_pispad23ttm_folder"):
                 getattr(self.ui, name).setEnabled(not intensity)
 
 
     @trace_action
     def start(self, filename, *, stream_microimage=False, record=True, preview=False,
-              microimage_worker=None, mode="timestamp", wait_for_trigger=False):
+              microimage_worker=None, mode="timestamp", wait_for_trigger=False, metadata=None):
         if self.active or self.calibrating:
             raise RuntimeError("The previous PI SPAD23R acquisition is still finishing.")
         if stream_microimage and microimage_worker is None:
             raise ValueError("Microimage mode requires its acquisition worker")
+        if mode == "intensity" and not stream_microimage:
+            raise ValueError("Intensity acquisition requires the standard MCS microimage pipeline")
         try:
             import brighteyes_pispad as pispad
         except ImportError as error:
             raise RuntimeError("Install brighteyes-pispad-libs in the Python environment running BrightEyes-MCS.") from error
-        if "verbosity" not in pispad.AcquisitionConfig.__dataclass_fields__:
-            raise RuntimeError("Update brighteyes-pispad-libs to version 0.2.1 or newer for TCP logging.")
+        if getattr(pispad.AcquisitionSession, "worker_kind", None) != "rust_process":
+            raise RuntimeError("Update brighteyes-pispad-libs to version 0.3 or newer for Rust process acquisition.")
         from ...acquisition.detectors.pispad23.library_worker import LibraryMicroimageWorker
 
         if stream_microimage and not isinstance(microimage_worker, LibraryMicroimageWorker):
@@ -135,7 +140,8 @@ class PISPAD23Timetagging(QObject):
         raw = self.ui.comboBox_pispad23ttm_format.currentText() == "RAW"
         self.path = None
         self.protocol_log_path = None
-        if record:
+        self.metadata_source = Path((metadata or {}).get("mcs_filename", filename)).resolve()
+        if record and mode == "timestamp":
             folder = self.ui.lineEdit_pispad23ttm_folder.text().strip() or str(Path(filename).parent)
             Path(folder).mkdir(parents=True, exist_ok=True)
             self.path = output_path(folder, filename, raw, mode).resolve()
@@ -159,6 +165,16 @@ class PISPAD23Timetagging(QObject):
         if worker is None:
             worker = LibraryMicroimageWorker(self.ui.spinBox_nx.value(), self.ui.spinBox_ny.value(),
                                              self.ui.spinBox_pispad23ttm_uimg_batch.value(), mode=mode)
+        self.mcs_path = Path(worker.saving["filename"]) if worker.saving is not None else None
+        if self.path is not None and raw:
+            from ...storage.tdc_metadata import ScanGeometry, create_metadata
+            dwell = self.ui.spinBox_timeresolution.value() * self.ui.spinBox_time_bin_per_px.value() * 1e-6
+            if self.ui.checkBox_circular.isChecked():
+                dwell *= self.ui.spinBox_circular_points.value() * self.ui.spinBox_circular_repetition.value()
+            geometry = ScanGeometry(self.ui.spinBox_nx.value(), self.ui.spinBox_ny.value(),
+                self.ui.spinBox_nframe.value(), self.ui.spinBox_nrepetition.value(), dwell,
+                self.ui.checkBox_snake.isChecked(), self.ui.checkBox_snake_z.isChecked())
+            create_metadata(self.path, geometry, metadata)
         worker.configure(vars(config))
         if not stream_microimage:
             worker.start()
@@ -173,7 +189,8 @@ class PISPAD23Timetagging(QObject):
         self._enable_settings(False)
         self.deadline = time.monotonic() + self.ui.doubleSpinBox_pispad23ttm_timeout.value()
         self.log(f"brighteyes-pispad-libs: endpoint={config.addr} format={config.format} "
-                 f"measurement_ms={duration} microimages={stream_microimage} output={self.path}")
+                 f"measurement_ms={duration} microimages={stream_microimage} "
+                 f"TDC output={self.path} MCS output={self.mcs_path}")
         self.ui.label_pispad23ttm_status.setText("Starting / calibrating PI SPAD23R library acquisition…")
         self.timer.start()
 
@@ -202,6 +219,12 @@ class PISPAD23Timetagging(QObject):
             self.failed.emit(error)
         if not worker.is_alive():
             worker.join(timeout=0)
+            if self.path is not None and self.path.suffix.lower() == ".raw":
+                from ...storage.tdc_metadata import update_status
+                try:
+                    update_status(self.path, status)
+                except Exception:
+                    logger.exception("Could not update TDC RAW acquisition metadata")
             if not self.stopping and (not worker.done.is_set() or worker.exitcode != 0
                                       or status.get("state") != "complete"):
                 error = error or f"PI SPAD23R library worker exited unexpectedly ({worker.exitcode})"
@@ -211,7 +234,7 @@ class PISPAD23Timetagging(QObject):
             self.timer.stop()
             self.settle_timer.stop()
             self._enable_settings(True)
-            result = f"Library acquisition {status.get('state', 'exited')}: {self.path or 'preview only'}"
+            result = f"Library acquisition {status.get('state', 'exited')}: {self.path or self.mcs_path or 'preview only'}"
             self.log(result)
             self.ui.label_pispad23ttm_status.setText(result)
             if not self.stopping and (error or was_pending):
@@ -223,6 +246,14 @@ class PISPAD23Timetagging(QObject):
 
     def poll(self):
         self._poll_library()
+
+    def preserve_final_metadata(self, mcs_filename):
+        """Keep final MCS comments/configuration/thumbnail beside the RAW file."""
+        if (self.path is not None and self.path.suffix.lower() == ".raw"
+                and self.metadata_source == Path(mcs_filename).resolve()):
+            from ...storage.tdc_metadata import copy_metadata, sidecar_path
+            copy_metadata(mcs_filename, sidecar_path(self.path))
+            self.metadata_source = None
 
     def _ready(self):
         if self.library_worker is not None:
@@ -239,7 +270,7 @@ class PISPAD23Timetagging(QObject):
                 return
             self.pending = False
             self.ui.label_pispad23ttm_status.setText(
-                f"Recording: {self.path}" if self.path else "PI SPAD23R microimage preview")
+                f"Recording: {self.path or self.mcs_path}" if self.path or self.mcs_path else "PI SPAD23R microimage preview")
             self.log("Recorder ready; starting the FPGA scan.")
             self.ready.emit()
             return

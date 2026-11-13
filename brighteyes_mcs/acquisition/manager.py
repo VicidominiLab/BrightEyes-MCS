@@ -679,7 +679,7 @@ class McsManager():
         self.detector_receiver_queue = self.detector_pipeline.make_receiver_queue(self)
 
         self.number_of_threads_h5 = mp.Value("i", 0)
-        if not do_not_save and not self.raw_stream_mode and self.detector_model != DETECTOR_DISABLED and not detector_uses_pispad23(self.detector_model):
+        if not do_not_save and not self.raw_stream_mode and self.detector_model != DETECTOR_DISABLED:
             (
                 self.h5_command_queue,
                 self.h5_response_queue,

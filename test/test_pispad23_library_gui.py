@@ -36,7 +36,7 @@ def configure(ui, addr, format="HDF5"):
 
 @pytest.mark.parametrize("mode", ["timestamp", "intensity"])
 @pytest.mark.parametrize("format,record", [("RAW", True), ("HDF5", True), ("HDF5", False)])
-def test_library_gui_waits_for_armed_then_records_and_finishes(app, ui, tmp_path, format, record, mode):
+def test_library_gui_waits_for_armed_then_records_and_finishes(app, ui, tmp_path, format, record, mode, h5_writer):
     gate = threading.Event()
     simulation = simulator.SimulationConfig(width=3, height=2, frames=2, fragment_bytes=7)
     with mp.Manager() as manager, simulator.SimulatedDevice(simulation, acquisition_gate=gate) as device:
@@ -45,7 +45,7 @@ def test_library_gui_waits_for_armed_then_records_and_finishes(app, ui, tmp_path
             ui.doubleSpinBox_pispad23_intensity_dwell.setValue(2000)
         shared = manager.dict(channel="Sum")
         mcs_path = tmp_path / "scan.h5"
-        worker = LibraryMicroimageWorker(3, 2, 7, {}, shared, mode=mode, saving=dict(
+        worker = LibraryMicroimageWorker(3, 2, 7, h5_writer.shared_objects, shared, mode=mode, saving=dict(
             filename=str(mcs_path), frames=2, repetitions=1, dwell_seconds=0.001))
         worker.start()
         recorder = PISPAD23Timetagging(ui)
@@ -63,7 +63,7 @@ def test_library_gui_waits_for_armed_then_records_and_finishes(app, ui, tmp_path
             assert starts == [(True, True)]
             assert not failures
             assert shared["pispad23_uimg_status"]["total_dwells"] == 12
-            if record:
+            if record and mode == "timestamp":
                 assert recorder.path.is_file()
                 if format == "RAW":
                     assert recorder.path.read_bytes() == (device.payload if mode == "timestamp" else simulator.simulated_intensity(3, 2, 2))
@@ -105,6 +105,92 @@ def test_library_recording_without_microimage_pipeline(app, ui, tmp_path):
             recorder.close()
 
 
+def test_intensity_standard_h5_is_finalized_with_normal_mcs_metadata(app, ui, tmp_path,
+                                                                   h5_writer, monkeypatch):
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+    from brighteyes_mcs.storage.h5 import H5Manager
+
+    path = tmp_path / "intensity.h5"
+    with simulator.SimulatedDevice(simulator.SimulationConfig(width=3, height=2, frames=2)) as device:
+        configure(ui, device.addr)
+        ui.comboBox_detector_model.setCurrentText("TCP/IP - PI SPAD23R (Intensity)")
+        worker = LibraryMicroimageWorker(3, 2, 7, h5_writer.shared_objects, {}, mode="intensity",
+            saving=dict(filename=str(path), frames=2, repetitions=1, dwell_seconds=0.001))
+        worker.start()
+        recorder = PISPAD23Timetagging(ui)
+        try:
+            recorder.start(str(path), stream_microimage=True, microimage_worker=worker,
+                           mode="intensity", record=True)
+            wait_for(app, lambda: not recorder.active, timeout=20)
+            assert worker.statistics()["state"] == "complete"
+            assert recorder.path is None
+            assert str(path) in ui.label_pispad23ttm_status.text()
+            assert "preview only" not in ui.label_pispad23ttm_status.text()
+        finally:
+            recorder.close()
+            worker.join(5)
+            if worker.is_alive():
+                worker.terminate()
+                worker.join(2)
+
+    # Exercise the real finalizer/metadata writer after the bulk writer closes.
+    monkeypatch.setattr(H5Manager, "metadata_add_thumbnail", lambda *args: None)
+    ui.checkBox_uttmActivate.setChecked(False)
+    ui.lineEdit_comment.setText("Intensity scan")
+    configuration = dict(detector_model="PISPAD23", pispad23_channels=25)
+    window = SimpleNamespace(
+        started_normal=True, _mcs_saving_suppressed=False, ui=ui,
+        completed_acquisition_count=0, raw_stream_mode=False,
+        mcs_manager=SimpleNamespace(shared_dict=dict(filenameh5=str(path)),
+                                    registers_configuration=dict(time_resolution=1000)),
+        configurationFPGA_dict=dict(max_pixel=3),
+        configurationGUI_dict_beforeStart=configuration,
+        getGUI_data=lambda: configuration, _gui_config_for_h5=MainWindow._gui_config_for_h5,
+        _make_status_timestamp=lambda: "test", PROGRAM_STATE_ACQUISITION_DONE="done",
+        im_widget=SimpleNamespace(imageItem=None),
+        currentImage_size=(3, 2), currentImage_pos=(0, 0), currentImage_pixels=(3, 2),
+        _publish_filename_to_console=MagicMock(), ttm_remote_is_up=lambda: False,
+        plugin_signals=MagicMock())
+    window.stop = lambda: setattr(window, "started_normal", False)
+    MainWindow.finalizeAcquisition(window)
+    assert window.completed_acquisition_count == 1
+    assert list(tmp_path.iterdir()) == [path]
+    with h5py.File(path) as saved:
+        assert saved.attrs["comment"] == "Intensity scan"
+        assert saved["configurationGUI"].attrs["detector_model"] == "PISPAD23"
+        assert "configurationFPGA" in saved
+        assert "configurationSpadFCSmanager" in saved
+        assert "configurationGUI_beforeStart" in saved
+        assert saved["data"].shape == (1, 2, 2, 3, 1, 25)
+
+
+@pytest.mark.parametrize("model,suppressed", [("TCP/IP - PI SPAD23R (Intensity)", False),
+                                               (DETECTOR_PISPAD23_TS_UIMG, True)])
+def test_saved_tdc_checkbox_does_not_suppress_intensity_saving(ui, model, suppressed):
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    ui.checkBox_noMcsSaveWithTtm.setChecked(True)
+    ui.checkBox_pispad23ttmActivate.setChecked(True)
+    ui.checkBox_ttmActivate.setChecked(False)
+    ui.checkBox_uttmActivate.setChecked(False)
+    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False),
+        _current_detector_model=lambda: model,
+        _prepare_fpga_for_acquisition=MagicMock(side_effect=RuntimeError("No FPGA in this test")),
+        mcs_manager=SimpleNamespace(is_connected=False),
+        _update_fpga_connection_button=MagicMock(), _show_fpga_initialization_error=MagicMock())
+    MainWindow.beginAcquisition(window)
+    assert window._mcs_saving_suppressed == suppressed
+
+
+def test_intensity_requires_the_mcs_microimage_pipeline(ui):
+    recorder = PISPAD23Timetagging(ui)
+    with pytest.raises(ValueError, match="standard MCS microimage pipeline"):
+        recorder.start("unused.h5", mode="intensity")
+    assert not recorder.active
+
+
 def test_library_stop_cancels_pending_fpga_trigger_and_closes_file(app, ui, tmp_path):
     gate = threading.Event()
     with simulator.SimulatedDevice(acquisition_gate=gate) as device:
@@ -138,7 +224,7 @@ def test_library_format_remains_selectable_in_timestamp_mode(ui):
 
 @pytest.mark.parametrize("model,intensity", [("TCP/IP - PI SPAD23R (Intensity)", True),
                                             (DETECTOR_PISPAD23_TS_UIMG, False)])
-def test_shared_panel_selects_mode_controls_and_allows_recording(ui, model, intensity):
+def test_shared_panel_selects_mode_controls_and_tdc_recording(ui, model, intensity):
     from types import SimpleNamespace
 
     ui.comboBox_detector_model.setCurrentText(model)
@@ -146,7 +232,9 @@ def test_shared_panel_selects_mode_controls_and_allows_recording(ui, model, inte
     window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False),
                              started_normal=False, started_preview=False)
     MainWindow._sync_pispad23_ttm_detector(window)
-    assert ui.checkBox_pispad23ttmActivate.isEnabled()
+    assert ui.checkBox_pispad23ttmActivate.isEnabled() != intensity
+    assert ui.comboBox_pispad23ttm_format.isEnabled() != intensity
+    assert ui.lineEdit_pispad23ttm_folder.isEnabled() != intensity
     assert ui.spinBox_pispad23_channels.isEnabled() == intensity
     assert ui.checkBox_pispad23_external_frame.isEnabled() == intensity
     assert ui.pushButton_pispad23ttm_force_calibration.isEnabled() != intensity
@@ -162,6 +250,17 @@ def test_library_missing_dependency_is_reported_without_legacy_fallback(ui, monk
     monkeypatch.setitem(sys.modules, "brighteyes_pispad", None)
     recorder = PISPAD23Timetagging(ui)
     with pytest.raises(RuntimeError, match="Install brighteyes-pispad-libs"):
+        recorder.start("unused.h5")
+    assert not recorder.active
+
+
+def test_library_without_process_support_requires_an_update(ui, monkeypatch):
+    from types import SimpleNamespace
+    import sys
+
+    monkeypatch.setitem(sys.modules, "brighteyes_pispad", SimpleNamespace(AcquisitionSession=object))
+    recorder = PISPAD23Timetagging(ui)
+    with pytest.raises(RuntimeError, match="version 0.3 or newer"):
         recorder.start("unused.h5")
     assert not recorder.active
 

@@ -33,13 +33,13 @@ def run_worker(worker, config, timeout=15):
 
 
 @pytest.mark.parametrize("format", ["raw", "h5"])
-def test_library_worker_saves_timestamps_and_mcs_microimages(tmp_path, format):
+def test_library_worker_saves_timestamps_and_mcs_microimages(tmp_path, format, h5_writer):
     simulation = SimulationConfig(width=3, height=2, frames=2, photons_per_dwell=5,
                                   fragment_bytes=1, empty_every=4)
     timestamps, mcs_path = tmp_path / f"timestamps.{format}", tmp_path / "mcs.h5"
     with mp.Manager() as manager, SimulatedDevice(simulation) as device:
         shared = manager.dict(channel="Sum")
-        worker = LibraryMicroimageWorker(3, 2, 3, {}, shared, snake=True, saving=dict(
+        worker = LibraryMicroimageWorker(3, 2, 3, h5_writer.shared_objects, shared, snake=True, saving=dict(
             filename=str(mcs_path), frames=2, repetitions=1, dwell_seconds=0.001))
         status = run_worker(worker, pispad.AcquisitionConfig(addr=device.addr, output=timestamps,
                                                             format=format))
@@ -100,9 +100,9 @@ def test_worker_stops_while_waiting_for_configuration():
             worker.join(2)
 
 
-def test_stop_drains_partial_event_and_marks_mcs_incomplete(tmp_path):
+def test_stop_drains_partial_event_and_marks_mcs_incomplete(tmp_path, h5_writer):
     with SimulatedDevice(SimulationConfig(stall_after_bytes=38)) as device:
-        worker = LibraryMicroimageWorker(8, 4, 4, {}, {}, saving=dict(
+        worker = LibraryMicroimageWorker(8, 4, 4, h5_writer.shared_objects, {}, saving=dict(
             filename=str(tmp_path / "mcs.h5"), frames=2, repetitions=1, dwell_seconds=0.001))
         worker.configure(vars(pispad.AcquisitionConfig(addr=device.addr, output=tmp_path / "partial.h5",
                                                        format="h5", flush_ms=20)))
@@ -131,3 +131,34 @@ def test_pipeline_uses_only_library_worker():
     acquisition = SimpleNamespace(dim_x=2, dim_y=2, shared_dict={}, shared_objects={})
     assert isinstance(PISPAD23MicroimagePipeline().make_acquisition_loop(acquisition, True),
                       LibraryMicroimageWorker)
+
+
+@pytest.mark.parametrize("mode", ["timestamp", "intensity"])
+def test_mcs_worker_pulls_microimages_from_a_separate_rust_process(mode):
+    with SimulatedDevice() as device:
+        worker = LibraryMicroimageWorker(8, 4, 7, mode=mode)
+        status = run_worker(worker, pispad.AcquisitionConfig(
+            addr=device.addr, mode=mode, width=8, height=4, frames=2))
+        assert status["state"] == "complete"
+        assert status["worker_kind"] == "rust_process"
+        assert status["pid"] != worker.pid
+        assert status["sequence"] == 64
+
+
+def test_intensity_uses_standard_mcs_h5_without_a_native_recording(tmp_path, h5_writer):
+    path = tmp_path / "scan.h5"
+    with SimulatedDevice(SimulationConfig(width=3, height=2, frames=2)) as device:
+        worker = LibraryMicroimageWorker(3, 2, 3, h5_writer.shared_objects, {},
+            mode="intensity", saving=dict(filename=str(path), frames=2, repetitions=1,
+                                           dwell_seconds=0.001))
+        status = run_worker(worker, pispad.AcquisitionConfig(
+            addr=device.addr, mode="intensity", width=3, height=2, frames=2,
+            intensity_dwell_us=2000, output=tmp_path / "native.raw"))
+    assert status["state"] == "complete" and status["sequence"] == 12
+    assert list(tmp_path.iterdir()) == [path]
+    with h5py.File(path) as saved:
+        assert saved["data"].shape == (1, 2, 2, 3, 1, 25)
+        assert saved["data"].maxshape[0] is None
+        assert saved["data"][:].max() > 15
+        assert saved["data"].attrs["dwell_seconds"] == 0.002
+        assert saved["pispad23_microimages/valid"][:].all()
