@@ -2189,20 +2189,20 @@ class Ui_MainWindowDesign(object):
         self.pushButton_pispad23ttm_force_calibration = QPushButton(self.tab_pi_timetagging)
         self.pushButton_pispad23ttm_force_calibration.setObjectName(u"pushButton_pispad23ttm_force_calibration")
 
-        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23ttm_force_calibration, 12, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23ttm_force_calibration, 13, 0, 1, 3)
 
         self.label_pispad23ttm_status = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_status.setObjectName(u"label_pispad23ttm_status")
         self.label_pispad23ttm_status.setWordWrap(True)
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_status, 13, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_status, 14, 0, 1, 3)
 
         self.plainTextEdit_pispad23ttm_log = QPlainTextEdit(self.tab_pi_timetagging)
         self.plainTextEdit_pispad23ttm_log.setObjectName(u"plainTextEdit_pispad23ttm_log")
         self.plainTextEdit_pispad23ttm_log.setReadOnly(True)
         self.plainTextEdit_pispad23ttm_log.setMaximumBlockCount(5000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pispad23ttm_log, 14, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pispad23ttm_log, 15, 0, 1, 3)
 
         self.label_pispad23_mode = QLabel(self.tab_pi_timetagging)
         self.label_pispad23_mode.setObjectName(u"label_pispad23_mode")
@@ -2239,6 +2239,19 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_pispad23_intensity_dwell.setDecimals(3)
 
         self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23_intensity_dwell, 7, 1, 1, 1)
+
+        self.label_pispad23_verbosity = QLabel(self.tab_pi_timetagging)
+        self.label_pispad23_verbosity.setObjectName(u"label_pispad23_verbosity")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23_verbosity, 12, 0, 1, 1)
+
+        self.comboBox_pispad23_verbosity = QComboBox(self.tab_pi_timetagging)
+        self.comboBox_pispad23_verbosity.addItem("")
+        self.comboBox_pispad23_verbosity.addItem("")
+        self.comboBox_pispad23_verbosity.addItem("")
+        self.comboBox_pispad23_verbosity.setObjectName(u"comboBox_pispad23_verbosity")
+
+        self.gridLayout_pi_timetagging.addWidget(self.comboBox_pispad23_verbosity, 12, 1, 1, 2)
 
         self.tabWidget_3.addTab(self.tab_pi_timetagging, "")
 
@@ -4710,6 +4723,7 @@ class Ui_MainWindowDesign(object):
         self.tabWidget_2.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(1)
         self.tabWidget_4.setCurrentIndex(0)
+        self.comboBox_pispad23_verbosity.setCurrentIndex(1)
         self.comboLaserSeq_1.setCurrentIndex(1)
         self.comboBox_analogSelect_B.setCurrentIndex(1)
         self.comboBox_slavemode_type.setCurrentIndex(2)
@@ -5084,6 +5098,14 @@ class Ui_MainWindowDesign(object):
         self.checkBox_pispad23_external_frame.setText(QCoreApplication.translate("MainWindowDesign", u"Intensity: use external frame clock", None))
         self.label_pispad23_intensity_dwell.setText(QCoreApplication.translate("MainWindowDesign", u"Intensity dwell (0 = external clock)", None))
         self.doubleSpinBox_pispad23_intensity_dwell.setSuffix(QCoreApplication.translate("MainWindowDesign", u" us", None))
+        self.label_pispad23_verbosity.setText(QCoreApplication.translate("MainWindowDesign", u"pSPAD TCP verbosity", None))
+        self.comboBox_pispad23_verbosity.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Minimal", None))
+        self.comboBox_pispad23_verbosity.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Normal", None))
+        self.comboBox_pispad23_verbosity.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"Full", None))
+
+#if QT_CONFIG(tooltip)
+        self.comboBox_pispad23_verbosity.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Independent of MCS logging. Minimal: lifecycle/errors. Normal: all commands, replies and receive sizes without data payloads. Full: also save every received byte; large logs and slower acquisition.", None))
+#endif // QT_CONFIG(tooltip)
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_pi_timetagging), QCoreApplication.translate("MainWindowDesign", u"PI SPAD23R", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"External Integration", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_config), QCoreApplication.translate("MainWindowDesign", u"Config", None))

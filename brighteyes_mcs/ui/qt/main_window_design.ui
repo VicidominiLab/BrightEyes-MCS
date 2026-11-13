@@ -3394,7 +3394,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="12" column="0" colspan="3">
+                    <item row="13" column="0" colspan="3">
                      <widget class="QPushButton" name="pushButton_pispad23ttm_force_calibration">
                       <property name="toolTip">
                        <string>Send T,c,1 to the configured PI SPAD23R TTM endpoint. Do not use while a recorder or PI SPAD23R image acquisition is active.</string>
@@ -3404,7 +3404,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="13" column="0" colspan="3">
+                    <item row="14" column="0" colspan="3">
                      <widget class="QLabel" name="label_pispad23ttm_status">
                       <property name="text">
                        <string>Idle</string>
@@ -3414,7 +3414,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="14" column="0" colspan="3">
+                    <item row="15" column="0" colspan="3">
                      <widget class="QPlainTextEdit" name="plainTextEdit_pispad23ttm_log">
                       <property name="readOnly">
                        <bool>true</bool>
@@ -3431,6 +3431,20 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
 <item row="6" column="0" colspan="3"><widget class="QCheckBox" name="checkBox_pispad23_external_frame"><property name="text"><string>Intensity: use external frame clock</string></property><property name="checked"><bool>true</bool></property></widget></item>
 <item row="7" column="0"><widget class="QLabel" name="label_pispad23_intensity_dwell"><property name="text"><string>Intensity dwell (0 = external clock)</string></property></widget></item>
 <item row="7" column="1"><widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23_intensity_dwell"><property name="maximum"><double>1000000.0</double></property><property name="decimals"><number>3</number></property><property name="suffix"><string> us</string></property></widget></item>
+                    <item row="12" column="0">
+                     <widget class="QLabel" name="label_pispad23_verbosity">
+                      <property name="text"><string>pSPAD TCP verbosity</string></property>
+                     </widget>
+                    </item>
+                    <item row="12" column="1" colspan="2">
+                     <widget class="QComboBox" name="comboBox_pispad23_verbosity">
+                      <property name="toolTip"><string>Independent of MCS logging. Minimal: lifecycle/errors. Normal: all commands, replies and receive sizes without data payloads. Full: also save every received byte; large logs and slower acquisition.</string></property>
+                      <property name="currentIndex"><number>1</number></property>
+                      <item><property name="text"><string>Minimal</string></property></item>
+                      <item><property name="text"><string>Normal</string></property></item>
+                      <item><property name="text"><string>Full</string></property></item>
+                     </widget>
+                    </item>
 </layout>
                   </widget>
 

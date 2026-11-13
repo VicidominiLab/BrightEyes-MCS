@@ -2,11 +2,10 @@
 import math
 from pathlib import Path
 import queue
-import socket
 import threading
 import time
 from PySide6.QtCore import QObject, QTimer, Signal
-from ...logging_setup import logger, trace_action
+from ...logging_setup import logger, trace_action, default_log_dir, report_logging_failure
 
 def measurement_ms(ui, *, preview=False):
     """One frame plus startup/wait margin for preview; full recording budget.
@@ -63,6 +62,7 @@ class PISPAD23Timetagging(QObject):
         self.armed = False
         self.stopping = False
         self.path = None
+        self.protocol_log_path = None
         self.messages = queue.Queue()
         self.timer = QTimer(self)
         self.timer.setInterval(50)
@@ -96,7 +96,7 @@ class PISPAD23Timetagging(QObject):
     def _enable_settings(self, enabled):
         for name in (
             "lineEdit_pispad23ttm_folder", "lineEdit_pispad23ttm_address", "toolButton_pispad23ttm_folder",
-            "comboBox_pispad23ttm_format", "doubleSpinBox_pispad23ttm_settle",
+            "comboBox_pispad23ttm_format", "comboBox_pispad23_verbosity", "doubleSpinBox_pispad23ttm_settle",
             "doubleSpinBox_pispad23ttm_margin", "doubleSpinBox_pispad23ttm_timeout",
             "doubleSpinBox_pispad23ttm_preview_margin", "pushButton_pispad23ttm_force_calibration",
             "spinBox_pispad23ttm_uimg_buffer", "spinBox_pispad23ttm_uimg_batch",
@@ -126,19 +126,21 @@ class PISPAD23Timetagging(QObject):
             import brighteyes_pispad as pispad
         except ImportError as error:
             raise RuntimeError("Install brighteyes-pispad-libs in the Python environment running BrightEyes-MCS.") from error
-        if "mode" not in pispad.AcquisitionConfig.__dataclass_fields__:
-            raise RuntimeError("Update brighteyes-pispad-libs to version 0.2 or newer.")
+        if "verbosity" not in pispad.AcquisitionConfig.__dataclass_fields__:
+            raise RuntimeError("Update brighteyes-pispad-libs to version 0.2.1 or newer for TCP logging.")
         from ...acquisition.detectors.pispad23.library_worker import LibraryMicroimageWorker
 
         if stream_microimage and not isinstance(microimage_worker, LibraryMicroimageWorker):
             raise RuntimeError("Microimage acquisition requires the PI library worker.")
         raw = self.ui.comboBox_pispad23ttm_format.currentText() == "RAW"
         self.path = None
+        self.protocol_log_path = None
         if record:
             folder = self.ui.lineEdit_pispad23ttm_folder.text().strip() or str(Path(filename).parent)
             Path(folder).mkdir(parents=True, exist_ok=True)
             self.path = output_path(folder, filename, raw, mode).resolve()
         duration = measurement_ms(self.ui, preview=preview)
+        protocol_options = self._protocol_options()
         config = pispad.AcquisitionConfig(
             addr=self.ui.lineEdit_pispad23ttm_address.text().strip(),
             output=str(self.path) if self.path else None, format="raw" if raw else "h5",
@@ -151,6 +153,7 @@ class PISPAD23Timetagging(QObject):
             wait_for_trigger=wait_for_trigger,
             microimage_capacity=self.ui.spinBox_pispad23ttm_uimg_buffer.value(),
             idle_timeout_sec=max(60, math.ceil(duration / 1000) + 5),
+            **protocol_options,
         )
         worker = microimage_worker
         if worker is None:
@@ -262,6 +265,17 @@ class PISPAD23Timetagging(QObject):
             worker.terminate()
             worker.join(timeout=2)
 
+    def _protocol_options(self):
+        # The PI library owns this verbosity; MCS --log-level never changes it.
+        selected = self.ui.comboBox_pispad23_verbosity.currentIndex() + 1
+        self.protocol_log_path = default_log_dir().resolve() / f"pispad-tcp-{time.time_ns()}.log"
+        try:
+            self.protocol_log_path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            report_logging_failure("pSPAD protocol log directory", error)
+        self.log(f"pSPAD TCP verbosity={selected}; protocol log: {self.protocol_log_path}")
+        return dict(verbosity=selected, log_file=str(self.protocol_log_path))
+
     @trace_action
     def force_calibration(self):
         """Request a standalone vendor TDC calibration without recording data."""
@@ -275,29 +289,20 @@ class PISPAD23Timetagging(QObject):
         except ValueError:
             self.ui.label_pispad23ttm_status.setText("Invalid TTM endpoint; use host:port.")
             return
+        protocol_options = self._protocol_options()
         self.calibrating = True
         self._enable_settings(False)
         self.ui.label_pispad23ttm_status.setText("Forcing PI SPAD23R TTM calibration…")
         self.log(f"Force Calibration: connecting to {endpoint}")
         threading.Thread(
-            target=self._force_calibration_worker, args=(host, port), daemon=True
+            target=self._force_calibration_worker, args=(host, port, protocol_options), daemon=True
         ).start()
 
-    def _force_calibration_worker(self, host, port):
+    def _force_calibration_worker(self, host, port, protocol_options):
         try:
-            with socket.create_connection((host, port), timeout=5) as connection:
-                connection.settimeout(60)
-                try:
-                    greeting = connection.recv(8192)
-                    if greeting:
-                        self.calibration_log.emit(
-                            f"Server greeting: {greeting.decode('utf-8', errors='replace').strip()}"
-                        )
-                except socket.timeout:
-                    pass
-                connection.sendall(b"T,c,1\n")
-                response = connection.recv(8192).decode("utf-8", errors="replace").strip()
-                self.calibration_finished.emit(True, response or "Calibration command completed.")
+            from brighteyes_pispad import calibrate
+            response = calibrate(f"{host}:{port}", **protocol_options)
+            self.calibration_finished.emit(True, response or "Calibration command completed.")
         except Exception as error:
             self.calibration_finished.emit(False, str(error))
 

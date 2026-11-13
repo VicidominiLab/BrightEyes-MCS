@@ -166,6 +166,30 @@ def test_library_missing_dependency_is_reported_without_legacy_fallback(ui, monk
     assert not recorder.active
 
 
+@pytest.mark.parametrize("mcs_level", [0, 3])
+@pytest.mark.parametrize("selected,level", [("Minimal", 1), ("Normal", 2), ("Full", 3)])
+def test_protocol_setting_is_independent_of_mcs_logging(app, ui, tmp_path, monkeypatch,
+                                                      mcs_level, selected, level):
+    monkeypatch.setenv("BRIGHTEYES_LOG_VERBOSITY", str(mcs_level))
+    monkeypatch.setenv("BRIGHTEYES_LOG_DIR", str(tmp_path / "logs"))
+    with simulator.SimulatedDevice(simulator.SimulationConfig(width=3, height=2, frames=2)) as device:
+        configure(ui, device.addr)
+        ui.comboBox_pispad23_verbosity.setCurrentText(selected)
+        recorder = PISPAD23Timetagging(ui)
+        try:
+            recorder.start(str(tmp_path / "scan.h5"), record=False)
+            assert not ui.comboBox_pispad23_verbosity.isEnabled()
+            wait_for(app, lambda: not recorder.active, timeout=20)
+            assert ui.comboBox_pispad23_verbosity.isEnabled()
+            log = recorder.protocol_log_path.read_text()
+            assert "state=complete" in log
+            assert ("TX command" in log) == (level >= 2)
+            assert ("RX stream offset=" in log) == (level == 3)
+            assert str(recorder.protocol_log_path) in ui.plainTextEdit_pispad23ttm_log.toPlainText()
+        finally:
+            recorder.close()
+
+
 def test_nonzero_worker_exit_is_reported_even_after_done(app, ui, tmp_path):
     gate = threading.Event()
     with simulator.SimulatedDevice(simulator.SimulationConfig(width=3, height=2),

@@ -4,7 +4,7 @@ This integration was developed at Istituto Italiano di Tecnologia for our
 microscope workflows. It is our tool, not an official or endorsed Pi Imaging tool.
 
 Both **TCP/IP - PI SPAD23R (Intensity)** and **TS mode - uimg** use
-`brighteyes-pispad-libs>=0.2.0`. The executable backend, subprocess launcher,
+`brighteyes-pispad-libs>=0.2.1`. The executable backend, subprocess launcher,
 Python CS receiver/SPAD packer, and localhost TCP preview server were removed.
 The vendor device endpoint remains TCP/IP.
 
@@ -13,7 +13,7 @@ The vendor device endpoint remains TCP/IP.
 Choose the wheel matching the Python running MCS. For Python 3.12 on Windows x64:
 
 ```powershell
-python -m pip install "C:\path\to\brighteyes_pispad_libs-0.2.0-cp312-cp312-win_amd64.whl"
+python -m pip install "C:\path\to\brighteyes_pispad_libs-0.2.1-cp312-cp312-win_amd64.whl"
 ```
 
 Use the cp313 wheel for Python 3.13. These wheels contain native Rust and static
@@ -32,6 +32,17 @@ duration; external dwell uses the FPGA timing settings.
 Intensity additionally enables detector channel count (25 for SPAD23R, 23 for
 SPAD23G), external frame clock, and dwell time in microseconds (0 = external).
 Timestamp mode enables duration margins and Force Calibration.
+
+**pSPAD TCP verbosity** controls the library independently of MCS `--log-level`:
+Minimal logs lifecycle/errors; Normal (default) logs all commands and replies
+plus receive byte counts without binary payloads; Full also stores every wire
+byte in hex. The selection is saved with the PI configuration and applies to
+both acquisition modes, preview, and Force Calibration. Each operation writes
+`pispad-tcp-<id>.log` in the MCS log folder and displays its path in the tab.
+Use **Load / Save Cfg → Open log folder** to find these files, including when
+MCS application logging is off. Full mode creates large files and may slow
+acquisition; reserve it for short diagnostic runs. Measurement RAW/HDF5
+recording remains a separate setting.
 
 The PI recording checkbox saves the selected mode alongside acquisition.
 The choice RAW or HDF5 is fixed at startup; simultaneous RAW and HDF5 recording

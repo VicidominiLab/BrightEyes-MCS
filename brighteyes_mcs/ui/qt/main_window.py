@@ -135,6 +135,7 @@ PISPAD23_TIMETAGGING_CONFIGURATION_KEYS = (
     "pispad23_intensity_dwell_us",
     "pispad23ttm_folder",
     "pispad23ttm_format",
+    "pispad23_verbosity",
     "pispad23ttm_address",
     "pispad23ttm_uimg_buffer",
     "pispad23ttm_uimg_batch",
@@ -1630,6 +1631,7 @@ class MainWindow(QMainWindow):
         self.ui.checkBox_rawStreamAcquisition.setEnabled(not busy and not microimage)
         ttm.setEnabled(not busy)
         self.ui.comboBox_pispad23ttm_format.setEnabled(not busy)
+        self.ui.comboBox_pispad23_verbosity.setEnabled(not busy)
         self.ui.label_pispad23_mode.setText("Intensity" if intensity else "Timestamp")
         for name in ("spinBox_pispad23_channels", "checkBox_pispad23_external_frame",
                      "doubleSpinBox_pispad23_intensity_dwell"):
@@ -2585,6 +2587,7 @@ class MainWindow(QMainWindow):
             "pispad23_intensity_dwell_us": (float, self.ui.doubleSpinBox_pispad23_intensity_dwell),
             "pispad23ttm_folder": (str, self.ui.lineEdit_pispad23ttm_folder),
             "pispad23ttm_format": (str, self.ui.comboBox_pispad23ttm_format),
+            "pispad23_verbosity": (str, self.ui.comboBox_pispad23_verbosity),
             "pispad23ttm_address": (str, self.ui.lineEdit_pispad23ttm_address),
             "pispad23ttm_uimg_buffer": (int, self.ui.spinBox_pispad23ttm_uimg_buffer),
             "pispad23ttm_uimg_batch": (int, self.ui.spinBox_pispad23ttm_uimg_batch),

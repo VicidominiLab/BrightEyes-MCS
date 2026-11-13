@@ -24,7 +24,8 @@ def app():
 
 
 @pytest.fixture
-def ui(app):
+def ui(app, tmp_path_factory, monkeypatch):
+    monkeypatch.setenv("BRIGHTEYES_LOG_DIR", str(tmp_path_factory.mktemp("pispad-logs")))
     window = QMainWindow()
     design = Path(__file__).parents[1] / "brighteyes_mcs/ui/qt/main_window_design.ui"
     for connection in ET.parse(design).findall("./connections/connection"):
@@ -173,10 +174,16 @@ def test_timetagging_defaults_are_loaded_from_plugins_cfg(ui):
     assert ui.doubleSpinBox_pispad23ttm_settle.value() == 0.5
     assert ui.doubleSpinBox_pispad23ttm_preview_margin.value() == 0.5
     assert ui.doubleSpinBox_pispad23ttm_timeout.value() == 120.0
+    assert ui.comboBox_pispad23_verbosity.currentText() == "Normal"
     assert (
         MainWindow._get_pispad23_timetagging_configuration(window)
         == configuration
     )
+    ui.comboBox_pispad23_verbosity.setCurrentText("Full")
+    saved = MainWindow._get_pispad23_timetagging_configuration(window)
+    ui.comboBox_pispad23_verbosity.setCurrentText("Minimal")
+    MainWindow._apply_pispad23_timetagging_configuration(window, saved)
+    assert ui.comboBox_pispad23_verbosity.currentText() == "Full"
 
 
 def test_force_calibration_sends_vendor_command_and_logs_response(app, ui):
