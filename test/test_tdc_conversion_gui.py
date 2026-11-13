@@ -116,6 +116,8 @@ def test_raw_recording_keeps_metadata_when_no_main_mcs_file_is_saved(app, ui, tm
                 assert file.attrs["comment"] == "TDC only"
                 assert file.attrs["acquisition_status"] == "complete"
                 assert file["configurationGUI"].attrs["nx"] == 3
+                assert file["pispad_acquisition"].attrs["mode"] == "timestamp"
+                assert file["pispad_acquisition"].attrs["measurement_ms"] > 0
             assert read_geometry(sidecar_path(recorder.path)).width == 3
         finally:
             recorder.close()

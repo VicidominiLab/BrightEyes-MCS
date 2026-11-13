@@ -105,6 +105,31 @@ def test_library_recording_without_microimage_pipeline(app, ui, tmp_path):
             recorder.close()
 
 
+def test_frozen_qt_loop_triggers_rust_abort_without_gui_callbacks(app, ui, tmp_path):
+    with simulator.SimulatedDevice(acquisition_gate=threading.Event()) as device:
+        configure(ui, device.addr)
+        recorder = PISPAD23Timetagging(ui)
+        ready, failures = [], []
+        recorder.ready.connect(lambda: ready.append(True))
+        recorder.failed.connect(failures.append)
+        try:
+            recorder.start(str(tmp_path / "unused.h5"), record=False)
+            wait_for(app, lambda: bool(ready))
+            worker = recorder.library_worker
+            # Deliberately block the real Qt timer. The MCS Python worker keeps
+            # polling data/status, so only the explicit GUI heartbeat can expire.
+            worker.join(timeout=13)
+            assert not worker.is_alive()
+            status = worker.statistics()
+            assert status["abort_sent"] and "heartbeat expired" in status["error"]
+            commands = [c for c in device.commands if c.startswith("SB,")]
+            assert len(commands) == 2 and commands[0] == commands[1]
+            wait_for(app, lambda: not recorder.active)
+            assert any("heartbeat expired" in message for message in failures)
+        finally:
+            recorder.close()
+
+
 def test_intensity_standard_h5_is_finalized_with_normal_mcs_metadata(app, ui, tmp_path,
                                                                    h5_writer, monkeypatch):
     from types import SimpleNamespace

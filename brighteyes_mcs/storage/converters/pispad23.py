@@ -1,4 +1,4 @@
-"""Offline PISPAD23 raw conversion scaffold."""
+"""pSPAD TDC RAW conversion through the library, with MCS metadata preservation."""
 
 from pathlib import Path
 
@@ -151,10 +151,10 @@ def convert_tdc_raw(raw, *, tdc_output=None, intensity_output=None, metadata=Non
 
 def convert_pispad23_raw_acquisition(metadata_filename, output_filename=None, progress_callback=None):
     """
-    Placeholder for PISPAD23 raw-bunch conversion.
+    Legacy CS-bunch entry point, distinct from six-byte TDC RAW conversion.
 
-    The PISPAD23 raw stream is intentionally not SPAD FIFO words. Fill this
-    converter once the real detector payload and decoding rules are available.
+    New TDC RAW files are supported by convert_tdc_raw and the PI conversion
+    dialog. Historical CS bunch files routed here are not TDC event records.
     """
     metadata_filename = Path(metadata_filename).resolve()
     if progress_callback is not None:

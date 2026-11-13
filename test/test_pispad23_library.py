@@ -1,6 +1,7 @@
 """Exercise the library inside MCS worker processes, without Qt or hardware."""
 
 import multiprocessing as mp
+import threading
 import time
 from types import SimpleNamespace
 
@@ -30,6 +31,81 @@ def run_worker(worker, config, timeout=15):
         pytest.fail("library worker did not stop")
     assert worker.done.is_set()
     return worker.statistics()
+
+
+@pytest.mark.parametrize("mode", ["timestamp", "intensity"])
+def test_gui_heartbeat_loss_aborts_even_when_python_worker_keeps_polling(mode):
+    with SimulatedDevice(acquisition_gate=threading.Event()) as device:
+        worker = LibraryMicroimageWorker(4, 1, 4, mode=mode)
+        worker.configure(vars(pispad.AcquisitionConfig(addr=device.addr, mode=mode,
+                                width=4, height=1, watchdog_timeout_sec=1)))
+        worker.start()
+        try:
+            deadline = time.monotonic() + 10
+            while not worker.connected.is_set():
+                assert time.monotonic() < deadline
+                worker.keep_alive()
+                assert worker.is_alive()
+                time.sleep(0.05)
+            deadline = time.monotonic() + 1.3
+            while time.monotonic() < deadline:
+                worker.keep_alive()
+                assert worker.is_alive()
+                time.sleep(0.05)
+            assert worker.connected.is_set()
+            worker.join(5)  # Freeze the GUI pulse while the worker still runs.
+            assert not worker.is_alive()
+            status = worker.statistics()
+            assert "heartbeat expired" in status["error"]
+            assert status["abort_sent"]
+            commands = [c for c in device.commands if c.startswith(("SB,", "CS,"))]
+            assert len(commands) == 2 and commands[0] == commands[1]
+        finally:
+            worker.stop()
+            worker.join(2)
+            if worker.is_alive():
+                worker.terminate()
+                worker.join(2)
+
+
+@pytest.mark.parametrize("mode", ["timestamp", "intensity"])
+def test_terminated_mcs_worker_sends_abort_through_native_owner_death_guard(mode):
+    with SimulatedDevice(acquisition_gate=threading.Event()) as device:
+        worker = LibraryMicroimageWorker(4, 1, 4, mode=mode)
+        worker.configure(vars(pispad.AcquisitionConfig(addr=device.addr, mode=mode, width=4, height=1)))
+        worker.start()
+        try:
+            assert worker.connected.wait(10)
+            worker.terminate()
+            worker.join(3)
+            deadline = time.monotonic() + 5
+            while len([c for c in device.commands if c.startswith(("SB,", "CS,"))]) < 2:
+                assert time.monotonic() < deadline
+                time.sleep(0.01)
+            commands = [c for c in device.commands if c.startswith(("SB,", "CS,"))]
+            assert len(commands) == 2 and commands[0] == commands[1]
+        finally:
+            if worker.is_alive():
+                worker.terminate()
+                worker.join(2)
+
+
+class FailingPreviewWorker(LibraryMicroimageWorker):
+    def _publish_preview(self, preview, status):
+        if status.get("runs_started"):
+            raise RuntimeError("simulated MCS preview failure")
+        super()._publish_preview(preview, status)
+
+
+@pytest.mark.parametrize("mode", ["timestamp", "intensity"])
+def test_mcs_failure_sends_abort(mode):
+    with SimulatedDevice(acquisition_gate=threading.Event()) as device:
+        worker = FailingPreviewWorker(4, 1, 4, {}, {}, mode=mode)
+        status = run_worker(worker, pispad.AcquisitionConfig(addr=device.addr, mode=mode, width=4, height=1))
+        assert "simulated MCS preview failure" in status["error"]
+        assert status["abort_sent"]
+        commands = [c for c in device.commands if c.startswith(("SB,", "CS,"))]
+        assert len(commands) == 2 and commands[0] == commands[1]
 
 
 @pytest.mark.parametrize("format", ["raw", "h5"])

@@ -139,8 +139,9 @@ def test_companion_mcs_file_detection_and_geometry(tmp_path):
         data = file.create_dataset("data", (2, 3, 4, 5, 1, 25), dtype="u4")
         data.attrs["dwell_seconds"] = 0.003
         file.create_group("pispad23_microimages").attrs["snake_walk_xy"] = True
+        file.create_group("configurationFPGA").attrs["snake_z"] = "true"
     assert find_metadata(raw) == metadata
-    assert read_geometry(metadata) == ScanGeometry(5, 4, 3, 2, 0.003, snake=True)
+    assert read_geometry(metadata) == ScanGeometry(5, 4, 3, 2, 0.003, snake=True, snake_z=True)
 
 
 def test_active_acquisition_cannot_be_converted(tmp_path):

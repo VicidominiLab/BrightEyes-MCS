@@ -33,6 +33,7 @@ class LibraryMicroimageWorker(mp.Process):
         self.mode, self.acquisition_done = mode, acquisition_done
         self.connected, self.done, self.stop_event = mp.Event(), mp.Event(), mp.Event()
         self.commands = mp.Queue(maxsize=1)
+        self._heartbeat = mp.Value("Q", 0)
         self._status = mp.Array("c", 16384)
         self._publish_status(dict(state="waiting", finished=False, armed=False, error=""))
         if shared_objects is not None:
@@ -63,6 +64,11 @@ class LibraryMicroimageWorker(mp.Process):
 
     def stop(self):
         self.stop_event.set()
+
+    def keep_alive(self):
+        """Called by the GUI timer, never by a background keepalive thread."""
+        with self._heartbeat.get_lock():
+            self._heartbeat.value += 1
 
     def _publish_preview(self, preview, status):
         shared_mask = self.shared_objects.get("shared_fingerprint_mask")
@@ -116,12 +122,18 @@ class LibraryMicroimageWorker(mp.Process):
                 preview = MicroimagePreview(self.width, self.height, snake=self.snake,
                                             shared_objects=self.shared_objects)
             session = AcquisitionSession(AcquisitionConfig(**options)).start()
+            heartbeat = -1
             if self.shared_dict.get("software_trigger_enabled", False):
                 self.shared_dict["software_trigger_worker_ready"] = True
             last_publish = 0
             sequence = 0
             processed_frames = 0
             while not self.stop_event.is_set():
+                with self._heartbeat.get_lock():
+                    current_heartbeat = self._heartbeat.value
+                if current_heartbeat != heartbeat:
+                    session.keep_alive()
+                    heartbeat = current_heartbeat
                 # Sample completion BEFORE reading: finished=True then guarantees
                 # no producer can append another native tail after an empty read.
                 native = session.statistics()
@@ -166,6 +178,12 @@ class LibraryMicroimageWorker(mp.Process):
                 try:
                     final = session.wait(timeout=10)
                     status.update(final)
+                except Exception as exception:
+                    error = error or str(exception)
+                # wait() raises for a failed run. Still retain the final native
+                # abort outcome/counters rather than the last healthy snapshot.
+                try:
+                    status.update(session.statistics())
                 except Exception as exception:
                     error = error or str(exception)
             if writer is not None:

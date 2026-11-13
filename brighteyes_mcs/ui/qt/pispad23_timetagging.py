@@ -133,6 +133,8 @@ class PISPAD23Timetagging(QObject):
             raise RuntimeError("Install brighteyes-pispad-libs in the Python environment running BrightEyes-MCS.") from error
         if getattr(pispad.AcquisitionSession, "worker_kind", None) != "rust_process":
             raise RuntimeError("Update brighteyes-pispad-libs to version 0.3 or newer for Rust process acquisition.")
+        if not hasattr(pispad.AcquisitionSession, "keep_alive"):
+            raise RuntimeError("Update brighteyes-pispad-libs to version 0.3.2 or newer for device abort and watchdog support.")
         from ...acquisition.detectors.pispad23.library_worker import LibraryMicroimageWorker
 
         if stream_microimage and not isinstance(microimage_worker, LibraryMicroimageWorker):
@@ -159,6 +161,7 @@ class PISPAD23Timetagging(QObject):
             wait_for_trigger=wait_for_trigger,
             microimage_capacity=self.ui.spinBox_pispad23ttm_uimg_buffer.value(),
             idle_timeout_sec=max(60, math.ceil(duration / 1000) + 5),
+            watchdog_timeout_sec=10,
             **protocol_options,
         )
         worker = microimage_worker
@@ -174,7 +177,7 @@ class PISPAD23Timetagging(QObject):
             geometry = ScanGeometry(self.ui.spinBox_nx.value(), self.ui.spinBox_ny.value(),
                 self.ui.spinBox_nframe.value(), self.ui.spinBox_nrepetition.value(), dwell,
                 self.ui.checkBox_snake.isChecked(), self.ui.checkBox_snake_z.isChecked())
-            create_metadata(self.path, geometry, metadata)
+            create_metadata(self.path, geometry, metadata, acquisition=vars(config))
         worker.configure(vars(config))
         if not stream_microimage:
             worker.start()
@@ -198,6 +201,8 @@ class PISPAD23Timetagging(QObject):
         worker = self.library_worker
         if worker is None:
             return
+        if not self.stopping:
+            worker.keep_alive()
         while not self.messages.empty():
             self.log(self.messages.get_nowait())
         status = worker.statistics()

@@ -33,7 +33,7 @@ def sidecar_path(raw):
     return Path(str(raw) + ".metadata.h5")
 
 
-def create_metadata(raw, geometry, snapshot=None):
+def create_metadata(raw, geometry, snapshot=None, *, acquisition=None):
     """Create before acquisition, including when the main MCS file is suppressed."""
     path = sidecar_path(raw)
     snapshot = snapshot or {}
@@ -41,8 +41,11 @@ def create_metadata(raw, geometry, snapshot=None):
     try:
         manager.metadata_add_initial(snapshot.get("comment", ""))
         manager.set_attributes("/", dict(pispad_raw_format="tdc6", raw_file=Path(raw).name,
+                                          mcs_file=str(snapshot.get("mcs_filename", "")),
                                           acquisition_status="starting"))
         manager.set_attributes("pispad_tdc_geometry", asdict(geometry))
+        if acquisition is not None:
+            manager.metadata_add_dict("pispad_acquisition", dict(acquisition))
         for group, values in snapshot.get("groups", {}).items():
             register_names = LEGACY_H5_REGISTER_NAME_MAP if group in (
                 "configurationFPGA", "configurationSpadFCSmanager") else None
@@ -151,8 +154,14 @@ def read_geometry(metadata):
                 dwell *= float(gui.get("circular_points", 1)) * float(gui.get("circular_repetition", 1))
         info = file.get("pispad23_microimages")
         info = dict(info.attrs) if info is not None else {}
+        registers = {}
+        for group in ("configurationSpadFCSmanager", "configurationFPGA"):
+            if group in file:
+                registers.update(file[group].attrs)
         if any(v is None for v in (width, height, frames, repetitions, dwell)):
             return None
         return ScanGeometry(int(width), int(height), int(frames), int(repetitions), float(dwell),
-                            as_bool(info.get("snake_walk_xy", gui.get("snake", False))),
-                            as_bool(info.get("snake_walk_z", gui.get("snake_z", False))))
+            as_bool(info.get("snake_walk_xy", registers.get("xy_snake_scan_enable",
+                registers.get("snake", gui.get("snake", False))))),
+            as_bool(info.get("snake_walk_z", registers.get("z_snake_scan_enable",
+                registers.get("snake_z", gui.get("snake_z", False))))))

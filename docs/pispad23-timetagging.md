@@ -4,7 +4,7 @@ This integration was developed at Istituto Italiano di Tecnologia for our
 microscope workflows. It is our tool, not an official or endorsed Pi Imaging tool.
 
 Both **TCP/IP - PI SPAD23R (Intensity)** and **TS mode - uimg** use
-`brighteyes-pispad-libs>=0.3.0`. The library launches its packaged Rust worker
+`brighteyes-pispad-libs>=0.3.2`. The library launches its packaged Rust worker
 for TCP reception, buffering, decoding and recording. MCS pulls completed
 microimages from the worker's memory-mapped FIFO.
 
@@ -13,7 +13,7 @@ microimages from the worker's memory-mapped FIFO.
 Choose the wheel matching the Python running MCS. For Python 3.12 on Windows x64:
 
 ```powershell
-python -m pip install "C:\path\to\brighteyes_pispad_libs-0.3.0-cp312-cp312-win_amd64.whl"
+python -m pip install "C:\path\to\brighteyes_pispad_libs-0.3.2-cp312-cp312-win_amd64.whl"
 ```
 
 Use the cp313 wheel for Python 3.13. These wheels contain native Rust and static
@@ -70,6 +70,21 @@ The Rust backend reports FIFO overflow instead of silently dropping rows.
 MCS stops acquisition and marks the count file incomplete on delivery failure;
 native TDC recording is independent of microimage delivery at the library level.
 
+Stop, cancellation, and acquisition failures request a hardware abort in both
+intensity and TDC modes. Per the [pSPAD documentation](https://piimaging.com/doc-pspad),
+Rust repeats the exact active CS/SB command once on the existing TCP connection.
+After a recognized DONE/ERROR it disarms this toggle, so normal completion and
+cleanup do not restart the detector. Abort attempts and TCP write failures are
+included in library status and the PI protocol log.
+
+MCS enables a 10-second Rust watchdog. Only the GUI polling timer renews its
+heartbeat, forwarded by the MCS worker; data/status polling alone does not.
+A frozen GUI or blocked worker therefore triggers the hardware abort without
+requiring Python or Qt to respond. If the Python worker is killed, Rust detects
+owner-pipe EOF, sends the abort, and exits after at most two seconds of cleanup.
+The stop is best effort if TCP is lost or the Rust process itself is killed;
+the command is never blindly retried because another toggle could start a run.
+
 The MCS worker assembles original microimages into frames and sends them to
 the same `H5ManagerProcess` used by FPGA SPAD acquisition. Acknowledged frame
 writes preserve uint32 counts and report storage failures. Shared preview
@@ -112,6 +127,38 @@ while selected TDC event recording and preview continue. A saved PI TDC checkbox
 does not suppress intensity saving. Live previews use shared
 memory; read HDF5 recordings after the writer closes (no SWMR).
 
+## Batch TDC RAW conversion
+
+Open **PI SPAD23R → Convert TDC RAW files…** and add one or multiple completed
+TDC RAW recordings. Select **TDC HDF5 (events)**, **Intensity HDF5 (MCS)**, or
+both. The output folder defaults to each RAW file's folder. Outputs are named
+`<raw-stem>-tdc.h5` and `<raw-stem>-intensity.h5`. Existing files are never
+overwritten. Conversion runs in the background, reports each file's result,
+and continues after individual file failures. Cancel finishes the current
+native conversion step before discarding unpublished output.
+
+All TDC decoding is provided by `brighteyes_pispad`: its Rust event converter
+creates schema-v3 TDC HDF5; its offline microimage iterator reuses the live Rust
+dwell decoder for intensity reconstruction. MCS assembles these microimages
+into its usual HDF5 axes and stores validity/completion flags. EOF does not
+invent a final dwell boundary; incomplete frames are explicitly marked.
+
+New TDC RAW recordings have a `<file>.raw.metadata.h5` sidecar containing the
+original scan geometry, dwell duration, configuration and comments, including
+when the regular MCS file is suppressed. Final MCS metadata/thumbnail is copied
+to the matching sidecar after normal finalization. For older recordings, the
+dialog detects a same-name MCS companion, or lets you select metadata per file.
+If scan settings are unavailable, intensity reconstruction requires explicitly
+enabled fallback settings. Missing original metadata cannot be recovered from
+the RAW events.
+
+Both output types retain acquisition groups, comments, thumbnails and custom
+metadata. An `acquisition_metadata` snapshot preserves original attributes even
+when they conflict with the output schema. Dataset attributes are retained
+without duplicating original image/event payloads. A `conversion` group records
+source paths, byte counts and reconstruction settings. Files are staged until
+conversion and metadata preservation succeed, then published without overwrite.
+
 ## FPGA startup
 
 The primary FPGA session opens without automatically running the VI. Every acquisition first
@@ -123,6 +170,21 @@ Startup readback is retained separately and does not overwrite requested control
 Register-write failures propagate. Software triggers use the same held Run rule.
 
 ## Validation
+
+Remote abort/watchdog integration passes 141 focused MCS regressions with the
+installed 0.3.2 cp313 wheel. New tests verify exact SB/CS repetition on MCS
+processing failure, forced worker termination, and GUI heartbeat loss in both
+modes. A real Qt-loop freeze test confirms the 10-second Rust watchdog aborts
+without a GUI callback. Failed-run status preserves the final native abort
+result. Both installed cp312/cp313 wheels pass all 93 library tests; the Rust
+core passes all 23 tests. These checks use the TCP simulator, not hardware.
+
+Batch TDC conversion and acquisition regressions passed 188 tests and 5 subtests,
+followed by focused GUI/metadata ownership checks. Coverage includes both output
+choices and pairs, multi-file failures, metadata/thumbnail/custom-attribute
+preservation, snake ordering, partial dwell validity, cancellation, and RAW-only
+acquisition sidecars. The library's 82 tests pass on Python 3.13 and on the
+installed Python 3.12.10 wheel. The conversion engine reuses the Rust library.
 
 The standard MCS storage integration passed 183 focused tests and 5 subtests:
 PI acquisition/preview, HDF5 frame assembly and service writes, normal metadata
