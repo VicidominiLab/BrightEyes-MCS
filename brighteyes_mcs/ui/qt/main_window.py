@@ -275,6 +275,7 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_pispad23ttm_force_calibration.clicked.connect(
             self.pispad23_timetagging.force_calibration
         )
+        self.ui.pushButton_pispad23_status.clicked.connect(self.pispad23_timetagging.query_status)
         self.ui.pushButton_pispad23_convert_tdc.clicked.connect(self.cmd_convertTdcRaw)
         self._mcs_saving_suppressed = False
         self._waiting_for_pispad23 = False
@@ -1113,6 +1114,15 @@ class MainWindow(QMainWindow):
             int,
             self.ui.spinBox_time_bin_per_px,
             True,
+        )
+        configuration_helper["tag_clock_mode"] = (
+            "Tag clock duration mode", str, self.ui.comboBox_tag_clock_mode, True,
+        )
+        configuration_helper["tag_clock_duty_cycle"] = (
+            "Tag clock duty cycle (%)", float, self.ui.doubleSpinBox_tag_clock_duty_cycle, True,
+        )
+        configuration_helper["tag_clock_fixed_cycles"] = (
+            "Tag clock fixed cycles", int, self.ui.spinBox_tag_clock_fixed_cycles, True,
         )
         configuration_helper["nx"] = ("#x", int, self.ui.spinBox_nx, True)
         configuration_helper["ny"] = ("#y", int, self.ui.spinBox_ny, True)
@@ -5645,6 +5655,21 @@ Have fun!
                 )
             )
 
+    def tagClockDurationCycles(self):
+        """Return the selected tag pulse width in FPGA clock cycles."""
+        fixed = self.ui.comboBox_tag_clock_mode.currentText() == "Fixed cycles"
+        self.ui.doubleSpinBox_tag_clock_duty_cycle.setEnabled(not fixed)
+        self.ui.spinBox_tag_clock_fixed_cycles.setEnabled(fixed)
+        if fixed:
+            cycles = self.ui.spinBox_tag_clock_fixed_cycles.value()
+        else:
+            cycles = (self.ui.spinBox_timeresolution.value()
+                      * self.ui.spinBox_time_bin_per_px.value() * self.clock_base
+                      * self.ui.doubleSpinBox_tag_clock_duty_cycle.value() / 100)
+        cycles = max(0, min(0xFFFFFFFF, int(cycles)))
+        self.ui.label_tag_clock_cycles.setText(f"{cycles} cycles")
+        return cycles
+
     @Slot()
     @trace_action
     def temporalSettingsChanged(self):
@@ -5661,7 +5686,7 @@ Have fun!
             circ_repetition = 1
             circ_points = 1
 
-        clock_duration = time_bin * time_res * 20
+        clock_duration = self.tagClockDurationCycles()
         Cx = time_res * self.clock_base
         logger.debug("temporalSettingsChanged")
 
@@ -6956,7 +6981,7 @@ Have fun!
             circ_repetition = 1
             circ_points = 1
 
-        clock_duration = time_bin * time_res * self.clock_base/2
+        clock_duration = self.tagClockDurationCycles()
         Cx = time_res * self.clock_base
 
         waitForLaserInCycle = self.ui.spinBox_waitForLaser.value() * 40e6
@@ -7227,6 +7252,7 @@ Have fun!
                 self._waiting_for_pispad23 = True
                 self.pispad23_timetagging.start(
                     filename, stream_microimage=True, preview=do_not_save,
+                    continuous_preview=getattr(self, "_continuous_preview", True),
                     microimage_worker=self.mcs_manager.previewProcess,
                     record=(not do_not_save and self.ui.checkBox_pispad23ttmActivate.isChecked()
                             and not detector_uses_pispad23_pipeline(self._current_detector_model())),
@@ -7573,7 +7599,7 @@ Have fun!
 
     @Slot()
     @trace_action
-    def beginAcquisition(self, is_preview=False):
+    def beginAcquisition(self, is_preview=False, *, continuous_preview=True):
         """
         Start the acquisition with unified initialization for both normal and preview modes.
         
@@ -7592,10 +7618,12 @@ Have fun!
         if trigger is not None and (trigger.active or not trigger.validate()):
             return
 
-        if self.pispad23_timetagging.active:
-            self.ui.statusBar.showMessage("Wait for PI SPAD23R TTM to finish closing its recording.", 5000)
+        if (self.pispad23_timetagging.active or self.pispad23_timetagging.calibrating
+                or self.pispad23_timetagging.querying):
+            self.ui.statusBar.showMessage("Wait for the current PI SPAD23R operation to finish.", 5000)
             return
         self.pispad23_timetagging.metadata_source = None
+        self._continuous_preview = continuous_preview
         self._mcs_saving_suppressed = not is_preview and self.ui.checkBox_noMcsSaveWithTtm.isChecked() and (
             self.ui.checkBox_ttmActivate.isChecked()
             or (self.ui.checkBox_uttmActivate.isChecked() and self.ui.checkBox_uttm_auto.isChecked())
@@ -7611,6 +7639,7 @@ Have fun!
 
         # Update UI button states
         self.ui.pushButton_previewStart.setEnabled(False)
+        self.ui.pushButton_previewConfiguredRepetitions.setEnabled(False)
         self.ui.pushButton_acquisitionStart.setEnabled(False)
         self.ui.pushButton_stop.setEnabled(True)
 
@@ -7628,6 +7657,7 @@ Have fun!
                         "Could not fully close the failed FPGA connection"
                     )
             self.ui.pushButton_previewStart.setEnabled(True)
+            self.ui.pushButton_previewConfiguredRepetitions.setEnabled(True)
             self.ui.pushButton_acquisitionStart.setEnabled(True)
             self.ui.pushButton_stop.setEnabled(False)
             self.ui.pushButton_fpga_connection_cmd.setEnabled(True)
@@ -7673,7 +7703,8 @@ Have fun!
             self.nrepetition_before_run_preview = self.ui.spinBox_nrepetition.value()
             old_lock = self.lockspatialSettingsChanged
             self.lockspatialSettingsChanged = True
-            self.ui.spinBox_nrepetition.setValue(30000)
+            if continuous_preview:
+                self.ui.spinBox_nrepetition.setValue(30000)
             self.ui.spinBox_nx.setEnabled(0)
             self.ui.spinBox_ny.setEnabled(0)
             self.ui.spinBox_nframe.setEnabled(0)
@@ -7768,6 +7799,7 @@ Have fun!
                 self.stop()
         if not self.started_normal and not self.started_preview:
             self.ui.pushButton_previewStart.setEnabled(True)
+            self.ui.pushButton_previewConfiguredRepetitions.setEnabled(True)
             self.ui.pushButton_acquisitionStart.setEnabled(True)
             self.ui.pushButton_stop.setEnabled(False)
             self.ui.comboBox_detector_model.setEnabled(True)
@@ -8151,6 +8183,11 @@ Have fun!
         self.beginAcquisition(is_preview=True)
 
     @Slot()
+    def previewConfiguredRepetitions(self):
+        """Preview without replacing the configured repetition count."""
+        self.beginAcquisition(is_preview=True, continuous_preview=False)
+
+    @Slot()
     @trace_action
     def projChanged(self):
         logger.debug("projChanged()")
@@ -8405,6 +8442,7 @@ Have fun!
 
         # self.rect_roi.show()
         self.ui.pushButton_previewStart.setEnabled(True)
+        self.ui.pushButton_previewConfiguredRepetitions.setEnabled(True)
         self.ui.pushButton_acquisitionStart.setEnabled(True)
         self.ui.pushButton_stop.setEnabled(False)
         self.ui.pushButton_fpga_connection_cmd.setEnabled(True)
@@ -8435,6 +8473,7 @@ Have fun!
             self._sync_pispad23_ttm_detector()
         if recorder is not None and recorder.active:
             self.ui.pushButton_previewStart.setEnabled(False)
+            self.ui.pushButton_previewConfiguredRepetitions.setEnabled(False)
             self.ui.pushButton_acquisitionStart.setEnabled(False)
             self.ui.pushButton_stop.setEnabled(True)
         next_state = self._pending_program_state_after_stop

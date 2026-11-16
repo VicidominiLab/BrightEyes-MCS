@@ -965,9 +965,65 @@ class Ui_MainWindowDesign(object):
         self.tab_8.setObjectName(u"tab_8")
         self.gridLayout_46 = QGridLayout(self.tab_8)
         self.gridLayout_46.setObjectName(u"gridLayout_46")
+        self.groupBox_tag_clock = QGroupBox(self.tab_8)
+        self.groupBox_tag_clock.setObjectName(u"groupBox_tag_clock")
+        self.gridLayout_tag_clock = QGridLayout(self.groupBox_tag_clock)
+        self.gridLayout_tag_clock.setObjectName(u"gridLayout_tag_clock")
+        self.label_tag_clock_mode = QLabel(self.groupBox_tag_clock)
+        self.label_tag_clock_mode.setObjectName(u"label_tag_clock_mode")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_mode, 0, 0, 1, 1)
+
+        self.comboBox_tag_clock_mode = QComboBox(self.groupBox_tag_clock)
+        self.comboBox_tag_clock_mode.addItem("")
+        self.comboBox_tag_clock_mode.addItem("")
+        self.comboBox_tag_clock_mode.setObjectName(u"comboBox_tag_clock_mode")
+
+        self.gridLayout_tag_clock.addWidget(self.comboBox_tag_clock_mode, 0, 1, 1, 1)
+
+        self.label_tag_clock_duty_cycle = QLabel(self.groupBox_tag_clock)
+        self.label_tag_clock_duty_cycle.setObjectName(u"label_tag_clock_duty_cycle")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_duty_cycle, 1, 0, 1, 1)
+
+        self.doubleSpinBox_tag_clock_duty_cycle = QDoubleSpinBox(self.groupBox_tag_clock)
+        self.doubleSpinBox_tag_clock_duty_cycle.setObjectName(u"doubleSpinBox_tag_clock_duty_cycle")
+        self.doubleSpinBox_tag_clock_duty_cycle.setKeyboardTracking(False)
+        self.doubleSpinBox_tag_clock_duty_cycle.setMaximum(100.000000000000000)
+        self.doubleSpinBox_tag_clock_duty_cycle.setValue(50.000000000000000)
+
+        self.gridLayout_tag_clock.addWidget(self.doubleSpinBox_tag_clock_duty_cycle, 1, 1, 1, 1)
+
+        self.label_tag_clock_fixed_cycles = QLabel(self.groupBox_tag_clock)
+        self.label_tag_clock_fixed_cycles.setObjectName(u"label_tag_clock_fixed_cycles")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_fixed_cycles, 2, 0, 1, 1)
+
+        self.spinBox_tag_clock_fixed_cycles = QSpinBox(self.groupBox_tag_clock)
+        self.spinBox_tag_clock_fixed_cycles.setObjectName(u"spinBox_tag_clock_fixed_cycles")
+        self.spinBox_tag_clock_fixed_cycles.setEnabled(False)
+        self.spinBox_tag_clock_fixed_cycles.setKeyboardTracking(False)
+        self.spinBox_tag_clock_fixed_cycles.setMaximum(2147483647)
+        self.spinBox_tag_clock_fixed_cycles.setValue(200)
+
+        self.gridLayout_tag_clock.addWidget(self.spinBox_tag_clock_fixed_cycles, 2, 1, 1, 1)
+
+        self.label_tag_clock_effective = QLabel(self.groupBox_tag_clock)
+        self.label_tag_clock_effective.setObjectName(u"label_tag_clock_effective")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_effective, 3, 0, 1, 1)
+
+        self.label_tag_clock_cycles = QLabel(self.groupBox_tag_clock)
+        self.label_tag_clock_cycles.setObjectName(u"label_tag_clock_cycles")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_cycles, 3, 1, 1, 1)
+
+
+        self.gridLayout_46.addWidget(self.groupBox_tag_clock, 7, 0, 1, 2)
+
         self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_46.addItem(self.verticalSpacer_4, 7, 0, 1, 1)
+        self.gridLayout_46.addItem(self.verticalSpacer_4, 8, 0, 1, 1)
 
         self.horizontalSpacer_15 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -2073,6 +2129,11 @@ class Ui_MainWindowDesign(object):
         self.tab_pi_timetagging.setObjectName(u"tab_pi_timetagging")
         self.gridLayout_pi_timetagging = QGridLayout(self.tab_pi_timetagging)
         self.gridLayout_pi_timetagging.setObjectName(u"gridLayout_pi_timetagging")
+        self.pushButton_pispad23_status = QPushButton(self.tab_pi_timetagging)
+        self.pushButton_pispad23_status.setObjectName(u"pushButton_pispad23_status")
+
+        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23_status, 17, 0, 1, 3)
+
         self.label_pispad23ttm_folder = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_folder.setObjectName(u"label_pispad23ttm_folder")
 
@@ -3715,6 +3776,11 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_23 = QGridLayout()
         self.gridLayout_23.setObjectName(u"gridLayout_23")
+        self.pushButton_previewConfiguredRepetitions = QPushButton(self.scrollAreaWidgetContents_6)
+        self.pushButton_previewConfiguredRepetitions.setObjectName(u"pushButton_previewConfiguredRepetitions")
+
+        self.gridLayout_23.addWidget(self.pushButton_previewConfiguredRepetitions, 5, 0, 1, 3)
+
         self.pushButton_8 = QPushButton(self.scrollAreaWidgetContents_6)
         self.pushButton_8.setObjectName(u"pushButton_8")
 
@@ -4722,6 +4788,10 @@ class Ui_MainWindowDesign(object):
         self.comboBox_spad_channels.textActivated.connect(MainWindowDesign.spadChannelsChanged)
         self.pushButton_externalProgram.clicked.connect(MainWindowDesign.cmd_call_external)
         self.pushButton_autoresize_img.clicked.connect(MainWindowDesign.AutoRange_im_widget)
+        self.comboBox_tag_clock_mode.currentIndexChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.doubleSpinBox_tag_clock_duty_cycle.valueChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.spinBox_tag_clock_fixed_cycles.valueChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.pushButton_previewConfiguredRepetitions.clicked.connect(MainWindowDesign.previewConfiguredRepetitions)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(2)
@@ -4930,6 +5000,21 @@ class Ui_MainWindowDesign(object):
         self.pushButton_flare_export_log.setText(QCoreApplication.translate("MainWindowDesign", u"Export log", None))
         self.tabWidget_fpga_backends.setTabText(self.tabWidget_fpga_backends.indexOf(self.tab_fpga_flare), QCoreApplication.translate("MainWindowDesign", u"Kria Flare", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_2), QCoreApplication.translate("MainWindowDesign", u"FPGA", None))
+        self.groupBox_tag_clock.setTitle(QCoreApplication.translate("MainWindowDesign", u"Tag clock duration", None))
+        self.label_tag_clock_mode.setText(QCoreApplication.translate("MainWindowDesign", u"Mode", None))
+        self.comboBox_tag_clock_mode.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Duty cycle", None))
+        self.comboBox_tag_clock_mode.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Fixed cycles", None))
+
+        self.label_tag_clock_duty_cycle.setText(QCoreApplication.translate("MainWindowDesign", u"Pixel duty cycle [%]", None))
+#if QT_CONFIG(tooltip)
+        self.doubleSpinBox_tag_clock_duty_cycle.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Tag pulse width as a percentage of time resolution times time bins per pixel. Rounded down to FPGA cycles.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_tag_clock_fixed_cycles.setText(QCoreApplication.translate("MainWindowDesign", u"Fixed tag clock cycles", None))
+#if QT_CONFIG(tooltip)
+        self.spinBox_tag_clock_fixed_cycles.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Fixed tag_clock_duration_cycles value, independent of pixel dwell time. One cycle is 25 ns at 40 MHz.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_tag_clock_effective.setText(QCoreApplication.translate("MainWindowDesign", u"Effective tag duration", None))
+        self.label_tag_clock_cycles.setText(QCoreApplication.translate("MainWindowDesign", u"200 cycles", None))
         self.groupBox_20.setTitle(QCoreApplication.translate("MainWindowDesign", u"Primary Position System (X Y Z)", None))
         self.label_16.setText(QCoreApplication.translate("MainWindowDesign", u"CalibrationFactors ", None))
         self.label_19.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m/V]", None))
@@ -5063,6 +5148,10 @@ class Ui_MainWindowDesign(object):
         self.checkBox_uttm_watchdog.setText(QCoreApplication.translate("MainWindowDesign", u"Activate watchdog", None))
         self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_uTTM), QCoreApplication.translate("MainWindowDesign", u"u(TTM)", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_15), QCoreApplication.translate("MainWindowDesign", u"BrightEyes-TTM", None))
+        self.pushButton_pispad23_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status (D\\n)", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_pispad23_status.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Send D followed by newline to read PI SPAD status. Available when the PI acquisition and calibration are idle.", None))
+#endif // QT_CONFIG(tooltip)
         self.label_pispad23ttm_folder.setText(QCoreApplication.translate("MainWindowDesign", u"TDC data folder", None))
         self.lineEdit_pispad23ttm_folder.setPlaceholderText(QCoreApplication.translate("MainWindowDesign", u"Empty: use the MCS destination folder", None))
         self.toolButton_pispad23ttm_folder.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
@@ -5441,6 +5530,10 @@ class Ui_MainWindowDesign(object):
         self.dockWidget_debug.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Menu && Debug", None))
         self.checkBox_correlationMatrix.setText(QCoreApplication.translate("MainWindowDesign", u"Activate Corr. Matrix", None))
         self.label_dummy.setText(QCoreApplication.translate("MainWindowDesign", u"0t", None))
+        self.pushButton_previewConfiguredRepetitions.setText(QCoreApplication.translate("MainWindowDesign", u"Preview (configured repetitions)", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_previewConfiguredRepetitions.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Start a preview without changing the configured repetition count to continuous mode.", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButton_8.setText(QCoreApplication.translate("MainWindowDesign", u"Test6", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindowDesign", u"Test1", None))
         self.pushButton_6.setText(QCoreApplication.translate("MainWindowDesign", u"Test4", None))

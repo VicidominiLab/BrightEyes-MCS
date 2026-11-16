@@ -16,7 +16,7 @@ def test_plugin_hardware_prepares_before_ni_start_and_cleans_after_stop(preview)
     window = MagicMock()
     window.flare = None
     window.software_trigger = None
-    window.pispad23_timetagging = SimpleNamespace(active=False, stop=MagicMock())
+    window.pispad23_timetagging = SimpleNamespace(active=False, calibrating=False, querying=False, stop=MagicMock())
     window._current_detector_model.return_value = "SPAD Array"
     for name in ("pispad23ttmActivate", "ttmActivate", "uttmActivate", "noMcsSaveWithTtm"):
         getattr(window.ui, "checkBox_" + name).isChecked.return_value = False
@@ -511,13 +511,14 @@ def test_legacy_keep_connected_settings_do_not_fake_live_connection_state():
 
 def test_acquisition_start_failure_restores_controls_and_shows_popup():
     window = MainWindow.__new__(MainWindow)
-    window.pispad23_timetagging = SimpleNamespace(active=False)
+    window.pispad23_timetagging = SimpleNamespace(active=False, calibrating=False, querying=False)
     window.ui = SimpleNamespace(
         checkBox_pispad23ttmActivate=MagicMock(isChecked=MagicMock(return_value=False)),
         checkBox_ttmActivate=MagicMock(
             isChecked=MagicMock(return_value=False)
         ),
         pushButton_previewStart=MagicMock(),
+        pushButton_previewConfiguredRepetitions=MagicMock(),
         pushButton_acquisitionStart=MagicMock(),
         pushButton_stop=MagicMock(),
         pushButton_fpga_connection_cmd=MagicMock(),

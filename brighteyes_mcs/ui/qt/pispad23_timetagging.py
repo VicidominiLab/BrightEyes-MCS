@@ -51,6 +51,7 @@ class PISPAD23Timetagging(QObject):
     microimage_updated = Signal()
     calibration_log = Signal(str)
     calibration_finished = Signal(bool, str)
+    status_finished = Signal(bool, str)
 
     def __init__(self, ui, parent=None):
         super().__init__(parent)
@@ -65,6 +66,11 @@ class PISPAD23Timetagging(QObject):
         self.mcs_path = None
         self.metadata_source = None
         self.protocol_log_path = None
+        self.protocol_log_offset = 0
+        self.protocol_log_pending = b""
+        self.protocol_timer = QTimer(self)
+        self.protocol_timer.setInterval(100)
+        self.protocol_timer.timeout.connect(self._poll_protocol_log)
         self.messages = queue.Queue()
         self.timer = QTimer(self)
         self.timer.setInterval(50)
@@ -74,8 +80,10 @@ class PISPAD23Timetagging(QObject):
         self.settle_timer.timeout.connect(self._ready)
         self.calibration_log.connect(self.log)
         self.calibration_finished.connect(self._calibration_finished)
+        self.status_finished.connect(self._status_finished)
         self.failed.connect(self._log_failure)
         self.calibrating = False
+        self.querying = False
         self.stream_microimage = False
         self.microimage_worker = None
         self.image_stop = threading.Event()
@@ -101,6 +109,7 @@ class PISPAD23Timetagging(QObject):
             "comboBox_pispad23ttm_format", "comboBox_pispad23_verbosity", "doubleSpinBox_pispad23ttm_settle",
             "doubleSpinBox_pispad23ttm_margin", "doubleSpinBox_pispad23ttm_timeout",
             "doubleSpinBox_pispad23ttm_preview_margin", "pushButton_pispad23ttm_force_calibration",
+            "pushButton_pispad23_status",
             "spinBox_pispad23ttm_uimg_buffer", "spinBox_pispad23ttm_uimg_batch",
             "spinBox_pispad23_channels", "doubleSpinBox_pispad23_intensity_dwell",
             "checkBox_pispad23_external_frame",
@@ -120,8 +129,9 @@ class PISPAD23Timetagging(QObject):
 
     @trace_action
     def start(self, filename, *, stream_microimage=False, record=True, preview=False,
-              microimage_worker=None, mode="timestamp", wait_for_trigger=False, metadata=None):
-        if self.active or self.calibrating:
+              microimage_worker=None, mode="timestamp", wait_for_trigger=False, metadata=None,
+              continuous_preview=True):
+        if self.active or self.calibrating or self.querying:
             raise RuntimeError("The previous PI SPAD23R acquisition is still finishing.")
         if stream_microimage and microimage_worker is None:
             raise ValueError("Microimage mode requires its acquisition worker")
@@ -135,6 +145,8 @@ class PISPAD23Timetagging(QObject):
             raise RuntimeError("Update brighteyes-pispad-libs to version 0.3 or newer for Rust process acquisition.")
         if not hasattr(pispad.AcquisitionSession, "keep_alive"):
             raise RuntimeError("Update brighteyes-pispad-libs to version 0.3.2 or newer for device abort and watchdog support.")
+        if not hasattr(pispad, "device_status"):
+            raise RuntimeError("Update brighteyes-pispad-libs to version 0.3.3 or newer for D command abort and status support.")
         from ...acquisition.detectors.pispad23.library_worker import LibraryMicroimageWorker
 
         if stream_microimage and not isinstance(microimage_worker, LibraryMicroimageWorker):
@@ -147,12 +159,13 @@ class PISPAD23Timetagging(QObject):
             folder = self.ui.lineEdit_pispad23ttm_folder.text().strip() or str(Path(filename).parent)
             Path(folder).mkdir(parents=True, exist_ok=True)
             self.path = output_path(folder, filename, raw, mode).resolve()
-        duration = measurement_ms(self.ui, preview=preview)
+        repeat = preview and continuous_preview
+        duration = measurement_ms(self.ui, preview=repeat)
         protocol_options = self._protocol_options()
         config = pispad.AcquisitionConfig(
             addr=self.ui.lineEdit_pispad23ttm_address.text().strip(),
             output=str(self.path) if self.path else None, format="raw" if raw else "h5",
-            measurement_ms=duration, repeat=preview, preview=stream_microimage,
+            measurement_ms=duration, repeat=repeat, preview=stream_microimage,
             mode=mode, width=self.ui.spinBox_nx.value(), height=self.ui.spinBox_ny.value(),
             frames=self.ui.spinBox_nframe.value() * self.ui.spinBox_nrepetition.value(),
             detector_channels=self.ui.spinBox_pispad23_channels.value(),
@@ -305,17 +318,72 @@ class PISPAD23Timetagging(QObject):
         # The PI library owns this verbosity; MCS --log-level never changes it.
         selected = self.ui.comboBox_pispad23_verbosity.currentIndex() + 1
         self.protocol_log_path = default_log_dir().resolve() / f"pispad-tcp-{time.time_ns()}.log"
+        self.protocol_log_offset = 0
+        self.protocol_log_pending = b""
         try:
             self.protocol_log_path.parent.mkdir(parents=True, exist_ok=True)
         except OSError as error:
             report_logging_failure("pSPAD protocol log directory", error)
         self.log(f"pSPAD TCP verbosity={selected}; protocol log: {self.protocol_log_path}")
+        self.protocol_timer.start()
         return dict(verbosity=selected, log_file=str(self.protocol_log_path))
+
+    def _poll_protocol_log(self):
+        """Mirror native diagnostics without blocking the acquisition heartbeat."""
+        busy = self.active or self.calibrating or self.querying
+        try:
+            with self.protocol_log_path.open("rb") as source:
+                source.seek(self.protocol_log_offset)
+                chunk = source.read(64 * 1024)
+                self.protocol_log_offset = source.tell()
+        except FileNotFoundError:
+            chunk = b""
+        except OSError as error:
+            self.log(f"Cannot read pSPAD protocol log: {error}")
+            self.protocol_timer.stop()
+            return
+        lines = (self.protocol_log_pending + chunk).split(b"\n")
+        self.protocol_log_pending = lines.pop()
+        if lines:
+            self.log(b"\n".join(lines).decode("utf-8", errors="replace"), persist=False)
+        if not busy and not chunk:
+            if self.protocol_log_pending:
+                self.log(self.protocol_log_pending.decode("utf-8", errors="replace"), persist=False)
+                self.protocol_log_pending = b""
+            self.protocol_timer.stop()
+
+    @trace_action
+    def query_status(self):
+        """Send D on an idle connection and display the device's response."""
+        if self.active or self.calibrating or self.querying:
+            self.log("Wait for the PI SPAD23R operation to finish before querying status.")
+            return
+        endpoint = self.ui.lineEdit_pispad23ttm_address.text().strip()
+        options = self._protocol_options()
+        self.querying = True
+        self._enable_settings(False)
+        self.ui.label_pispad23ttm_status.setText("Reading PI SPAD23R status (D\\n)...")
+        threading.Thread(target=self._status_worker, args=(endpoint, options), daemon=True).start()
+
+    def _status_worker(self, endpoint, options):
+        try:
+            from brighteyes_pispad import device_status
+            response = device_status(endpoint, **options)
+            self.status_finished.emit(True, response)
+        except Exception as error:
+            self.status_finished.emit(False, str(error))
+
+    def _status_finished(self, success, message):
+        self.querying = False
+        self._enable_settings(True)
+        self.log(f"D\\n {'response' if success else 'failed'}: {message}")
+        self.ui.label_pispad23ttm_status.setText(
+            "PI SPAD23R status updated; see log." if success else "PI SPAD23R status failed; see log.")
 
     @trace_action
     def force_calibration(self):
         """Request a standalone vendor TDC calibration without recording data."""
-        if self.active or self.calibrating:
+        if self.active or self.calibrating or self.querying:
             self.log("Cannot force calibration while PI SPAD23R TTM is active.")
             return
         endpoint = self.ui.lineEdit_pispad23ttm_address.text().strip()

@@ -4,7 +4,7 @@ This integration was developed at Istituto Italiano di Tecnologia for our
 microscope workflows. It is our tool, not an official or endorsed Pi Imaging tool.
 
 Both **TCP/IP - PI SPAD23R (Intensity)** and **TS mode - uimg** use
-`brighteyes-pispad-libs>=0.3.2`. The library launches its packaged Rust worker
+`brighteyes-pispad-libs>=0.3.3`. The library launches its packaged Rust worker
 for TCP reception, buffering, decoding and recording. MCS pulls completed
 microimages from the worker's memory-mapped FIFO.
 
@@ -13,7 +13,7 @@ microimages from the worker's memory-mapped FIFO.
 Choose the wheel matching the Python running MCS. For Python 3.12 on Windows x64:
 
 ```powershell
-python -m pip install "C:\path\to\brighteyes_pispad_libs-0.3.2-cp312-cp312-win_amd64.whl"
+python -m pip install "C:\path\to\brighteyes_pispad_libs-0.3.3-cp312-cp312-win_amd64.whl"
 ```
 
 Use the cp313 wheel for Python 3.13. These wheels contain native Rust and static
@@ -37,8 +37,9 @@ Timestamp mode enables duration margins and Force Calibration.
 Minimal logs lifecycle/errors; Normal (default) logs all commands and replies
 plus receive byte counts without binary payloads; Full also stores every wire
 byte in hex. The selection is saved with the PI configuration and applies to
-both acquisition modes, preview, and Force Calibration. Each operation writes
-`pispad-tcp-<id>.log` in the MCS log folder and displays its path in the tab.
+both acquisition modes, preview, Force Calibration, and the **Status (D\n)**
+button. Commands and responses appear live in the PI tab log. Each operation
+also writes `pispad-tcp-<id>.log` in the MCS log folder.
 Use **Load / Save Cfg → Open log folder** to find these files, including when
 MCS application logging is off. Full mode creates large files and may slow
 acquisition; reserve it for short diagnostic runs. Measurement RAW/HDF5
@@ -58,6 +59,21 @@ port settings are ignored. They never reactivate the removed tools.
 
 ## Acquisition and preview
 
+**Status (D\n)** reads device status while PI acquisition and calibration are
+idle and displays the reply in the PI tab log. During acquisition use Stop,
+which sends `D\n` over the active connection.
+
+The **Preview (configured repetitions)** button in **Menu & Debug** starts a
+preview using the selected repetition count. The regular Preview button still selects 30000
+repetitions. The configured preview does not repeat PI measurements after the
+selected run completes.
+
+The **Scanning Calibration & Limits** tab contains a **Tag clock duration**
+group: a pixel duty cycle (default 50%) or a fixed cycle count. Both live timing updates and acquisition
+startup use this value for `tag_clock_duration_cycles`. Duty-cycle duration is
+rounded down to FPGA cycles; one cycle is 25 ns at 40 MHz. These settings are
+saved in the main GUI configuration.
+
 The MCS acquisition worker owns a separate Rust process. Rust receives and
 buffers the TCP stream, optionally records TDC RAW/HDF5, decodes microimages, and publishes
 them directly into a bounded memory-mapped FIFO. Python pulls available
@@ -71,10 +87,9 @@ MCS stops acquisition and marks the count file incomplete on delivery failure;
 native TDC recording is independent of microimage delivery at the library level.
 
 Stop, cancellation, and acquisition failures request a hardware abort in both
-intensity and TDC modes. Per the [pSPAD documentation](https://piimaging.com/doc-pspad),
-Rust repeats the exact active CS/SB command once on the existing TCP connection.
-After a recognized DONE/ERROR it disarms this toggle, so normal completion and
-cleanup do not restart the detector. Abort attempts and TCP write failures are
+intensity and TDC modes. Rust sends `D\n` once on the existing TCP connection.
+After a recognized DONE/ERROR it disarms the abort, so normal completion and
+cleanup send no abort command. Abort attempts and TCP write failures are
 included in library status and the PI protocol log.
 
 MCS enables a 10-second Rust watchdog. Only the GUI polling timer renews its
@@ -83,7 +98,7 @@ A frozen GUI or blocked worker therefore triggers the hardware abort without
 requiring Python or Qt to respond. If the Python worker is killed, Rust detects
 owner-pipe EOF, sends the abort, and exits after at most two seconds of cleanup.
 The stop is best effort if TCP is lost or the Rust process itself is killed;
-the command is never blindly retried because another toggle could start a run.
+the command is sent once per active run, without reconnecting or retrying.
 
 The MCS worker assembles original microimages into frames and sends them to
 the same `H5ManagerProcess` used by FPGA SPAD acquisition. Acknowledged frame

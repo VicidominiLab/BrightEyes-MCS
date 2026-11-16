@@ -59,7 +59,8 @@ def test_gui_heartbeat_loss_aborts_even_when_python_worker_keeps_polling(mode):
             assert "heartbeat expired" in status["error"]
             assert status["abort_sent"]
             commands = [c for c in device.commands if c.startswith(("SB,", "CS,"))]
-            assert len(commands) == 2 and commands[0] == commands[1]
+            assert len(commands) == 1
+            assert device.commands.count("D") == 1
         finally:
             worker.stop()
             worker.join(2)
@@ -79,11 +80,12 @@ def test_terminated_mcs_worker_sends_abort_through_native_owner_death_guard(mode
             worker.terminate()
             worker.join(3)
             deadline = time.monotonic() + 5
-            while len([c for c in device.commands if c.startswith(("SB,", "CS,"))]) < 2:
+            while "D" not in device.commands:
                 assert time.monotonic() < deadline
                 time.sleep(0.01)
             commands = [c for c in device.commands if c.startswith(("SB,", "CS,"))]
-            assert len(commands) == 2 and commands[0] == commands[1]
+            assert len(commands) == 1
+            assert device.commands.count("D") == 1
         finally:
             if worker.is_alive():
                 worker.terminate()
@@ -105,7 +107,8 @@ def test_mcs_failure_sends_abort(mode):
         assert "simulated MCS preview failure" in status["error"]
         assert status["abort_sent"]
         commands = [c for c in device.commands if c.startswith(("SB,", "CS,"))]
-        assert len(commands) == 2 and commands[0] == commands[1]
+        assert len(commands) == 1
+        assert device.commands.count("D") == 1
 
 
 @pytest.mark.parametrize("format", ["raw", "h5"])

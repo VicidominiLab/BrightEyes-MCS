@@ -105,6 +105,48 @@ def test_library_recording_without_microimage_pipeline(app, ui, tmp_path):
             recorder.close()
 
 
+@pytest.mark.parametrize("mode", ["timestamp", "intensity"])
+def test_configured_preview_finishes_once_and_shows_live_protocol(app, ui, tmp_path, mode):
+    gate = threading.Event()
+    config = simulator.SimulationConfig(width=3, height=2, frames=6)
+    with simulator.SimulatedDevice(config, acquisition_gate=gate) as device:
+        configure(ui, device.addr)
+        ui.spinBox_nrepetition.setValue(3)
+        worker = LibraryMicroimageWorker(3, 2, 7, {}, {}, mode=mode)
+        worker.start()
+        recorder = PISPAD23Timetagging(ui)
+        failures = []
+        recorder.failed.connect(failures.append)
+
+        def ready():
+            # Read the protocol file while acquisition is still waiting on the FPGA.
+            recorder._poll_protocol_log()
+            assert "TX command" in ui.plainTextEdit_pispad23ttm_log.toPlainText()
+            assert "RX greeting" in ui.plainTextEdit_pispad23ttm_log.toPlainText()
+            gate.set()
+
+        recorder.ready.connect(ready)
+        try:
+            recorder.start(str(tmp_path / "preview.h5"), stream_microimage=True,
+                           microimage_worker=worker, mode=mode, record=False,
+                           preview=True, continuous_preview=False)
+            wait_for(app, lambda: not recorder.active)
+            assert not failures
+            assert worker.statistics()["runs_started"] == 1
+            assert worker.statistics()["state"] == "complete"
+            assert worker.statistics()["sequence"] == 36
+            assert ui.spinBox_nrepetition.value() == 3
+            assert len([c for c in device.commands if c.startswith(("SB,", "CS,"))]) == 1
+            assert not list(tmp_path.iterdir())
+        finally:
+            recorder.close()
+            worker.stop()
+            worker.join(5)
+            if worker.is_alive():
+                worker.terminate()
+                worker.join(2)
+
+
 def test_frozen_qt_loop_triggers_rust_abort_without_gui_callbacks(app, ui, tmp_path):
     with simulator.SimulatedDevice(acquisition_gate=threading.Event()) as device:
         configure(ui, device.addr)
@@ -123,7 +165,8 @@ def test_frozen_qt_loop_triggers_rust_abort_without_gui_callbacks(app, ui, tmp_p
             status = worker.statistics()
             assert status["abort_sent"] and "heartbeat expired" in status["error"]
             commands = [c for c in device.commands if c.startswith("SB,")]
-            assert len(commands) == 2 and commands[0] == commands[1]
+            assert len(commands) == 1
+            assert device.commands.count("D") == 1
             wait_for(app, lambda: not recorder.active)
             assert any("heartbeat expired" in message for message in failures)
         finally:
@@ -200,7 +243,7 @@ def test_saved_tdc_checkbox_does_not_suppress_intensity_saving(ui, model, suppre
     ui.checkBox_pispad23ttmActivate.setChecked(True)
     ui.checkBox_ttmActivate.setChecked(False)
     ui.checkBox_uttmActivate.setChecked(False)
-    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False),
+    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False, calibrating=False, querying=False),
         _current_detector_model=lambda: model,
         _prepare_fpga_for_acquisition=MagicMock(side_effect=RuntimeError("No FPGA in this test")),
         mcs_manager=SimpleNamespace(is_connected=False),
@@ -241,7 +284,7 @@ def test_library_format_remains_selectable_in_timestamp_mode(ui):
 
     ui.comboBox_detector_model.setCurrentText(DETECTOR_PISPAD23_TS_UIMG)
     ui.comboBox_pispad23ttm_format.setCurrentText("HDF5")
-    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False), started_normal=False, started_preview=False)
+    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False, calibrating=False, querying=False), started_normal=False, started_preview=False)
     MainWindow._sync_pispad23_ttm_detector(window)
     assert ui.comboBox_pispad23ttm_format.isEnabled()
     assert ui.comboBox_pispad23ttm_format.currentText() == "HDF5"
@@ -254,7 +297,7 @@ def test_shared_panel_selects_mode_controls_and_tdc_recording(ui, model, intensi
 
     ui.comboBox_detector_model.setCurrentText(model)
     ui.checkBox_pispad23ttmActivate.setChecked(True)
-    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False),
+    window = SimpleNamespace(ui=ui, pispad23_timetagging=SimpleNamespace(active=False, calibrating=False, querying=False),
                              started_normal=False, started_preview=False)
     MainWindow._sync_pispad23_ttm_detector(window)
     assert ui.checkBox_pispad23ttmActivate.isEnabled() != intensity

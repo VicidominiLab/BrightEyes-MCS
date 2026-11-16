@@ -220,6 +220,115 @@ def test_force_calibration_is_not_available_while_recording(ui):
     assert "Cannot force calibration" in ui.plainTextEdit_pispad23ttm_log.toPlainText()
 
 
+def test_protocol_log_is_mirrored_live_with_partial_lines(ui):
+    recorder = PISPAD23Timetagging(ui)
+    recorder._protocol_options()
+    recorder.process = MagicMock()
+    path = recorder.protocol_log_path
+    path.write_bytes(b'TX command ascii="D\\n"\nRX setup ')
+    recorder._poll_protocol_log()
+    assert 'TX command ascii="D\\n"' in ui.plainTextEdit_pispad23ttm_log.toPlainText()
+    assert "RX setup" not in ui.plainTextEdit_pispad23ttm_log.toPlainText()
+    with path.open("ab") as log:
+        log.write(b'reply ascii="ready\\n"\n')
+    recorder.process = None
+    recorder._poll_protocol_log()
+    recorder._poll_protocol_log()
+    text = ui.plainTextEdit_pispad23ttm_log.toPlainText()
+    assert text.count('TX command ascii="D\\n"') == 1
+    assert 'RX setup reply ascii="ready\\n"' in text
+    assert not recorder.protocol_timer.isActive()
+
+
+def test_status_sends_d_and_displays_protocol(app, ui):
+    from brighteyes_pispad.simulator import SimulatedDevice
+
+    with SimulatedDevice() as device:
+        ui.lineEdit_pispad23ttm_address.setText(device.addr)
+        recorder = PISPAD23Timetagging(ui)
+        recorder.query_status()
+        assert not ui.pushButton_pispad23_status.isEnabled()
+        wait_for(app, lambda: not recorder.querying and not recorder.protocol_timer.isActive())
+        assert device.commands == ["D"]
+    text = ui.plainTextEdit_pispad23ttm_log.toPlainText()
+    assert "pSPAD deterministic simulator" in text
+    assert 'ascii="D\\n"' in text and "RX setup reply" in text
+    assert ui.pushButton_pispad23_status.isEnabled()
+
+
+def test_status_cannot_open_another_connection_while_recording(ui, monkeypatch):
+    import brighteyes_pispad
+
+    query = MagicMock()
+    monkeypatch.setattr(brighteyes_pispad, "device_status", query)
+    recorder = PISPAD23Timetagging(ui)
+    recorder.process = MagicMock()
+    recorder.query_status()
+    query.assert_not_called()
+
+
+def test_tag_clock_duty_cycle_tracks_pixel_and_fixed_cycles_do_not(ui):
+    window = SimpleNamespace(ui=ui, clock_base=40, setRegistersDict=MagicMock(),
+                             set_expected_duration=MagicMock(), checkAlerts=MagicMock())
+    window.tagClockDurationCycles = lambda: MainWindow.tagClockDurationCycles(window)
+    ui.spinBox_timeresolution.setValue(2)
+    ui.spinBox_time_bin_per_px.setValue(10)
+    MainWindow.temporalSettingsChanged(window)
+    assert window.setRegistersDict.call_args.args[0]["tag_clock_duration_cycles"] == 400
+    ui.doubleSpinBox_tag_clock_duty_cycle.setValue(25)
+    MainWindow.temporalSettingsChanged(window)
+    assert window.setRegistersDict.call_args.args[0]["tag_clock_duration_cycles"] == 200
+    ui.spinBox_timeresolution.setValue(4)
+    assert window.tagClockDurationCycles() == 400
+    ui.comboBox_tag_clock_mode.setCurrentText("Fixed cycles")
+    ui.spinBox_tag_clock_fixed_cycles.setValue(37)
+    MainWindow.temporalSettingsChanged(window)
+    assert window.setRegistersDict.call_args.args[0]["tag_clock_duration_cycles"] == 37
+    ui.spinBox_time_bin_per_px.setValue(50)
+    assert window.tagClockDurationCycles() == 37
+    assert not ui.doubleSpinBox_tag_clock_duty_cycle.isEnabled()
+    assert ui.spinBox_tag_clock_fixed_cycles.isEnabled()
+
+
+def test_tag_clock_settings_round_trip_in_gui_configuration(ui):
+    window = MagicMock()
+    for name in ("comboBox_tag_clock_mode", "doubleSpinBox_tag_clock_duty_cycle",
+                 "spinBox_tag_clock_fixed_cycles"):
+        setattr(window.ui, name, getattr(ui, name))
+    bindings = MainWindow.configuration_helper_init(window)
+    window.configuration_helper = {key: value for key, value in bindings.items()
+                                   if key.startswith("tag_clock_")}
+    ui.comboBox_tag_clock_mode.setCurrentText("Fixed cycles")
+    ui.spinBox_tag_clock_fixed_cycles.setValue(123)
+    ui.doubleSpinBox_tag_clock_duty_cycle.setValue(33)
+    settings = MainWindow.getGUI_data(window)
+    ui.comboBox_tag_clock_mode.setCurrentText("Duty cycle")
+    ui.spinBox_tag_clock_fixed_cycles.setValue(456)
+    ui.doubleSpinBox_tag_clock_duty_cycle.setValue(50)
+    window.flare = window.software_trigger = None
+    MainWindow.setGUI_data(window, settings)
+    assert ui.comboBox_tag_clock_mode.currentText() == "Fixed cycles"
+    assert ui.spinBox_tag_clock_fixed_cycles.value() == 123
+    assert ui.doubleSpinBox_tag_clock_duty_cycle.value() == 33
+
+
+@pytest.mark.parametrize("continuous, expected", [(False, 7), (True, 30000)])
+def test_preview_preserves_configured_repetitions_when_requested(ui, continuous, expected):
+    window = MagicMock(ui=ui)
+    window.flare = window.software_trigger = window.plugin_manager = None
+    window.pispad23_timetagging = SimpleNamespace(active=False, calibrating=False,
+                                                 querying=False, stop=MagicMock())
+    window._pending_program_state_after_stop = None
+    window.ttm_remote_is_up.return_value = False
+    ui.spinBox_nrepetition.setValue(7)
+    MainWindow.beginAcquisition(window, is_preview=True, continuous_preview=continuous)
+    assert ui.spinBox_nrepetition.value() == expected
+    window.initializeAcquisition.assert_called_once()
+    assert window.initializeAcquisition.call_args.kwargs["do_not_save"] is True
+    MainWindow.stop(window)
+    assert ui.spinBox_nrepetition.value() == 7
+
+
 
 
 
