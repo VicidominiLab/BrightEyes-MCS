@@ -224,20 +224,24 @@ def test_mcs_worker_pulls_microimages_from_a_separate_rust_process(mode):
         assert status["sequence"] == 64
 
 
-def test_intensity_uses_standard_mcs_h5_without_a_native_recording(tmp_path, h5_writer):
+@pytest.mark.parametrize("width", [3, 200, 201, 202, 203, 204])
+def test_intensity_uses_standard_mcs_h5_without_a_native_recording(tmp_path, h5_writer, width):
     path = tmp_path / "scan.h5"
-    with SimulatedDevice(SimulationConfig(width=3, height=2, frames=2)) as device:
-        worker = LibraryMicroimageWorker(3, 2, 3, h5_writer.shared_objects, {},
+    with SimulatedDevice(SimulationConfig(width=width, height=2, frames=2)) as device:
+        worker = LibraryMicroimageWorker(width, 2, 137, h5_writer.shared_objects, {},
             mode="intensity", saving=dict(filename=str(path), frames=2, repetitions=1,
                                            dwell_seconds=0.001))
         status = run_worker(worker, pispad.AcquisitionConfig(
-            addr=device.addr, mode="intensity", width=3, height=2, frames=2,
+            addr=device.addr, mode="intensity", width=width, height=2, frames=2,
             intensity_dwell_us=2000, output=tmp_path / "native.raw"))
-    assert status["state"] == "complete" and status["sequence"] == 12
+    assert status["state"] == "complete" and status["sequence"] == 4 * width
     assert list(tmp_path.iterdir()) == [path]
     with h5py.File(path) as saved:
-        assert saved["data"].shape == (1, 2, 2, 3, 1, 25)
+        assert saved["data"].shape == (1, 2, 2, width, 1, 25)
         assert saved["data"].maxshape[0] is None
         assert saved["data"][:].max() > 15
         assert saved["data"].attrs["dwell_seconds"] == 0.002
         assert saved["pispad23_microimages/valid"][:].all()
+        frame, y, x, channel = np.indices((2, 2, width, 25))
+        expected = (frame + channel * 17 + y * width + x) % 256
+        np.testing.assert_array_equal(saved["data"][0, :, :, :, 0, :], expected)

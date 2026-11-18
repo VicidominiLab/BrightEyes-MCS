@@ -4,7 +4,7 @@ This integration was developed at Istituto Italiano di Tecnologia for our
 microscope workflows. It is our tool, not an official or endorsed Pi Imaging tool.
 
 Both **TCP/IP - PI SPAD23R (Intensity)** and **TS mode - uimg** use
-`brighteyes-pispad-libs>=0.3.3`. The library launches its packaged Rust worker
+`brighteyes-pispad-libs>=0.3.4`. The library launches its packaged Rust worker
 for TCP reception, buffering, decoding and recording. MCS pulls completed
 microimages from the worker's memory-mapped FIFO.
 
@@ -13,7 +13,7 @@ microimages from the worker's memory-mapped FIFO.
 Choose the wheel matching the Python running MCS. For Python 3.12 on Windows x64:
 
 ```powershell
-python -m pip install "C:\path\to\brighteyes_pispad_libs-0.3.3-cp312-cp312-win_amd64.whl"
+python -m pip install "C:\path\to\brighteyes_pispad_libs-0.3.4-cp312-cp312-win_amd64.whl"
 ```
 
 Use the cp313 wheel for Python 3.13. These wheels contain native Rust and static
@@ -108,7 +108,7 @@ frames are assembled separately from the ordered microimages.
 
 Timestamp mode uses SB windows and includes zero-photon dwells. Preview repeats
 windows without issuing another FPGA start. Intensity uses length-framed CS
-channel planes, strips wire row padding to a multiple of four pixels, and
+channel planes, separates packed pixels from image-allocation padding, and
 preserves full unsigned 8-bit counts. It does not clip counts to SPAD FIFO bit
 fields. Intensity preview arrives after a complete frame's channel planes.
 Set the microimage buffer to hold at least one full scan frame, with headroom
