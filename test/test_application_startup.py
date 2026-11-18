@@ -49,6 +49,29 @@ def test_full_window_startup_and_plot_signals(tmp_path, log_directory_available)
                     assert self.init_ready and self.guiReadyFlag
                     assert not self._shutdown_started and not self._shutdown_complete
                     assert not self.mcs_manager.is_connected
+                    assert len(self._register_browsers) == 3
+                    workspace = self.register_workspace
+                    assert workspace.editor_tabs.count() == 3
+                    assert [self.ui.tabWidget_circular.tabText(i) for i in range(self.ui.tabWidget_circular.count())] == ['Registry editor', 'Circular', 'Monitor']
+                    assert [workspace.editor_tabs.tabText(i) for i in range(3)] == ['Read Conf. FPGA', 'Conf. FPGA dict.', 'Conf. GUI dict.']
+                    browser = self._register_browsers[self.ui.treeView_3]
+                    browser.search.setText('nx')
+                    assert browser.proxy.rowCount() == 1
+                    index = browser.model.rows[('nx',)][1].index()
+                    original_nx = self.ui.spinBox_nx.value()
+                    assert browser.model.rows[('nx',)][1].text() == str(original_nx)
+                    assert browser.model.setData(index, str(original_nx + 1))
+                    assert self.ui.spinBox_nx.value() == original_nx + 1
+                    assert self.getGUI_data()['nx'] == original_nx + 1
+                    assert browser.model.setData(index, str(original_nx))
+                    browser.search.clear()
+                    self.updateTables()
+                    assert browser.model.rows[('nx',)][1].text() == str(original_nx)
+                    original_laser = self.ui.checkBox_laser0.isChecked()
+                    index = browser.model.rows[('laser_1_enable',)][1].index()
+                    assert browser.model.setData(index, str(not original_laser))
+                    assert self.configurationFPGA_dict['laser_1_enable'] == (not original_laser)
+                    assert browser.model.setData(index, str(original_laser))
                     combo = self.ui.comboBox_plot_channel
                     combo.setCurrentIndex((combo.currentIndex() + 1) % combo.count())
                     combo.setCurrentText('LIFETIME_HSV')

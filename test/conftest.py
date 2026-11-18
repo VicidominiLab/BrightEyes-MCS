@@ -43,6 +43,8 @@ def forbid_flare_activation_in_existing_workflows(request, monkeypatch):
 
 
 QT_MODULES = {
+    "test_register_browser.py",
+    "test_register_workspace.py",
     "test_workspace_layout.py",
     "test_flim_image_view.py",
     "test_flare_ui.py",

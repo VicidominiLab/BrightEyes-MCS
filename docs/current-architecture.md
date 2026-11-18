@@ -81,6 +81,64 @@ Only packages matching `brighteyes_mcs*` are included by the root build.
 output are not importable parts of the
 installed application package.
 
+## Register views in Status
+
+**Status > Registry editor** contains the three sources **Read Conf. FPGA**,
+**Conf. FPGA dict.**, and **Conf. GUI dict.**. **Circular** and **Monitor** remain
+alongside it. Each source has one searchable editor containing every register,
+including unfamiliar firmware and plug-in fields. The original source pages and
+tree widgets are retained by
+[`register_workspace.py`](../brighteyes_mcs/ui/qt/register_workspace.py).
+
+The editor shows sortable parameter, current value, type and access columns,
+with alternating rows and expandable arrays and nested dictionaries. Use
+**Ctrl+F** to filter names or values, or clear **Filter** and use **Find next**
+(**F3**) while keeping all rows visible. Each source retains its own filter.
+
+**Group prefixes** is enabled by default. Shared underscore-separated prefixes
+become expandable branches: for example, analog output registers collect under
+`analog / output / 0`, `analog / output / 1`, and so on when the names contain
+those shared levels. Single-child prefix chains are compressed, and numbered
+channels sort naturally. A heading shows the number of registers below it.
+Individual rows show the remaining suffix; full original names remain in
+tooltips, search, and **Copy parameter path**. Prefix headings are read-only and
+do not change the underlying configuration dictionary, FPGA register names,
+array paths, or Monitor identifiers.
+
+Uncheck **Group prefixes** for the flat list. Switching grouping preserves
+current values, selection, and array expansion and does not write any registers.
+Finish or cancel an active edit before changing grouping. Refresh preserves
+prefix expansion/collapse state and rebuilds the grouping only when the register
+structure changes.
+
+Double-click a writable value, press **F2**, choose **Edit value**, or use the
+context menu to edit. **Enter** applies and **Esc** cancels. Array elements can be
+edited individually. Integer values retain full 64-bit precision; integer input
+also accepts hexadecimal, octal and binary notation. Boolean values use a
+True/False editor. Invalid values and failed writes appear below the tree.
+
+**Refresh** takes a new sample; **Update automatically** uses the existing
+500 ms status refresh cycle. Value-only updates retain indexes, selection,
+scroll position and expansion; an active editor is left intact until it closes.
+Unchanged rows do not emit redundant model changes. Firmware metadata is
+resolved once per batch of view updates.
+
+The context menu also copies parameter paths/values and adds numeric top-level
+registers to **Monitor**. The visual dashboard has been removed, including its
+extra models, timers, feature switch and benchmark tooling. Its design is
+preserved only in the [dashboard design archive](register-dashboard-design.md).
+
+**Read Conf. FPGA** writes directly to connected FPGA controls in native register
+units. **Conf. FPGA dict.** uses the acquisition manager's detector-specific
+conversions; edits made while disconnected are staged for the next connection.
+FPGA access is determined from the active bitfile, or the selected bitfile while
+disconnected. Indicators and registers without metadata remain read-only.
+**Conf. GUI dict.** edits the associated GUI controls and runs their usual change
+handlers. Derived values and disabled controls remain read-only, and edits are
+blocked while a software-trigger acquisition is armed. Flare retains its separate
+register interface. Numeric top-level values can still be added to **Monitor**
+from the context menu.
+
 ## Package ownership
 
 | Area | Owns | Important files |

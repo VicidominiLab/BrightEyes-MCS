@@ -29,6 +29,7 @@ PRISM-Light, SPAD23R, and pSPAD are trademarks or product names of their respect
 - [Plug-in API](../brighteyes_mcs/plugins/README.md)
 - [Build and release procedure (publishing disabled)](pypi-release.md)
 - [Wiki landing-page draft](wiki-home.md)
+- [Removed register dashboard: design archive](register-dashboard-design.md)
 
 ## Technical references
 

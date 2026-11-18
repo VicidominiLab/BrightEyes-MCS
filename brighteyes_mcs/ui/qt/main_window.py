@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QTextBrowser,
-    QHeaderView,
     QProgressDialog,
     QMenu,
 )
@@ -69,7 +68,9 @@ from ...acquisition.manager import McsManager
 from ...acquisition.flare_trace import records_per_trace_bin
 from ..table_manager import TableManager
 
-from .dict_to_tree import TreeModel
+from .register_browser import PATH_ROLE, VALUE_ROLE, RegisterBrowser
+from .register_workspace import RegisterWorkspace
+from ..controllers.registers import RegisterEditor
 from ...hardware.ttm import TtmRemoteManager
 from ...application.plugin_service import PluginManager
 from ...api import FastAPIServerThread
@@ -396,6 +397,23 @@ class MainWindow(QMainWindow):
                 lambda position, tree=status_tree:
                     self.statusRegisterContextMenu(tree, position)
             )
+        self.register_editor = RegisterEditor(self)
+        self._register_browsers = {}
+        register_sources = []
+        for tree in (self.ui.treeView, self.ui.treeView_2, self.ui.treeView_3):
+            page = tree.parentWidget()
+            page.layout().removeWidget(tree)
+            browser = RegisterBrowser(
+                tree,
+                lambda path, value, tree=tree: self.register_editor.access(tree, path, value),
+                lambda path, value, tree=tree: self._write_status_value(tree, path, value),
+                self.updateTables,
+                page,
+            )
+            page.layout().addWidget(browser, 0, 0)
+            self._register_browsers[tree] = browser
+            register_sources.append((self.ui.tabWidget_circular.tabText(self.ui.tabWidget_circular.indexOf(page)), page, browser))
+        self.register_workspace = RegisterWorkspace(self.ui.tabWidget_circular, register_sources)
         for special_channel in (
             "RGBDFD",
             "LIFETIME_HCL",
@@ -866,6 +884,7 @@ class MainWindow(QMainWindow):
             logger.debug("call guiReadyEvent from __init__")
 
         self.init_ready = True
+        self._refresh_status_register_browsers()
 
     def _make_status_timestamp(self):
         """
@@ -2274,6 +2293,7 @@ class MainWindow(QMainWindow):
         logger.debug("%s %s", "loading cfg", default_cfg)
         self.LoadConfiguration(default_cfg)
         self.panoramaButton()
+        self._refresh_status_register_browsers()
         # self.splash.close()
         QTimer.singleShot(100, self.splash.close)
 
@@ -3951,31 +3971,39 @@ class MainWindow(QMainWindow):
             return "Conf. GUI dict.", self.configurationGUI_dict
         return "Read Conf. FPGA", self._latest_status_registers
 
+    def _write_status_value(self, tree, path, value):
+        accepted = self.register_editor.write(tree, path, value)
+        QTimer.singleShot(0, self._refresh_status_register_browsers)
+        return accepted
+
+    def _refresh_status_register_browsers(self):
+        self.configurationGUI_dict.update(self.getGUI_data())
+        with self.register_editor.refresh_snapshot():
+            for tree, browser in self._register_browsers.items():
+                browser.update_data(self._status_tree_source(tree)[1])
+
     def statusRegisterContextMenu(self, tree, position):
-        """Offer monitoring for scalar numeric FPGA status registers."""
+        """Offer live edits, copying and numeric register monitoring."""
         index = tree.indexAt(position)
         if not index.isValid():
             return
         name_index = index.sibling(index.row(), 0)
         value_index = index.sibling(index.row(), 1)
-        register_name = name_index.data(Qt.ItemDataRole.DisplayRole)
-        source_name, source = self._status_tree_source(tree)
-        value = source.get(register_name)
-        numeric_value = self._coerce_monitor_value(value)
-
-        # TEMP DEBUG: remove after the monitor context-menu behavior is verified.
-        print(
-            "[Monitor debug] right-click",
-            {
-                "tree": source_name,
-                "register": register_name,
-                "raw_value": repr(value),
-                "display_value": value_index.data(Qt.ItemDataRole.DisplayRole),
-                "numeric_value": numeric_value,
-            },
-        )
+        source_name, _ = self._status_tree_source(tree)
+        path = name_index.data(PATH_ROLE)
+        if not path:
+            return  # Section headings do not refer to an individual register.
+        register_name = path[0]
+        wrapped_value = value_index.data(VALUE_ROLE)
+        value = wrapped_value.value if wrapped_value is not None else None
+        numeric_value = self._coerce_monitor_value(value) if len(path) == 1 else None
 
         menu = QMenu(self)
+        edit_action = menu.addAction("Edit current value…")
+        edit_action.setEnabled(bool(value_index.flags() & Qt.ItemFlag.ItemIsEditable))
+        copy_name = menu.addAction("Copy parameter path")
+        copy_value = menu.addAction("Copy value")
+        menu.addSeparator()
         action = menu.addAction("Add to Monitor")
         monitor_id = (source_name, register_name)
         action.setEnabled(
@@ -3985,7 +4013,14 @@ class MainWindow(QMainWindow):
         selected_action = menu.exec(
             tree.viewport().mapToGlobal(position)
         )
-        if selected_action is action:
+        if selected_action is edit_action:
+            tree.setCurrentIndex(value_index)
+            self._register_browsers[tree].edit_current()
+        elif selected_action is copy_name:
+            QGuiApplication.clipboard().setText(" / ".join(map(str, path)))
+        elif selected_action is copy_value:
+            QGuiApplication.clipboard().setText(str(value))
+        elif selected_action is action:
             self.addRegisterToMonitor(
                 register_name,
                 source_name=source_name,
@@ -4326,39 +4361,7 @@ class MainWindow(QMainWindow):
 
 
 
-        if self.ui.treeView.model() is None:  # first time only
-            model = TreeModel(["Parameter", "Data"], fff, sort_first_column=True, view=self.ui.treeView)
-            self.ui.treeView.setModel(model)
-            self.ui.treeView.expandAll()
-            self.ui.treeView.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-            self.ui.treeView.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-
-        else:
-            self.ui.treeView.model().updateData(fff)
-
-
-        fff = self.configurationFPGA_dict
-
-        if self.ui.treeView_2.model() is None:  # first time only
-            model = TreeModel(["Parameter", "Data"], fff, sort_first_column=True, view=self.ui.treeView_2)
-            self.ui.treeView_2.setModel(model)
-            self.ui.treeView_2.expandAll()
-            self.ui.treeView_2.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-            self.ui.treeView_2.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        else:
-            self.ui.treeView_2.model().updateData(fff)
-
-
-        fff = self.configurationGUI_dict
-
-        if self.ui.treeView_3.model() is None:  # first time only
-            model = TreeModel(["Parameter", "Data"], fff, sort_first_column=True, view=self.ui.treeView_3)
-            self.ui.treeView_3.setModel(model)
-            self.ui.treeView_3.expandAll()
-            self.ui.treeView_3.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-            self.ui.treeView_3.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        else:
-            self.ui.treeView_3.model().updateData(fff)
+        self._refresh_status_register_browsers()
 
         self._append_monitor_points(
             {
