@@ -1,6 +1,6 @@
 """Temporary name translation for the immutable legacy HDF5 contract.
 
-The application and FPGA interface use the firmware v1 names exclusively.
+The application and FPGA interface use the current firmware register names.
 Only the HDF5 writer should use these mappings.  Pass ``None`` instead of the
 mapping to opt out once downstream readers no longer require legacy metadata
 attribute names; this module can then be removed in a future major version.
@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from ..hardware.register_names import ANALOG_REGISTER_ALIASES
 
 # Optional compatibility mapping: new runtime register name -> legacy HDF5 name.
 # Do not use this dictionary for hardware access or internal application state.
@@ -195,6 +196,12 @@ LEGACY_H5_REGISTER_NAME_MAP: dict[str, str] = {
     "xy_snake_scan_enable": "snake",
     "z_snake_scan_enable": "snake_z",
 }
+
+
+LEGACY_H5_REGISTER_NAME_MAP.update({
+    new: LEGACY_H5_REGISTER_NAME_MAP[old]
+    for old, new in ANALOG_REGISTER_ALIASES.items()
+})
 
 
 # Optional compatibility mapping for any HDF5 metadata dictionaries keyed by

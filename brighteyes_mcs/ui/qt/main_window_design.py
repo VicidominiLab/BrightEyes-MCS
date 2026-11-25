@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
 
 from .scispinbox import sciSpinBox
 from .support import ElidedComboBox
+from brighteyes_mcs.ui.qt.tag_signal_preview import TagSignalPreview
 
 class Ui_MainWindowDesign(object):
     def setupUi(self, MainWindowDesign):
@@ -965,9 +966,214 @@ class Ui_MainWindowDesign(object):
         self.tab_8.setObjectName(u"tab_8")
         self.gridLayout_46 = QGridLayout(self.tab_8)
         self.gridLayout_46.setObjectName(u"gridLayout_46")
+        self.groupBox_tag_clock = QGroupBox(self.tab_8)
+        self.groupBox_tag_clock.setObjectName(u"groupBox_tag_clock")
+        self.verticalLayout_tag_outputs = QVBoxLayout(self.groupBox_tag_clock)
+        self.verticalLayout_tag_outputs.setObjectName(u"verticalLayout_tag_outputs")
+        self.groupBox_tag_timing = QGroupBox(self.groupBox_tag_clock)
+        self.groupBox_tag_timing.setObjectName(u"groupBox_tag_timing")
+        self.gridLayout_tag_clock = QGridLayout(self.groupBox_tag_timing)
+        self.gridLayout_tag_clock.setObjectName(u"gridLayout_tag_clock")
+        self.label_tag_x_header = QLabel(self.groupBox_tag_timing)
+        self.label_tag_x_header.setObjectName(u"label_tag_x_header")
+        self.label_tag_x_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_x_header, 0, 1, 1, 1)
+
+        self.label_tag_y_header = QLabel(self.groupBox_tag_timing)
+        self.label_tag_y_header.setObjectName(u"label_tag_y_header")
+        self.label_tag_y_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_y_header, 0, 2, 1, 1)
+
+        self.label_tag_z_header = QLabel(self.groupBox_tag_timing)
+        self.label_tag_z_header.setObjectName(u"label_tag_z_header")
+        self.label_tag_z_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_z_header, 0, 3, 1, 1)
+
+        self.label_tag_clock_mode = QLabel(self.groupBox_tag_timing)
+        self.label_tag_clock_mode.setObjectName(u"label_tag_clock_mode")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_mode, 1, 0, 1, 1)
+
+        self.label_tag_clock_duty_cycle = QLabel(self.groupBox_tag_timing)
+        self.label_tag_clock_duty_cycle.setObjectName(u"label_tag_clock_duty_cycle")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_duty_cycle, 2, 0, 1, 1)
+
+        self.label_tag_clock_fixed_cycles = QLabel(self.groupBox_tag_timing)
+        self.label_tag_clock_fixed_cycles.setObjectName(u"label_tag_clock_fixed_cycles")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_fixed_cycles, 3, 0, 1, 1)
+
+        self.label_tag_clock_effective = QLabel(self.groupBox_tag_timing)
+        self.label_tag_clock_effective.setObjectName(u"label_tag_clock_effective")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_effective, 4, 0, 1, 1)
+
+        self.label_tag_clock_polarity = QLabel(self.groupBox_tag_timing)
+        self.label_tag_clock_polarity.setObjectName(u"label_tag_clock_polarity")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_polarity, 5, 0, 1, 1)
+
+        self.comboBox_tag_clock_mode = QComboBox(self.groupBox_tag_timing)
+        self.comboBox_tag_clock_mode.addItem("")
+        self.comboBox_tag_clock_mode.addItem("")
+        self.comboBox_tag_clock_mode.setObjectName(u"comboBox_tag_clock_mode")
+
+        self.gridLayout_tag_clock.addWidget(self.comboBox_tag_clock_mode, 1, 1, 1, 1)
+
+        self.doubleSpinBox_tag_clock_duty_cycle = QDoubleSpinBox(self.groupBox_tag_timing)
+        self.doubleSpinBox_tag_clock_duty_cycle.setObjectName(u"doubleSpinBox_tag_clock_duty_cycle")
+        self.doubleSpinBox_tag_clock_duty_cycle.setKeyboardTracking(False)
+        self.doubleSpinBox_tag_clock_duty_cycle.setMaximum(100.000000000000000)
+        self.doubleSpinBox_tag_clock_duty_cycle.setValue(50.000000000000000)
+
+        self.gridLayout_tag_clock.addWidget(self.doubleSpinBox_tag_clock_duty_cycle, 2, 1, 1, 1)
+
+        self.spinBox_tag_clock_fixed_cycles = QSpinBox(self.groupBox_tag_timing)
+        self.spinBox_tag_clock_fixed_cycles.setObjectName(u"spinBox_tag_clock_fixed_cycles")
+        self.spinBox_tag_clock_fixed_cycles.setEnabled(False)
+        self.spinBox_tag_clock_fixed_cycles.setKeyboardTracking(False)
+        self.spinBox_tag_clock_fixed_cycles.setMaximum(2147483647)
+        self.spinBox_tag_clock_fixed_cycles.setValue(200)
+
+        self.gridLayout_tag_clock.addWidget(self.spinBox_tag_clock_fixed_cycles, 3, 1, 1, 1)
+
+        self.label_tag_clock_cycles = QLabel(self.groupBox_tag_timing)
+        self.label_tag_clock_cycles.setObjectName(u"label_tag_clock_cycles")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_clock_cycles, 4, 1, 1, 1)
+
+        self.comboBox_tag_y_clock_mode = QComboBox(self.groupBox_tag_timing)
+        self.comboBox_tag_y_clock_mode.addItem("")
+        self.comboBox_tag_y_clock_mode.addItem("")
+        self.comboBox_tag_y_clock_mode.addItem("")
+        self.comboBox_tag_y_clock_mode.setObjectName(u"comboBox_tag_y_clock_mode")
+
+        self.gridLayout_tag_clock.addWidget(self.comboBox_tag_y_clock_mode, 1, 2, 1, 1)
+
+        self.doubleSpinBox_tag_y_clock_duty_cycle = QDoubleSpinBox(self.groupBox_tag_timing)
+        self.doubleSpinBox_tag_y_clock_duty_cycle.setObjectName(u"doubleSpinBox_tag_y_clock_duty_cycle")
+        self.doubleSpinBox_tag_y_clock_duty_cycle.setEnabled(False)
+        self.doubleSpinBox_tag_y_clock_duty_cycle.setKeyboardTracking(False)
+        self.doubleSpinBox_tag_y_clock_duty_cycle.setMaximum(100.000000000000000)
+        self.doubleSpinBox_tag_y_clock_duty_cycle.setValue(50.000000000000000)
+
+        self.gridLayout_tag_clock.addWidget(self.doubleSpinBox_tag_y_clock_duty_cycle, 2, 2, 1, 1)
+
+        self.spinBox_tag_y_clock_fixed_cycles = QSpinBox(self.groupBox_tag_timing)
+        self.spinBox_tag_y_clock_fixed_cycles.setObjectName(u"spinBox_tag_y_clock_fixed_cycles")
+        self.spinBox_tag_y_clock_fixed_cycles.setEnabled(False)
+        self.spinBox_tag_y_clock_fixed_cycles.setKeyboardTracking(False)
+        self.spinBox_tag_y_clock_fixed_cycles.setMaximum(2147483647)
+        self.spinBox_tag_y_clock_fixed_cycles.setValue(200)
+
+        self.gridLayout_tag_clock.addWidget(self.spinBox_tag_y_clock_fixed_cycles, 3, 2, 1, 1)
+
+        self.label_tag_y_clock_cycles = QLabel(self.groupBox_tag_timing)
+        self.label_tag_y_clock_cycles.setObjectName(u"label_tag_y_clock_cycles")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_y_clock_cycles, 4, 2, 1, 1)
+
+        self.comboBox_tag_z_clock_mode = QComboBox(self.groupBox_tag_timing)
+        self.comboBox_tag_z_clock_mode.addItem("")
+        self.comboBox_tag_z_clock_mode.addItem("")
+        self.comboBox_tag_z_clock_mode.addItem("")
+        self.comboBox_tag_z_clock_mode.setObjectName(u"comboBox_tag_z_clock_mode")
+
+        self.gridLayout_tag_clock.addWidget(self.comboBox_tag_z_clock_mode, 1, 3, 1, 1)
+
+        self.doubleSpinBox_tag_z_clock_duty_cycle = QDoubleSpinBox(self.groupBox_tag_timing)
+        self.doubleSpinBox_tag_z_clock_duty_cycle.setObjectName(u"doubleSpinBox_tag_z_clock_duty_cycle")
+        self.doubleSpinBox_tag_z_clock_duty_cycle.setEnabled(False)
+        self.doubleSpinBox_tag_z_clock_duty_cycle.setKeyboardTracking(False)
+        self.doubleSpinBox_tag_z_clock_duty_cycle.setMaximum(100.000000000000000)
+        self.doubleSpinBox_tag_z_clock_duty_cycle.setValue(50.000000000000000)
+
+        self.gridLayout_tag_clock.addWidget(self.doubleSpinBox_tag_z_clock_duty_cycle, 2, 3, 1, 1)
+
+        self.spinBox_tag_z_clock_fixed_cycles = QSpinBox(self.groupBox_tag_timing)
+        self.spinBox_tag_z_clock_fixed_cycles.setObjectName(u"spinBox_tag_z_clock_fixed_cycles")
+        self.spinBox_tag_z_clock_fixed_cycles.setEnabled(False)
+        self.spinBox_tag_z_clock_fixed_cycles.setKeyboardTracking(False)
+        self.spinBox_tag_z_clock_fixed_cycles.setMaximum(2147483647)
+        self.spinBox_tag_z_clock_fixed_cycles.setValue(200)
+
+        self.gridLayout_tag_clock.addWidget(self.spinBox_tag_z_clock_fixed_cycles, 3, 3, 1, 1)
+
+        self.label_tag_z_clock_cycles = QLabel(self.groupBox_tag_timing)
+        self.label_tag_z_clock_cycles.setObjectName(u"label_tag_z_clock_cycles")
+
+        self.gridLayout_tag_clock.addWidget(self.label_tag_z_clock_cycles, 4, 3, 1, 1)
+
+        self.checkBox_tag_x_clock_invert = QCheckBox(self.groupBox_tag_timing)
+        self.checkBox_tag_x_clock_invert.setObjectName(u"checkBox_tag_x_clock_invert")
+
+        self.gridLayout_tag_clock.addWidget(self.checkBox_tag_x_clock_invert, 5, 1, 1, 1)
+
+        self.checkBox_tag_y_clock_invert = QCheckBox(self.groupBox_tag_timing)
+        self.checkBox_tag_y_clock_invert.setObjectName(u"checkBox_tag_y_clock_invert")
+
+        self.gridLayout_tag_clock.addWidget(self.checkBox_tag_y_clock_invert, 5, 2, 1, 1)
+
+        self.checkBox_tag_z_clock_invert = QCheckBox(self.groupBox_tag_timing)
+        self.checkBox_tag_z_clock_invert.setObjectName(u"checkBox_tag_z_clock_invert")
+
+        self.gridLayout_tag_clock.addWidget(self.checkBox_tag_z_clock_invert, 5, 3, 1, 1)
+
+
+        self.verticalLayout_tag_outputs.addWidget(self.groupBox_tag_timing)
+
+        self.groupBox_tag_exclusions = QGroupBox(self.groupBox_tag_clock)
+        self.groupBox_tag_exclusions.setObjectName(u"groupBox_tag_exclusions")
+        self.gridLayout_tag_exclusions = QGridLayout(self.groupBox_tag_exclusions)
+        self.gridLayout_tag_exclusions.setObjectName(u"gridLayout_tag_exclusions")
+        self.checkBox_tag_exclude_first_x = QCheckBox(self.groupBox_tag_exclusions)
+        self.checkBox_tag_exclude_first_x.setObjectName(u"checkBox_tag_exclude_first_x")
+
+        self.gridLayout_tag_exclusions.addWidget(self.checkBox_tag_exclude_first_x, 0, 0, 1, 1)
+
+        self.checkBox_tag_exclude_last_x = QCheckBox(self.groupBox_tag_exclusions)
+        self.checkBox_tag_exclude_last_x.setObjectName(u"checkBox_tag_exclude_last_x")
+
+        self.gridLayout_tag_exclusions.addWidget(self.checkBox_tag_exclude_last_x, 0, 1, 1, 1)
+
+        self.checkBox_tag_exclude_first_y = QCheckBox(self.groupBox_tag_exclusions)
+        self.checkBox_tag_exclude_first_y.setObjectName(u"checkBox_tag_exclude_first_y")
+
+        self.gridLayout_tag_exclusions.addWidget(self.checkBox_tag_exclude_first_y, 1, 0, 1, 1)
+
+        self.checkBox_tag_exclude_last_y = QCheckBox(self.groupBox_tag_exclusions)
+        self.checkBox_tag_exclude_last_y.setObjectName(u"checkBox_tag_exclude_last_y")
+
+        self.gridLayout_tag_exclusions.addWidget(self.checkBox_tag_exclude_last_y, 1, 1, 1, 1)
+
+        self.checkBox_tag_exclude_first_y_for_x = QCheckBox(self.groupBox_tag_exclusions)
+        self.checkBox_tag_exclude_first_y_for_x.setObjectName(u"checkBox_tag_exclude_first_y_for_x")
+
+        self.gridLayout_tag_exclusions.addWidget(self.checkBox_tag_exclude_first_y_for_x, 2, 0, 1, 1)
+
+        self.checkBox_tag_exclude_last_y_for_x = QCheckBox(self.groupBox_tag_exclusions)
+        self.checkBox_tag_exclude_last_y_for_x.setObjectName(u"checkBox_tag_exclude_last_y_for_x")
+
+        self.gridLayout_tag_exclusions.addWidget(self.checkBox_tag_exclude_last_y_for_x, 2, 1, 1, 1)
+
+
+        self.verticalLayout_tag_outputs.addWidget(self.groupBox_tag_exclusions)
+
+        self.widget_tag_signal_preview = TagSignalPreview(self.groupBox_tag_clock)
+        self.widget_tag_signal_preview.setObjectName(u"widget_tag_signal_preview")
+
+        self.verticalLayout_tag_outputs.addWidget(self.widget_tag_signal_preview)
+
+
+        self.gridLayout_46.addWidget(self.groupBox_tag_clock, 7, 0, 1, 2)
+
         self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_46.addItem(self.verticalSpacer_4, 7, 0, 1, 1)
+        self.gridLayout_46.addItem(self.verticalSpacer_4, 8, 0, 1, 1)
 
         self.horizontalSpacer_15 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -2073,125 +2279,87 @@ class Ui_MainWindowDesign(object):
         self.tab_pi_timetagging.setObjectName(u"tab_pi_timetagging")
         self.gridLayout_pi_timetagging = QGridLayout(self.tab_pi_timetagging)
         self.gridLayout_pi_timetagging.setObjectName(u"gridLayout_pi_timetagging")
-        self.label_pispad23ttm_executable = QLabel(self.tab_pi_timetagging)
-        self.label_pispad23ttm_executable.setObjectName(u"label_pispad23ttm_executable")
+        self.pushButton_pispad23_status = QPushButton(self.tab_pi_timetagging)
+        self.pushButton_pispad23_status.setObjectName(u"pushButton_pispad23_status")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_executable, 0, 0, 1, 1)
-
-        self.lineEdit_pispad23ttm_h5_executable = QLineEdit(self.tab_pi_timetagging)
-        self.lineEdit_pispad23ttm_h5_executable.setObjectName(u"lineEdit_pispad23ttm_h5_executable")
-
-        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_h5_executable, 0, 1, 1, 1)
-
-        self.toolButton_pispad23ttm_h5 = QToolButton(self.tab_pi_timetagging)
-        self.toolButton_pispad23ttm_h5.setObjectName(u"toolButton_pispad23ttm_h5")
-
-        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_h5, 0, 2, 1, 1)
-
-        self.label_pispad23ttm_raw = QLabel(self.tab_pi_timetagging)
-        self.label_pispad23ttm_raw.setObjectName(u"label_pispad23ttm_raw")
-
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_raw, 1, 0, 1, 1)
-
-        self.lineEdit_pispad23ttm_raw_executable = QLineEdit(self.tab_pi_timetagging)
-        self.lineEdit_pispad23ttm_raw_executable.setObjectName(u"lineEdit_pispad23ttm_raw_executable")
-
-        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_raw_executable, 1, 1, 1, 1)
-
-        self.toolButton_pispad23ttm_raw = QToolButton(self.tab_pi_timetagging)
-        self.toolButton_pispad23ttm_raw.setObjectName(u"toolButton_pispad23ttm_raw")
-
-        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_raw, 1, 2, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23_status, 17, 0, 1, 3)
 
         self.label_pispad23ttm_folder = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_folder.setObjectName(u"label_pispad23ttm_folder")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_folder, 2, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_folder, 1, 0, 1, 1)
 
         self.lineEdit_pispad23ttm_folder = QLineEdit(self.tab_pi_timetagging)
         self.lineEdit_pispad23ttm_folder.setObjectName(u"lineEdit_pispad23ttm_folder")
 
-        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_folder, 2, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_folder, 1, 1, 1, 1)
 
         self.toolButton_pispad23ttm_folder = QToolButton(self.tab_pi_timetagging)
         self.toolButton_pispad23ttm_folder.setObjectName(u"toolButton_pispad23ttm_folder")
 
-        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_folder, 2, 2, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.toolButton_pispad23ttm_folder, 1, 2, 1, 1)
 
         self.label_pispad23ttm_format = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_format.setObjectName(u"label_pispad23ttm_format")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_format, 3, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_format, 2, 0, 1, 1)
 
         self.comboBox_pispad23ttm_format = QComboBox(self.tab_pi_timetagging)
         self.comboBox_pispad23ttm_format.addItem("")
         self.comboBox_pispad23ttm_format.addItem("")
         self.comboBox_pispad23ttm_format.setObjectName(u"comboBox_pispad23ttm_format")
 
-        self.gridLayout_pi_timetagging.addWidget(self.comboBox_pispad23ttm_format, 3, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.comboBox_pispad23ttm_format, 2, 1, 1, 1)
 
         self.label_pispad23ttm_address = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_address.setObjectName(u"label_pispad23ttm_address")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_address, 4, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_address, 0, 0, 1, 1)
 
         self.lineEdit_pispad23ttm_address = QLineEdit(self.tab_pi_timetagging)
         self.lineEdit_pispad23ttm_address.setObjectName(u"lineEdit_pispad23ttm_address")
 
-        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_address, 4, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.lineEdit_pispad23ttm_address, 0, 1, 1, 1)
 
         self.label_pispad23ttm_margin = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_margin.setObjectName(u"label_pispad23ttm_margin")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_margin, 6, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_margin, 10, 0, 1, 1)
 
         self.doubleSpinBox_pispad23ttm_margin = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pispad23ttm_margin.setObjectName(u"doubleSpinBox_pispad23ttm_margin")
         self.doubleSpinBox_pispad23ttm_margin.setMinimum(0.100000000000000)
         self.doubleSpinBox_pispad23ttm_margin.setMaximum(86400.000000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_margin, 6, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_margin, 10, 1, 1, 1)
 
         self.label_pispad23ttm_settle = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_settle.setObjectName(u"label_pispad23ttm_settle")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_settle, 7, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_settle, 8, 0, 1, 1)
 
         self.doubleSpinBox_pispad23ttm_settle = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pispad23ttm_settle.setObjectName(u"doubleSpinBox_pispad23ttm_settle")
         self.doubleSpinBox_pispad23ttm_settle.setMaximum(3600.000000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_settle, 7, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_settle, 8, 1, 1, 1)
 
         self.label_pispad23ttm_timeout = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_timeout.setObjectName(u"label_pispad23ttm_timeout")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_timeout, 8, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_timeout, 9, 0, 1, 1)
 
         self.doubleSpinBox_pispad23ttm_timeout = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pispad23ttm_timeout.setObjectName(u"doubleSpinBox_pispad23ttm_timeout")
         self.doubleSpinBox_pispad23ttm_timeout.setMinimum(1.000000000000000)
         self.doubleSpinBox_pispad23ttm_timeout.setMaximum(3600.000000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_timeout, 8, 1, 1, 1)
-
-        self.label_pispad23ttm_stream_port = QLabel(self.tab_pi_timetagging)
-        self.label_pispad23ttm_stream_port.setObjectName(u"label_pispad23ttm_stream_port")
-
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_stream_port, 5, 0, 1, 1)
-
-        self.spinBox_pispad23ttm_stream_port = QSpinBox(self.tab_pi_timetagging)
-        self.spinBox_pispad23ttm_stream_port.setObjectName(u"spinBox_pispad23ttm_stream_port")
-        self.spinBox_pispad23ttm_stream_port.setMinimum(1)
-        self.spinBox_pispad23ttm_stream_port.setMaximum(65535)
-        self.spinBox_pispad23ttm_stream_port.setValue(19000)
-
-        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_stream_port, 5, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_timeout, 9, 1, 1, 1)
 
         self.label_pispad23ttm_preview_margin = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_preview_margin.setObjectName(u"label_pispad23ttm_preview_margin")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_preview_margin, 9, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_preview_margin, 11, 0, 1, 1)
 
         self.doubleSpinBox_pispad23ttm_preview_margin = QDoubleSpinBox(self.tab_pi_timetagging)
         self.doubleSpinBox_pispad23ttm_preview_margin.setObjectName(u"doubleSpinBox_pispad23ttm_preview_margin")
@@ -2201,12 +2369,12 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_pispad23ttm_preview_margin.setSingleStep(0.100000000000000)
         self.doubleSpinBox_pispad23ttm_preview_margin.setValue(0.500000000000000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_preview_margin, 9, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23ttm_preview_margin, 11, 1, 1, 1)
 
         self.label_pispad23ttm_uimg_buffer = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_uimg_buffer.setObjectName(u"label_pispad23ttm_uimg_buffer")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_uimg_buffer, 10, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_uimg_buffer, 3, 0, 1, 1)
 
         self.spinBox_pispad23ttm_uimg_buffer = QSpinBox(self.tab_pi_timetagging)
         self.spinBox_pispad23ttm_uimg_buffer.setObjectName(u"spinBox_pispad23ttm_uimg_buffer")
@@ -2214,12 +2382,12 @@ class Ui_MainWindowDesign(object):
         self.spinBox_pispad23ttm_uimg_buffer.setMaximum(8388608)
         self.spinBox_pispad23ttm_uimg_buffer.setValue(1048576)
 
-        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_uimg_buffer, 10, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_uimg_buffer, 3, 1, 1, 1)
 
         self.label_pispad23ttm_uimg_batch = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_uimg_batch.setObjectName(u"label_pispad23ttm_uimg_batch")
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_uimg_batch, 11, 0, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_uimg_batch, 4, 0, 1, 1)
 
         self.spinBox_pispad23ttm_uimg_batch = QSpinBox(self.tab_pi_timetagging)
         self.spinBox_pispad23ttm_uimg_batch.setObjectName(u"spinBox_pispad23ttm_uimg_batch")
@@ -2227,82 +2395,81 @@ class Ui_MainWindowDesign(object):
         self.spinBox_pispad23ttm_uimg_batch.setMaximum(65536)
         self.spinBox_pispad23ttm_uimg_batch.setValue(4096)
 
-        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_uimg_batch, 11, 1, 1, 1)
+        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23ttm_uimg_batch, 4, 1, 1, 1)
 
         self.pushButton_pispad23ttm_force_calibration = QPushButton(self.tab_pi_timetagging)
         self.pushButton_pispad23ttm_force_calibration.setObjectName(u"pushButton_pispad23ttm_force_calibration")
 
-        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23ttm_force_calibration, 12, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23ttm_force_calibration, 13, 0, 1, 3)
 
         self.label_pispad23ttm_status = QLabel(self.tab_pi_timetagging)
         self.label_pispad23ttm_status.setObjectName(u"label_pispad23ttm_status")
         self.label_pispad23ttm_status.setWordWrap(True)
 
-        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_status, 13, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23ttm_status, 15, 0, 1, 3)
 
         self.plainTextEdit_pispad23ttm_log = QPlainTextEdit(self.tab_pi_timetagging)
         self.plainTextEdit_pispad23ttm_log.setObjectName(u"plainTextEdit_pispad23ttm_log")
         self.plainTextEdit_pispad23ttm_log.setReadOnly(True)
         self.plainTextEdit_pispad23ttm_log.setMaximumBlockCount(5000)
 
-        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pispad23ttm_log, 14, 0, 1, 3)
+        self.gridLayout_pi_timetagging.addWidget(self.plainTextEdit_pispad23ttm_log, 16, 0, 1, 3)
+
+        self.label_pispad23_mode = QLabel(self.tab_pi_timetagging)
+        self.label_pispad23_mode.setObjectName(u"label_pispad23_mode")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23_mode, 0, 2, 1, 1)
+
+        self.label_pispad23_channels = QLabel(self.tab_pi_timetagging)
+        self.label_pispad23_channels.setObjectName(u"label_pispad23_channels")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23_channels, 5, 0, 1, 1)
+
+        self.spinBox_pispad23_channels = QSpinBox(self.tab_pi_timetagging)
+        self.spinBox_pispad23_channels.setObjectName(u"spinBox_pispad23_channels")
+        self.spinBox_pispad23_channels.setMinimum(1)
+        self.spinBox_pispad23_channels.setMaximum(25)
+        self.spinBox_pispad23_channels.setValue(25)
+
+        self.gridLayout_pi_timetagging.addWidget(self.spinBox_pispad23_channels, 5, 1, 1, 1)
+
+        self.checkBox_pispad23_external_frame = QCheckBox(self.tab_pi_timetagging)
+        self.checkBox_pispad23_external_frame.setObjectName(u"checkBox_pispad23_external_frame")
+        self.checkBox_pispad23_external_frame.setChecked(True)
+
+        self.gridLayout_pi_timetagging.addWidget(self.checkBox_pispad23_external_frame, 6, 0, 1, 3)
+
+        self.label_pispad23_intensity_dwell = QLabel(self.tab_pi_timetagging)
+        self.label_pispad23_intensity_dwell.setObjectName(u"label_pispad23_intensity_dwell")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23_intensity_dwell, 7, 0, 1, 1)
+
+        self.doubleSpinBox_pispad23_intensity_dwell = QDoubleSpinBox(self.tab_pi_timetagging)
+        self.doubleSpinBox_pispad23_intensity_dwell.setObjectName(u"doubleSpinBox_pispad23_intensity_dwell")
+        self.doubleSpinBox_pispad23_intensity_dwell.setMaximum(1000000.000000000000000)
+        self.doubleSpinBox_pispad23_intensity_dwell.setDecimals(3)
+
+        self.gridLayout_pi_timetagging.addWidget(self.doubleSpinBox_pispad23_intensity_dwell, 7, 1, 1, 1)
+
+        self.label_pispad23_verbosity = QLabel(self.tab_pi_timetagging)
+        self.label_pispad23_verbosity.setObjectName(u"label_pispad23_verbosity")
+
+        self.gridLayout_pi_timetagging.addWidget(self.label_pispad23_verbosity, 12, 0, 1, 1)
+
+        self.comboBox_pispad23_verbosity = QComboBox(self.tab_pi_timetagging)
+        self.comboBox_pispad23_verbosity.addItem("")
+        self.comboBox_pispad23_verbosity.addItem("")
+        self.comboBox_pispad23_verbosity.addItem("")
+        self.comboBox_pispad23_verbosity.setObjectName(u"comboBox_pispad23_verbosity")
+
+        self.gridLayout_pi_timetagging.addWidget(self.comboBox_pispad23_verbosity, 12, 1, 1, 2)
+
+        self.pushButton_pispad23_convert_tdc = QPushButton(self.tab_pi_timetagging)
+        self.pushButton_pispad23_convert_tdc.setObjectName(u"pushButton_pispad23_convert_tdc")
+
+        self.gridLayout_pi_timetagging.addWidget(self.pushButton_pispad23_convert_tdc, 14, 0, 1, 3)
 
         self.tabWidget_3.addTab(self.tab_pi_timetagging, "")
-        self.tab_6 = QWidget()
-        self.tab_6.setObjectName(u"tab_6")
-        self.gridLayout_106 = QGridLayout(self.tab_6)
-        self.gridLayout_106.setObjectName(u"gridLayout_106")
-        self.gridLayout_43 = QGridLayout()
-        self.gridLayout_43.setObjectName(u"gridLayout_43")
-        self.label_pispad23_port = QLabel(self.tab_6)
-        self.label_pispad23_port.setObjectName(u"label_pispad23_port")
-
-        self.gridLayout_43.addWidget(self.label_pispad23_port, 0, 2, 1, 1)
-
-        self.spinBox_pispad23_port = QSpinBox(self.tab_6)
-        self.spinBox_pispad23_port.setObjectName(u"spinBox_pispad23_port")
-        self.spinBox_pispad23_port.setMinimum(1)
-        self.spinBox_pispad23_port.setMaximum(65535)
-        self.spinBox_pispad23_port.setValue(9997)
-
-        self.gridLayout_43.addWidget(self.spinBox_pispad23_port, 0, 3, 1, 1)
-
-        self.label_pispad23_ip_addr = QLabel(self.tab_6)
-        self.label_pispad23_ip_addr.setObjectName(u"label_pispad23_ip_addr")
-
-        self.gridLayout_43.addWidget(self.label_pispad23_ip_addr, 0, 0, 1, 1)
-
-        self.label_pispad23_greeting_raw = QLabel(self.tab_6)
-        self.label_pispad23_greeting_raw.setObjectName(u"label_pispad23_greeting_raw")
-
-        self.gridLayout_43.addWidget(self.label_pispad23_greeting_raw, 1, 0, 1, 1)
-
-        self.lineEdit_pispad23_ip_addr = QLineEdit(self.tab_6)
-        self.lineEdit_pispad23_ip_addr.setObjectName(u"lineEdit_pispad23_ip_addr")
-
-        self.gridLayout_43.addWidget(self.lineEdit_pispad23_ip_addr, 0, 1, 1, 1)
-
-        self.textEdit_pispad23_greeting_raw = QTextEdit(self.tab_6)
-        self.textEdit_pispad23_greeting_raw.setObjectName(u"textEdit_pispad23_greeting_raw")
-        self.textEdit_pispad23_greeting_raw.setReadOnly(True)
-
-        self.gridLayout_43.addWidget(self.textEdit_pispad23_greeting_raw, 1, 1, 1, 1)
-
-        self.label_pispad23_greeting_decoded = QLabel(self.tab_6)
-        self.label_pispad23_greeting_decoded.setObjectName(u"label_pispad23_greeting_decoded")
-
-        self.gridLayout_43.addWidget(self.label_pispad23_greeting_decoded, 2, 0, 1, 1)
-
-        self.textEdit_pispad23_greeting_decoded = QTextEdit(self.tab_6)
-        self.textEdit_pispad23_greeting_decoded.setObjectName(u"textEdit_pispad23_greeting_decoded")
-        self.textEdit_pispad23_greeting_decoded.setReadOnly(True)
-
-        self.gridLayout_43.addWidget(self.textEdit_pispad23_greeting_decoded, 2, 1, 1, 1)
-
-
-        self.gridLayout_106.addLayout(self.gridLayout_43, 0, 0, 1, 1)
-
-        self.tabWidget_3.addTab(self.tab_6, "")
 
         self.gridLayout_76.addWidget(self.tabWidget_3, 2, 0, 1, 2)
 
@@ -3759,6 +3926,11 @@ class Ui_MainWindowDesign(object):
 
         self.gridLayout_23 = QGridLayout()
         self.gridLayout_23.setObjectName(u"gridLayout_23")
+        self.pushButton_previewConfiguredRepetitions = QPushButton(self.scrollAreaWidgetContents_6)
+        self.pushButton_previewConfiguredRepetitions.setObjectName(u"pushButton_previewConfiguredRepetitions")
+
+        self.gridLayout_23.addWidget(self.pushButton_previewConfiguredRepetitions, 5, 0, 1, 3)
+
         self.pushButton_8 = QPushButton(self.scrollAreaWidgetContents_6)
         self.pushButton_8.setObjectName(u"pushButton_8")
 
@@ -4766,12 +4938,32 @@ class Ui_MainWindowDesign(object):
         self.comboBox_spad_channels.textActivated.connect(MainWindowDesign.spadChannelsChanged)
         self.pushButton_externalProgram.clicked.connect(MainWindowDesign.cmd_call_external)
         self.pushButton_autoresize_img.clicked.connect(MainWindowDesign.AutoRange_im_widget)
+        self.comboBox_tag_clock_mode.currentIndexChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.doubleSpinBox_tag_clock_duty_cycle.valueChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.spinBox_tag_clock_fixed_cycles.valueChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.spinBox_tag_y_clock_fixed_cycles.valueChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.spinBox_tag_z_clock_fixed_cycles.valueChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.checkBox_tag_x_clock_invert.toggled.connect(MainWindowDesign.temporalSettingsChanged)
+        self.checkBox_tag_y_clock_invert.toggled.connect(MainWindowDesign.temporalSettingsChanged)
+        self.checkBox_tag_z_clock_invert.toggled.connect(MainWindowDesign.temporalSettingsChanged)
+        self.checkBox_tag_exclude_first_x.toggled.connect(MainWindowDesign.temporalSettingsChanged)
+        self.checkBox_tag_exclude_first_y.toggled.connect(MainWindowDesign.temporalSettingsChanged)
+        self.checkBox_tag_exclude_first_y_for_x.toggled.connect(MainWindowDesign.temporalSettingsChanged)
+        self.pushButton_previewConfiguredRepetitions.clicked.connect(MainWindowDesign.previewConfiguredRepetitions)
+        self.comboBox_tag_y_clock_mode.currentIndexChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.doubleSpinBox_tag_y_clock_duty_cycle.valueChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.comboBox_tag_z_clock_mode.currentIndexChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.doubleSpinBox_tag_z_clock_duty_cycle.valueChanged.connect(MainWindowDesign.temporalSettingsChanged)
+        self.checkBox_tag_exclude_last_x.toggled.connect(MainWindowDesign.temporalSettingsChanged)
+        self.checkBox_tag_exclude_last_y.toggled.connect(MainWindowDesign.temporalSettingsChanged)
+        self.checkBox_tag_exclude_last_y_for_x.toggled.connect(MainWindowDesign.temporalSettingsChanged)
 
         self.tabWidget.setCurrentIndex(0)
         self.tabWidget_circular.setCurrentIndex(2)
         self.tabWidget_2.setCurrentIndex(0)
         self.tabWidget_3.setCurrentIndex(1)
         self.tabWidget_4.setCurrentIndex(0)
+        self.comboBox_pispad23_verbosity.setCurrentIndex(1)
         self.comboLaserSeq_1.setCurrentIndex(1)
         self.comboBox_analogSelect_B.setCurrentIndex(1)
         self.comboBox_slavemode_type.setCurrentIndex(2)
@@ -4973,6 +5165,91 @@ class Ui_MainWindowDesign(object):
         self.pushButton_flare_export_log.setText(QCoreApplication.translate("MainWindowDesign", u"Export log", None))
         self.tabWidget_fpga_backends.setTabText(self.tabWidget_fpga_backends.indexOf(self.tab_fpga_flare), QCoreApplication.translate("MainWindowDesign", u"Kria Flare", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_2), QCoreApplication.translate("MainWindowDesign", u"FPGA", None))
+        self.groupBox_tag_clock.setTitle(QCoreApplication.translate("MainWindowDesign", u"Tag outputs", None))
+        self.groupBox_tag_timing.setTitle(QCoreApplication.translate("MainWindowDesign", u"Pulse timing and polarity", None))
+        self.label_tag_x_header.setText(QCoreApplication.translate("MainWindowDesign", u"Pixel (X)", None))
+        self.label_tag_y_header.setText(QCoreApplication.translate("MainWindowDesign", u"Line (Y)", None))
+        self.label_tag_z_header.setText(QCoreApplication.translate("MainWindowDesign", u"Frame (Z)", None))
+        self.label_tag_clock_mode.setText(QCoreApplication.translate("MainWindowDesign", u"Mode", None))
+        self.label_tag_clock_duty_cycle.setText(QCoreApplication.translate("MainWindowDesign", u"Duty cycle [%]", None))
+        self.label_tag_clock_fixed_cycles.setText(QCoreApplication.translate("MainWindowDesign", u"Fixed cycles", None))
+        self.label_tag_clock_effective.setText(QCoreApplication.translate("MainWindowDesign", u"Effective width", None))
+        self.label_tag_clock_polarity.setText(QCoreApplication.translate("MainWindowDesign", u"Polarity", None))
+        self.comboBox_tag_clock_mode.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Duty cycle", None))
+        self.comboBox_tag_clock_mode.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Fixed cycles", None))
+
+#if QT_CONFIG(tooltip)
+        self.doubleSpinBox_tag_clock_duty_cycle.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Tag pulse width as a percentage of time resolution times time bins per pixel. Rounded down to FPGA cycles.", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.spinBox_tag_clock_fixed_cycles.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Fixed tag_clock_duration_cycles value, independent of pixel dwell time. One cycle is 25 ns at 40 MHz.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_tag_clock_cycles.setText(QCoreApplication.translate("MainWindowDesign", u"200 cycles", None))
+        self.comboBox_tag_y_clock_mode.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Follow X", None))
+        self.comboBox_tag_y_clock_mode.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Duty cycle", None))
+        self.comboBox_tag_y_clock_mode.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"Fixed cycles", None))
+
+#if QT_CONFIG(tooltip)
+        self.comboBox_tag_y_clock_mode.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: Follow X uses the pixel tag width internally; duty cycle uses one active line.", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.doubleSpinBox_tag_y_clock_duty_cycle.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Percentage of FPGA cycles per line: time-bin cycles times time bins per pixel times pixels per line, including enabled circular points/repetitions. Excludes startup/post-frame waits. Rounded down; zero follows X.", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.spinBox_tag_y_clock_fixed_cycles.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: fixed tag width in FPGA cycles, independent of scan timing. One cycle is 25 ns at 40 MHz. Zero uses the pixel (X) tag width internally.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_tag_y_clock_cycles.setText(QCoreApplication.translate("MainWindowDesign", u"200 cycles (X)", None))
+        self.comboBox_tag_z_clock_mode.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Follow X", None))
+        self.comboBox_tag_z_clock_mode.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Duty cycle", None))
+        self.comboBox_tag_z_clock_mode.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"Fixed cycles", None))
+
+#if QT_CONFIG(tooltip)
+        self.comboBox_tag_z_clock_mode.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: Follow X uses the pixel tag width internally; duty cycle uses one active frame.", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.doubleSpinBox_tag_z_clock_duty_cycle.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Percentage of FPGA cycles per frame: time-bin cycles times time bins per pixel times pixels per line times lines per frame, including enabled circular points/repetitions. Excludes startup/post-frame waits. Rounded down; zero follows X.", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.spinBox_tag_z_clock_fixed_cycles.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: fixed tag width in FPGA cycles, independent of scan timing. One cycle is 25 ns at 40 MHz. Zero uses the pixel (X) tag width internally.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_tag_z_clock_cycles.setText(QCoreApplication.translate("MainWindowDesign", u"200 cycles (X)", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_tag_x_clock_invert.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: invert the pixel (X) tag polarity.", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_tag_x_clock_invert.setText(QCoreApplication.translate("MainWindowDesign", u"Invert", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_tag_y_clock_invert.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: invert the line (Y) tag polarity.", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_tag_y_clock_invert.setText(QCoreApplication.translate("MainWindowDesign", u"Invert", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_tag_z_clock_invert.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: frame (Z) polarity inversion register.", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_tag_z_clock_invert.setText(QCoreApplication.translate("MainWindowDesign", u"Invert", None))
+        self.groupBox_tag_exclusions.setTitle(QCoreApplication.translate("MainWindowDesign", u"Tag exclusions", None))
+        self.checkBox_tag_exclude_first_x.setText(QCoreApplication.translate("MainWindowDesign", u"Skip first X tag per line", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_first_x.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: suppress the first X tag of each line, before polarity inversion.", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_last_x.setText(QCoreApplication.translate("MainWindowDesign", u"Skip last X tag per line", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_last_x.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: suppress the last X tag of each line, before polarity inversion.", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_first_y.setText(QCoreApplication.translate("MainWindowDesign", u"Skip first Y tag per frame", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_first_y.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: suppress the first Y tag of each frame, before polarity inversion.", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_last_y.setText(QCoreApplication.translate("MainWindowDesign", u"Skip last Y tag per frame", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_last_y.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: suppress the last Y tag of each frame, before polarity inversion.", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_first_y_for_x.setText(QCoreApplication.translate("MainWindowDesign", u"Skip X tags on first line", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_first_y_for_x.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: suppress all X tags on the first line of each frame, before polarity inversion.", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_last_y_for_x.setText(QCoreApplication.translate("MainWindowDesign", u"Skip X tags on last line", None))
+#if QT_CONFIG(tooltip)
+        self.checkBox_tag_exclude_last_y_for_x.setToolTip(QCoreApplication.translate("MainWindowDesign", u"MCSV2_1: suppress all X tags on the last line of each frame, before polarity inversion.", None))
+#endif // QT_CONFIG(tooltip)
         self.groupBox_20.setTitle(QCoreApplication.translate("MainWindowDesign", u"Primary Position System (X Y Z)", None))
         self.label_16.setText(QCoreApplication.translate("MainWindowDesign", u"CalibrationFactors ", None))
         self.label_19.setText(QCoreApplication.translate("MainWindowDesign", u"[\u00b5m/V]", None))
@@ -5106,18 +5383,18 @@ class Ui_MainWindowDesign(object):
         self.checkBox_uttm_watchdog.setText(QCoreApplication.translate("MainWindowDesign", u"Activate watchdog", None))
         self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_uTTM), QCoreApplication.translate("MainWindowDesign", u"u(TTM)", None))
         self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_15), QCoreApplication.translate("MainWindowDesign", u"BrightEyes-TTM", None))
-        self.label_pispad23ttm_executable.setText(QCoreApplication.translate("MainWindowDesign", u"HDF5 recorder", None))
-        self.toolButton_pispad23ttm_h5.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.label_pispad23ttm_raw.setText(QCoreApplication.translate("MainWindowDesign", u"RAW recorder", None))
-        self.toolButton_pispad23ttm_raw.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.label_pispad23ttm_folder.setText(QCoreApplication.translate("MainWindowDesign", u"Data folder", None))
+        self.pushButton_pispad23_status.setText(QCoreApplication.translate("MainWindowDesign", u"Status (D\\n)", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_pispad23_status.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Send D followed by newline to read PI SPAD status. Available when the PI acquisition and calibration are idle.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_pispad23ttm_folder.setText(QCoreApplication.translate("MainWindowDesign", u"TDC data folder", None))
         self.lineEdit_pispad23ttm_folder.setPlaceholderText(QCoreApplication.translate("MainWindowDesign", u"Empty: use the MCS destination folder", None))
         self.toolButton_pispad23ttm_folder.setText(QCoreApplication.translate("MainWindowDesign", u"...", None))
-        self.label_pispad23ttm_format.setText(QCoreApplication.translate("MainWindowDesign", u"Output format", None))
+        self.label_pispad23ttm_format.setText(QCoreApplication.translate("MainWindowDesign", u"TDC event format", None))
         self.comboBox_pispad23ttm_format.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"HDF5", None))
         self.comboBox_pispad23ttm_format.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"RAW", None))
 
-        self.label_pispad23ttm_address.setText(QCoreApplication.translate("MainWindowDesign", u"TTM endpoint (host:port)", None))
+        self.label_pispad23ttm_address.setText(QCoreApplication.translate("MainWindowDesign", u"Detector endpoint (host:port)", None))
         self.label_pispad23ttm_margin.setText(QCoreApplication.translate("MainWindowDesign", u"Recording margin", None))
 #if QT_CONFIG(tooltip)
         self.doubleSpinBox_pispad23ttm_margin.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Extra recording time beyond the scan duration. Include external trigger delays here.", None))
@@ -5125,15 +5402,11 @@ class Ui_MainWindowDesign(object):
         self.doubleSpinBox_pispad23ttm_margin.setSuffix(QCoreApplication.translate("MainWindowDesign", u" s", None))
         self.label_pispad23ttm_settle.setText(QCoreApplication.translate("MainWindowDesign", u"Delay after armed / ready", None))
 #if QT_CONFIG(tooltip)
-        self.doubleSpinBox_pispad23ttm_settle.setToolTip(QCoreApplication.translate("MainWindowDesign", u"RAW: wait until SB is sent, then this delay before starting the FPGA. HDF5: wait for the recorder ready message. Included in both preview and recording measurement-ms.", None))
+        self.doubleSpinBox_pispad23ttm_settle.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Wait after the Rust receiver is armed before starting the FPGA. Applies to timestamp and intensity acquisition.", None))
 #endif // QT_CONFIG(tooltip)
         self.doubleSpinBox_pispad23ttm_settle.setSuffix(QCoreApplication.translate("MainWindowDesign", u" s", None))
         self.label_pispad23ttm_timeout.setText(QCoreApplication.translate("MainWindowDesign", u"Calibration / startup timeout", None))
         self.doubleSpinBox_pispad23ttm_timeout.setSuffix(QCoreApplication.translate("MainWindowDesign", u" s", None))
-        self.label_pispad23ttm_stream_port.setText(QCoreApplication.translate("MainWindowDesign", u"Stream image TCP/IP port", None))
-#if QT_CONFIG(tooltip)
-        self.spinBox_pispad23ttm_stream_port.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Local tdc_raw_acquire image server port. img previews the detector sum; uimg streams each dwell's 25 channel counts for the scan image and detector fingerprint. PI SPAD23R TTM also saves RAW timestamps.", None))
-#endif // QT_CONFIG(tooltip)
         self.label_pispad23ttm_preview_margin.setText(QCoreApplication.translate("MainWindowDesign", u"Preview margin", None))
 #if QT_CONFIG(tooltip)
         self.doubleSpinBox_pispad23ttm_preview_margin.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Extra time for each timestamp preview measurement, in addition to one frame, scan waits, and the ready delay. Increase this for communication or trigger delays.", None))
@@ -5146,13 +5419,27 @@ class Ui_MainWindowDesign(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_pispad23ttm_force_calibration.setText(QCoreApplication.translate("MainWindowDesign", u"Force Calibration", None))
         self.label_pispad23ttm_status.setText(QCoreApplication.translate("MainWindowDesign", u"Idle", None))
-        self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_pi_timetagging), QCoreApplication.translate("MainWindowDesign", u"PI SPAD23R (Timestamp mode)", None))
-        self.label_pispad23_port.setText(QCoreApplication.translate("MainWindowDesign", u"Port", None))
-        self.label_pispad23_ip_addr.setText(QCoreApplication.translate("MainWindowDesign", u"IP addr.", None))
-        self.label_pispad23_greeting_raw.setText(QCoreApplication.translate("MainWindowDesign", u"Greeting raw", None))
-        self.lineEdit_pispad23_ip_addr.setText(QCoreApplication.translate("MainWindowDesign", u"127.0.0.1", None))
-        self.label_pispad23_greeting_decoded.setText(QCoreApplication.translate("MainWindowDesign", u"Greeting decoded", None))
-        self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_6), QCoreApplication.translate("MainWindowDesign", u"PI SPAD23R (Intensity mode)", None))
+        self.label_pispad23_mode.setText(QCoreApplication.translate("MainWindowDesign", u"Timestamp", None))
+        self.label_pispad23_channels.setText(QCoreApplication.translate("MainWindowDesign", u"Intensity detector channels", None))
+#if QT_CONFIG(tooltip)
+        self.spinBox_pispad23_channels.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Number of image planes: 25 for SPAD23R, 23 for SPAD23G. Remaining output channels are zero-filled.", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_pispad23_external_frame.setText(QCoreApplication.translate("MainWindowDesign", u"Intensity: use external frame clock", None))
+        self.label_pispad23_intensity_dwell.setText(QCoreApplication.translate("MainWindowDesign", u"Intensity dwell (0 = external clock)", None))
+        self.doubleSpinBox_pispad23_intensity_dwell.setSuffix(QCoreApplication.translate("MainWindowDesign", u" us", None))
+        self.label_pispad23_verbosity.setText(QCoreApplication.translate("MainWindowDesign", u"pSPAD TCP verbosity", None))
+        self.comboBox_pispad23_verbosity.setItemText(0, QCoreApplication.translate("MainWindowDesign", u"Minimal", None))
+        self.comboBox_pispad23_verbosity.setItemText(1, QCoreApplication.translate("MainWindowDesign", u"Normal", None))
+        self.comboBox_pispad23_verbosity.setItemText(2, QCoreApplication.translate("MainWindowDesign", u"Full", None))
+
+#if QT_CONFIG(tooltip)
+        self.comboBox_pispad23_verbosity.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Independent of MCS logging. Minimal: lifecycle/errors. Normal: all commands, replies and receive sizes without data payloads. Full: also save every received byte; large logs and slower acquisition.", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_pispad23_convert_tdc.setText(QCoreApplication.translate("MainWindowDesign", u"Convert TDC RAW files\u2026", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_pispad23_convert_tdc.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Convert one or multiple pSPAD TDC RAW files to TDC HDF5 and/or standard MCS intensity HDF5, preserving acquisition metadata.", None))
+#endif // QT_CONFIG(tooltip)
+        self.tabWidget_3.setTabText(self.tabWidget_3.indexOf(self.tab_pi_timetagging), QCoreApplication.translate("MainWindowDesign", u"PI SPAD23R", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_14), QCoreApplication.translate("MainWindowDesign", u"External Integration", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_config), QCoreApplication.translate("MainWindowDesign", u"Config", None))
         self.dockWidget_preview.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Commands", None))
@@ -5216,7 +5503,7 @@ class Ui_MainWindowDesign(object):
         self.checkBox_ttmActivate.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the TTM data receiver (external software) when start the acquisition</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_ttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"TTM", None))
-        self.checkBox_pispad23ttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"PI SPAD23R TTM", None))
+        self.checkBox_pispad23ttmActivate.setText(QCoreApplication.translate("MainWindowDesign", u"PI SPAD23R TDC recording", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_uttmActivate.setToolTip(QCoreApplication.translate("MainWindowDesign", u"<html><head/><body><p>Activate the TTM data receiver (external software) when start the acquisition</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -5478,6 +5765,10 @@ class Ui_MainWindowDesign(object):
         self.dockWidget_debug.setWindowTitle(QCoreApplication.translate("MainWindowDesign", u"Menu && Debug", None))
         self.checkBox_correlationMatrix.setText(QCoreApplication.translate("MainWindowDesign", u"Activate Corr. Matrix", None))
         self.label_dummy.setText(QCoreApplication.translate("MainWindowDesign", u"0t", None))
+        self.pushButton_previewConfiguredRepetitions.setText(QCoreApplication.translate("MainWindowDesign", u"Preview (configured repetitions)", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_previewConfiguredRepetitions.setToolTip(QCoreApplication.translate("MainWindowDesign", u"Start a preview without changing the configured repetition count to continuous mode.", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButton_8.setText(QCoreApplication.translate("MainWindowDesign", u"Test6", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindowDesign", u"Test1", None))
         self.pushButton_6.setText(QCoreApplication.translate("MainWindowDesign", u"Test4", None))

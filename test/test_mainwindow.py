@@ -623,8 +623,8 @@ class TestMyClass(unittest.TestCase):
         instance.configure_analog()
 
         instance.setRegistersDict.assert_called_with({
-            "analog_a_channel_0_integrate_enable": True,
-            "analog_a_channel_0_invert_enable": False,
+            "analog_channel_0_integrate_enable": True,
+            "analog_channel_0_invert_enable": False,
             "analog_a_input_selector": 1,
             "analog_b_input_selector": 2,
         })

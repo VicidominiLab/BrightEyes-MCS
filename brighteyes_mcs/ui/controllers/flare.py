@@ -553,6 +553,7 @@ class FlareController(QObject):
     def _busy(self, active):
         for name in (
             "pushButton_previewStart",
+            "pushButton_previewConfiguredRepetitions",
             "pushButton_acquisitionStart",
             "comboBox_detector_model",
             "comboBox_flare_mode",

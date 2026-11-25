@@ -356,7 +356,7 @@ def test_repeated_dfd_acquisition_restores_all_preview_planes_before_first_chann
     result = run.run()
     assert result.get("error") is None, result
     assert observed[0][3] == (0, 1)
-    for actual, expected in zip(observed[0][:3], (image, hcl, rgb)):
+    for actual, expected in zip(observed[0][:3], (image, hcl, rgb), strict=True):
         np.testing.assert_array_equal(actual, expected)
     assert snapshots[-1]["display_channels"] == (0, 1)
     np.testing.assert_array_equal(observed[0][4], 0 if reset_trace else previous_histogram)

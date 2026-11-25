@@ -6,9 +6,127 @@ import pytest
 
 from brighteyes_mcs.acquisition.manager import McsManager
 from brighteyes_mcs.hardware.fpga import FpgaHandle
+from brighteyes_mcs.hardware.tag_clock import (
+    MCSV2_1_TAG_DEFAULTS, TAG_REGISTER_ALIASES, compatible_tag_registers, normalize_tag_registers,
+)
 from brighteyes_mcs.acquisition.workers.fpga import validate_fpga_interface
 from brighteyes_mcs.ui.qt.main_window import MainWindow
 from brighteyes_mcs.application.plugin_service import PluginManager
+
+
+def test_old_bitfile_omits_only_new_tag_defaults():
+    requested = {"tag_clock_duration_cycles": 200, **MCSV2_1_TAG_DEFAULTS}
+    assert compatible_tag_registers(requested, {"tag_clock_duration_cycles"}) == {
+        "tag_clock_duration_cycles": 200,
+    }
+    assert requested["tag_y_clock_duration_cycles"] == 0
+
+
+@pytest.mark.parametrize("name", ("tag_yz_xor_x", "tag_yz_xor_x_invert"))
+def test_removed_xor_registers_are_discarded_even_when_enabled(name):
+    assert compatible_tag_registers({name: True, "tag_clock_duration_cycles": 200}, set()) == {
+        "tag_clock_duration_cycles": 200,
+    }
+    handle = FpgaHandle.__new__(FpgaHandle)
+    handle.configuration = {"detector_model": "SPAD Array"}
+    register = MagicMock()
+    handle.nifpga_obj = SimpleNamespace(registers={name: register})
+    handle.register_write_checked(name, True)
+    register.write.assert_not_called()
+
+
+@pytest.mark.parametrize("name,default", MCSV2_1_TAG_DEFAULTS.items())
+def test_checked_tag_writes_support_old_defaults_and_new_firmware(name, default):
+    handle = FpgaHandle.__new__(FpgaHandle)
+    handle.configuration = {"detector_model": "SPAD Array"}
+    handle.nifpga_obj = SimpleNamespace(registers={})
+    handle.register_write_checked(name, default)
+    custom = 17 if name.endswith("duration_cycles") else True
+    with pytest.raises(ValueError, match="requires MCSV2_1"):
+        handle.register_write_checked(name, custom)
+    with pytest.raises(ValueError, match="requires MCSV2_1"):
+        compatible_tag_registers({name: custom}, set())
+
+    register = MagicMock()
+    handle.nifpga_obj.registers[name] = register
+    handle.register_write_checked(name, custom)
+    handle.register_write_checked(name, default)
+    assert register.write.call_args_list == [call(custom), call(default)]
+    register.write.side_effect = OSError("hardware write failed")
+    with pytest.raises(OSError, match="hardware write failed"):
+        handle.register_write_checked(name, default)
+
+
+def test_missing_ordinary_register_still_raises():
+    handle = FpgaHandle.__new__(FpgaHandle)
+    handle.configuration = {"detector_model": "SPAD Array"}
+    handle.nifpga_obj = SimpleNamespace(registers={})
+    with pytest.raises(KeyError):
+        handle.register_write_checked("start_command", False)
+
+
+@pytest.mark.parametrize("old,new", TAG_REGISTER_ALIASES.items())
+def test_register_aliases_are_normalized_and_resolve_the_actual_bitfile_name(old, new):
+    assert normalize_tag_registers({old: True}) == {new: True}
+    assert normalize_tag_registers({old: True, new: False}) == {new: False}
+    assert compatible_tag_registers({old: True}, {new}) == {new: True}
+    assert compatible_tag_registers({new: True}, {old}) == {old: True}
+    handle = FpgaHandle.__new__(FpgaHandle)
+    handle.configuration = {"detector_model": "SPAD Array"}
+    register = MagicMock()
+    handle.nifpga_obj = SimpleNamespace(registers={new: register})
+    handle.register_write_checked(old, True)
+    register.write.assert_called_once_with(True)
+    register.reset_mock()
+    handle.nifpga_obj.registers = {old: register}
+    handle.register_write_checked(new, False)
+    register.write.assert_called_once_with(False)
+
+
+def test_manager_keeps_only_current_tag_names_in_requested_settings():
+    manager = bare_manager()
+    manager.detector_model = "SPAD Array"
+    manager.setRegistersDict({"tag_clock_invert": True, "tag_yz_xor_x": True})
+    assert manager.registers_configuration == {"tag_x_clock_invert": True}
+    manager.fpga_handle.register_write_checked.assert_called_once_with("tag_x_clock_invert", True)
+
+
+def test_manager_keeps_current_analog_names_and_gui_writes_them():
+    from brighteyes_mcs.hardware.register_names import ANALOG_REGISTER_ALIASES
+
+    manager = bare_manager()
+    manager.detector_model = "SPAD Array"
+    manager.setRegistersDict(dict.fromkeys(ANALOG_REGISTER_ALIASES, True))
+    assert manager.registers_configuration == dict.fromkeys(ANALOG_REGISTER_ALIASES.values(), True)
+
+    window = MagicMock()
+    MainWindow.configure_analog(window)
+    requested = window.setRegistersDict.call_args.args[0]
+    for channel in range(4):
+        for option in ("integrate", "invert"):
+            assert f"analog_channel_{channel}_{option}_enable" in requested
+    assert not set(requested).intersection(ANALOG_REGISTER_ALIASES)
+
+    window = SimpleNamespace(
+        flare=None, software_trigger=None, configurationFPGA_dict={}, mcs_manager=manager,
+    )
+    MainWindow.setRegistersDict(window, dict.fromkeys(ANALOG_REGISTER_ALIASES, False))
+    assert window.configurationFPGA_dict == dict.fromkeys(ANALOG_REGISTER_ALIASES.values(), False)
+
+
+def test_status_table_and_monitor_preserve_actual_fpga_names_and_values():
+    from brighteyes_mcs.hardware.register_names import REGISTER_ALIASES
+
+    actual = {name: index for index, name in enumerate(
+        (*REGISTER_ALIASES, *REGISTER_ALIASES.values(), "tag_yz_xor_x")
+    )}
+    window = MagicMock()
+    window.flare = None
+    window.mcs_manager.is_connected = True
+    window.mcs_manager.fpga_handle.register_read_all.return_value = actual
+    MainWindow.updateTables(window)
+    assert window._latest_status_registers == actual
+    assert window._append_monitor_points.call_args.args[0]["Read Conf. FPGA"] == actual
 
 
 @pytest.mark.parametrize("preview", [False, True])
@@ -16,7 +134,7 @@ def test_plugin_hardware_prepares_before_ni_start_and_cleans_after_stop(preview)
     window = MagicMock()
     window.flare = None
     window.software_trigger = None
-    window.pispad23_timetagging = SimpleNamespace(active=False, stop=MagicMock())
+    window.pispad23_timetagging = SimpleNamespace(active=False, calibrating=False, querying=False, stop=MagicMock())
     window._current_detector_model.return_value = "SPAD Array"
     for name in ("pispad23ttmActivate", "ttmActivate", "uttmActivate", "noMcsSaveWithTtm"):
         getattr(window.ui, "checkBox_" + name).isChecked.return_value = False
@@ -43,13 +161,14 @@ def bare_manager():
     return manager
 
 
-def test_quick_reset_pulses_stop_and_waits_for_idle():
+def test_quick_reset_holds_stop_until_idle():
     manager = bare_manager()
     manager.wait_for_fpga_idle = MagicMock()
 
     manager.quick_reset_fpga(timeout=2.5)
 
     assert manager.fpga_handle.register_write_checked.call_args_list == [
+        call("start_command", False),
         call("stop_command", True),
         call("stop_command", False),
     ]
@@ -70,6 +189,58 @@ def test_wait_for_fpga_idle_returns_on_status_zero():
 
     assert manager.registers_configuration["debug_scan_fsm_status"] == 0
     assert manager.fpga_handle.register_read.call_count == 2
+
+
+def test_reset_is_observed_by_a_delayed_fpga_control_loop():
+    manager = bare_manager()
+    hardware = {"start_command": True, "stop_command": False}
+    manager.fpga_handle.register_write_checked.side_effect = hardware.__setitem__
+
+    def sample_idle(**kwargs):
+        # Sampling occurs after host writes, as on an independent FPGA loop.
+        assert hardware == {"start_command": False, "stop_command": True}
+
+    manager.wait_for_fpga_idle = sample_idle
+    manager.quick_reset_fpga()
+    assert hardware == {"start_command": False, "stop_command": False}
+
+
+@pytest.mark.parametrize("keep", [False, True])
+def test_repeated_runs_keep_start_visible_to_delayed_fpga(keep):
+    window = SimpleNamespace(flare=None, ui=SimpleNamespace(
+        pushButton_fpga_connection_cmd=MagicMock(isChecked=lambda: keep)))
+    hardware = {"start_command": False, "stop_command": False}
+    window.setRegistersDict = hardware.update
+    for _ in range(3):
+        MainWindow.sendCmdRun(window)
+        assert hardware["start_command"] and not hardware["stop_command"]
+        MainWindow.sendCmdStop(window)
+        assert not hardware["start_command"] and hardware["stop_command"]
+
+
+@pytest.mark.parametrize("model", ["SPAD Array", "PISPAD23", "TCP/IP - PI SPAD23R (TS mode - uimg)"])
+def test_requested_lasers_and_sequencer_reach_first_and_reused_runs(model):
+    hardware = {}
+    requested = {"laser_1_enable": True, "laser_excitation_sequence": [True, False],
+                 "start_command": True, "stop_command": True}
+
+    def reset(**kwargs):
+        hardware.update(laser_1_enable=False, laser_excitation_sequence=[False, False],
+                        start_command=False, stop_command=False)
+
+    window = SimpleNamespace(flare=None, configurationFPGA_dict=requested,
+        FPGA_IDLE_TIMEOUT_SECONDS=5, setRegistersDict=hardware.update,
+        mcs_manager=SimpleNamespace(is_connected=True, quick_reset_fpga=reset,
+                                    detector_model=model),
+        ui=SimpleNamespace(checkBox_pulsing_forced=MagicMock(isChecked=lambda: False),
+                           checkBox_DFD=MagicMock(isChecked=lambda: False)))
+    for enabled, sequence in [(True, [True, False]), (False, [False, True]), (True, [True, True])]:
+        requested.update(laser_1_enable=enabled, laser_excitation_sequence=sequence)
+        MainWindow._prepare_fpga_for_acquisition(window)
+        MainWindow.sendCmdRun(window)
+        assert hardware["start_command"] and not hardware["stop_command"]
+        assert hardware["laser_1_enable"] is enabled
+        assert hardware["laser_excitation_sequence"] == sequence
 
 
 def test_wait_for_fpga_idle_raises_after_timeout():
@@ -181,7 +352,7 @@ def test_run_command_stays_asserted_when_connection_will_close():
     ]
 
 
-def test_run_command_is_pulsed_when_connection_is_kept():
+def test_run_command_stays_asserted_when_connection_is_kept():
     window = MainWindow.__new__(MainWindow)
     window.ui = SimpleNamespace(
         pushButton_fpga_connection_cmd=MagicMock(
@@ -193,8 +364,8 @@ def test_run_command_is_pulsed_when_connection_is_kept():
     window.sendCmdRun()
 
     assert window.setRegistersDict.call_args_list == [
-        call({"stop_command": False, "start_command": True}),
-        call({"start_command": False}),
+        call({"stop_command": False, "start_command": False}),
+        call({"start_command": True}),
     ]
 
 
@@ -458,13 +629,14 @@ def test_legacy_keep_connected_settings_do_not_fake_live_connection_state():
 
 def test_acquisition_start_failure_restores_controls_and_shows_popup():
     window = MainWindow.__new__(MainWindow)
-    window.pispad23_timetagging = SimpleNamespace(active=False)
+    window.pispad23_timetagging = SimpleNamespace(active=False, calibrating=False, querying=False)
     window.ui = SimpleNamespace(
         checkBox_pispad23ttmActivate=MagicMock(isChecked=MagicMock(return_value=False)),
         checkBox_ttmActivate=MagicMock(
             isChecked=MagicMock(return_value=False)
         ),
         pushButton_previewStart=MagicMock(),
+        pushButton_previewConfiguredRepetitions=MagicMock(),
         pushButton_acquisitionStart=MagicMock(),
         pushButton_stop=MagicMock(),
         pushButton_fpga_connection_cmd=MagicMock(),

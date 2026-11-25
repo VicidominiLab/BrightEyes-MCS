@@ -126,10 +126,17 @@ python -m brighteyes_mcs --log-level 2
 | 0 — No log | No application log files or crash dumps are written. |
 | 1 — Normal | Normal application messages, warnings, errors and crash diagnostics. |
 | 2 — Verbose (default) | Normal logs plus user input and the first action handler, with action IDs, completion and failure records. Includes buttons, settings and plot navigation. |
-| 3 — Extremely Verbose | All of the above plus data-flow debug messages, PI SPAD23R receive/decode/batch details, and the RAW recorder's `--verbose` diagnostics. |
+| 3 — Extremely Verbose | All of the above plus application data-flow debug messages. |
 
 `--verbosity` is an alias for `--log-level`. The legacy `debug` argument still
 selects the unstable window mode independently of log verbosity.
+
+pSPAD TCP/IP diagnostics have a separate **pSPAD TCP verbosity** selector in
+the **PI SPAD23R** tab: Minimal, Normal (default), or Full. This setting is
+independent of `--log-level`, including when MCS logging is off. Normal records
+commands, replies and receive sizes; Full also stores complete received data
+in hex. The tab shows the separate `pispad-tcp-<id>.log` path for each acquisition
+or forced calibration. Full can produce large logs and slow acquisition.
 
 ### Log files and location
 

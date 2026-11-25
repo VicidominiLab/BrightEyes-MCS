@@ -9,6 +9,8 @@ import os
 from datetime import datetime
 from brighteyes_mcs.logging_setup import logger, set_debug
 from ..acquisition.workers.fpga import NiFpgaControlProcess
+from .tag_clock import REMOVED_TAG_REGISTERS, compatible_tag_registers, normalize_tag_registers
+from .register_names import REGISTER_ALIASES, resolve_register_name
 from ..acquisition.detectors.models import (
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_control,
@@ -91,6 +93,7 @@ class FpgaHandle(object):
     def run(self, initial_registers=None):
         if initial_registers is None:
             initial_registers = {}
+        initial_registers = normalize_tag_registers(initial_registers)
         self.configuration["initial_registers"].clear()
         self.configuration["initial_registers"].update(initial_registers)
         self.configuration["initialization_error"].clear()
@@ -249,12 +252,14 @@ class FpgaHandle(object):
     def register_read(self, register, timeout=1000):
         if not detector_uses_nifpga_control(self.configuration["detector_model"]):
             initial_registers = self.configuration["initial_registers"]
-            return {name: initial_registers.get(name) for name in list(register)}
+            return {name: initial_registers.get(REGISTER_ALIASES.get(name, name))
+                    for name in list(register)}
 
         register = list(register)
         ret = {}
         for i in register:
-            ret.update({i: self.nifpga_obj.registers[i].read()})
+            physical_name = resolve_register_name(i, self.nifpga_obj.registers)
+            ret.update({i: self.nifpga_obj.registers[physical_name].read()})
 
         l = list(ret.keys())
         if not (list(register) == register):
@@ -263,20 +268,15 @@ class FpgaHandle(object):
         return ret
 
     def register_read_all(self, timeout=5000):
+        """Read the actual FPGA register names and values without alias translation."""
         if not detector_uses_nifpga_control(self.configuration["detector_model"]):
             return dict(self.configuration["initial_registers"])
 
-        mydict = {}
-        mydict = self.register_read(list(self.configuration["list_registers"]), timeout)
-        return mydict
+        return {name: register.read() for name, register in self.nifpga_obj.registers.items()}
 
     def register_write(self, register, data):
-        if not detector_uses_nifpga_control(self.configuration["detector_model"]):
-            self.configuration["initial_registers"][register] = data
-            return
-
         try:
-            self.nifpga_obj.registers[register].write(data)
+            self.register_write_checked(register, data)
         except Exception as e:
             print("ERROR:", register, data, e)
         # self.configuration['queueRegisterWrite'].put({register: data})
@@ -284,9 +284,13 @@ class FpgaHandle(object):
     def register_write_checked(self, register, data):
         """Write a register and propagate hardware failures to the caller."""
         if not detector_uses_nifpga_control(self.configuration["detector_model"]):
-            self.configuration["initial_registers"][register] = data
+            self.configuration["initial_registers"].update(normalize_tag_registers({register: data}))
             return
-        self.nifpga_obj.registers[register].write(data)
+        if register in self.nifpga_obj.registers and register not in REMOVED_TAG_REGISTERS:
+            self.nifpga_obj.registers[register].write(data)
+            return
+        for name, value in compatible_tag_registers({register: data}, self.nifpga_obj.registers).items():
+            self.nifpga_obj.registers[name].write(value)
     #
     # def fifo_read(self, fifoname, timeout):
     #     self.configuration["queueFifoReadReq"].put(

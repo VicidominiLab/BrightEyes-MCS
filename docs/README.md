@@ -29,11 +29,14 @@ PRISM-Light, SPAD23R, and pSPAD are trademarks or product names of their respect
 - [Plug-in API](../brighteyes_mcs/plugins/README.md)
 - [Build and release procedure (publishing disabled)](pypi-release.md)
 - [Wiki landing-page draft](wiki-home.md)
+- [Removed register dashboard: design archive](register-dashboard-design.md)
 
 ## Technical references
 
 - [HDF5 schema 0.0.1](h5_mcs_scheme_v0_0_1.md)
 - [Low-level firmware registers](BrightEyes-MCSLL-registers.md)
+- [MCSV2_1 tag outputs and compatibility](BrightEyes-MCSLL-registers.md#mcsv2_1-firmware-v21-tag-outputs)
+- [MCSV2_1 analog register names](BrightEyes-MCSLL-registers.md#mcsv2_1-firmware-v21-analog-register-names)
 - [Lifetime estimation](lifetime_estimation_explanation.txt)
 
 The architecture guide contains the maintained software diagram. The images in

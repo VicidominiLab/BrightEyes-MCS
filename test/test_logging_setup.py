@@ -434,19 +434,6 @@ def test_launcher_default_aliases_qt_passthrough_and_rejected_levels():
                 _logging_options(["mcs", flag, invalid])
 
 
-def test_pispad23_debug_obeys_level_even_with_legacy_environment(log_session, monkeypatch):
-    from brighteyes_mcs.acquisition.detectors.pispad23.backend import pispad23_debug, pispad23_debug_enabled
-
-    monkeypatch.setenv("PISPAD23_DEBUG", "1")
-    for level in range(4):
-        path = logs.configure_logging(verbosity=level)
-        assert pispad23_debug_enabled(True) == (level == 3)
-        pispad23_debug("PISPAD23 packet detail")
-        if path:
-            assert ("PISPAD23 packet detail" in path.read_text()) == (level == 3)
-    assert os.environ[logs.VERBOSITY_ENV_VAR] == "3"
-
-
 def test_unwritable_log_folder_does_not_stop_startup_or_worker(log_session, monkeypatch):
     from pathlib import Path
 

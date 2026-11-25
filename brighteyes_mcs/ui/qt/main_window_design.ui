@@ -1505,7 +1505,382 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                 <string>Scanning Calibration &amp;&amp; Limits</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_46">
-                <item row="7" column="0">
+                <item row="7" column="0" colspan="2">
+                 <widget class="QGroupBox" name="groupBox_tag_clock">
+                  <property name="title">
+                   <string>Tag outputs</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_tag_outputs">
+                   <item>
+                    <widget class="QGroupBox" name="groupBox_tag_timing">
+                     <property name="title">
+                      <string>Pulse timing and polarity</string>
+                     </property>
+                     <layout class="QGridLayout" name="gridLayout_tag_clock">
+                      <item row="0" column="1">
+                       <widget class="QLabel" name="label_tag_x_header">
+                        <property name="text">
+                         <string>Pixel (X)</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="2">
+                       <widget class="QLabel" name="label_tag_y_header">
+                        <property name="text">
+                         <string>Line (Y)</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="3">
+                       <widget class="QLabel" name="label_tag_z_header">
+                        <property name="text">
+                         <string>Frame (Z)</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
+                       <widget class="QLabel" name="label_tag_clock_mode">
+                        <property name="text">
+                         <string>Mode</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="0">
+                       <widget class="QLabel" name="label_tag_clock_duty_cycle">
+                        <property name="text">
+                         <string>Duty cycle [%]</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="3" column="0">
+                       <widget class="QLabel" name="label_tag_clock_fixed_cycles">
+                        <property name="text">
+                         <string>Fixed cycles</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="4" column="0">
+                       <widget class="QLabel" name="label_tag_clock_effective">
+                        <property name="text">
+                         <string>Effective width</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="5" column="0">
+                       <widget class="QLabel" name="label_tag_clock_polarity">
+                        <property name="text">
+                         <string>Polarity</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="1">
+                       <widget class="QComboBox" name="comboBox_tag_clock_mode">
+                        <item>
+                         <property name="text">
+                          <string>Duty cycle</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>Fixed cycles</string>
+                         </property>
+                        </item>
+                       </widget>
+                      </item>
+                      <item row="2" column="1">
+                       <widget class="QDoubleSpinBox" name="doubleSpinBox_tag_clock_duty_cycle">
+                        <property name="keyboardTracking">
+                         <bool>false</bool>
+                        </property>
+                        <property name="maximum">
+                         <double>100.0</double>
+                        </property>
+                        <property name="value">
+                         <double>50.0</double>
+                        </property>
+                        <property name="toolTip">
+                         <string>Tag pulse width as a percentage of time resolution times time bins per pixel. Rounded down to FPGA cycles.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="3" column="1">
+                       <widget class="QSpinBox" name="spinBox_tag_clock_fixed_cycles">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="keyboardTracking">
+                         <bool>false</bool>
+                        </property>
+                        <property name="maximum">
+                         <number>2147483647</number>
+                        </property>
+                        <property name="value">
+                         <number>200</number>
+                        </property>
+                        <property name="toolTip">
+                         <string>Fixed tag_clock_duration_cycles value, independent of pixel dwell time. One cycle is 25 ns at 40 MHz.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="4" column="1">
+                       <widget class="QLabel" name="label_tag_clock_cycles">
+                        <property name="text">
+                         <string>200 cycles</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="2">
+                       <widget class="QComboBox" name="comboBox_tag_y_clock_mode">
+                        <item>
+                         <property name="text">
+                          <string>Follow X</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>Duty cycle</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>Fixed cycles</string>
+                         </property>
+                        </item>
+                        <property name="toolTip">
+                         <string>MCSV2_1: Follow X uses the pixel tag width internally; duty cycle uses one active line.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="2">
+                       <widget class="QDoubleSpinBox" name="doubleSpinBox_tag_y_clock_duty_cycle">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="keyboardTracking">
+                         <bool>false</bool>
+                        </property>
+                        <property name="maximum">
+                         <double>100.0</double>
+                        </property>
+                        <property name="value">
+                         <double>50.0</double>
+                        </property>
+                        <property name="toolTip">
+                         <string>Percentage of FPGA cycles per line: time-bin cycles times time bins per pixel times pixels per line, including enabled circular points/repetitions. Excludes startup/post-frame waits. Rounded down; zero follows X.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="3" column="2">
+                       <widget class="QSpinBox" name="spinBox_tag_y_clock_fixed_cycles">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="keyboardTracking">
+                         <bool>false</bool>
+                        </property>
+                        <property name="maximum">
+                         <number>2147483647</number>
+                        </property>
+                        <property name="value">
+                         <number>200</number>
+                        </property>
+                        <property name="toolTip">
+                         <string>MCSV2_1: fixed tag width in FPGA cycles, independent of scan timing. One cycle is 25 ns at 40 MHz. Zero uses the pixel (X) tag width internally.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="4" column="2">
+                       <widget class="QLabel" name="label_tag_y_clock_cycles">
+                        <property name="text">
+                         <string>200 cycles (X)</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="3">
+                       <widget class="QComboBox" name="comboBox_tag_z_clock_mode">
+                        <item>
+                         <property name="text">
+                          <string>Follow X</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>Duty cycle</string>
+                         </property>
+                        </item>
+                        <item>
+                         <property name="text">
+                          <string>Fixed cycles</string>
+                         </property>
+                        </item>
+                        <property name="toolTip">
+                         <string>MCSV2_1: Follow X uses the pixel tag width internally; duty cycle uses one active frame.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="3">
+                       <widget class="QDoubleSpinBox" name="doubleSpinBox_tag_z_clock_duty_cycle">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="keyboardTracking">
+                         <bool>false</bool>
+                        </property>
+                        <property name="maximum">
+                         <double>100.0</double>
+                        </property>
+                        <property name="value">
+                         <double>50.0</double>
+                        </property>
+                        <property name="toolTip">
+                         <string>Percentage of FPGA cycles per frame: time-bin cycles times time bins per pixel times pixels per line times lines per frame, including enabled circular points/repetitions. Excludes startup/post-frame waits. Rounded down; zero follows X.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="3" column="3">
+                       <widget class="QSpinBox" name="spinBox_tag_z_clock_fixed_cycles">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="keyboardTracking">
+                         <bool>false</bool>
+                        </property>
+                        <property name="maximum">
+                         <number>2147483647</number>
+                        </property>
+                        <property name="value">
+                         <number>200</number>
+                        </property>
+                        <property name="toolTip">
+                         <string>MCSV2_1: fixed tag width in FPGA cycles, independent of scan timing. One cycle is 25 ns at 40 MHz. Zero uses the pixel (X) tag width internally.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="4" column="3">
+                       <widget class="QLabel" name="label_tag_z_clock_cycles">
+                        <property name="text">
+                         <string>200 cycles (X)</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="5" column="1">
+                       <widget class="QCheckBox" name="checkBox_tag_x_clock_invert">
+                        <property name="toolTip">
+                         <string>MCSV2_1: invert the pixel (X) tag polarity.</string>
+                        </property>
+                        <property name="text">
+                         <string>Invert</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="5" column="2">
+                       <widget class="QCheckBox" name="checkBox_tag_y_clock_invert">
+                        <property name="toolTip">
+                         <string>MCSV2_1: invert the line (Y) tag polarity.</string>
+                        </property>
+                        <property name="text">
+                         <string>Invert</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="5" column="3">
+                       <widget class="QCheckBox" name="checkBox_tag_z_clock_invert">
+                        <property name="toolTip">
+                         <string>MCSV2_1: frame (Z) polarity inversion register.</string>
+                        </property>
+                        <property name="text">
+                         <string>Invert</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QGroupBox" name="groupBox_tag_exclusions">
+                     <property name="title">
+                      <string>Tag exclusions</string>
+                     </property>
+                     <layout class="QGridLayout" name="gridLayout_tag_exclusions">
+                      <item row="0" column="0">
+                       <widget class="QCheckBox" name="checkBox_tag_exclude_first_x">
+                        <property name="text">
+                         <string>Skip first X tag per line</string>
+                        </property>
+                        <property name="toolTip">
+                         <string>MCSV2_1: suppress the first X tag of each line, before polarity inversion.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="1">
+                       <widget class="QCheckBox" name="checkBox_tag_exclude_last_x">
+                        <property name="text">
+                         <string>Skip last X tag per line</string>
+                        </property>
+                        <property name="toolTip">
+                         <string>MCSV2_1: suppress the last X tag of each line, before polarity inversion.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
+                       <widget class="QCheckBox" name="checkBox_tag_exclude_first_y">
+                        <property name="text">
+                         <string>Skip first Y tag per frame</string>
+                        </property>
+                        <property name="toolTip">
+                         <string>MCSV2_1: suppress the first Y tag of each frame, before polarity inversion.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="1">
+                       <widget class="QCheckBox" name="checkBox_tag_exclude_last_y">
+                        <property name="text">
+                         <string>Skip last Y tag per frame</string>
+                        </property>
+                        <property name="toolTip">
+                         <string>MCSV2_1: suppress the last Y tag of each frame, before polarity inversion.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="0">
+                       <widget class="QCheckBox" name="checkBox_tag_exclude_first_y_for_x">
+                        <property name="text">
+                         <string>Skip X tags on first line</string>
+                        </property>
+                        <property name="toolTip">
+                         <string>MCSV2_1: suppress all X tags on the first line of each frame, before polarity inversion.</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="1">
+                       <widget class="QCheckBox" name="checkBox_tag_exclude_last_y_for_x">
+                        <property name="text">
+                         <string>Skip X tags on last line</string>
+                        </property>
+                        <property name="toolTip">
+                         <string>MCSV2_1: suppress all X tags on the last line of each frame, before polarity inversion.</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="TagSignalPreview" name="widget_tag_signal_preview"/>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item row="8" column="0">
                  <spacer name="verticalSpacer_4">
                   <property name="orientation">
                    <enum>Qt::Orientation::Vertical</enum>
@@ -3202,72 +3577,43 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                   </widget>
                   <widget class="QWidget" name="tab_pi_timetagging">
                    <attribute name="title">
-                    <string>PI SPAD23R (Timestamp mode)</string>
+                    <string>PI SPAD23R</string>
                    </attribute>
                    <layout class="QGridLayout" name="gridLayout_pi_timetagging">
-                    <item row="0" column="0">
-                     <widget class="QLabel" name="label_pispad23ttm_executable">
-                      <property name="text">
-                       <string>HDF5 recorder</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="1">
-                     <widget class="QLineEdit" name="lineEdit_pispad23ttm_h5_executable"/>
-                    </item>
-                    <item row="0" column="2">
-                     <widget class="QToolButton" name="toolButton_pispad23ttm_h5">
-                      <property name="text">
-                       <string>...</string>
-                      </property>
-                     </widget>
-                    </item>
+                    <item row="17" column="0" colspan="3"><widget class="QPushButton" name="pushButton_pispad23_status">
+                     <property name="text"><string>Status (D\n)</string></property>
+                     <property name="toolTip"><string>Send D followed by newline to read PI SPAD status. Available when the PI acquisition and calibration are idle.</string></property>
+                    </widget></item>
+
                     <item row="1" column="0">
-                     <widget class="QLabel" name="label_pispad23ttm_raw">
+                     <widget class="QLabel" name="label_pispad23ttm_folder">
                       <property name="text">
-                       <string>RAW recorder</string>
+                       <string>TDC data folder</string>
                       </property>
                      </widget>
                     </item>
                     <item row="1" column="1">
-                     <widget class="QLineEdit" name="lineEdit_pispad23ttm_raw_executable"/>
-                    </item>
-                    <item row="1" column="2">
-                     <widget class="QToolButton" name="toolButton_pispad23ttm_raw">
-                      <property name="text">
-                       <string>...</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="0">
-                     <widget class="QLabel" name="label_pispad23ttm_folder">
-                      <property name="text">
-                       <string>Data folder</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="1">
                      <widget class="QLineEdit" name="lineEdit_pispad23ttm_folder">
                       <property name="placeholderText">
                        <string>Empty: use the MCS destination folder</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="2">
+                    <item row="1" column="2">
                      <widget class="QToolButton" name="toolButton_pispad23ttm_folder">
                       <property name="text">
                        <string>...</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="3" column="0">
+                    <item row="2" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_format">
                       <property name="text">
-                       <string>Output format</string>
+                       <string>TDC event format</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="3" column="1">
+                    <item row="2" column="1">
                      <widget class="QComboBox" name="comboBox_pispad23ttm_format">
                       <item>
                        <property name="text">
@@ -3281,24 +3627,24 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </item>
                      </widget>
                     </item>
-                    <item row="4" column="0">
+                    <item row="0" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_address">
                       <property name="text">
-                       <string>TTM endpoint (host:port)</string>
+                       <string>Detector endpoint (host:port)</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="4" column="1">
+                    <item row="0" column="1">
                      <widget class="QLineEdit" name="lineEdit_pispad23ttm_address"/>
                     </item>
-                    <item row="6" column="0">
+                    <item row="10" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_margin">
                       <property name="text">
                        <string>Recording margin</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="6" column="1">
+                    <item row="10" column="1">
                      <widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23ttm_margin">
                       <property name="toolTip">
                        <string>Extra recording time beyond the scan duration. Include external trigger delays here.</string>
@@ -3314,17 +3660,17 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="7" column="0">
+                    <item row="8" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_settle">
                       <property name="text">
                        <string>Delay after armed / ready</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="7" column="1">
+                    <item row="8" column="1">
                      <widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23ttm_settle">
                       <property name="toolTip">
-                       <string>RAW: wait until SB is sent, then this delay before starting the FPGA. HDF5: wait for the recorder ready message. Included in both preview and recording measurement-ms.</string>
+                       <string>Wait after the Rust receiver is armed before starting the FPGA. Applies to timestamp and intensity acquisition.</string>
                       </property>
                       <property name="suffix">
                        <string> s</string>
@@ -3334,14 +3680,14 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="8" column="0">
+                    <item row="9" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_timeout">
                       <property name="text">
                        <string>Calibration / startup timeout</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="8" column="1">
+                    <item row="9" column="1">
                      <widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23ttm_timeout">
                       <property name="suffix">
                        <string> s</string>
@@ -3354,37 +3700,15 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="5" column="0">
-                     <widget class="QLabel" name="label_pispad23ttm_stream_port">
-                      <property name="text">
-                       <string>Stream image TCP/IP port</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="5" column="1">
-                     <widget class="QSpinBox" name="spinBox_pispad23ttm_stream_port">
-                      <property name="toolTip">
-                       <string>Local tdc_raw_acquire image server port. img previews the detector sum; uimg streams each dwell's 25 channel counts for the scan image and detector fingerprint. PI SPAD23R TTM also saves RAW timestamps.</string>
-                      </property>
-                      <property name="minimum">
-                       <number>1</number>
-                      </property>
-                      <property name="maximum">
-                       <number>65535</number>
-                      </property>
-                      <property name="value">
-                       <number>19000</number>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="9" column="0">
+
+                    <item row="11" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_preview_margin">
                       <property name="text">
                        <string>Preview margin</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="9" column="1">
+                    <item row="11" column="1">
                      <widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23ttm_preview_margin">
                       <property name="toolTip">
                        <string>Extra time for each timestamp preview measurement, in addition to one frame, scan waits, and the ready delay. Increase this for communication or trigger delays.</string>
@@ -3409,14 +3733,14 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="10" column="0">
+                    <item row="3" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_uimg_buffer">
                       <property name="text">
                        <string>Uimg buffer (dwells)</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="10" column="1">
+                    <item row="3" column="1">
                      <widget class="QSpinBox" name="spinBox_pispad23ttm_uimg_buffer">
                       <property name="minimum">
                        <number>1</number>
@@ -3429,14 +3753,14 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="11" column="0">
+                    <item row="4" column="0">
                      <widget class="QLabel" name="label_pispad23ttm_uimg_batch">
                       <property name="text">
                        <string>Uimg batch size (dwells)</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="11" column="1">
+                    <item row="4" column="1">
                      <widget class="QSpinBox" name="spinBox_pispad23ttm_uimg_batch">
                       <property name="minimum">
                        <number>1</number>
@@ -3449,7 +3773,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="12" column="0" colspan="3">
+                    <item row="13" column="0" colspan="3">
                      <widget class="QPushButton" name="pushButton_pispad23ttm_force_calibration">
                       <property name="toolTip">
                        <string>Send T,c,1 to the configured PI SPAD23R TTM endpoint. Do not use while a recorder or PI SPAD23R image acquisition is active.</string>
@@ -3459,7 +3783,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="13" column="0" colspan="3">
+                    <item row="15" column="0" colspan="3">
                      <widget class="QLabel" name="label_pispad23ttm_status">
                       <property name="text">
                        <string>Idle</string>
@@ -3469,7 +3793,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="14" column="0" colspan="3">
+                    <item row="16" column="0" colspan="3">
                      <widget class="QPlainTextEdit" name="plainTextEdit_pispad23ttm_log">
                       <property name="readOnly">
                        <bool>true</bool>
@@ -3479,81 +3803,36 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
                       </property>
                      </widget>
                     </item>
-                   </layout>
-                  </widget>
-                  <widget class="QWidget" name="tab_6">
-                   <attribute name="title">
-                    <string>PI SPAD23R (Intensity mode)</string>
-                   </attribute>
-                   <layout class="QGridLayout" name="gridLayout_106">
-                    <item row="0" column="0">
-                     <layout class="QGridLayout" name="gridLayout_43">
-                      <item row="0" column="2">
-                       <widget class="QLabel" name="label_pispad23_port">
-                        <property name="text">
-                         <string>Port</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="0" column="3">
-                       <widget class="QSpinBox" name="spinBox_pispad23_port">
-                        <property name="minimum">
-                         <number>1</number>
-                        </property>
-                        <property name="maximum">
-                         <number>65535</number>
-                        </property>
-                        <property name="value">
-                         <number>9997</number>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="0" column="0">
-                       <widget class="QLabel" name="label_pispad23_ip_addr">
-                        <property name="text">
-                         <string>IP addr.</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="1" column="0">
-                       <widget class="QLabel" name="label_pispad23_greeting_raw">
-                        <property name="text">
-                         <string>Greeting raw</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="0" column="1">
-                       <widget class="QLineEdit" name="lineEdit_pispad23_ip_addr">
-                        <property name="text">
-                         <string>127.0.0.1</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="1" column="1">
-                       <widget class="QTextEdit" name="textEdit_pispad23_greeting_raw">
-                        <property name="readOnly">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="2" column="0">
-                       <widget class="QLabel" name="label_pispad23_greeting_decoded">
-                        <property name="text">
-                         <string>Greeting decoded</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="2" column="1">
-                       <widget class="QTextEdit" name="textEdit_pispad23_greeting_decoded">
-                        <property name="readOnly">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
+
+<item row="0" column="2"><widget class="QLabel" name="label_pispad23_mode"><property name="text"><string>Timestamp</string></property></widget></item>
+<item row="5" column="0"><widget class="QLabel" name="label_pispad23_channels"><property name="text"><string>Intensity detector channels</string></property></widget></item>
+<item row="5" column="1"><widget class="QSpinBox" name="spinBox_pispad23_channels"><property name="minimum"><number>1</number></property><property name="maximum"><number>25</number></property><property name="value"><number>25</number></property><property name="toolTip"><string>Number of image planes: 25 for SPAD23R, 23 for SPAD23G. Remaining output channels are zero-filled.</string></property></widget></item>
+<item row="6" column="0" colspan="3"><widget class="QCheckBox" name="checkBox_pispad23_external_frame"><property name="text"><string>Intensity: use external frame clock</string></property><property name="checked"><bool>true</bool></property></widget></item>
+<item row="7" column="0"><widget class="QLabel" name="label_pispad23_intensity_dwell"><property name="text"><string>Intensity dwell (0 = external clock)</string></property></widget></item>
+<item row="7" column="1"><widget class="QDoubleSpinBox" name="doubleSpinBox_pispad23_intensity_dwell"><property name="maximum"><double>1000000.0</double></property><property name="decimals"><number>3</number></property><property name="suffix"><string> us</string></property></widget></item>
+                    <item row="12" column="0">
+                     <widget class="QLabel" name="label_pispad23_verbosity">
+                      <property name="text"><string>pSPAD TCP verbosity</string></property>
+                     </widget>
                     </item>
-                   </layout>
+                    <item row="12" column="1" colspan="2">
+                     <widget class="QComboBox" name="comboBox_pispad23_verbosity">
+                      <property name="toolTip"><string>Independent of MCS logging. Minimal: lifecycle/errors. Normal: all commands, replies and receive sizes without data payloads. Full: also save every received byte; large logs and slower acquisition.</string></property>
+                      <property name="currentIndex"><number>1</number></property>
+                      <item><property name="text"><string>Minimal</string></property></item>
+                      <item><property name="text"><string>Normal</string></property></item>
+                      <item><property name="text"><string>Full</string></property></item>
+                     </widget>
+                    </item>
+                    <item row="14" column="0" colspan="3">
+                     <widget class="QPushButton" name="pushButton_pispad23_convert_tdc">
+                      <property name="text"><string>Convert TDC RAW files…</string></property>
+                      <property name="toolTip"><string>Convert one or multiple pSPAD TDC RAW files to TDC HDF5 and/or standard MCS intensity HDF5, preserving acquisition metadata.</string></property>
+                     </widget>
+                    </item>
+</layout>
                   </widget>
+
                  </widget>
                 </item>
                </layout>
@@ -4105,7 +4384,7 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
           <item row="0" column="2">
            <widget class="QCheckBox" name="checkBox_pispad23ttmActivate">
             <property name="text">
-             <string>PI SPAD23R TTM</string>
+             <string>PI SPAD23R TDC recording</string>
             </property>
            </widget>
           </item>
@@ -6596,6 +6875,10 @@ Ctrl+Drag/Wheel/Double-Click: microscope</string>
          </item>
          <item row="0" column="0">
           <layout class="QGridLayout" name="gridLayout_23">
+           <item row="5" column="0" colspan="3"><widget class="QPushButton" name="pushButton_previewConfiguredRepetitions">
+            <property name="text"><string>Preview (configured repetitions)</string></property>
+            <property name="toolTip"><string>Start a preview without changing the configured repetition count to continuous mode.</string></property>
+           </widget></item>
            <item row="2" column="2">
             <widget class="QPushButton" name="pushButton_8">
              <property name="text">
@@ -8211,6 +8494,11 @@ when TTM is active</string>
   </widget>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>TagSignalPreview</class>
+   <extends>QWidget</extends>
+   <header>brighteyes_mcs.ui.qt.tag_signal_preview</header>
+  </customwidget>
   <customwidget>
    <class>ElidedComboBox</class>
    <extends>QComboBox</extends>
@@ -9908,6 +10196,25 @@ when TTM is active</string>
     </hint>
    </hints>
   </connection>
+<connection><sender>comboBox_tag_clock_mode</sender><signal>currentIndexChanged(int)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>doubleSpinBox_tag_clock_duty_cycle</sender><signal>valueChanged(double)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>spinBox_tag_clock_fixed_cycles</sender><signal>valueChanged(int)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>spinBox_tag_y_clock_fixed_cycles</sender><signal>valueChanged(int)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>spinBox_tag_z_clock_fixed_cycles</sender><signal>valueChanged(int)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>checkBox_tag_x_clock_invert</sender><signal>toggled(bool)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>checkBox_tag_y_clock_invert</sender><signal>toggled(bool)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>checkBox_tag_z_clock_invert</sender><signal>toggled(bool)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>checkBox_tag_exclude_first_x</sender><signal>toggled(bool)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>checkBox_tag_exclude_first_y</sender><signal>toggled(bool)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>checkBox_tag_exclude_first_y_for_x</sender><signal>toggled(bool)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>pushButton_previewConfiguredRepetitions</sender><signal>clicked()</signal><receiver>MainWindowDesign</receiver><slot>previewConfiguredRepetitions()</slot></connection>
+<connection><sender>comboBox_tag_y_clock_mode</sender><signal>currentIndexChanged(int)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>doubleSpinBox_tag_y_clock_duty_cycle</sender><signal>valueChanged(double)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>comboBox_tag_z_clock_mode</sender><signal>currentIndexChanged(int)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>doubleSpinBox_tag_z_clock_duty_cycle</sender><signal>valueChanged(double)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>checkBox_tag_exclude_last_x</sender><signal>toggled(bool)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>checkBox_tag_exclude_last_y</sender><signal>toggled(bool)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
+<connection><sender>checkBox_tag_exclude_last_y_for_x</sender><signal>toggled(bool)</signal><receiver>MainWindowDesign</receiver><slot>temporalSettingsChanged()</slot></connection>
  </connections>
  <slots>
   <slot>AutoRange_im_widget()</slot>

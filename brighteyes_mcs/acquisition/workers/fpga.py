@@ -1,6 +1,7 @@
 import multiprocessing as mp
 from threading import Thread
 import nifpga
+from ...hardware.tag_clock import compatible_tag_registers
 from brighteyes_mcs.logging_setup import logged_worker, logger
 from time import perf_counter_ns, sleep
 from ..detectors.models import (
@@ -10,7 +11,6 @@ from ..detectors.models import (
 )
 
 import os, psutil
-
 
 REQUIRED_FPGA_CONTROL_REGISTERS = frozenset(
     ("stop_command", "start_command", "debug_scan_fsm_status")
@@ -356,11 +356,11 @@ class FpgaHandleProcess(mp.Process):
         p.nice(psutil.HIGH_PRIORITY_CLASS)
         logger.debug("%s %s %s %s", self.process_label, "RUN - PID:", os.getpid(), p.nice())
 
-        logger.debug("nifpga.Session(self.bitfile, self.ni_address)")
+        logger.debug("nifpga.Session(self.bitfile, self.ni_address, no_run=True)")
         # print(self.configuration)
         try:
-            self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address)
-            logger.debug("nifpga.Session(self.bitfile, self.ni_address) DONE!")
+            self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address, no_run=True)
+            logger.debug("nifpga.Session(self.bitfile, self.ni_address, no_run=True) DONE!")
             available_registers = set(self.nifpga_session.registers.keys())
             available_fifos = set(self.nifpga_session.fifos.keys())
             required_fifos = (
@@ -372,6 +372,9 @@ class FpgaHandleProcess(mp.Process):
                 available_registers,
                 available_fifos,
                 required_fifos,
+            )
+            initial_registers = compatible_tag_registers(
+                dict(self.initial_registers), available_registers
             )
             self.is_connected.set()
 
@@ -401,7 +404,7 @@ class FpgaHandleProcess(mp.Process):
                 logger.debug("%s %s", self.process_label, "FIFOs disabled")
             logger.debug("%s %s", "Registers: ", self.list_registers)
 
-            # self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address)
+            # self.nifpga_session = nifpga.Session(self.bitfile, self.ni_address, no_run=True)
 
             self.nifpga_session.reset()
 
@@ -422,18 +425,17 @@ class FpgaHandleProcess(mp.Process):
                 for register in ("stream_out_aux_enable", "stream_out_main_enable", "dfd_enable"):
                     if register in self.initial_registers:
                         self.initial_registers[register] = False
+                        initial_registers[register] = False
 
             # debug(self.fifo_element_remaining)
             # Here we assume the configured depth is the same for all FIFOs.
 
             logger.debug("%s %s", self.process_label, "started")
-            for register in dict(self.initial_registers):
+            for register, value in initial_registers.items():
                 try:
-                    if self.initial_registers[register] is not None:
-                        self.nifpga_session.registers[register].write(
-                            self.initial_registers[register]
-                        )
-                    logger.debug("%s %s %s", "initial_registers: ", register, self.initial_registers[register])
+                    if value is not None:
+                        self.nifpga_session.registers[register].write(value)
+                    logger.debug("%s %s %s", "initial_registers: ", register, value)
                 except Exception as e:
                     logger.debug("%s %s %s %s %s %s", "initial_registers - self.queueRegisterWrite", repr(e), " ERROR", register, "========", self.initial_registers)
             logger.debug("initial_registers done")

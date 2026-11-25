@@ -49,6 +49,100 @@ def test_full_window_startup_and_plot_signals(tmp_path, log_directory_available)
                     assert self.init_ready and self.guiReadyFlag
                     assert not self._shutdown_started and not self._shutdown_complete
                     assert not self.mcs_manager.is_connected
+                    assert len(self._register_browsers) == 3
+                    workspace = self.register_workspace
+                    assert workspace.editor_tabs.count() == 3
+                    assert [self.ui.tabWidget_circular.tabText(i) for i in range(self.ui.tabWidget_circular.count())] == ['Registry editor', 'Circular', 'Monitor']
+                    assert [workspace.editor_tabs.tabText(i) for i in range(3)] == ['Read Conf. FPGA', 'Conf. FPGA dict.', 'Conf. GUI dict.']
+                    browser = self._register_browsers[self.ui.treeView_3]
+                    browser.search.setText('nx')
+                    assert browser.proxy.rowCount() == 1
+                    index = browser.model.rows[('nx',)][1].index()
+                    original_nx = self.ui.spinBox_nx.value()
+                    assert browser.model.rows[('nx',)][1].text() == str(original_nx)
+                    # Exercise Designer signals for axis modes and staged scan geometry.
+                    saved = self.getGUI_data()
+                    self.ui.spinBox_timeresolution.setValue(2)
+                    self.ui.spinBox_time_bin_per_px.setValue(10)
+                    self.ui.spinBox_nx.setValue(5)
+                    self.ui.spinBox_ny.setValue(7)
+                    self.ui.comboBox_tag_y_clock_mode.setCurrentText('Duty cycle')
+                    self.ui.doubleSpinBox_tag_y_clock_duty_cycle.setValue(25)
+                    self.ui.comboBox_tag_z_clock_mode.setCurrentText('Duty cycle')
+                    self.ui.doubleSpinBox_tag_z_clock_duty_cycle.setValue(10)
+                    assert self.configurationFPGA_dict['tag_y_clock_duration_cycles'] == 1000
+                    assert self.configurationFPGA_dict['tag_z_clock_duration_cycles'] == 2800
+                    preview = self.ui.widget_tag_signal_preview
+                    assert preview.pulse_widths_ns == (10000, 25000, 70000)
+                    assert preview.pixel_period_ns == 20000
+                    assert preview.pulse_intervals_cycles == (
+                        ((0, 400), (800, 1200), (1600, 2000)),
+                        ((0, 1000),), ((0, 2400),))
+                    assert preview.continues == (False, False, True)
+                    self.ui.spinBox_nx.setValue(10)
+                    assert self.ui.label_tag_y_clock_cycles.text() == '2000 cycles'
+                    assert self.ui.label_tag_z_clock_cycles.text() == '5600 cycles'
+                    assert preview.pulse_widths_ns == (10000, 50000, 140000)
+                    self.ui.pushButton_18.click()
+                    assert self.configurationFPGA_dict['tag_y_clock_duration_cycles'] == 2000
+                    assert self.configurationFPGA_dict['tag_z_clock_duration_cycles'] == 5600
+                    self.ui.comboBox_tag_z_clock_mode.setCurrentText('Follow X')
+                    assert self.configurationFPGA_dict['tag_z_clock_duration_cycles'] == 0
+                    assert not self.ui.doubleSpinBox_tag_z_clock_duty_cycle.isEnabled()
+                    assert preview.pulse_widths_ns == (10000, 50000, 10000)
+                    self.ui.checkBox_tag_x_clock_invert.setChecked(True)
+                    assert 'X: 10,000 ns, inverted' in preview.accessibleDescription()
+                    for name in ('tag_exclude_first_x', 'tag_exclude_first_y',
+                                 'tag_exclude_first_y_for_x'):
+                        getattr(self.ui, 'checkBox_' + name).setChecked(True)
+                        assert self.configurationFPGA_dict[name] is True
+                        assert self.getGUI_data()[name] is True
+                    assert 'tag_yz_xor_x' not in self.configurationFPGA_dict
+                    assert 'tag_yz_xor_x_invert' not in self.configurationFPGA_dict
+                    assert not hasattr(self.ui, 'checkBox_tag_yz_xor_x')
+                    assert not hasattr(self.ui, 'checkBox_tag_yz_xor_x_invert')
+                    assert preview.pulse_intervals_cycles == (((0, 2400),), (), ((0, 400),))
+                    assert 'Line 1 X: line skipped' in preview.accessibleDescription()
+                    assert [panel['label'] for panel in preview._panels] == ['Line 1', 'Line 2']
+                    assert preview._panels[1]['signals'][0] == (
+                        (0, 1000), (1400, 1800), (2200, 2600))
+                    assert preview._panels[1]['signals'][1] == ((200, 2200),)
+                    self.ui.checkBox_tag_exclude_first_y_for_x.setChecked(False)
+                    assert preview.pulse_intervals_cycles[0] == (
+                        (0, 800), (1200, 1600), (2000, 2400))
+                    self.ui.checkBox_tag_exclude_first_x.setChecked(False)
+                    assert preview.pulse_intervals_cycles[0] == (
+                        (400, 800), (1200, 1600), (2000, 2400))
+                    self.ui.checkBox_tag_exclude_first_y.setChecked(False)
+                    assert preview.pulse_intervals_cycles[1] == ((0, 2000),)
+                    assert 'tag_clock_invert' not in self.getGUI_data()
+                    for name in ('tag_exclude_last_x', 'tag_exclude_last_y',
+                                 'tag_exclude_last_y_for_x'):
+                        getattr(self.ui, 'checkBox_' + name).setChecked(True)
+                        assert self.configurationFPGA_dict[name] is True
+                        assert self.getGUI_data()[name] is True
+                    assert [panel['label'] for panel in preview._panels] == [
+                        'Line 1', 'Line 2', 'Line 2 end', 'Last line']
+                    assert preview._panels[2]['annotations'][0] == 'skip last'
+                    assert preview._panels[3]['annotations'][:2] == [
+                        'line skipped', 'last tag skipped']
+                    assert preview._panels[3]['signals'][0] == ((0, 2600),)
+                    self.setGUI_data({key: value for key, value in saved.items()
+                                      if key.startswith('tag_') or key in
+                                      ('nx', 'ny', 'time_resolution', 'timebin_per_pixel')})
+                    self.ui.pushButton_18.click()
+                    assert browser.model.setData(index, str(original_nx + 1))
+                    assert self.ui.spinBox_nx.value() == original_nx + 1
+                    assert self.getGUI_data()['nx'] == original_nx + 1
+                    assert browser.model.setData(index, str(original_nx))
+                    browser.search.clear()
+                    self.updateTables()
+                    assert browser.model.rows[('nx',)][1].text() == str(original_nx)
+                    original_laser = self.ui.checkBox_laser0.isChecked()
+                    index = browser.model.rows[('laser_1_enable',)][1].index()
+                    assert browser.model.setData(index, str(not original_laser))
+                    assert self.configurationFPGA_dict['laser_1_enable'] == (not original_laser)
+                    assert browser.model.setData(index, str(original_laser))
                     combo = self.ui.comboBox_plot_channel
                     combo.setCurrentIndex((combo.currentIndex() + 1) % combo.count())
                     combo.setCurrentText('LIFETIME_HSV')

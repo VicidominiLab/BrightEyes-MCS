@@ -1,6 +1,7 @@
 # BrightEyes-MCSLL
 
-> Applicability: the register and FIFO tables use firmware v1 snake-case names.
+> Applicability: the register and FIFO tables use snake-case names, including
+> firmware v2.1 (`MCSV2_1`) tag controls explicitly marked below.
 > Saved HDF5 files retain legacy names through
 > [legacy_names.py](../brighteyes_mcs/storage/legacy_names.py); see the
 > [HDF5 compatibility reference](h5_mcs_scheme_v0_0_1.md).
@@ -73,6 +74,147 @@ If you have bugs to report or you have requests for adding or modifying firmware
 
 ## Registers
 
+### MCSV2_1 (firmware v2.1) analog register names
+
+For every analog input channel **0 through 7**, firmware 2.1 uses
+`analog_channel_N_integrate_enable` and `analog_channel_N_invert_enable`
+(Bool, RW), replacing `analog_a_channel_N_integrate_enable` and
+`analog_a_channel_N_invert_enable`. Their behavior is unchanged. GUI controls
+use the current names. The **Read Conf. FPGA** register
+listing and bitfile metadata show the actual FPGA names and values unchanged,
+including older spellings, so firmware differences remain visible for debugging.
+Aliases apply to individual reads/writes only when the requested name is absent;
+an exact FPGA name always selects that register. Hardware access
+falls back to the older names when the selected bitfile exposes them; explicit
+current settings take precedence over old aliases in register dictionaries.
+The existing HDF5 attribute names (`AnalogA0 integrate`, `AnalogA0 invert`,
+and so on) remain compatible for both firmware spellings.
+The A/B input selectors and differential-mode register names are unchanged.
+
+### MCSV2_1 (firmware v2.1) tag outputs
+
+`tag_clock_duration_cycles` controls the **pixel (X)** tag pulse width.
+MCSV2_1 adds separate **line (Y)** and **frame (Z)** widths through
+`tag_y_clock_duration_cycles` and `tag_z_clock_duration_cycles`. Durations are
+FPGA clock cycles: one cycle is 25 ns at 40 MHz. A Y or Z width of **0** makes
+the firmware use `tag_clock_duration_cycles` internally for that axis. The
+software sends the zero unchanged, so that axis continues to follow later
+pixel-width changes. For example, X=200, Y=0, Z=80 produces widths of 200,
+200, and 80 cycles.
+
+The rewritten MCSV2_1 firmware replaces the former `tag_yz_xor_x` and
+`tag_yz_xor_x_invert` controls with six Boolean exclusion registers for the
+first/last X tags, first/last Y tags, and all X tags on first/last lines.
+All six default to false. They appear in the **Tag exclusions** group and are
+saved and programmed independently.
+The firmware name and version remain **MCSV2_1 / 2.1**. Register availability
+is checked against the actual bitfile because the same version name covers
+both register interfaces. Removed XOR settings in old GUI configurations are
+ignored, and removed XOR register writes are discarded even when enabled.
+
+X inversion is now named **`tag_x_clock_invert`**. Saved configurations and
+register dictionaries using `tag_clock_invert` migrate to the new name, with
+explicit new values taking precedence. The canonical last-line X exclusion
+name is **`tag_exclude_last_y_for_x`**; older configurations using the short name
+`tag_exclude_last_for_x` are supported through a name alias. Available
+register names determine which spelling is written to the bitfile.
+
+The exclusion flags use **true = suppress** and **false = pass normally**:
+
+- `tag_exclude_first_x` suppresses the first X tag of **every line**.
+- `tag_exclude_first_y` suppresses the first Y tag of **every frame**.
+- `tag_exclude_first_y_for_x` suppresses **all X tags on the first line of
+  every frame**. On later lines, the first-X exclusion still applies if enabled.
+- `tag_exclude_last_x` suppresses the last X tag of **every line**.
+- `tag_exclude_last_y` suppresses the last Y tag of **every frame**.
+- `tag_exclude_last_y_for_x` suppresses **all X tags on the last line of every
+  frame**. On other lines, the last-X exclusion still applies if enabled.
+
+First and last exclusions combine. A single-pixel line or single-line frame
+can have every corresponding tag suppressed; inversion still selects the idle
+level for the suppressed signal.
+
+The gates apply before output polarity inversion. A suppressed tag stays LOW
+normally or HIGH when inverted. These controls suppress output tags only;
+scan positions, dimensions, and acquired data are unchanged. With zero-based
+pixel/line indices, the output model is:
+
+```text
+skip_x = (tag_exclude_first_x AND x_is_0)
+         OR (tag_exclude_first_y_for_x AND y_is_0)
+         OR (tag_exclude_last_x AND x_is_last)
+         OR (tag_exclude_last_y_for_x AND y_is_last)
+skip_y = (tag_exclude_first_y AND y_is_0)
+         OR (tag_exclude_last_y AND y_is_last)
+x_tag_out = (PixelClock AND NOT skip_x) XOR tag_x_clock_invert
+y_tag_out = (LineClock AND NOT skip_y) XOR tag_y_clock_invert
+z_tag_out = FrameClock XOR tag_z_clock_invert
+```
+
+Unprogrammed MCSV2_1 controls preserve the old firmware behavior: Y/Z widths
+default to 0, and all inversion and exclusion controls default to false. BrightEyes-MCS
+uses these same defaults. With older bitfiles, the NI control path skips missing
+new registers when their values are defaults; requesting a nondefault value for
+a missing register reports that MCSV2_1 is required. Availability is checked
+against the actual register names rather than the bitfile filename.
+
+In **Scanning Calibration & Limits → Tag outputs**, **Pulse timing and polarity**
+places Pixel (X), Line (Y), and Frame (Z) side by side. Each axis has a duration
+mode, duty percentage, fixed cycle count, effective width, and inversion control.
+X offers **Duty cycle** and **Fixed cycles**; Y/Z additionally offer **Follow X**
+(the default), which writes 0 to the corresponding firmware register. Only the
+fields used by the selected mode are enabled. The **Tag exclusions** group
+pairs the six first/last exclusion controls.
+
+The compact **Tag outputs - schematic** preview shows the first few pixels
+of **Line 1** and **Line 2**, separated by **`---`**. A single-line frame uses
+**Next frame** for the second excerpt. This makes skipped first tags and their
+resumption visible together, even when an entire first line is excluded from X.
+Enabling last-tag exclusions adds **Line 2 end** and/or **Last line** excerpts
+as needed, with actual pixel indices under end-of-line excerpts.
+Skipped events are labeled **skip**, **line skipped**, or **first tag skipped**.
+
+X/Y/Z edges and pixel boundaries align within each excerpt. Distinct edges
+receive a minimum visual spacing so narrow pulses remain readable; the
+horizontal spacing is schematic, while the configured pulse widths are
+reported in **ns** (25 ns per cycle at 40 MHz). **`---`** also marks pulses
+continuing beyond the excerpts; full duration labels remain visible. The
+preview updates with timing controls, geometry, X fallback, all three
+exclusions, and per-axis inversion. Hover for full widths and exclusion details.
+
+Y duty cycle is relative to one active line; Z duty cycle is relative to one
+active frame, independently of the X tag width. With `B` equal to the programmed
+`time_bin_dwell_cycles` and `T` to time bins per pixel:
+
+- Pixel period: `B × T` cycles.
+- Line period: `B × T × pixels_per_line × circular_points × circular_repetitions`.
+- Frame period: line period `× lines_per_frame`.
+
+Circular factors are 1 when circular scanning is disabled. Each duty-cycle
+width is rounded down after multiplying its period by the percentage divided
+by 100. Frame count, acquisition repetitions, startup waits, and post-frame
+waits do not change these periods. For example, B=80, T=10, 5 pixels per line,
+and 7 lines per frame yield 4000 cycles per line and 28000 per frame: a 25% Y
+duty cycle gives 1000 cycles and a 10% Z duty cycle gives 2800 cycles. Changing
+X to a fixed width does not change either result.
+
+Fixed widths remain constant when geometry or timing changes. A Y/Z width
+that computes or is set to 0 still invokes the firmware's X fallback; the
+effective-width label shows the X width with `(X)` in this case. Computed Y/Z
+widths can exceed 32 bits and are limited to the I64 register range.
+
+The inversion and exclusion controls default to unchecked. Modes, percentages, and
+fixed values are saved in the main GUI configuration and applied during live
+updates and acquisition startup. The saved GUI keys are `tag_y_clock_mode`,
+`tag_y_clock_duty_cycle`, `tag_y_clock_fixed_cycles` and their Z equivalents.
+Older GUI configurations with `tag_y_clock_duration_cycles` or
+`tag_z_clock_duration_cycles` migrate to **Follow X** at 0 or **Fixed cycles**
+at a nonzero value. Firmware register names remain unchanged. Firmware
+reset/reuse also reapplies these values, so disabling a previously enabled
+control writes false on MCSV2_1.
+
+### Register reference
+
 | Name                           | Type       | Read/Write | Description                                                                                                                                      |
 |--------------------------------|------------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Main**                       |            |            |                                                                                                                                                  |
@@ -111,7 +253,18 @@ If you have bugs to report or you have requests for adding or modifying firmware
 | spad_configuration_message | U64        | RW         | SPAD configuration message cmd send                                                                                                              |
 | spad_configuration_message_length | U8         | RW         | SPAD configuration message length                                                                                                                |
 | spad_sdata_invert_enable | Bool       | RW         | SPAD configuration invert the cmd logic (useful for some SPAD prototype)                                                                         |
-| tag_clock_duration_cycles | I64        | RW         | SPAD configuration - sync output duration (40 MHz units)                                                                                         |
+| tag_clock_duration_cycles | I64 | RW | Pixel (X) tag duration in FPGA cycles (25 ns at 40 MHz); also the fallback width for Y/Z |
+| tag_y_clock_duration_cycles | I64 | RW | MCSV2_1: line (Y) tag duration in FPGA cycles; default 0 uses `tag_clock_duration_cycles` internally |
+| tag_z_clock_duration_cycles | I64 | RW | MCSV2_1: frame (Z) tag duration in FPGA cycles; default 0 uses `tag_clock_duration_cycles` internally |
+| tag_x_clock_invert | Bool | RW | MCSV2_1: invert pixel (X) tag polarity; default false |
+| tag_y_clock_invert | Bool | RW | MCSV2_1: invert line (Y) tag polarity; default false |
+| tag_z_clock_invert | Bool | RW | MCSV2_1: frame (Z) polarity inversion register; default false |
+| tag_exclude_first_x | Bool | RW | Rewritten MCSV2_1: suppress first X tag of every line, before inversion; default false |
+| tag_exclude_first_y | Bool | RW | Rewritten MCSV2_1: suppress first Y tag of every frame, before inversion; default false |
+| tag_exclude_first_y_for_x | Bool | RW | Rewritten MCSV2_1: suppress all X tags on first line of every frame, before inversion; default false |
+| tag_exclude_last_x | Bool | RW | MCSV2_1: suppress last X tag of every line before inversion; default false |
+| tag_exclude_last_y | Bool | RW | MCSV2_1: suppress last Y tag of every frame before inversion; default false |
+| tag_exclude_last_y_for_x | Bool | RW | MCSV2_1: suppress all X tags on last line of every frame before inversion; default false |
 | detector_fpga_holdoff_cycles | U16        | RW         | holdOff time (FPGA based) in 120 MHz units                                                                                                       |
 | dummy_data_enable | Bool       | RW         | If enable produces dummy data instead of using data from the detector                                                                            |
 |                                |            |            |                                                                                                                                                  |
@@ -157,8 +310,8 @@ If you have bugs to report or you have requests for adding or modifying firmware
 | analog_b_differential_mode_enable | Bool       | RW         | True: signal derivative during within the timebin; False: signal direct                                                                          |
 |                                |            |            |                                                                                                                                                  |
 | (for all channels from 0 to 7) |            |            |                                                                                                                                                  |
-| analog_a_channel_7_invert_enable | Bool       | RW         | True: signal inverted; False: signal not inverted                                                                                                |
-| analog_a_channel_7_integrate_enable | Bool       | RW         | True: signal integrated; False: signal not integrated. The integration is performed at the max ADC readout speed                                 |
+| analog_channel_7_invert_enable | Bool       | RW         | True: signal inverted; False: signal not inverted                                                                                                |
+| analog_channel_7_integrate_enable | Bool       | RW         | True: signal integrated; False: signal not integrated. The integration is performed at the max ADC readout speed                                 |
 | analog_input_7_volts | Fxp        | R          | Current Voltage on AnalogIN                                                                                                                      |
 |                                |            |            |                                                                                                                                                  |
 | **Digital Frequency Domain**   |            |            |                                                                                                                                                  |

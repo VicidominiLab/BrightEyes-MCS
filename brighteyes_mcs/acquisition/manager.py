@@ -8,10 +8,12 @@ import time
 # from PySide6.QtCore import QObject
 
 from brighteyes_mcs.logging_setup import data_debug_enabled, logger
+from ..hardware.tag_clock import MCSV2_1_TAG_DEFAULTS, normalize_tag_registers
 from ..acquisition.detectors.models import (
     DETECTOR_DISABLED,
     detector_uses_flare,
     detector_uses_pispad23_timestamp,
+    detector_uses_pispad23,
     DETECTOR_SPAD_ARRAY,
     detector_uses_nifpga_fifo,
     detector_uses_pispad23_pipeline,
@@ -162,6 +164,7 @@ class McsManager():
             "detector_fpga_holdoff_cycles": 11,
             "time_bin_dwell_cycles": 40,
             "tag_clock_duration_cycles": 20000,
+            **MCSV2_1_TAG_DEFAULTS,
             "tag_turnoff_frame_counter": None,
             "tag_turnoff_line_counter": None,
             "tag_turnoff_pixel_counter": None,
@@ -612,6 +615,8 @@ class McsManager():
         """
         if detector_uses_flare(self.detector_model):
             raise RuntimeError("Flare acquisition uses FlareAcquisition, not NI workers")
+        if self.raw_stream_mode and detector_uses_pispad23(self.detector_model):
+            raise ValueError("PI acquisition uses its RAW/HDF5 recording controls, not SPAD raw-stream mode")
         do_not_save = self.do_not_save_event.is_set()
         self.process_supervisor.clear()
 
@@ -619,7 +624,7 @@ class McsManager():
 
         logger.debug("%s %s", "do_not_save", do_not_save)
         logger.debug("fpga_process.runed from run")
-        self.readRegistersDict()
+        self.readRegistersDict(preserve_requested=True)
         logger.debug("mcs_manager.registers_configuration")
         logger.debug("%s %s", "mcs_manager.expected_words_data_digital", self.expected_words_data_digital)
 
@@ -676,7 +681,7 @@ class McsManager():
         self.detector_receiver_queue = self.detector_pipeline.make_receiver_queue(self)
 
         self.number_of_threads_h5 = mp.Value("i", 0)
-        if not do_not_save and not self.raw_stream_mode and self.detector_model != DETECTOR_DISABLED and not detector_uses_pispad23_timestamp(self.detector_model):
+        if not do_not_save and not self.raw_stream_mode and self.detector_model != DETECTOR_DISABLED:
             (
                 self.h5_command_queue,
                 self.h5_response_queue,
@@ -860,7 +865,7 @@ class McsManager():
         """
         Set the registers dictionary
         """
-        myconf = dict(myconf)
+        myconf = normalize_tag_registers(myconf)
         if not detector_uses_nifpga_fifo(self.detector_model):
             for register in ("stream_out_aux_enable", "stream_out_main_enable", "dfd_enable"):
                 if register in myconf:
@@ -882,19 +887,22 @@ class McsManager():
         logger.debug(register_set)
         self.registers_configuration.update(temp_dict)
 
-    def readRegistersDict(self):
+    def readRegistersDict(self, *, preserve_requested=False):
         """
         Read the registers dictionary
         """
         logger.debug("readRegistersDict()")
         if self.is_connected:
-            self.registers_configuration.update(
-                _pispad23_nifpga_dimension_registers(
-                    self.fpga_handle.register_read_all(),
-                    self.detector_model,
-                    direction=-1,
-                )
-            )
+            self.last_register_readback = dict(self.fpga_handle.register_read_all())
+            readback = _pispad23_nifpga_dimension_registers(
+                self.last_register_readback, self.detector_model, direction=-1)
+            readback = normalize_tag_registers(readback)
+            if preserve_requested:
+                # Startup indicators/defaults must not replace the requested
+                # scan and laser settings used to allocate this acquisition.
+                readback = {key: value for key, value in readback.items()
+                            if key not in self.registers_configuration}
+            self.registers_configuration.update(readback)
             logger.debug("%s %s", "readRegistersDict self.registers_configuration:", self.registers_configuration)
         else:
             logger.debug("register_read_all() not called due to FPGAhandle not connected")
@@ -1072,15 +1080,17 @@ class McsManager():
         return status
 
     def quick_reset_fpga(self, timeout=5.0, poll_interval=0.01):
-        """Pulse the stop register and verify that the scan FSM becomes idle."""
+        """Hold Stop until acknowledged; clear Run before releasing Stop."""
         if not self.is_connected or self.fpga_handle is None:
             raise RuntimeError("The FPGA is not connected.")
 
+        self.fpga_handle.register_write_checked("start_command", False)
+        self.registers_configuration["start_command"] = False
         self.fpga_handle.register_write_checked("stop_command", True)
         self.registers_configuration["stop_command"] = True
+        self.wait_for_fpga_idle(timeout=timeout, poll_interval=poll_interval)
         self.fpga_handle.register_write_checked("stop_command", False)
         self.registers_configuration["stop_command"] = False
-        self.wait_for_fpga_idle(timeout=timeout, poll_interval=poll_interval)
 
     def _stop_detector_receiver(self):
         if self.detector_receiver_process is None:

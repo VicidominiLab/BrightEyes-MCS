@@ -20,12 +20,12 @@ except:
 
 
 class H5Manager:
-    def __init__(self, filenameh5, new_file=True, shm_number_of_threads_h5=None):
+    def __init__(self, filenameh5, new_file=True, shm_number_of_threads_h5=None, *, exclusive=False):
         self.shm_number_of_threads_h5 = shm_number_of_threads_h5
         print(shm_number_of_threads_h5)
 
         if new_file:
-            self.h5file = h5py.File(filenameh5, "w")
+            self.h5file = h5py.File(filenameh5, "x" if exclusive else "w")
             logger.debug("w")
         elif not new_file:
             self.h5file = h5py.File(filenameh5, "r+")
@@ -58,11 +58,22 @@ class H5Manager:
         )
         logger.debug("%s %s", dataset_name, self.h5dset[dataset_name].shape)
 
-    def add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z):
+    def add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z, *, wait=False):
         # Writes are already asynchronous at process level (H5ManagerProcess).
         # Avoid per-frame Python thread creation overhead here.
         self._add_to_dataset(dataset_name, buffer_for_save, current_rep, current_z)
         self.update_threads_number()
+
+    def create_dataset(self, dataset_name, shape, dtype, *, chunks=None, fillvalue=None):
+        self.h5file.create_dataset(dataset_name, shape=shape, dtype=dtype,
+                                  chunks=chunks, fillvalue=fillvalue)
+
+    def write_slice(self, dataset_name, index, values):
+        self.h5file[dataset_name][index] = values
+
+    def set_attributes(self, path, attributes):
+        target = self.h5file[path] if path in self.h5file else self.h5file.require_group(path)
+        target.attrs.update(attributes)
 
     def _add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z):
         dims = list(self.h5dset[dataset_name].shape)
@@ -194,6 +205,7 @@ class H5ManagerProcess(mp.Process):
                         kwargs["filenameh5"],
                         new_file=kwargs.get("new_file", True),
                         shm_number_of_threads_h5=self.shm_number_of_threads_h5,
+                        exclusive=kwargs.get("exclusive", False),
                     )
                     result = True
 
@@ -219,6 +231,10 @@ class H5ManagerProcess(mp.Process):
 
                 elif cmd == "get_number_of_threads":
                     result = h5mgr.get_number_of_threads()
+
+                elif cmd in ("create_dataset", "write_slice", "set_attributes"):
+                    getattr(h5mgr, cmd)(**kwargs)
+                    result = True
 
                 elif cmd == "close":
                     if h5mgr is not None:
@@ -286,8 +302,8 @@ class H5ManagerProcessClient:
             raise RuntimeError(response.get("error", "Unknown H5ManagerProcess error"))
         return response.get("result")
 
-    def init(self, filenameh5, new_file=True):
-        self._send("init", wait=True, filenameh5=filenameh5, new_file=new_file)
+    def init(self, filenameh5, new_file=True, *, exclusive=False):
+        self._send("init", wait=True, filenameh5=filenameh5, new_file=new_file, exclusive=exclusive)
 
     def init_dataset(self, dataset_name, shape, timebinsPerPixel, channels, dtype):
         self._send(
@@ -300,15 +316,25 @@ class H5ManagerProcessClient:
             dtype=dtype,
         )
 
-    def add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z):
+    def add_to_dataset(self, dataset_name, buffer_for_save, current_rep, current_z, *, wait=False):
         self._send(
             "add_to_dataset",
-            wait=False,
+            wait=wait,
             dataset_name=dataset_name,
             buffer_for_save=buffer_for_save,
             current_rep=current_rep,
             current_z=current_z,
         )
+
+    def create_dataset(self, dataset_name, shape, dtype, *, chunks=None, fillvalue=None):
+        self._send("create_dataset", wait=True, dataset_name=dataset_name, shape=shape,
+                   dtype=dtype, chunks=chunks, fillvalue=fillvalue)
+
+    def write_slice(self, dataset_name, index, values):
+        self._send("write_slice", wait=True, dataset_name=dataset_name, index=index, values=values)
+
+    def set_attributes(self, path, attributes):
+        self._send("set_attributes", wait=True, path=path, attributes=attributes)
 
     def get_number_of_threads(self):
         return self._send("get_number_of_threads", wait=True)

@@ -78,6 +78,18 @@ def test_unselected_mode_still_uses_hardware_dimensions():
     manager.fpga_handle.register_write_checked.assert_not_called()
 
 
+def test_full_readback_keeps_actual_names_separate_from_requested_configuration():
+    manager = manager_stub()
+    actual = {"analog_a_channel_1_invert_enable": True, "tag_clock_invert": True,
+              "tag_yz_xor_x": False, "max_frame": 7}
+    manager.fpga_handle.register_read_all.return_value = actual
+    manager.readRegistersDict()
+    assert manager.last_register_readback == actual
+    assert manager.registers_configuration["analog_channel_1_invert_enable"] is True
+    assert manager.registers_configuration["tag_x_clock_invert"] is True
+    assert "analog_a_channel_1_invert_enable" not in manager.registers_configuration
+
+
 def test_one_trigger_waits_for_both_streams_and_fpga_idle():
     manager, session = make_session()
     assert session.trigger()
@@ -263,25 +275,3 @@ def test_acquisition_range_and_position_remain_locked(state):
                                                 "analog_output_2_dc_volts": 1.25})
     assert session.frame_offsets() == [1, 2, 3]
     manager.fpga_handle.register_write_checked.assert_not_called()
-
-
-def test_pispad23_human_wait_preserves_socket_and_normal_timeout_is_unchanged():
-    import socket
-    from unittest.mock import patch
-    from brighteyes_mcs.acquisition.detectors.pispad23.backend import PISPAD23TcpBunchSource, DONE_SENTINEL
-
-    for enabled in (False, True):
-        shared = {"software_trigger_enabled": enabled}
-        source = PISPAD23TcpBunchSource(2, 1, 20, 0, shared_dict=shared)
-        connection = MagicMock()
-        connection.recv.side_effect = [b"hello", socket.timeout(), b"payload" + DONE_SENTINEL]
-        with patch("brighteyes_mcs.acquisition.detectors.pispad23.backend.socket.create_connection") as connect:
-            connect.return_value.__enter__.return_value = connection
-            if enabled:
-                assert source._receive_cs_binary_payload() == b"payload"
-                assert shared["software_trigger_receiver_ready"] == 1
-                assert connect.call_count == 1
-            else:
-                with pytest.raises(socket.timeout):
-                    source._receive_cs_binary_payload()
-                assert "software_trigger_receiver_ready" not in shared

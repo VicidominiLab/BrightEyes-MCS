@@ -6,7 +6,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...acquisition.software_trigger import SoftwareTriggerSession
-from ...acquisition.detectors.models import DETECTOR_DISABLED, detector_uses_pispad23_timestamp
+from ...acquisition.detectors.models import DETECTOR_DISABLED, detector_uses_pispad23_timestamp, detector_uses_pispad23_pipeline
 from ...logging_setup import logger
 from ...storage.h5 import H5Manager
 from ...storage.legacy_names import LEGACY_H5_REGISTER_NAME_MAP
@@ -113,10 +113,11 @@ class SoftwareTriggerController:
         if model == DETECTOR_DISABLED or detector_uses_pispad23_timestamp(model):
             reason = "Software triggering requires a detector with frame data (SPAD or PISPAD23 intensity)."
         elif any(widget.isChecked() for widget in (
-                self.ui.checkBox_ttmActivate, self.ui.checkBox_uttmActivate,
-                self.ui.checkBox_pispad23ttmActivate)):
+                self.ui.checkBox_ttmActivate, self.ui.checkBox_uttmActivate)) or (
+                    self.ui.checkBox_pispad23ttmActivate.isChecked() and
+                    not detector_uses_pispad23_pipeline(model)):
             reason = "Software triggering with external TTM recording is not supported yet."
-        elif not (self.ui.checkBox_fifo_digital.isChecked() or self.ui.checkBox_fifo_analog.isChecked()):
+        elif not detector_uses_pispad23_pipeline(model) and not (self.ui.checkBox_fifo_digital.isChecked() or self.ui.checkBox_fifo_analog.isChecked()):
             reason = "Enable at least one data stream before using software triggering."
         if reason:
             QMessageBox.warning(self.window, "Software trigger", reason)
@@ -186,6 +187,8 @@ class SoftwareTriggerController:
         try:
             self.session.poll()
             manager = self.window.mcs_manager
+            if manager.shared_dict.get("pispad23_uimg_error"):
+                raise RuntimeError(manager.shared_dict["pispad23_uimg_error"])
             if manager.shared_dict.get("raw_writer_error"):
                 raise RuntimeError(manager.shared_dict["raw_writer_error"])
             for name in ("receiver", "preprocess", "preview", "raw_writer"):

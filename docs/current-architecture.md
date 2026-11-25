@@ -31,6 +31,7 @@ flowchart TB
     Detector --> PISPAD23[PI SPAD23R TCP pipeline]
     SPAD --> Workers[Multiprocessing workers]
     PISPAD23 --> Workers
+    PiTimestamp[brighteyes-pispad-libs<br/>timestamp receive / recording / microimages] --> Workers
 
     Workers --> Shared[Shared-memory preview data]
     Shared --> Qt
@@ -68,7 +69,6 @@ BrightEyes-MCS/
 ├── test/                    Unit, integration, Qt and hardware-facing tests
 ├── docs/                    Architecture, register and HDF5 documentation
 ├── scripts/                 Developer distribution and conversion tools
-├── blueskyproject_mcs/      Separate Bluesky/Ophyd register-map project
 ├── data/                    Placeholder data directory
 ├── dist/                    Local wheel and source-distribution build output
 ├── pyproject.toml           Authoritative package metadata and dependencies
@@ -76,9 +76,66 @@ BrightEyes-MCS/
 ```
 
 Only packages matching `brighteyes_mcs*` are included by the root build.
-`blueskyproject_mcs`, the top-level `scripts/` directory, tests, and local build
-output are not importable parts of the
-installed application package.
+The top-level `scripts/` directory, tests, and local build output are not
+importable parts of the installed application package.
+
+## Register views in Status
+
+**Status > Registry editor** contains the three sources **Read Conf. FPGA**,
+**Conf. FPGA dict.**, and **Conf. GUI dict.**. **Circular** and **Monitor** remain
+alongside it. Each source has one searchable editor containing every register,
+including unfamiliar firmware and plug-in fields. The original source pages and
+tree widgets are retained by
+[`register_workspace.py`](../brighteyes_mcs/ui/qt/register_workspace.py).
+
+The editor shows sortable parameter, current value, type and access columns,
+with alternating rows and expandable arrays and nested dictionaries. Use
+**Ctrl+F** to filter names or values, or clear **Filter** and use **Find next**
+(**F3**) while keeping all rows visible. Each source retains its own filter.
+
+**Group prefixes** is enabled by default. Shared underscore-separated prefixes
+become expandable branches: for example, analog output registers collect under
+`analog / output / 0`, `analog / output / 1`, and so on when the names contain
+those shared levels. Single-child prefix chains are compressed, and numbered
+channels sort naturally. A heading shows the number of registers below it.
+Individual rows show the remaining suffix; full original names remain in
+tooltips, search, and **Copy parameter path**. Prefix headings are read-only and
+do not change the underlying configuration dictionary, FPGA register names,
+array paths, or Monitor identifiers.
+
+Uncheck **Group prefixes** for the flat list. Switching grouping preserves
+current values, selection, and array expansion and does not write any registers.
+Finish or cancel an active edit before changing grouping. Refresh preserves
+prefix expansion/collapse state and rebuilds the grouping only when the register
+structure changes.
+
+Double-click a writable value, press **F2**, choose **Edit value**, or use the
+context menu to edit. **Enter** applies and **Esc** cancels. Array elements can be
+edited individually. Integer values retain full 64-bit precision; integer input
+also accepts hexadecimal, octal and binary notation. Boolean values use a
+True/False editor. Invalid values and failed writes appear below the tree.
+
+**Refresh** takes a new sample; **Update automatically** uses the existing
+500 ms status refresh cycle. Value-only updates retain indexes, selection,
+scroll position and expansion; an active editor is left intact until it closes.
+Unchanged rows do not emit redundant model changes. Firmware metadata is
+resolved once per batch of view updates.
+
+The context menu also copies parameter paths/values and adds numeric top-level
+registers to **Monitor**. The visual dashboard has been removed, including its
+extra models, timers, feature switch and benchmark tooling. Its design is
+preserved only in the [dashboard design archive](register-dashboard-design.md).
+
+**Read Conf. FPGA** writes directly to connected FPGA controls in native register
+units. **Conf. FPGA dict.** uses the acquisition manager's detector-specific
+conversions; edits made while disconnected are staged for the next connection.
+FPGA access is determined from the active bitfile, or the selected bitfile while
+disconnected. Indicators and registers without metadata remain read-only.
+**Conf. GUI dict.** edits the associated GUI controls and runs their usual change
+handlers. Derived values and disabled controls remain read-only, and edits are
+blocked while a software-trigger acquisition is armed. Flare retains its separate
+register interface. Numeric top-level values can still be added to **Monitor**
+from the context menu.
 
 ## Package ownership
 
@@ -276,25 +333,26 @@ flowchart LR
     end
 
     subgraph PISPAD23_path[PI SPAD23R or PISPAD23TT]
-        PISPAD23TCP[PI SPAD23R TCP stream] --> Receiver[PISPAD23ReceiverProcess]
-        Receiver --> PiQueue[receiver queue]
-        PiQueue --> PiPre[PISPAD23DataPreProcess]
-        PiQueue --> PiRaw[PISPAD23RawStreamWriterProcess]
+        PISPAD23TCP[PI SPAD23R TCP stream] --> PiRust[Packaged Rust worker process]
+        PiRust --> PiRing[Mapped microimage FIFO]
+        PiRust --> PiRecord[Native TDC RAW or HDF5 recording]
+        PiRing --> PiLoop[LibraryMicroimageWorker]
+        PiLoop --> SharedMem
+        PiLoop --> H5Queue
     end
 
     SpadPre --> DataQueues[per-stream data queues]
-    PiPre --> DataQueues
     DataQueues --> Loop[detector acquisition-loop process]
     Loop --> SharedMem[shared preview arrays]
     Loop --> H5Queue[HDF5 command queue]
     H5Queue --> H5Process[H5ManagerProcess]
     H5Process --> H5File[standard HDF5 file]
     SpadRaw --> RawFiles[RAW files]
-    PiRaw --> RawFiles
 ```
 
 For PI SPAD23R, NI-FPGA remains the scan-control surface, but its detector FIFO is not
-used. Detector payload comes from the PI SPAD23R TCP receiver. The PI SPAD23R emulator in
+used. The library Rust process receives and decodes detector payloads, and the
+MCS Python acquisition worker pulls available microimages from its mapped FIFO. The PI SPAD23R emulator in
 [`detectors/pispad23/emulator.py`](../brighteyes_mcs/acquisition/detectors/pispad23/emulator.py)
 provides a software source for development.
 
@@ -304,7 +362,8 @@ provides a software source for development.
 | --- | --- | --- |
 | Qt main thread | GUI, timers, configuration and orchestration | Qt signals, manager API, shared-array reads |
 | `NiFpgaControlProcess` | NI session, register and SPAD FIFO control | manager queues/events and Rust FIFO reader |
-| PI SPAD23R receiver process | Receive detector TCP bunches | multiprocessing receiver queue |
+| PI SPAD23R Rust worker | TCP receive, buffering, decoding and optional TDC RAW/HDF5 recording | mapped microimage FIFO and native status/controls |
+| `LibraryMicroimageWorker` | Pull completed microimages; MCS dwell processing, preview and frame assembly | mapped FIFO, shared preview arrays, standard HDF5 command queue |
 | detector preprocessor process | Batch/repack receiver payloads | receiver queue to per-stream data queues |
 | detector acquisition-loop process | Decode, aggregate, preview and request HDF5 writes | shared memory, shared dict, HDF5 command queue |
 | detector RAW writer process | Write native stream payloads directly | receiver queue to `.raw` files |
@@ -435,7 +494,6 @@ not yet a complete isolation boundary.
 | `nifpga-fast-fifo-recv` | Required native Rust FIFO receiver used by the SPAD NI-FPGA path. This is separate from the Rust Cython-replacement repository. |
 | `nifpga` and NI drivers | Required hardware interface. Drivers and bitfiles are installed/provided separately and are not distributed in the Python wheel. |
 | `brighteyes-mcs-reader` | Listed by the root package; the bundled `brighteyes_mcs/scripts/shift_vectors.py` ScriptLauncher utility uses it. |
-| `blueskyproject_mcs/` | Stand-alone `brighteyes-bluesky` package exposing the low-level register map as an Ophyd device. It does not implement or currently drive the main acquisition orchestration. |
 
 Although local bitfiles may appear under `brighteyes_mcs/bitfiles`, only the
 placeholder is tracked and the root package-data list does not include firmware.
@@ -507,7 +565,7 @@ and RAW acquisition, stop/reconnect, HDF5 conversion, TTM, plug-ins and REST.
 | Scan start/stop or orchestration | `ui/qt/main_window.py`, `acquisition/manager.py`, `acquisition/coordinator.py` |
 | NI register/FIFO behavior | `hardware/fpga.py`, `acquisition/workers/fpga.py`, `acquisition/fifo.py` |
 | SPAD processing | `acquisition/detectors/spad/` and `acquisition/workers/detectors/spad/` |
-| PI SPAD23R receive/processing/emulation | `acquisition/detectors/pispad23/` and `acquisition/workers/detectors/pispad23/` |
+| PI SPAD23R acquisition/preview | `acquisition/detectors/pispad23/`; native receive/decoding and simulation in `brighteyes-pispad-libs` |
 | Preview math/shared arrays | `acquisition/workers/acquisition_loop.py`, `acquisition/shared_memory.py`, `acquisition/preview.py` |
 | Preview presentation | `ui/controllers/preview.py`, `ui/qt/main_window.py`, `ui/qt/flim_image_view.py` |
 | HDF5 or RAW format | `storage/`; update schema/compatibility tests and documentation |

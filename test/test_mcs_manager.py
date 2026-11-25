@@ -40,22 +40,43 @@ class TestMcsManager(unittest.TestCase):
             instance.readRegistersDict = MagicMock()
             instance.set_do_not_save(True)
             instance.acquisition_storage.start = MagicMock()
-            with patch("brighteyes_mcs.acquisition.detectors.pispad23.pipeline.PISPAD23ReceiverProcess") as receiver:
-                for _ in range(2):
+            for _ in range(2):
+                instance.run()
+                self.assertEqual(instance.detector_pipeline.detector_model, model)
+                self.assertIsNone(instance.detector_receiver_process)
+                self.assertIsNone(instance.detector_receiver_queue)
+                self.assertIsNone(instance.dataProcess)
+                self.assertIsNone(instance.raw_writer_process)
+                instance.fpga_handle.set_list_fifos_to_read_continously.assert_called_with([])
+                if model == DETECTOR_PISPAD23_TS_UIMG:
+                    self.assertTrue(instance.previewProcess.is_alive())
+                    self.assertIn("shared_fingerprint", instance.detector_pipeline.worker.shared_objects)
+                instance.stopPreview()
+                instance.stopAcquisition()
+            instance.acquisition_storage.start.assert_not_called()
+
+    def test_pi_acquisition_allocates_the_standard_hdf5_service(self):
+        from brighteyes_mcs.storage.h5 import H5ManagerProcess, H5ManagerProcessClient
+
+        for model in (DETECTOR_PISPAD23, DETECTOR_PISPAD23_TS_UIMG):
+            with self.subTest(model=model):
+                instance = McsManager()
+                instance.set_detector_model(model)
+                instance.dim_x, instance.dim_y, instance.dim_z = 3, 2, 1
+                instance.fpga_handle = MagicMock()
+                instance.readRegistersDict = MagicMock()
+                instance.set_do_not_save(False)
+                try:
                     instance.run()
-                    self.assertEqual(instance.detector_pipeline.detector_model, model)
-                    self.assertIsNone(instance.detector_receiver_process)
-                    self.assertIsNone(instance.detector_receiver_queue)
-                    self.assertIsNone(instance.dataProcess)
-                    self.assertIsNone(instance.raw_writer_process)
-                    instance.fpga_handle.set_list_fifos_to_read_continously.assert_called_with([])
-                    if model == DETECTOR_PISPAD23_TS_UIMG:
-                        self.assertTrue(instance.previewProcess.is_alive())
-                        self.assertIn("shared_fingerprint", instance.detector_pipeline.worker.shared_objects)
+                    self.assertIsInstance(instance.h5_manager_process, H5ManagerProcess)
+                    self.assertTrue(instance.h5_manager_process.is_alive())
+                    self.assertIs(instance.previewProcess.shared_objects["h5_command_queue"],
+                                  instance.h5_command_queue)
+                    H5ManagerProcessClient(instance.h5_command_queue,
+                                           instance.h5_response_queue).shutdown()
+                finally:
                     instance.stopPreview()
                     instance.stopAcquisition()
-                receiver.assert_not_called()
-            instance.acquisition_storage.start.assert_not_called()
 
     def test_disabled_runs_fpga_without_data_workers_or_storage(self):
         for preview, raw in ((True, False), (False, False), (False, True)):

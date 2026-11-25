@@ -32,8 +32,8 @@ class TestDetectorPipelines(unittest.TestCase):
             [
                 sys.executable,
                 "-c",
-                "from brighteyes_mcs.acquisition.workers.detectors.pispad23.acquisition_loop "
-                "import PISPAD23AcquisitionLoopProcess",
+                "from brighteyes_mcs.acquisition.detectors.pispad23.library_worker "
+                "import LibraryMicroimageWorker",
             ],
             capture_output=True,
             text=True,

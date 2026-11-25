@@ -1,87 +1,11 @@
-"""PISPAD23 acquisition pipeline."""
-
-import multiprocessing as mp
-import os
-
-from ...workers.detectors.pispad23.acquisition_loop import PISPAD23AcquisitionLoopProcess
-from ...workers.detectors.pispad23.preprocessor import PISPAD23DataPreProcess
-from ...workers.detectors.pispad23.raw_writer import PISPAD23RawStreamWriterProcess
-from ...workers.detectors.pispad23.receiver import PISPAD23ReceiverProcess
+"""Rust-backed intensity acquisition uses the same MCS dwell processing path."""
+from .timestamp_pipeline import PISPAD23MicroimagePipeline
 
 
-def pispad23_words_per_sample(spad_channels):
-    return 2
-
-
-def _pispad23_active_fifos(active_fifos):
-    return [fifo for fifo in active_fifos if fifo == "stream_out_main"] or ["stream_out_main"]
-
-
-def _pispad23_total_scan_frames(acquisition):
-    if getattr(acquisition, "software_trigger_session", None) is not None:
-        return 1
-    return max(1, int(acquisition.dim_z))
-
-
-def _pispad23_dwell_us(acquisition):
-    if os.environ.get("PISPAD23_FORCE_DWELLTIME") is not None:
-        acquisition.registers_configuration.get(
-            "tag_clock_duration_cycles", acquisition.default_configuration.get("tag_clock_duration_cycles", 2000)
-        )
-    return 0
-
-
-class PISPAD23DetectorPipeline:
+class PISPAD23DetectorPipeline(PISPAD23MicroimagePipeline):
     detector_model = "PISPAD23"
+    mode = "intensity"
 
     def __init__(self, detector_model=None):
         if detector_model is not None:
             self.detector_model = detector_model
-
-    def make_receiver_queue(self, acquisition):
-        return mp.Queue()
-
-    def make_receiver_process(self, acquisition, receiver_queue, start_event):
-        active_fifos = _pispad23_active_fifos(acquisition.activated_fifos_list)
-        return PISPAD23ReceiverProcess(
-            receiver_queue, active_fifos, start_event,
-            acquisition.fpga_handle.configuration["fifo_chuck_size_digital"],
-            acquisition.fpga_handle.configuration["fifo_chuck_size_analog"],
-            acquisition.fpga_handle.configuration["expected_words_data_digital"],
-            acquisition.fpga_handle.configuration["expected_words_data_analog"],
-            digital_words_per_sample=pispad23_words_per_sample(acquisition.spad_channels),
-            digital_output_channels=25, scan_x=acquisition.dim_x, scan_y=acquisition.dim_y,
-            scan_frames=_pispad23_total_scan_frames(acquisition),
-            timebins_per_pixel=(acquisition.timebins_per_pixel * acquisition.circ_repetition * acquisition.circ_points),
-            dwell_us=_pispad23_dwell_us(acquisition),
-            external_frame=int(os.environ.get("PISPAD23_IGNOREEXTERNAL_FRAME", "1")),
-            host=acquisition.pispad23_host, port=acquisition.pispad23_port,
-            shared_dict=acquisition.shared_dict, debug=acquisition.debug,
-        )
-
-    def make_data_preprocess(self, acquisition, receiver_queue):
-        return PISPAD23DataPreProcess(
-            receiver_queue, acquisition.loc_acquired, acquisition.last_preprocessed_len,
-            acquisition.data_queue, acquisition.dtype_data_queue,
-            digital_words_per_sample=pispad23_words_per_sample(acquisition.spad_channels),
-            debug=acquisition.debug,
-        )
-
-    def make_acquisition_loop(self, acquisition, do_not_save):
-        acquisition.shared_objects["activated_fifos_list"] = _pispad23_active_fifos(acquisition.activated_fifos_list)
-        acquisition.shared_dict["spad_channels"] = 25
-        return PISPAD23AcquisitionLoopProcess(
-            25, acquisition.shared_objects, do_not_save, acquisition.data_queue,
-            acquisition.acquisition_done_event, acquisition.acquisition_almost_done_event,
-            acquisition.shared_dict, debug=acquisition.debug,
-        )
-
-    def make_raw_stream_writer(self, acquisition, receiver_queue):
-        return PISPAD23RawStreamWriterProcess(
-            receiver_queue, _pispad23_active_fifos(acquisition.activated_fifos_list),
-            acquisition.raw_output_files, acquisition.loc_acquired, acquisition.loc_previewed,
-            acquisition.last_preprocessed_len, acquisition.acquisition_done_event,
-            acquisition.acquisition_almost_done_event, acquisition.shared_dict,
-            digital_words_per_sample=pispad23_words_per_sample(acquisition.spad_channels),
-            debug=acquisition.debug,
-        )

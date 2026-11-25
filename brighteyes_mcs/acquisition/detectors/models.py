@@ -44,6 +44,10 @@ def detector_uses_pispad23_timestamp(detector_model):
     return normalize_detector_model(detector_model) in DETECTOR_PISPAD23_TS_MODELS
 
 
+def detector_uses_pispad23(detector_model):
+    return detector_uses_pispad23_pipeline(detector_model) or detector_uses_pispad23_timestamp(detector_model)
+
+
 def detector_uses_nifpga_fifo(detector_model):
     return detector_uses_spad_pipeline(detector_model)
 

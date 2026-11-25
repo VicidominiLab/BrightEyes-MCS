@@ -1,8 +1,19 @@
 # BrightEyes MCSLL register sizes
 
-The 151 documented registers require an estimated **822 bytes** when each element uses a whole-byte container. Their combined logical width is **4751 bits**, equivalent to **594 bytes** if all bits are packed together.
+The 162 documented registers, including the MCSV2_1 tag controls, require an estimated **847 bytes** when each element uses a whole-byte container. Their combined logical width is **4888 bits**, equivalent to **611 bytes** if all bits are packed together.
 
 Source: [register definitions](BrightEyes-MCSLL-registers.md). Fixed-point widths and array lengths use the local reference firmware `brighteyes_mcs/bitfiles/MCSV2-USB7856R-3_3V-40M91.lvbitx`. The four `L1` through `L4` registers use the documented U8 type because those names are absent from that bitfile.
+
+The eleven new MCSV2_1 registers are absent from that reference bitfile. The
+sizes below use I64 for the two additional durations, matching the X duration,
+and Bool for the nine inversion/exclusion controls, as present in MCSV2_1
+register metadata. Without those eleven registers the original
+MCSV2 totals remain 151 registers, 4751 bits, and 822 bytes in whole-byte containers.
+
+Analog input integration and inversion use the firmware 2.1 names
+`analog_channel_N_integrate_enable` and `analog_channel_N_invert_enable` for
+N=0 through 7. Earlier bitfiles use `analog_a_channel_N_...` aliases; this
+rename changes neither register counts nor sizes.
 
 ## Sizing assumptions
 
@@ -64,6 +75,17 @@ Source: [register definitions](BrightEyes-MCSLL-registers.md). Fixed-point width
 | Detection Configuration | `spad_configuration_message_length` | U8 | RW | 1 | 8 | 8 | 1 |
 | Detection Configuration | `spad_sdata_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
 | Detection Configuration | `tag_clock_duration_cycles` | I64 | RW | 1 | 64 | 64 | 8 |
+| Detection Configuration | `tag_y_clock_duration_cycles` | I64 | RW | 1 | 64 | 64 | 8 |
+| Detection Configuration | `tag_z_clock_duration_cycles` | I64 | RW | 1 | 64 | 64 | 8 |
+| Detection Configuration | `tag_x_clock_invert` | Bool | RW | 1 | 1 | 1 | 1 |
+| Detection Configuration | `tag_y_clock_invert` | Bool | RW | 1 | 1 | 1 | 1 |
+| Detection Configuration | `tag_z_clock_invert` | Bool | RW | 1 | 1 | 1 | 1 |
+| Detection Configuration | `tag_exclude_first_x` | Bool | RW | 1 | 1 | 1 | 1 |
+| Detection Configuration | `tag_exclude_first_y` | Bool | RW | 1 | 1 | 1 | 1 |
+| Detection Configuration | `tag_exclude_first_y_for_x` | Bool | RW | 1 | 1 | 1 | 1 |
+| Detection Configuration | `tag_exclude_last_x` | Bool | RW | 1 | 1 | 1 | 1 |
+| Detection Configuration | `tag_exclude_last_y` | Bool | RW | 1 | 1 | 1 | 1 |
+| Detection Configuration | `tag_exclude_last_y_for_x` | Bool | RW | 1 | 1 | 1 | 1 |
 | Detection Configuration | `detector_fpga_holdoff_cycles` | U16 | RW | 1 | 16 | 16 | 2 |
 | Detection Configuration | `dummy_data_enable` | Bool | RW | 1 | 1 | 1 | 1 |
 | Laser Control | `wait_laser_startup_cycles` | I64 | RW | 1 | 64 | 64 | 8 |
@@ -94,22 +116,22 @@ Source: [register definitions](BrightEyes-MCSLL-registers.md). Fixed-point width
 | Analog Input | `analog_b_input_selector` | U8 | RW | 1 | 8 | 8 | 1 |
 | Analog Input | `analog_a_differential_mode_enable` | Bool | RW | 1 | 1 | 1 | 1 |
 | Analog Input | `analog_b_differential_mode_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_0_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_1_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_2_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_3_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_4_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_5_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_6_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_7_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_0_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_1_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_2_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_3_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_4_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_5_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_6_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
-| Analog Input | `analog_a_channel_7_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_0_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_1_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_2_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_3_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_4_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_5_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_6_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_7_invert_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_0_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_1_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_2_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_3_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_4_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_5_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_6_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
+| Analog Input | `analog_channel_7_integrate_enable` | Bool | RW | 1 | 1 | 1 | 1 |
 | Analog Input | `analog_input_0_volts` | Fxp | R | 1 | 32 | 32 | 4 |
 | Analog Input | `analog_input_1_volts` | Fxp | R | 1 | 32 | 32 | 4 |
 | Analog Input | `analog_input_2_volts` | Fxp | R | 1 | 32 | 32 | 4 |
@@ -167,10 +189,10 @@ Source: [register definitions](BrightEyes-MCSLL-registers.md). Fixed-point width
 | Internal / Debug | `debug_y_index_2` | I32 | RW | 1 | 32 | 32 | 4 |
 | Internal / Debug | `debug_z_index_2` | I32 | RW | 1 | 32 | 32 | 4 |
 | Internal / Debug | `debug_repetition_index` | I32 | RW | 1 | 32 | 32 | 4 |
-| **Total** | **151 registers** | | | | | **4751** | **822** |
+| **Total** | **162 registers** | | | | | **4888** | **847** |
 
 ## Sum
 
-Estimated whole-byte storage: **822 bytes**.
+Estimated whole-byte storage: **847 bytes**.
 
-Packed minimum: `ceil(4751 / 8) = 594` bytes.
+Packed minimum: `ceil(4888 / 8) = 611` bytes.

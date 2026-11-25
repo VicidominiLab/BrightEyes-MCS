@@ -1,24 +1,11 @@
-"""Asynchronous external PI SPAD23R time-tag recording and acquisition timing."""
-
+"""One asynchronous PI SPAD23R acquisition controller for both library modes."""
 import math
-import os
 from pathlib import Path
 import queue
-import socket
-import subprocess
-import sys
 import threading
 import time
-
 from PySide6.QtCore import QObject, QTimer, Signal
-
-from ...hardware import pispad23ttm_runner
-from ...logging_setup import data_debug_enabled, logger, trace_action
-
-
-class _PersistedRecorderLine(str):
-    """A pipe line already saved by the reader, before GUI event delivery."""
-
+from ...logging_setup import logger, trace_action, default_log_dir, report_logging_failure
 
 def measurement_ms(ui, *, preview=False):
     """One frame plus startup/wait margin for preview; full recording budget.
@@ -46,11 +33,12 @@ def measurement_ms(ui, *, preview=False):
     return max(1, math.ceil(seconds * 1000))
 
 
-def output_path(folder, mcs_filename, raw=False):
-    path = Path(folder) / (Path(mcs_filename).stem + ("-ts.raw" if raw else "-tsraw.h5"))
+def output_path(folder, mcs_filename, raw=False, mode="timestamp"):
+    suffix = ("-intensity.raw" if raw else "-intensity.h5") if mode == "intensity" else ("-ts.raw" if raw else "-tsraw.h5")
+    path = Path(folder) / (Path(mcs_filename).stem + suffix)
     original = path
     index = 1
-    while path.exists():
+    while path.exists() or (raw and Path(str(path) + ".metadata.h5").exists()):
         path = original.with_name(f"{original.stem}-{index}{original.suffix}")
         index += 1
     return path
@@ -63,16 +51,26 @@ class PISPAD23Timetagging(QObject):
     microimage_updated = Signal()
     calibration_log = Signal(str)
     calibration_finished = Signal(bool, str)
+    status_finished = Signal(bool, str)
 
     def __init__(self, ui, parent=None):
         super().__init__(parent)
         self.ui = ui
         self.process = None
+        self.library_worker = None
+        self.library_run = 0
         self.pending = False
-        self.require_armed = False
         self.armed = False
         self.stopping = False
         self.path = None
+        self.mcs_path = None
+        self.metadata_source = None
+        self.protocol_log_path = None
+        self.protocol_log_offset = 0
+        self.protocol_log_pending = b""
+        self.protocol_timer = QTimer(self)
+        self.protocol_timer.setInterval(100)
+        self.protocol_timer.timeout.connect(self._poll_protocol_log)
         self.messages = queue.Queue()
         self.timer = QTimer(self)
         self.timer.setInterval(50)
@@ -82,11 +80,12 @@ class PISPAD23Timetagging(QObject):
         self.settle_timer.timeout.connect(self._ready)
         self.calibration_log.connect(self.log)
         self.calibration_finished.connect(self._calibration_finished)
+        self.status_finished.connect(self._status_finished)
         self.failed.connect(self._log_failure)
         self.calibrating = False
+        self.querying = False
         self.stream_microimage = False
         self.microimage_worker = None
-        self.image_messages = queue.Queue(maxsize=1)
         self.image_stop = threading.Event()
         self.image_connected = threading.Event()
         self.image_done = threading.Event()
@@ -104,251 +103,287 @@ class PISPAD23Timetagging(QObject):
         logger.error("PISPAD23_FAILURE reason=%s output=%s pending=%s armed=%s stopping=%s",
                      message, self.path, self.pending, self.armed, self.stopping)
 
-    def _close_pipe(self, pipe, name):
-        if pipe is None:
-            return
-        try:
-            pipe.close()
-        except (OSError, ValueError) as error:
-            # TextIOWrapper.close flushes a buffered stop command even after
-            # the bridge exits. Windows can report EINVAL instead of EPIPE.
-            logger.warning("PI SPAD23R recorder %s close failed: %s", name, error)
-
     def _enable_settings(self, enabled):
         for name in (
-            "lineEdit_pispad23ttm_h5_executable", "lineEdit_pispad23ttm_raw_executable",
-            "lineEdit_pispad23ttm_folder", "lineEdit_pispad23ttm_address",
-            "comboBox_pispad23ttm_format", "doubleSpinBox_pispad23ttm_settle",
+            "lineEdit_pispad23ttm_folder", "lineEdit_pispad23ttm_address", "toolButton_pispad23ttm_folder",
+            "comboBox_pispad23ttm_format", "comboBox_pispad23_verbosity", "doubleSpinBox_pispad23ttm_settle",
             "doubleSpinBox_pispad23ttm_margin", "doubleSpinBox_pispad23ttm_timeout",
-            "doubleSpinBox_pispad23ttm_preview_margin",
-            "toolButton_pispad23ttm_h5", "toolButton_pispad23ttm_raw", "toolButton_pispad23ttm_folder",
-            "pushButton_pispad23ttm_force_calibration",
-            "spinBox_pispad23ttm_stream_port",
+            "doubleSpinBox_pispad23ttm_preview_margin", "pushButton_pispad23ttm_force_calibration",
+            "pushButton_pispad23_status",
             "spinBox_pispad23ttm_uimg_buffer", "spinBox_pispad23ttm_uimg_batch",
+            "spinBox_pispad23_channels", "doubleSpinBox_pispad23_intensity_dwell",
+            "checkBox_pispad23_external_frame",
         ):
             getattr(self.ui, name).setEnabled(enabled)
+        if enabled:
+            from ...acquisition.detectors.models import detector_uses_pispad23_pipeline
+            intensity = detector_uses_pispad23_pipeline(self.ui.comboBox_detector_model.currentText())
+            for name in ("spinBox_pispad23_channels", "doubleSpinBox_pispad23_intensity_dwell",
+                         "checkBox_pispad23_external_frame"):
+                getattr(self.ui, name).setEnabled(intensity)
+            for name in ("doubleSpinBox_pispad23ttm_margin", "doubleSpinBox_pispad23ttm_preview_margin",
+                         "pushButton_pispad23ttm_force_calibration", "comboBox_pispad23ttm_format",
+                         "lineEdit_pispad23ttm_folder", "toolButton_pispad23ttm_folder"):
+                getattr(self.ui, name).setEnabled(not intensity)
+
 
     @trace_action
     def start(self, filename, *, stream_microimage=False, record=True, preview=False,
-              microimage_worker=None):
-        if self.active or self.calibrating:
-            raise RuntimeError("The previous PI SPAD23R recording is still finishing.")
+              microimage_worker=None, mode="timestamp", wait_for_trigger=False, metadata=None,
+              continuous_preview=True):
+        if self.active or self.calibrating or self.querying:
+            raise RuntimeError("The previous PI SPAD23R acquisition is still finishing.")
         if stream_microimage and microimage_worker is None:
             raise ValueError("Microimage mode requires its acquisition worker")
-        raw = stream_microimage or self.ui.comboBox_pispad23ttm_format.currentText() == "RAW"
-        executable = (self.ui.lineEdit_pispad23ttm_raw_executable if raw else
-                      self.ui.lineEdit_pispad23ttm_h5_executable).text().strip()
-        if not Path(executable).is_file():
-            raise RuntimeError(f"PI SPAD23R recorder not found: {executable}")
+        if mode == "intensity" and not stream_microimage:
+            raise ValueError("Intensity acquisition requires the standard MCS microimage pipeline")
+        try:
+            import brighteyes_pispad as pispad
+        except ImportError as error:
+            raise RuntimeError("Install brighteyes-pispad-libs in the Python environment running BrightEyes-MCS.") from error
+        if getattr(pispad.AcquisitionSession, "worker_kind", None) != "rust_process":
+            raise RuntimeError("Update brighteyes-pispad-libs to version 0.3 or newer for Rust process acquisition.")
+        if not hasattr(pispad.AcquisitionSession, "keep_alive"):
+            raise RuntimeError("Update brighteyes-pispad-libs to version 0.3.2 or newer for device abort and watchdog support.")
+        if not hasattr(pispad, "device_status"):
+            raise RuntimeError("Update brighteyes-pispad-libs to version 0.3.3 or newer for D command abort and status support.")
+        from ...acquisition.detectors.pispad23.library_worker import LibraryMicroimageWorker
+
+        if stream_microimage and not isinstance(microimage_worker, LibraryMicroimageWorker):
+            raise RuntimeError("Microimage acquisition requires the PI library worker.")
+        raw = self.ui.comboBox_pispad23ttm_format.currentText() == "RAW"
         self.path = None
-        if record:
+        self.protocol_log_path = None
+        self.metadata_source = Path((metadata or {}).get("mcs_filename", filename)).resolve()
+        if record and mode == "timestamp":
             folder = self.ui.lineEdit_pispad23ttm_folder.text().strip() or str(Path(filename).parent)
             Path(folder).mkdir(parents=True, exist_ok=True)
-            self.path = output_path(folder, filename, raw).resolve()
-        args = [executable, "--addr", self.ui.lineEdit_pispad23ttm_address.text().strip(),
-                "--measurement-ms", str(measurement_ms(self.ui, preview=preview))]
-        if record:
-            args += ["-o", str(self.path)]
-        else:
-            args += ["--no-output"]
-        if stream_microimage:
-            width, height = self.ui.spinBox_nx.value(), self.ui.spinBox_ny.value()
-            if not 0 < width * height <= 16_777_216:
-                raise ValueError("PI SPAD23R stream image supports at most 16777216 scan pixels.")
-            port = self.ui.spinBox_pispad23ttm_stream_port.value()
-            args += ["--stream-microimage", "--microimage-buffer", str(self.ui.spinBox_pispad23ttm_uimg_buffer.value())]
-            args += ["--stream-image-port", str(port)]
-            if preview:
-                args += ["--repeat"]
-        if getattr(sys, "frozen", False):
-            raise RuntimeError("PI SPAD23R recorder bridge currently requires running MCS with Python.")
-        options = {"start_new_session": True} if os.name != "nt" else {}
-        if os.name == "nt":
-            startup = subprocess.STARTUPINFO()
-            startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startup.wShowWindow = 0
-            options = dict(creationflags=subprocess.CREATE_NEW_CONSOLE, startupinfo=startup)
-        if raw and data_debug_enabled():
-            args.append("--verbose")
-        self.log(subprocess.list2cmdline(args))
-        job = None
-        bridge_args = []
-        if os.name == "nt":
-            from ...hardware.pispad23ttm_job import RecorderJob
-
-            job = RecorderJob()
-            bridge_args = ["--job-name", job.name]
-        try:
-            self.process = subprocess.Popen(
-                [sys.executable, "-u", str(Path(pispad23ttm_runner.__file__).resolve()), *bridge_args, *args],
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                text=True, encoding="utf-8", errors="replace", **options,
-            )
-            self.process.recorder_job = job
-            logger.info("PI SPAD23R recorder launched pid=%s output=%s microimage=%s preview=%s",
-                        self.process.pid, self.path, stream_microimage, preview)
-        except Exception:
-            if job is not None:
-                job.close()
-            raise
-        self.messages = queue.Queue()
-        self.reader = threading.Thread(target=self._read, args=(self.process, self.messages), daemon=True)
-        self.reader.start()
+            self.path = output_path(folder, filename, raw, mode).resolve()
+        repeat = preview and continuous_preview
+        duration = measurement_ms(self.ui, preview=repeat)
+        protocol_options = self._protocol_options()
+        config = pispad.AcquisitionConfig(
+            addr=self.ui.lineEdit_pispad23ttm_address.text().strip(),
+            output=str(self.path) if self.path else None, format="raw" if raw else "h5",
+            measurement_ms=duration, repeat=repeat, preview=stream_microimage,
+            mode=mode, width=self.ui.spinBox_nx.value(), height=self.ui.spinBox_ny.value(),
+            frames=self.ui.spinBox_nframe.value() * self.ui.spinBox_nrepetition.value(),
+            detector_channels=self.ui.spinBox_pispad23_channels.value(),
+            intensity_dwell_us=self.ui.doubleSpinBox_pispad23_intensity_dwell.value(),
+            external_frame=self.ui.checkBox_pispad23_external_frame.isChecked(),
+            wait_for_trigger=wait_for_trigger,
+            microimage_capacity=self.ui.spinBox_pispad23ttm_uimg_buffer.value(),
+            idle_timeout_sec=max(60, math.ceil(duration / 1000) + 5),
+            watchdog_timeout_sec=10,
+            **protocol_options,
+        )
+        worker = microimage_worker
+        if worker is None:
+            worker = LibraryMicroimageWorker(self.ui.spinBox_nx.value(), self.ui.spinBox_ny.value(),
+                                             self.ui.spinBox_pispad23ttm_uimg_batch.value(), mode=mode)
+        self.mcs_path = Path(worker.saving["filename"]) if worker.saving is not None else None
+        if self.path is not None and raw:
+            from ...storage.tdc_metadata import ScanGeometry, create_metadata
+            dwell = self.ui.spinBox_timeresolution.value() * self.ui.spinBox_time_bin_per_px.value() * 1e-6
+            if self.ui.checkBox_circular.isChecked():
+                dwell *= self.ui.spinBox_circular_points.value() * self.ui.spinBox_circular_repetition.value()
+            geometry = ScanGeometry(self.ui.spinBox_nx.value(), self.ui.spinBox_ny.value(),
+                self.ui.spinBox_nframe.value(), self.ui.spinBox_nrepetition.value(), dwell,
+                self.ui.checkBox_snake.isChecked(), self.ui.checkBox_snake_z.isChecked())
+            create_metadata(self.path, geometry, metadata, acquisition=vars(config))
+        worker.configure(vars(config))
+        if not stream_microimage:
+            worker.start()
+        self.process = self.library_worker = worker
+        self.library_run = 0
         self.pending = True
-        self.require_armed = raw
-        self.armed = False
-        self.stopping = False
+        self.armed = self.stopping = False
         self.stream_microimage = stream_microimage
-        self.microimage_worker = microimage_worker
-        self.image_messages = queue.Queue(maxsize=64 if stream_microimage else 1)
-        self.image_stop = threading.Event()
-        self.image_connected = threading.Event()
-        self.image_done = threading.Event()
-        if stream_microimage:
-            self.image_connected = microimage_worker.connected
-            self.image_done = microimage_worker.done
-            self.image_stop = microimage_worker.stop_event
+        self.microimage_worker = worker if stream_microimage else None
+        self.image_connected, self.image_done, self.image_stop = worker.connected, worker.done, worker.stop_event
+        self.messages = queue.Queue()
         self._enable_settings(False)
         self.deadline = time.monotonic() + self.ui.doubleSpinBox_pispad23ttm_timeout.value()
-        self.ui.label_pispad23ttm_status.setText("Starting / calibrating PI SPAD23R TTM…")
+        self.log(f"brighteyes-pispad-libs: endpoint={config.addr} format={config.format} "
+                 f"measurement_ms={duration} microimages={stream_microimage} "
+                 f"TDC output={self.path} MCS output={self.mcs_path}")
+        self.ui.label_pispad23ttm_status.setText("Starting / calibrating PI SPAD23R library acquisition…")
         self.timer.start()
 
-    @staticmethod
-    def _read(process, messages):
-        try:
-            for line in process.stdout:
-                logger.info("PI SPAD23R recorder output pid=%s: %s", process.pid, line.rstrip())
-                messages.put(_PersistedRecorderLine(line))
-        except (OSError, ValueError) as error:
-            logger.exception("PI SPAD23R recorder output read failed pid=%s", process.pid)
-            messages.put(f"Recorder output read failed: {error}\n")
-        finally:
-            messages.put(None)
+    def _poll_library(self):
+        worker = self.library_worker
+        if worker is None:
+            return
+        if not self.stopping:
+            worker.keep_alive()
+        while not self.messages.empty():
+            self.log(self.messages.get_nowait())
+        status = worker.statistics()
+        run = status.get("runs_started", 0)
+        if run != self.library_run:
+            self.settle_timer.stop()
+            self.library_run = run
+        self.armed = bool(status.get("armed"))
+        if not self.armed:
+            self.settle_timer.stop()
+        elif self.pending and not self.settle_timer.isActive():
+            self.settle_timer.start(round(self.ui.doubleSpinBox_pispad23ttm_settle.value() * 1000))
+        if self.stream_microimage:
+            self.microimage_updated.emit()
+        error = status.get("error", "")
+        if error and not self.stopping:
+            self.log(error)
+            self.stop()
+            self.failed.emit(error)
+        if not worker.is_alive():
+            worker.join(timeout=0)
+            if self.path is not None and self.path.suffix.lower() == ".raw":
+                from ...storage.tdc_metadata import update_status
+                try:
+                    update_status(self.path, status)
+                except Exception:
+                    logger.exception("Could not update TDC RAW acquisition metadata")
+            if not self.stopping and (not worker.done.is_set() or worker.exitcode != 0
+                                      or status.get("state") != "complete"):
+                error = error or f"PI SPAD23R library worker exited unexpectedly ({worker.exitcode})"
+            was_pending = self.pending
+            self.process = self.library_worker = None
+            self.pending = self.armed = False
+            self.timer.stop()
+            self.settle_timer.stop()
+            self._enable_settings(True)
+            result = f"Library acquisition {status.get('state', 'exited')}: {self.path or self.mcs_path or 'preview only'}"
+            self.log(result)
+            self.ui.label_pispad23ttm_status.setText(result)
+            if not self.stopping and (error or was_pending):
+                self.failed.emit(error or "PI SPAD23R measurement ended before the FPGA scan started.")
+            self.finished.emit()
+        elif self.pending and time.monotonic() > self.deadline:
+            self.stop()
+            self.failed.emit("PI SPAD23R calibration / startup timed out; see PI-Timetagging log.")
 
     def poll(self):
-        if self.stream_microimage and not self.stopping:
-            worker = self.microimage_worker
-            error = worker.error
-            if not error and not worker.is_alive() and not worker.done.is_set():
-                error = "PI SPAD23R microimage acquisition worker exited unexpectedly"
-            if error:
-                self.log(error)
-                self.stop()
-                self.failed.emit(error)
-        self._poll_process()
+        self._poll_library()
 
-
-    def _poll_process(self):
-        while not self.messages.empty():
-            line = self.messages.get_nowait()
-            if line is None:
-                process = self.process
-                if process is None:
-                    continue
-                if (self.stream_microimage and not self.stopping and not self.pending
-                        and (not self.image_done.is_set() or not self.image_messages.empty())):
-                    # Rust serves the final batches before exit; consume the tail
-                    # before announcing completion or releasing preview buffers.
-                    self.messages.put(None)
-                    return
-                code = process.wait()
-                log_exit = logger.error if code != 0 else logger.info
-                log_exit("PI SPAD23R recorder exit pid=%s code=%s hex=0x%08X requested_stop=%s pending=%s armed=%s output=%s",
-                         process.pid, code, code & 0xFFFFFFFF, self.stopping, self.pending,
-                         self.armed, self.path)
-                if self.stream_microimage and not self.stopping and self.microimage_worker.error:
-                    self.stop()
-                    self.failed.emit(self.microimage_worker.error)
-                job = getattr(process, "recorder_job", None)
-                if job is not None:
-                    job.close()
-                self.process = None
-                self.image_stop.set()
-                self.timer.stop()
-                self.settle_timer.stop()
-                was_pending = self.pending
-                self.pending = False
-                self._close_pipe(process.stdout, "stdout")
-                self._close_pipe(process.stdin, "stdin")
-                self._enable_settings(True)
-                result = f"Recorder exited ({code}): {self.path}" if self.path else f"Image stream exited ({code})"
-                self.log(result)
-                self.ui.label_pispad23ttm_status.setText(result)
-                if not self.stopping and (code != 0 or was_pending):
-                    self.failed.emit(f"PI SPAD23R recorder exited ({code}); see PI-Timetagging log.")
-                if self.stream_microimage:
-                    self.microimage_updated.emit()
-                self.finished.emit()
-                return
-            self.log(line, persist=not isinstance(line, _PersistedRecorderLine))
-            stream_closed = self.stream_microimage and "Socket closed by server." in line
-            if ("Acquisition error:" in line or stream_closed) and not self.stopping:
-                self.stop()
-                self.failed.emit(line.strip())
-            if line.strip() == "PI23_DISARMED":
-                self.armed = False
-                if self.pending:
-                    self.settle_timer.stop()
-            if line.startswith("PI23_ARMED SB,"):
-                self.armed = True
-            ready_message = (line.startswith("PI23_ARMED SB,") if self.require_armed
-                             else "Press Ctrl+C to stop." in line)
-            if self.pending and ready_message and not self.settle_timer.isActive():
-                self.settle_timer.start(round(self.ui.doubleSpinBox_pispad23ttm_settle.value() * 1000))
-        if self.pending and time.monotonic() > self.deadline:
-            detail = (" RAW recorder must report PI23_ARMED after sending SB; rebuild tdc_raw_acquire if needed."
-                      if self.require_armed and not self.armed else "")
-            self.stop()
-            self.failed.emit("PI SPAD23R calibration / startup timed out; see PI-Timetagging log." + detail)
-
+    def preserve_final_metadata(self, mcs_filename):
+        """Keep final MCS comments/configuration/thumbnail beside the RAW file."""
+        if (self.path is not None and self.path.suffix.lower() == ".raw"
+                and self.metadata_source == Path(mcs_filename).resolve()):
+            from ...storage.tdc_metadata import copy_metadata, sidecar_path
+            copy_metadata(mcs_filename, sidecar_path(self.path))
+            self.metadata_source = None
 
     def _ready(self):
-        # Process a queued DONE/disarm before acting on an earlier ready timer.
-        if not self.messages.empty():
-            self._poll_process()
-            if self.settle_timer.isActive():
+        if self.library_worker is not None:
+            worker = self.library_worker
+            status = worker.statistics()
+            if (not worker.is_alive() or worker.done.is_set() or not status.get("armed")
+                    or status.get("runs_started", 0) != self.library_run):
+                self._poll_library()
                 return
-        if self.active and self.process.poll() is None and self.pending:
-            if self.require_armed and not self.armed:
+            if not self.pending or self.stopping:
                 return
-            if self.stream_microimage and not self.image_connected.is_set():
+            if not worker.connected.is_set():
                 self.settle_timer.start(50)
                 return
             self.pending = False
             self.ui.label_pispad23ttm_status.setText(
-                f"Recording: {self.path}" if self.path else "PI SPAD23R timestamp image preview"
-            )
+                f"Recording: {self.path or self.mcs_path}" if self.path or self.mcs_path else "PI SPAD23R microimage preview")
             self.log("Recorder ready; starting the FPGA scan.")
             self.ready.emit()
-
+            return
     def stop(self):
         self.pending = False
-        self.image_stop.set()
         self.settle_timer.stop()
-        if self.active and not self.stopping:
+        if self.library_worker is not None and not self.stopping:
             self.stopping = True
-            threading.Thread(
-                target=pispad23ttm_runner.stop_watchdog,
-                args=(self.process, self.messages), daemon=True,
-            ).start()
-            self.ui.label_pispad23ttm_status.setText("Stopping PI SPAD23R TTM / closing file…")
-            try:
-                self.process.stdin.write("stop\n")
-                self.process.stdin.flush()
-            except (OSError, ValueError) as error:
-                logger.warning("PI SPAD23R recorder stop pipe failed: %s", error)
-                self._close_pipe(self.process.stdin, "stdin")  # EOF also stops the bridge.
+            self.image_stop.set()
+            self.ui.label_pispad23ttm_status.setText("Stopping PI SPAD23R / closing file")
+            threading.Thread(target=self._stop_library_worker,
+                             args=(self.library_worker, self.messages), daemon=True).start()
 
     def close(self):
         self.stop()
-        if self.active:
-            # Closing stdin also stops the bridge if the GUI exits unexpectedly.
-            self._close_pipe(self.process.stdin, "stdin")
+
+    @staticmethod
+    def _stop_library_worker(worker, messages):
+        worker.stop()
+        worker.join(timeout=5)
+        if worker.is_alive():
+            messages.put("Library worker did not stop within 5 seconds; forcing termination. Output may be incomplete.")
+            worker.terminate()
+            worker.join(timeout=2)
+
+    def _protocol_options(self):
+        # The PI library owns this verbosity; MCS --log-level never changes it.
+        selected = self.ui.comboBox_pispad23_verbosity.currentIndex() + 1
+        self.protocol_log_path = default_log_dir().resolve() / f"pispad-tcp-{time.time_ns()}.log"
+        self.protocol_log_offset = 0
+        self.protocol_log_pending = b""
+        try:
+            self.protocol_log_path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            report_logging_failure("pSPAD protocol log directory", error)
+        self.log(f"pSPAD TCP verbosity={selected}; protocol log: {self.protocol_log_path}")
+        self.protocol_timer.start()
+        return dict(verbosity=selected, log_file=str(self.protocol_log_path))
+
+    def _poll_protocol_log(self):
+        """Mirror native diagnostics without blocking the acquisition heartbeat."""
+        busy = self.active or self.calibrating or self.querying
+        try:
+            with self.protocol_log_path.open("rb") as source:
+                source.seek(self.protocol_log_offset)
+                chunk = source.read(64 * 1024)
+                self.protocol_log_offset = source.tell()
+        except FileNotFoundError:
+            chunk = b""
+        except OSError as error:
+            self.log(f"Cannot read pSPAD protocol log: {error}")
+            self.protocol_timer.stop()
+            return
+        lines = (self.protocol_log_pending + chunk).split(b"\n")
+        self.protocol_log_pending = lines.pop()
+        if lines:
+            self.log(b"\n".join(lines).decode("utf-8", errors="replace"), persist=False)
+        if not busy and not chunk:
+            if self.protocol_log_pending:
+                self.log(self.protocol_log_pending.decode("utf-8", errors="replace"), persist=False)
+                self.protocol_log_pending = b""
+            self.protocol_timer.stop()
+
+    @trace_action
+    def query_status(self):
+        """Send D on an idle connection and display the device's response."""
+        if self.active or self.calibrating or self.querying:
+            self.log("Wait for the PI SPAD23R operation to finish before querying status.")
+            return
+        endpoint = self.ui.lineEdit_pispad23ttm_address.text().strip()
+        options = self._protocol_options()
+        self.querying = True
+        self._enable_settings(False)
+        self.ui.label_pispad23ttm_status.setText("Reading PI SPAD23R status (D\\n)...")
+        threading.Thread(target=self._status_worker, args=(endpoint, options), daemon=True).start()
+
+    def _status_worker(self, endpoint, options):
+        try:
+            from brighteyes_pispad import device_status
+            response = device_status(endpoint, **options)
+            self.status_finished.emit(True, response)
+        except Exception as error:
+            self.status_finished.emit(False, str(error))
+
+    def _status_finished(self, success, message):
+        self.querying = False
+        self._enable_settings(True)
+        self.log(f"D\\n {'response' if success else 'failed'}: {message}")
+        self.ui.label_pispad23ttm_status.setText(
+            "PI SPAD23R status updated; see log." if success else "PI SPAD23R status failed; see log.")
 
     @trace_action
     def force_calibration(self):
         """Request a standalone vendor TDC calibration without recording data."""
-        if self.active or self.calibrating:
+        if self.active or self.calibrating or self.querying:
             self.log("Cannot force calibration while PI SPAD23R TTM is active.")
             return
         endpoint = self.ui.lineEdit_pispad23ttm_address.text().strip()
@@ -358,29 +393,20 @@ class PISPAD23Timetagging(QObject):
         except ValueError:
             self.ui.label_pispad23ttm_status.setText("Invalid TTM endpoint; use host:port.")
             return
+        protocol_options = self._protocol_options()
         self.calibrating = True
         self._enable_settings(False)
         self.ui.label_pispad23ttm_status.setText("Forcing PI SPAD23R TTM calibration…")
         self.log(f"Force Calibration: connecting to {endpoint}")
         threading.Thread(
-            target=self._force_calibration_worker, args=(host, port), daemon=True
+            target=self._force_calibration_worker, args=(host, port, protocol_options), daemon=True
         ).start()
 
-    def _force_calibration_worker(self, host, port):
+    def _force_calibration_worker(self, host, port, protocol_options):
         try:
-            with socket.create_connection((host, port), timeout=5) as connection:
-                connection.settimeout(60)
-                try:
-                    greeting = connection.recv(8192)
-                    if greeting:
-                        self.calibration_log.emit(
-                            f"Server greeting: {greeting.decode('utf-8', errors='replace').strip()}"
-                        )
-                except socket.timeout:
-                    pass
-                connection.sendall(b"T,c,1\n")
-                response = connection.recv(8192).decode("utf-8", errors="replace").strip()
-                self.calibration_finished.emit(True, response or "Calibration command completed.")
+            from brighteyes_pispad import calibrate
+            response = calibrate(f"{host}:{port}", **protocol_options)
+            self.calibration_finished.emit(True, response or "Calibration command completed.")
         except Exception as error:
             self.calibration_finished.emit(False, str(error))
 
